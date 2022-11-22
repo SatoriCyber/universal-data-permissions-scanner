@@ -7,6 +7,7 @@ Analyze DB authorization will connect to your database, and analyze which user h
 USERNAME, ROLE, ACCESS LEVEL, TABLE, GRATED TIME
 
 For example:
+
 John Doe, ACCOUNTADMIN, WRITE, customers, 2022-11-01 09:20:00
 
 
