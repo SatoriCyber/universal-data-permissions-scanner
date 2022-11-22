@@ -3,8 +3,11 @@
 
 
 
-Analyze DB authorization
+Analyze DB authorization will connect to your database, and analyze which user has which permission and will provide you a CSV file of the follow:
+USERNAME, ROLE, ACCESS LEVEL, TABLE, GRATED TIME
 
+For example:
+John Doe, ACCOUNTADMIN, WRITE, customers, 2022-11-01 09:20:00
 
 
 ## Features
