@@ -5,6 +5,7 @@ from authz_collectors.snowflake_collector.snowflake_collector import AuthZSnowfl
 from authz_data_model.authz_data_model import AuthorizationModel
 from authz_exporters import csv_exporter
 from az_bigquery.analyzer import BigQueryAuthzAnalyzer
+from model import ConsoleReporter, FileReporter, OutputFormat, JSONFormatter
 
 collector = AuthZSnowflakeCollector.connect(
         username='jane@satoripoc.info',
@@ -20,8 +21,22 @@ authz_model: AuthorizationModel = collector.get_authorization_model()
 print("Starting to analyze")
 csv_exporter.export(authz_model, Path("csv_mode.xslx"))
 
-if __name__ == '__main__':
-    project_id = "dev-gcp-europe-central2-yoav"
-    analyzer = BigQueryAuthzAnalyzer(project_id)
-    analyzer.run()
+def run_snowflake():
+    pass
 
+def run_bigquery(logger, project_id: str, format: OutputFormat, filename: str):
+    reporter = get_reporter(format, filename)
+    analyzer = BigQueryAuthzAnalyzer(logger, reporter, project_id)
+    analyzer.run()
+    reporter.close()
+
+def get_formatter(format: OutputFormat):
+    return JSONFormatter()
+        
+def get_reporter(format: OutputFormat, filename: str):
+    formatter = get_formatter(format)
+    if filename is None:
+        reporter = ConsoleReporter(formatter)
+    else:
+        reporter = FileReporter(filename, formatter)
+    return reporter
