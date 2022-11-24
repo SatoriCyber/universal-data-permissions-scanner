@@ -5,38 +5,37 @@ from authz_collectors.snowflake_collector.snowflake_collector import AuthZSnowfl
 from authz_data_model.authz_data_model import AuthorizationModel
 from authz_exporters import csv_exporter
 from az_bigquery.analyzer import BigQueryAuthzAnalyzer
-from model import ConsoleReporter, FileReporter, OutputFormat, JSONFormatter
+import sys
+from writers import OutputFormat, JSONWriter, CSVWriter
 
-collector = AuthZSnowflakeCollector.connect(
-        username='jane@satoripoc.info',
-        password='[PLACEHOLDER]',
-        host='bra51996.snowflakecomputing.com',
-        account='pda02239',
-        warehouse='COMPUTE_WH',
-        database='SNOWFLAKE',
-        # schema='PUBLIC',
-)
-print("Connected successfully")
-authz_model: AuthorizationModel = collector.get_authorization_model()
-print("Starting to analyze")
-csv_exporter.export(authz_model, Path("csv_mode.xslx"))
+# Snowflake runner
+def run_snowflake(logger, username: str, password: str, account: str, host: str, warehouse: str, filename: str):
+    collector = AuthZSnowflakeCollector.connect(
+        username=username,
+        password=password,
+        account=account,
+        host=host,
+        warehouse=warehouse,
+        database='SNOWFLAKE'
+    )
+    logger.debug("Connected successfully")
+    authz_model: AuthorizationModel = collector.get_authorization_model()
+    logger.debug("Starting to analyze")
+    csv_exporter.export(authz_model, Path(filename))
 
-def run_snowflake():
-    pass
-
+# BigQuery runner
 def run_bigquery(logger, project_id: str, format: OutputFormat, filename: str):
-    reporter = get_reporter(format, filename)
-    analyzer = BigQueryAuthzAnalyzer(logger, reporter, project_id)
+    writer = get_writer(filename, format)
+    writer.write_header()
+    analyzer = BigQueryAuthzAnalyzer(logger, writer, project_id)
     analyzer.run()
-    reporter.close()
+    writer.close()
 
-def get_formatter(format: OutputFormat):
-    return JSONFormatter()
+def get_writer(filename: str, format: OutputFormat):
+    fh = sys.stdout if filename is None else open(filename, 'w')
+    if format == OutputFormat.JSON:
+        return JSONWriter(fh)
+    elif format == OutputFormat.CSV:
+        return CSVWriter(fh)
+    return None
         
-def get_reporter(format: OutputFormat, filename: str):
-    formatter = get_formatter(format)
-    if filename is None:
-        reporter = ConsoleReporter(formatter)
-    else:
-        reporter = FileReporter(filename, formatter)
-    return reporter

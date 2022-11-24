@@ -1,11 +1,23 @@
 from az_bigquery.service import BigQueryService
 from az_bigquery.policy_tree import PolicyNode, DatasetPolicyNode, TableIamPolicyNode, READ, WRITE, FULL
-from model import AuthzAnalyzer, AuthzEntry, AuthzPathElement
+from model import AuthzEntry, AuthzPathElement
+from writers import OutputWriter
 
-class BigQueryAuthzAnalyzer(AuthzAnalyzer):
+# This analyzer uses data from BigQuery and GCP IAM to list all possible permissions to BigQuery tables/views.
+# 
+# The canonical structure of a the authorization graph is as follows:
+# Table - may have permissions defined directly on it and inherits the permissions from the dataset.
+# Dataset - may have permissions defined directly on it and potentially inherits some permissions from the project.
+# Project - may have permissions defined directly on it and inherits the permissions from the folder it's contained in.
+# Folder -  may have permissions defined directly on it and inherits the permissions from its parent folder(s) or organization
+# Organization - may have permissions defined directly on it
+#
+# Permissions are defined using roles, see the mapping of role to permissions in the policy_tree module.
+class BigQueryAuthzAnalyzer:
 
-    def __init__(self, logger, reporter, project_id):
-        super().__init__(logger, reporter)
+    def __init__(self, logger, writer: OutputWriter, project_id):
+        self.logger = logger
+        self.writer = writer
         self.service = BigQueryService(project_id)
     
     def run(self):
@@ -21,9 +33,11 @@ class BigQueryAuthzAnalyzer(AuthzAnalyzer):
                 table_node.set_parent(dataset_node)
                 self.calc(fq_table_id, table_node, [])
 
+    # Calculates permissions on the policy node and recursively search for more permissions
+    # on the nodes it references or its parent node.
     def calc(self, fq_table_id, node: PolicyNode, path, permissions=[READ, WRITE, FULL]):
         self.logger.debug("calc for %s %s %s permissions = %s path = %s}", fq_table_id, node.type, node.name, permissions, list(map(lambda x: x.type, path)))
-        # Start by listing all immediate permissions defined on this node.
+        # Start by listing all immediate permissions defined on this node
         for permission in permissions:
             for member in node.get_members(permission):
                 self.report_permission(fq_table_id, node, member, permission, path)
@@ -62,7 +76,7 @@ class BigQueryAuthzAnalyzer(AuthzAnalyzer):
         authz.set_permission(permission)
         authz.set_identity(member["principal"])
         authz.set_path(path)
-        self.reporter.report(authz)
+        self.writer.write_entry(authz)
         path.pop()
 
 
