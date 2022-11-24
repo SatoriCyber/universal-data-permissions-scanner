@@ -80,7 +80,7 @@ class BigQueryService():
                     folder_iam = self.get_folder_iam(parent_id)
                     folder_node = IamPolicyNode(folder.name, folder.display_name, "folder", folder_iam)
                     curr.set_parent(folder_node)
-                    # Move up the tree        
+                    # Move to a parent folder or org
                     curr = folder_node
                     parent_id = folder.parent
                 elif parent_id.startswith("organizations/"):
@@ -88,8 +88,7 @@ class BigQueryService():
                     org_iam = self.get_organization_iam(parent_id)
                     org_node = IamPolicyNode(org.name, org.display_name, "organization", org_iam)
                     curr.set_parent(org_node)
-                    # Org is the root of the tree
-                    # TODO: can we have multiple orgs?
+                    # Org is the top level object
                     parent_id = None
         
         return self.project_node
