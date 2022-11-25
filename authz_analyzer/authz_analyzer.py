@@ -9,7 +9,7 @@ import sys
 from writers import OutputFormat, JSONWriter, CSVWriter
 
 # Snowflake runner
-def run_snowflake(logger, username: str, password: str, account: str, host: str, warehouse: str, filename: str):
+def run_snowflake(logger, username: str, password: str, account: str, host: str, warehouse: str, format: OutputFormat, filename: str):
     collector = AuthZSnowflakeCollector.connect(
         username=username,
         password=password,
@@ -21,6 +21,8 @@ def run_snowflake(logger, username: str, password: str, account: str, host: str,
     logger.debug("Connected successfully")
     authz_model: AuthorizationModel = collector.get_authorization_model()
     logger.debug("Starting to analyze")
+    writer = get_writer(filename, format)
+    writer.write_header()
     csv_exporter.export(authz_model, Path(filename))
 
 # BigQuery runner
@@ -32,7 +34,7 @@ def run_bigquery(logger, project_id: str, format: OutputFormat, filename: str):
     writer.close()
 
 def get_writer(filename: str, format: OutputFormat):
-    fh = sys.stdout if filename is None else open(filename, 'w')
+    fh = sys.stdout if filename is None else open(filename, 'w', encoding="utf=8")
     if format == OutputFormat.JSON:
         return JSONWriter(fh)
     elif format == OutputFormat.CSV:

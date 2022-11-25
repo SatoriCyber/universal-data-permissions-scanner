@@ -2,6 +2,7 @@
 import authz_analyzer
 import click
 import logging
+import os
 from writers import OutputFormat
 
 @click.group()
@@ -17,8 +18,7 @@ def main(ctx, debug, out, format):
     ctx.obj['FORMAT'] = OutputFormat[format.upper() if format else "CSV"]
     # Initializing logger early so we can use it here as needed
     logger = get_logger(debug)
-    ctx.obj['LOGGER'] = logger    
-    logger.debug("Starting with ctx: %s", ctx.obj)
+    ctx.obj['LOGGER'] = logger
 
 @main.command()
 @click.pass_context
@@ -29,13 +29,16 @@ def main(ctx, debug, out, format):
 @click.option('--warehouse', required=False, type=str, help="Warehouse")
 def snowflake(ctx, user, password, account, host, warehouse):
     """Analyze Snowflake Authorization"""
-    authz_analyzer.run_snowflake(user, password, account, host, warehouse)
+    authz_analyzer.run_snowflake(ctx.obj['LOGGER'], user, password, account, host, warehouse, ctx.obj['FORMAT'], ctx.obj['OUT'])
 
 @main.command()
 @click.pass_context
 @click.option('--project', required=True, type=str, help="GCP project ID, for example: acme-webapp-prod")
-def bigquery(ctx, project: str):
+@click.option('--key-file', required=False, type=str, help="Path to GCP service account file")
+def bigquery(ctx, project: str, key_file: str = None):
     """Analyze Google BigQuery Authorization"""
+    if key_file is not None:
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = key_file
     authz_analyzer.run_bigquery(ctx.obj['LOGGER'], project, ctx.obj['FORMAT'], ctx.obj['OUT'])
 
 def get_logger(debug: bool):

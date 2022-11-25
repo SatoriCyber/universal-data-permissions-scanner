@@ -5,7 +5,7 @@ from az_bigquery.policy_tree import IamPolicyNode
 
 class BigQueryService():
 
-    def __init__(self, project_id) -> None:
+    def __init__(self, project_id):
         self.project_id = project_id
         self.projects_client = resourcemanager_v3.ProjectsClient()
         self.folders_client = resourcemanager_v3.FoldersClient()
