@@ -91,7 +91,9 @@ class DatasetPolicyNode(PolicyNode):
             if entry.entity_type == "user_by_email":
                 super().add_member(entry.entity_id, entry.role, entry.role)
             elif entry.entity_type == "specialGroup" and entry.entity_id in ["projectReaders", "projectWriters", "projectOwners"]:
-                super().add_reference("PROJECT", entry.role, entry.entity_id)
+                # These specialGroup permissions are legacy, because the dataset always inherits
+                # permissions from its parent project.
+                continue
             else:
                 # catch all just so we don't miss stuff
                 # TODO - handle groups, domain, all, etc

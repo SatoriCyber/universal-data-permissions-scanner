@@ -22,9 +22,11 @@ class BigQueryAuthzAnalyzer:
     
     def run(self):
         # Read all tables in all datasets and calculate authz paths
+        project_node = self.service.lookup_project()
         for dataset_id in self.service.list_datasets():
             dataset = self.service.get_dataset(dataset_id)
             dataset_node = DatasetPolicyNode(dataset, dataset.access_entries)
+            dataset_node.set_parent(project_node)
             tables = self.service.list_tables(dataset_id)
             for table in tables:
                 fq_table_id = "{}.{}.{}".format(table.project, table.dataset_id, table.table_id)
