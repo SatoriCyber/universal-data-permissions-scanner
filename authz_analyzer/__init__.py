@@ -3,3 +3,7 @@
 __author__ = """SatoriCyber"""
 __email__ = 'omer.shtivi@satoricyber.com'
 __version__ = '0.1.0'
+
+from authz_analyzer.main import AuthzAnalyzer
+
+__all__ = ["AuthzAnalyzer"]
