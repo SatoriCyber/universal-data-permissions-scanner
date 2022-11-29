@@ -2,7 +2,7 @@
 
 __author__ = """SatoriCyber"""
 __email__ = 'omer.shtivi@satoricyber.com'
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 from authz_analyzer.main import AuthzAnalyzer
 
