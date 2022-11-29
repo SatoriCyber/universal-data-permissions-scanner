@@ -6,7 +6,7 @@ from snowflake.connector import SnowflakeConnection
 from snowflake.connector.cursor import SnowflakeCursor
 
 from authz_analyzer.datastores.base import BaseConnector, BaseConnectParams
-from authz_analyzer.datastores.snowflake import SnowflakeConnectionParameters
+from authz_analyzer.datastores.snowflake.params import SnowflakeConnectionParameters
 
 
 @dataclass
