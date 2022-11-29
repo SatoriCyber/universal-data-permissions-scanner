@@ -1,0 +1,6 @@
+SINGLE_USER_ROLE = [("user_1", "role_1")]
+SINGLE_GRANT_ROLE = [("role_1", "SELECT", "db1.schema1.table1")]
+NO_ROLES_GRANTS = [("", "")]
+ROLE_TO_ROLE_GRANT = [("role_1", "role_2")]
+GRANT_ROLE_2 = [("role_2", "SELECT", "db1.schema1.table1")]
+NO_ROLE_RESOURCE = [("", "", "")]

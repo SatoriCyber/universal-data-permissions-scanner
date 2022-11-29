@@ -49,7 +49,8 @@ def run_snowflake(
     )
     writer = get_writer(filename, format=format)
     writer.write_header()
-    SnowflakeAuthzAnalyzer.run(snowflake_params, writer=writer, logger=logger)
+    snowflake_analyzer = SnowflakeAuthzAnalyzer.connect(snowflake_params, writer=writer, logger=logger)
+    snowflake_analyzer.run()
     writer.close()
 
 
@@ -77,6 +78,7 @@ class AuthzAnalyzer:
         writer.write_header()
 
         if isinstance(db_params, SnowflakeConnectionParameters):
-            SnowflakeAuthzAnalyzer.run(params=db_params, writer=writer, logger=logger)
+            snowflake_analyzer = SnowflakeAuthzAnalyzer.connect(db_params, writer=writer, logger=logger)
+            snowflake_analyzer.run()
             writer.close()
         writer.close()

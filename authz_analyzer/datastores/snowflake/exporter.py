@@ -6,12 +6,12 @@ from authz_analyzer.models.model import AuthzEntry, AuthzPathElement
 from authz_analyzer.writers import BaseWriter
 
 
-def _yield_row(username: str, permission_level: PermissionLevel, grant_name: str, roles: str):
-    auth_path_element = AuthzPathElement(id="", name=roles, type="", note="")
+def _yield_row(username: str, permission_level: PermissionLevel, grant_name: str, roles: List[DBRole]):
+    auth_path_element = [AuthzPathElement(id=role.name, name=role.name, type="role", note="") for role in roles]
     yield AuthzEntry(
         identity=username,
         asset=grant_name,
-        path=[auth_path_element],
+        path=auth_path_element,
         permission=permission_level,
     )
 
@@ -24,20 +24,13 @@ def _iter_role_row(
     role_to_roles: Dict[str, Set[DBRole]],
 ) -> Generator[AuthzEntry, None, None]:
     grants = roles_to_grants.get(role.name, set())
+    prev_roles.append(role)
     for grant in grants:
-        if len(prev_roles) == 0:
-            yield from _yield_row(
-                username=user_name, permission_level=grant.permission_level, grant_name=grant.name, roles=role.name
-            )
-        else:
-            str_prev_roles = "->".join([role.name for role in prev_roles])
-            str_roles = str_prev_roles + "->" + role.name
-            yield from _yield_row(
-                username=user_name, permission_level=grant.permission_level, grant_name=grant.name, roles=str_roles
-            )
+        yield from _yield_row(
+            username=user_name, permission_level=grant.permission_level, grant_name=grant.name, roles=prev_roles
+        )
 
     for granted_role in role_to_roles.get(role.name, set()):
-        prev_roles.append(role)
         yield from _iter_role_row(
             user_name=user_name,
             role=granted_role,
