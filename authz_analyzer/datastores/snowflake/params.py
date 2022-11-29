@@ -12,4 +12,3 @@ class SnowflakeConnectionParameters(BaseConnectParams):
     password: str
     warehouse: str
     snowflake_connection_kwargs: Dict[str, Any] = field(default_factory=lambda: {})
-

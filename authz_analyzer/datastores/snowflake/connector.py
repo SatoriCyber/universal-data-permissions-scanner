@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, List, Tuple
 
 import snowflake.connector
 from snowflake.connector import SnowflakeConnection
@@ -26,12 +26,12 @@ class SnowflakeConnector(BaseConnector):
             host=params.host,
             account=params.account,
             warehouse=params.warehouse,
-            **params.snowflake_connection_kwargs
+            **params.snowflake_connection_kwargs,
         )
         cursor = connector.cursor()
         return cls(connector=connector, cursor=cursor)
 
-    def execute(self, command: str, **kwargs: Any) -> list[tuple[Any]]:
+    def execute(self, command: str, **kwargs: Any) -> List[Tuple[Any]]:
         cursor = self.cursor.execute(command=command, **kwargs)
         if cursor is None:
             raise BaseException("Cursor is none")  # TODO: better handle later

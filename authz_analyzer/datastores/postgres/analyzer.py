@@ -36,5 +36,7 @@ https://www.postgresql.org/docs/15/predefined-roles.html
 
 https://www.postgresql.org/docs/current/sql-grant.html
 """
+
+
 class PostgresAuthzAnalyzer:
     pass

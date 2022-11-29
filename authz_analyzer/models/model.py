@@ -19,7 +19,6 @@ class PermissionLevel(Enum):
         return self.name
 
 
-
 # Describes an element of the authorization entry path, for example a group or a role
 # that was used to grant permission to an asset.
 @dataclass

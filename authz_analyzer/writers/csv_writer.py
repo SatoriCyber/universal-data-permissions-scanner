@@ -1,8 +1,9 @@
 import csv
 from typing import TextIO
 
-from authz_analyzer.writers import BaseWriter
 from authz_analyzer.models.model import AuthzEntry
+from authz_analyzer.writers import BaseWriter
+
 
 class CSVWriter(BaseWriter):
     def __init__(self, fh: TextIO):

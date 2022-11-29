@@ -6,29 +6,26 @@ Ref: https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-json#load
  """
 
 import json
-from typing import List, Dict, TextIO
-from authz_analyzer.models.model import AuthzEntry
+from typing import Dict, List, TextIO
 
+from authz_analyzer.models.model import AuthzEntry
 from authz_analyzer.writers import BaseWriter
 
 
 class MultiJsonWriter(BaseWriter):
     def __init__(self, fh: TextIO):
         super().__init__(fh)
-    
+
     def write_entry(self, entry: AuthzEntry):
-        path: List[Dict[str, str]] = list(map(lambda x: {
-            "type": x.type,
-            "id": x.id,
-            "name": x.name,
-            "note": x.note
-        }, entry.path))
-        
+        path: List[Dict[str, str]] = list(
+            map(lambda x: {"type": x.type, "id": x.id, "name": x.name, "note": x.note}, entry.path)
+        )
+
         line = {
             "identity": entry.identity,
             "permission": str(entry.permission),
             "asset": entry.asset,
-            "granted_by": path
+            "granted_by": path,
         }
         json_line = json.dumps(line, indent=None)
         json_line += '\n'
@@ -36,4 +33,3 @@ class MultiJsonWriter(BaseWriter):
 
     def write_header(self):
         pass
-
