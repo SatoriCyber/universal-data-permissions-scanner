@@ -23,7 +23,7 @@ The analyzer query to tables: snowflake.account_usage.grants_to_users, snowflake
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Tuple
 
 from authz_analyzer.datastores.base import BaseAuthzAnalyzer, BaseConnectParams
 from authz_analyzer.datastores.snowflake import exporter
@@ -60,7 +60,7 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
 
     def _get_users_to_role_mapping(self):
         command = (COMMANDS_DIR / "user_grants.sql").read_text(encoding="utf-8")
-        rows: List[tuple[str, str]] = self.connector.execute(command=command)  # type: ignore
+        rows: List[Tuple[str, str]] = self.connector.execute(command=command)  # type: ignore
 
         results: Dict[str, DBUser] = {}
 
@@ -75,7 +75,7 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
 
     def _get_role_to_role_mapping(self):
         command = (COMMANDS_DIR / "roles_grants.sql").read_text(encoding="utf-8")
-        rows: List[tuple[str, str]] = self.connector.execute(command=command)  # type: ignore
+        rows: List[Tuple[str, str]] = self.connector.execute(command=command)  # type: ignore
         roles_grants_map: Dict[str, Set[DBRole]] = {}
         for row in rows:
             role_name = row[0]
@@ -88,7 +88,7 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
 
     def _get_grants_to_role(self) -> Dict[str, Set[ResourceGrant]]:
         command = (COMMANDS_DIR / "roles_tables_resources.sql").read_text(encoding="utf-8")
-        rows: List[tuple[str, str, str]] = self.connector.execute(command=command)  # type: ignore
+        rows: List[Tuple[str, str, str]] = self.connector.execute(command=command)  # type: ignore
         results: Dict[str, Set[ResourceGrant]] = {}
 
         for row in rows:

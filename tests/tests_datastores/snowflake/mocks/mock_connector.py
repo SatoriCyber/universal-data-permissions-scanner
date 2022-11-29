@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from types import TracebackType
-from typing import List, Optional, Type
+from typing import List, Optional, Tuple, Type
 from unittest.mock import MagicMock
 
 
 @dataclass
 class MockConnector:
-    user_grants: List[tuple[str, str]]
-    role_grants: List[tuple[str, str]]
-    role_resources: List[tuple[str, str, str]]
+    user_grants: List[Tuple[str, str]]
+    role_grants: List[Tuple[str, str]]
+    role_resources: List[Tuple[str, str, str]]
 
     def get(self):
         snowflake_mock = MagicMock(name="SnowflakeConnectionMock")
