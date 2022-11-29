@@ -1,5 +1,5 @@
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 READ = "READER"
@@ -26,8 +26,8 @@ class PolicyNode:
     name: str
     type: str
     parent: Optional[str]
-    permissions: Dict[str, List[Dict[str, str]]] = {READ: [], WRITE: [], FULL: []}
-    references: Dict[str, List[Dict[str, str]]] = {READ: [], WRITE: [], FULL: []}
+    permissions: Dict[str, List[Dict[str, str]]] = field(default_factory=lambda: {READ: [], WRITE: [], FULL: []})
+    references: Dict[str, List[Dict[str, str]]] = field(default_factory=lambda: {READ: [], WRITE: [], FULL: []})
 
     def set_parent(self, parent: str):
         self.parent = parent

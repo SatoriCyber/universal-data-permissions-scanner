@@ -1,7 +1,7 @@
 from google.cloud import bigquery
 from google.cloud import resourcemanager_v3
 from google.iam.v1 import iam_policy_pb2
-from az_bigquery.policy_tree import IamPolicyNode
+from authz_analyzer.datastores.bigquery.policy_tree import IamPolicyNode
 
 class BigQueryService():
 

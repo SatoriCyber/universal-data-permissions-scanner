@@ -34,21 +34,22 @@ from authz_analyzer.datastores.snowflake.model import (
     permission_level_from_str,
 )
 from authz_analyzer.datastores.snowflake import exporter
-from authz_analyzer.datastores.base import BaseConnectParams
+from authz_analyzer.datastores.base import BaseConnectParams, BaseAuthzAnalyzer
 from authz_analyzer.writers import BaseWriter
 
 COMMANDS_DIR = Path(__file__).parent / "commands"
 
 
 @dataclass
-class SnowflakeAuthzAnalyzer:
+class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
     logger: Logger
     connector: SnowflakeConnector
     writer: BaseWriter
 
     @classmethod
     def _load(cls, params: BaseConnectParams, writer: BaseWriter, logger: Logger):
-        return cls(connector=SnowflakeConnector.connect(params), writer=writer, logger=logger)
+        connector: SnowflakeConnector = SnowflakeConnector.connect(params) #type: ignore
+        return cls(connector=connector, writer=writer, logger=logger)
 
     @staticmethod
     def run(params: BaseConnectParams, writer: BaseWriter, logger: Logger):
