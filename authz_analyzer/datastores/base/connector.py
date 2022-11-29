@@ -10,7 +10,7 @@ from authz_analyzer.datastores.base.connect_params import BaseConnectParams
 class BaseConnector(ABC):
     @classmethod
     @abstractmethod
-    def connect(cls, params: BaseConnectParams, **kwargs: Any) -> BaseConnector:
+    def connect(cls, params: BaseConnectParams) -> BaseConnector:
         """Connect to the datastore
 
         Args:

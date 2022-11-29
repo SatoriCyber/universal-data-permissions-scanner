@@ -11,8 +11,8 @@ Permissions are defined using roles, see the mapping of role to permissions in t
 
 from dataclasses import dataclass
 from logging import Logger
-from bigquery.service import BigQueryService
-from bigquery.policy_tree import PolicyNode, DatasetPolicyNode, TableIamPolicyNode, READ, WRITE, FULL
+from authz_analyzer.datastores.bigquery.service import BigQueryService
+from authz_analyzer.datastores.bigquery.policy_tree import PolicyNode, DatasetPolicyNode, TableIamPolicyNode, READ, WRITE, FULL
 from authz_analyzer.models.model import AuthzEntry, AuthzPathElement
 from authz_analyzer.writers.writers import BaseWriter
 

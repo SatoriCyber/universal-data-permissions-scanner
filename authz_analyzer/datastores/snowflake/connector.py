@@ -15,7 +15,7 @@ class SnowflakeConnector(BaseConnector):
     cursor: SnowflakeCursor
 
     @classmethod
-    def connect(cls, params: BaseConnectParams):
+    def connect(cls, params: BaseConnectParams) -> BaseConnector:
         if not isinstance(params, SnowflakeConnectionParameters):
             raise BaseException(
                 "Expecting snowflake params to be SnowflakeConnectionParameters"
