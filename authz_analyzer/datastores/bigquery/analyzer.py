@@ -22,7 +22,7 @@ from authz_analyzer.datastores.bigquery.policy_tree import (
 )
 from authz_analyzer.datastores.bigquery.service import BigQueryService
 from authz_analyzer.models.model import AuthzEntry, AuthzPathElement
-from authz_analyzer.writers.writers import BaseWriter
+from authz_analyzer.writers import BaseWriter
 
 
 @dataclass

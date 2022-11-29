@@ -10,7 +10,7 @@ from authz_analyzer.datastores.bigquery.analyzer import BigQueryAuthzAnalyzer
 from authz_analyzer.datastores.snowflake import SnowflakeAuthzAnalyzer, SnowflakeConnectionParameters
 from authz_analyzer.writers.csv_writer import CSVWriter
 from authz_analyzer.writers.multi_json_exporter import MultiJsonWriter
-from authz_analyzer.writers.writers import OutputFormat
+from authz_analyzer.writers import OutputFormat
 
 
 def get_logger(debug: bool):
