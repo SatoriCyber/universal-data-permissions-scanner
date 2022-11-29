@@ -47,18 +47,16 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
     writer: BaseWriter
 
     @classmethod
-    def _load(cls, params: BaseConnectParams, writer: BaseWriter, logger: Logger):
+    def connect(cls, params: BaseConnectParams, writer: BaseWriter, logger: Logger):
         connector: SnowflakeConnector = SnowflakeConnector.connect(params)  # type: ignore
         return cls(connector=connector, writer=writer, logger=logger)
 
-    @staticmethod
-    def run(params: BaseConnectParams, writer: BaseWriter, logger: Logger):
-        logger.info("Connecting to Snowflake")
-        snowflake_authz_analyzer = SnowflakeAuthzAnalyzer._load(params=params, writer=writer, logger=logger)
-        logger.info("Starting to  query")
-        authorization_model = snowflake_authz_analyzer._get_authorization_model()
-        logger.info("Writing to file")
-        exporter.export(model=authorization_model, writer=writer)
+    def run(self):
+        self.logger.info("Connecting to Snowflake")
+        self.logger.info("Starting to  query")
+        authorization_model = self._get_authorization_model()
+        self.logger.info("Writing to file")
+        exporter.export(model=authorization_model, writer=self.writer)
 
     def _get_users_to_role_mapping(self):
         command = (COMMANDS_DIR / "user_grants.sql").read_text(encoding="utf-8")

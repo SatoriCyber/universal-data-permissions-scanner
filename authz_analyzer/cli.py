@@ -3,9 +3,9 @@ import os
 from typing import Optional
 
 import click
-from writers import OutputFormat
 
 from authz_analyzer.main import get_logger, run_bigquery, run_snowflake
+from authz_analyzer.writers import OutputFormat
 
 
 @click.group()

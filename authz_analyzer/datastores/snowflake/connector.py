@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, List, Tuple
 
-import snowflake.connector
+from snowflake.connector import connect  # type: ignore
 from snowflake.connector import SnowflakeConnection
 from snowflake.connector.cursor import SnowflakeCursor
 
@@ -19,8 +19,8 @@ class SnowflakeConnector(BaseConnector):
         if not isinstance(params, SnowflakeConnectionParameters):
             raise BaseException(
                 "Expecting snowflake params to be SnowflakeConnectionParameters"
-            )  # T ODO: Better exceptions
-        connector = snowflake.connector.connect(  # type: ignore
+            )  # TODO: Better exceptions
+        connector = connect(  # type: ignore
             user=params.username,
             password=params.password,
             host=params.host,
