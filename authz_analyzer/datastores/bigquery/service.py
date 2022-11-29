@@ -1,10 +1,10 @@
-from google.cloud import bigquery
-from google.cloud import resourcemanager_v3
+from google.cloud import bigquery, resourcemanager_v3
 from google.iam.v1 import iam_policy_pb2
+
 from authz_analyzer.datastores.bigquery.policy_tree import IamPolicyNode
 
-class BigQueryService():
 
+class BigQueryService:
     def __init__(self, project_id):
         self.project_id = project_id
         self.projects_client = resourcemanager_v3.ProjectsClient()
@@ -15,43 +15,35 @@ class BigQueryService():
 
     def get_project(self):
         request = resourcemanager_v3.GetProjectRequest(
-            name = "projects/%s" % self.project_id,
+            name="projects/%s" % self.project_id,
         )
         return self.projects_client.get_project(request=request)
 
     def get_project_iam(self):
         request = iam_policy_pb2.GetIamPolicyRequest(
-            resource = "projects/%s" % self.project_id,
+            resource="projects/%s" % self.project_id,
         )
         return self.projects_client.get_iam_policy(request=request)
 
     def get_folder(self, folder_id):
-        request = resourcemanager_v3.GetFolderRequest(
-            name = folder_id
-        )
+        request = resourcemanager_v3.GetFolderRequest(name=folder_id)
         return self.folders_client.get_folder(request=request)
 
     def get_folder_iam(self, folder_id):
-        request = iam_policy_pb2.GetIamPolicyRequest(
-            resource = folder_id
-        )
+        request = iam_policy_pb2.GetIamPolicyRequest(resource=folder_id)
         return self.folders_client.get_iam_policy(request=request)
 
     def get_organization(self, org_id):
-        request = resourcemanager_v3.GetOrganizationRequest(
-            name = org_id
-        )
+        request = resourcemanager_v3.GetOrganizationRequest(name=org_id)
         return self.org_client.get_organization(request=request)
 
     def get_organization_iam(self, org_id):
-        request = iam_policy_pb2.GetIamPolicyRequest(
-            resource = org_id
-        )
-        return self.org_client.get_iam_policy(request=request)   
+        request = iam_policy_pb2.GetIamPolicyRequest(resource=org_id)
+        return self.org_client.get_iam_policy(request=request)
 
     def list_datasets(self):
         return list(map(lambda dataset: dataset.dataset_id, self.bq_client.list_datasets()))
-    
+
     def get_dataset(self, dataset_id):
         return self.bq_client.get_dataset(dataset_id)
 
@@ -90,5 +82,5 @@ class BigQueryService():
                     curr.set_parent(org_node)
                     # Org is the top level object
                     parent_id = None
-        
+
         return self.project_node

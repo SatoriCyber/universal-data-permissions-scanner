@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
@@ -6,17 +5,17 @@ READ = "READER"
 WRITE = "WRITER"
 FULL = "OWNER"
 ROLE_TO_PERMISSION = {
-    "roles/viewer":                          READ,                       
-    "roles/editor":                          WRITE,                        
-    "roles/owner":                           FULL,                         
-    "roles/bigquery.admin":                  FULL,                
-    "roles/bigquery.dataEditor":             WRITE,          
-    "roles/bigquery.dataOwner":              FULL,            
-    "roles/bigquery.dataViewer":             READ,           
-    "roles/bigquery.filteredDataViewer":     READ,   
-    "roles/bigquery.jobUser":                WRITE,             
-    "roles/bigquery.user":                   READ,
-    "roles/bigquerydatapolicy.maskedReader": READ
+    "roles/viewer": READ,
+    "roles/editor": WRITE,
+    "roles/owner": FULL,
+    "roles/bigquery.admin": FULL,
+    "roles/bigquery.dataEditor": WRITE,
+    "roles/bigquery.dataOwner": FULL,
+    "roles/bigquery.dataViewer": READ,
+    "roles/bigquery.filteredDataViewer": READ,
+    "roles/bigquery.jobUser": WRITE,
+    "roles/bigquery.user": READ,
+    "roles/bigquerydatapolicy.maskedReader": READ,
 }
 
 
@@ -31,21 +30,15 @@ class PolicyNode:
 
     def set_parent(self, parent: str):
         self.parent = parent
-    
+
     def add_member(self, member: str, permission: str, role: str):
-        self.permissions[permission].append({
-            "principal": member,
-            "role": role
-        })
+        self.permissions[permission].append({"principal": member, "role": role})
 
     def get_members(self, permission: str):
         return self.permissions[permission]
 
     def add_reference(self, reference: str, permission: str, role: str):
-        self.references[permission].append({
-            "principal": reference,
-            "role": role
-        })
+        self.references[permission].append({"principal": reference, "role": role})
 
     def get_references(self, permission: str):
         return self.references[permission]
@@ -61,14 +54,19 @@ class PolicyNode:
         - READ: %s
         - WRITE: %s
         - FULL: %s
-         """ % (self.name, 
-         self.parent,
-         self.get_members(READ), self.get_members(WRITE), self.get_members(FULL),
-         self.get_references(READ), self.get_references(WRITE), self.get_references(FULL))
+         """ % (
+            self.name,
+            self.parent,
+            self.get_members(READ),
+            self.get_members(WRITE),
+            self.get_members(FULL),
+            self.get_references(READ),
+            self.get_references(WRITE),
+            self.get_references(FULL),
+        )
 
 
 class IamPolicyNode(PolicyNode):
-
     def __init__(self, id: str, name: str, type: str, policy):
         super().__init__(id, name, type)
         for binding in policy.bindings:
@@ -104,7 +102,11 @@ class DatasetPolicyNode(PolicyNode):
         for entry in access_entries:
             if entry.entity_type == "user_by_email":
                 super().add_member(entry.entity_id, entry.role, entry.role)
-            elif entry.entity_type == "specialGroup" and entry.entity_id in ["projectReaders", "projectWriters", "projectOwners"]:
+            elif entry.entity_type == "specialGroup" and entry.entity_id in [
+                "projectReaders",
+                "projectWriters",
+                "projectOwners",
+            ]:
                 # These specialGroup permissions are legacy, because the dataset always inherits
                 # permissions from its parent project.
                 continue
@@ -112,4 +114,3 @@ class DatasetPolicyNode(PolicyNode):
                 # catch all just so we don't miss stuff
                 # TODO - handle groups, domain, all, etc
                 super().add_member(entry.entity_id, entry.role, entry.role)
-

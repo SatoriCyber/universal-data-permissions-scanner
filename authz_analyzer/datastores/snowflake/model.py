@@ -5,10 +5,9 @@ from typing import Dict, Set
 
 from authz_analyzer.models import PermissionLevel
 
-
 READ_LEVEL_PERMISSIONS = {"SELECT", "REFERENCES"}
-WRITE_LEVEL_PERMISSIONS = {"SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REBUILD", "ALL"}
-FULL_LEVEL_PERMISSIONS = {"OWNERSHIP"}
+WRITE_LEVEL_PERMISSIONS = {"SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REBUILD"}
+FULL_LEVEL_PERMISSIONS = {"OWNERSHIP", "ALL"}
 
 
 def permission_level_from_str(level: str):
@@ -20,7 +19,6 @@ def permission_level_from_str(level: str):
         return PermissionLevel.Full
     else:
         return PermissionLevel.Unknown
-
 
 
 @dataclass
@@ -35,10 +33,10 @@ class ResourceGrant:
 @dataclass
 class DBRole:
     name: str
-    roles: set[DBRole]
+    roles: Set[DBRole]
 
     @classmethod
-    def new(cls, name: str, roles: set[DBRole] = set()):
+    def new(cls, name: str, roles: Set[DBRole] = set()):
         return cls(name=name, roles=roles)
 
     def add_role(self, role: DBRole):
@@ -51,10 +49,10 @@ class DBRole:
 @dataclass
 class DBUser:
     name: str
-    roles: set[DBRole]
+    roles: Set[DBRole]
 
     @classmethod
-    def new(cls, name: str, roles: set[DBRole] = set()) -> DBUser:
+    def new(cls, name: str, roles: Set[DBRole] = set()) -> DBUser:
         return cls(name=name, roles=roles)
 
     def add_role(self, role: DBRole):

@@ -11,8 +11,16 @@ Permissions are defined using roles, see the mapping of role to permissions in t
 
 from dataclasses import dataclass
 from logging import Logger
+
+from authz_analyzer.datastores.bigquery.policy_tree import (
+    FULL,
+    READ,
+    WRITE,
+    DatasetPolicyNode,
+    PolicyNode,
+    TableIamPolicyNode,
+)
 from authz_analyzer.datastores.bigquery.service import BigQueryService
-from authz_analyzer.datastores.bigquery.policy_tree import PolicyNode, DatasetPolicyNode, TableIamPolicyNode, READ, WRITE, FULL
 from authz_analyzer.models.model import AuthzEntry, AuthzPathElement
 from authz_analyzer.writers.writers import BaseWriter
 
@@ -22,7 +30,7 @@ class BigQueryAuthzAnalyzer:
     logger: Logger
     service: BigQueryService
     writer: BaseWriter
-    
+
     @classmethod
     def connect(cls, project_id: str, logger: Logger, writer: BaseWriter):
         return cls(logger, BigQueryService(project_id), writer)
@@ -45,7 +53,14 @@ class BigQueryAuthzAnalyzer:
     # Calculates permissions on the policy node and recursively search for more permissions
     # on the nodes it references or its parent node.
     def calc(self, fq_table_id, node: PolicyNode, path, permissions=[READ, WRITE, FULL]):
-        self.logger.debug("calc for %s %s %s permissions = %s path = %s}", fq_table_id, node.type, node.name, permissions, list(map(lambda x: x.type, path)))
+        self.logger.debug(
+            "calc for %s %s %s permissions = %s path = %s}",
+            fq_table_id,
+            node.type,
+            node.name,
+            permissions,
+            list(map(lambda x: x.type, path)),
+        )
         # Start by listing all immediate permissions defined on this node
         for permission in permissions:
             for member in node.get_members(permission):
@@ -58,11 +73,13 @@ class BigQueryAuthzAnalyzer:
                 if ref_node is None:
                     self.logger.error("Unable to find ref_node for member {}", member)
                     continue
-                note = "{} references {} {} with permission {}".format(node.type, ref_node.type.lower(), ref_node.name, permission)
+                note = "{} references {} {} with permission {}".format(
+                    node.type, ref_node.type.lower(), ref_node.name, permission
+                )
                 self.add_to_path(path, node, note)
                 self.calc(fq_table_id, ref_node, path, permissions=[permission])
                 path.pop()
-        
+
         # Finally, go to the parent and get the inherited permissions
         if node.parent is None:
             return
@@ -87,5 +104,3 @@ class BigQueryAuthzAnalyzer:
         authz.set_path(path)
         self.writer.write_entry(authz)
         path.pop()
-
-

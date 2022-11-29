@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Dict, List, Tuple, Union
 
 from authz_analyzer.datastores.base.connect_params import BaseConnectParams
 
@@ -21,7 +21,7 @@ class BaseConnector(ABC):
         """
 
     @abstractmethod
-    def execute(self, command: str, **kwargs: Any) -> list[tuple[Any]] | list[dict[Any, Any]]:
+    def execute(self, command: str, **kwargs: Any) -> Union[List[Tuple[Any]], List[Dict[Any, Any]]]:
         """Execute a single command against the datastore
 
         Args:

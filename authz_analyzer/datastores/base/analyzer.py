@@ -9,7 +9,7 @@ class BaseAuthzAnalyzer(ABC):
     @staticmethod
     @abstractmethod
     def run(params: BaseConnectParams, writer: BaseWriter, logger: Logger):
-        """Query the datastore for the authorization information, expand it, and 
+        """Query the datastore for the authorization information, expand it, and
         write to the writer
 
         Args:
