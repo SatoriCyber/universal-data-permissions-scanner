@@ -35,13 +35,6 @@ The project is using [black](https://github.com/psf/black) make sure the code is
 ### Adding dependencies
 Follow this [guide](https://python-poetry.org/docs/basic-usage/#specifying-dependencies) to add dependency
 
-### Project design
-[Entrypoint](authz_analyzer/cli.py) for users
-
-[Collectors](authz_analyzer/collectors/README.MD) - Used to collect raw data from different datastores
-
-[utils](authz_analyzer/utils/README.MD) - holds everything which isn't the tool logic, db connectors, etc'
-
 
 
 
