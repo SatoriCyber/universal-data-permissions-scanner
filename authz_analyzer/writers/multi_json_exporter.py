@@ -9,7 +9,7 @@ import json
 from typing import Dict, List, TextIO
 
 from authz_analyzer.models.model import AuthzEntry
-from authz_analyzer.writers import BaseWriter
+from authz_analyzer.writers.base_writers import BaseWriter
 
 
 class MultiJsonWriter(BaseWriter):
