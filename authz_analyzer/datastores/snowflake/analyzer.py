@@ -99,7 +99,7 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
             role_name = row[1]
 
             roles = results.setdefault(user_name, set())
-            role = DBRole.new(name=role_name)
+            role = DBRole.new(name=role_name, roles=set())
             roles.add(role)
         return results
 
@@ -112,7 +112,7 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
             granted_role_name = row[1]
 
             role = roles_grants_map.setdefault(role_name, set())
-            granted_role = DBRole.new(name=granted_role_name)
+            granted_role = DBRole.new(name=granted_role_name, roles=set())
             role.add(granted_role)
         return roles_grants_map
 
