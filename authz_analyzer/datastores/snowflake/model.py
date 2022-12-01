@@ -39,7 +39,7 @@ class DBRole:
     roles: Set[DBRole]
 
     @classmethod
-    def new(cls, name: str, roles: Set[DBRole] = set()):
+    def new(cls, name: str, roles: Set[DBRole]):
         return cls(name=name, roles=roles)
 
     def add_role(self, role: DBRole):
