@@ -5,26 +5,24 @@ from unittest.mock import MagicMock
 
 
 @dataclass
-class MockConnector:
+class MockCursor:
     user_grants: List[Tuple[str, str]]
     role_grants: List[Tuple[str, str]]
     role_resources: List[Tuple[str, str, str]]
 
     def get(self):
         snowflake_mock = MagicMock(name="SnowflakeConnectionMock")
-        execute_mock = MagicMock(
-            name="SnowflakeExecuteMock", side_effect=[self.user_grants, self.role_grants, self.role_resources]
+        fetchall = MagicMock(
+            name="SnowflakFetchAllMock", side_effect=[self.user_grants, self.role_grants, self.role_resources]
         )
 
-        snowflake_mock.execute = execute_mock
-
-        execute_mock.side_effect = [self.user_grants, self.role_grants, self.role_resources]
+        snowflake_mock.fetchall = fetchall
 
         return snowflake_mock
 
     def __enter__(self):
-        self.connector = self.get()
-        return self.connector
+        self.cursor = self.get()
+        return self.cursor
 
     def __exit__(
         self,
@@ -32,4 +30,4 @@ class MockConnector:
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ):
-        self.connector.execute.assert_called()  # type: ignore
+        self.cursor.fetchall.assert_called()  # type: ignore

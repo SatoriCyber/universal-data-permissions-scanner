@@ -6,8 +6,11 @@ from typing import Dict, Set
 from authz_analyzer.models import PermissionLevel
 
 READ_LEVEL_PERMISSIONS = {"SELECT", "REFERENCES"}
-WRITE_LEVEL_PERMISSIONS = {"SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REBUILD"}
+WRITE_LEVEL_PERMISSIONS = {"INSERT", "UPDATE", "DELETE", "TRUNCATE", "REBUILD"}
 FULL_LEVEL_PERMISSIONS = {"OWNERSHIP", "ALL"}
+
+RoleName = str
+Username = str
 
 
 def permission_level_from_str(level: str):
@@ -64,6 +67,6 @@ class DBUser:
 
 @dataclass
 class AuthorizationModel:
-    users_to_roles: Dict[str, DBUser]
-    role_to_roles: Dict[str, Set[DBRole]]
-    roles_to_grants: Dict[str, Set[ResourceGrant]]
+    users_to_roles: Dict[Username, DBUser]
+    role_to_roles: Dict[RoleName, Set[DBRole]]
+    roles_to_grants: Dict[RoleName, Set[ResourceGrant]]

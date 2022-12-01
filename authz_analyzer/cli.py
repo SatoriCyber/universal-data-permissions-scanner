@@ -4,7 +4,8 @@ from typing import Optional
 
 import click
 
-from authz_analyzer.main import get_logger, run_bigquery, run_snowflake
+from authz_analyzer.main import run_bigquery, run_snowflake
+from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import OutputFormat
 
 
