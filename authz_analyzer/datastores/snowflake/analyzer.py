@@ -33,7 +33,6 @@ from authz_analyzer.datastores.snowflake import exporter
 from authz_analyzer.datastores.snowflake.model import (
     AuthorizationModel,
     DBRole,
-    DBUser,
     ResourceGrant,
     permission_level_from_str,
 )
@@ -93,15 +92,15 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
         command = (COMMANDS_DIR / "user_grants.sql").read_text(encoding="utf-8")
         rows: List[Tuple[str, str]] = self._get_rows(command=command)
 
-        results: Dict[str, DBUser] = {}
+        results: Dict[str, Set[DBRole]] = {}
 
         for row in rows:
             user_name: str = row[0]
             role_name = row[1]
 
-            user = results.setdefault(user_name, DBUser.new(name=user_name))
+            roles = results.setdefault(user_name, set())
             role = DBRole.new(name=role_name)
-            user.add_role(role)
+            roles.add(role)
         return results
 
     def _get_role_to_role_mapping(self):
