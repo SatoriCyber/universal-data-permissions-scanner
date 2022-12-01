@@ -41,10 +41,10 @@ def _iter_role_row(
 
 
 def export(model: AuthorizationModel, writer: BaseWriter):
-    for user in model.users_to_roles.values():
-        for role in user.roles:
+    for username, roles in model.users_to_roles.items():
+        for role in roles:
             for entry in _iter_role_row(
-                user.name,
+                username,
                 role=role,
                 prev_roles=[],
                 roles_to_grants=model.roles_to_grants,

@@ -50,23 +50,7 @@ class DBRole:
 
 
 @dataclass
-class DBUser:
-    name: str
-    roles: Set[DBRole]
-
-    @classmethod
-    def new(cls, name: str, roles: Set[DBRole] = set()) -> DBUser:
-        return cls(name=name, roles=roles)
-
-    def add_role(self, role: DBRole):
-        self.roles.add(role)
-
-    def __hash__(self) -> int:
-        return hash(self.name)
-
-
-@dataclass
 class AuthorizationModel:
-    users_to_roles: Dict[Username, DBUser]
+    users_to_roles: Dict[Username, Set[DBRole]]
     role_to_roles: Dict[RoleName, Set[DBRole]]
     roles_to_grants: Dict[RoleName, Set[ResourceGrant]]

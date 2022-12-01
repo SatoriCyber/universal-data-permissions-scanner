@@ -21,7 +21,12 @@ def main(ctx: click.Context, debug: bool, out: str, format: str):
     ctx.ensure_object(dict)
     ctx.obj['DEBUG'] = debug
     ctx.obj['OUT'] = out
-    ctx.obj['FORMAT'] = OutputFormat[format.upper() if format else "CSV"]
+    if ctx.obj["format"] == "CSV":
+        ctx.obj["FORMAT"] = OutputFormat.Csv
+    if ctx.obj["format"] == "JSON":
+        ctx.obj["FORMAT"] = OutputFormat.MultiJson
+    else:
+        raise BaseException("Unknown format")
     # Initializing logger early so we can use it here as needed
     logger = get_logger(debug)
     ctx.obj['LOGGER'] = logger
@@ -36,7 +41,8 @@ def main(ctx: click.Context, debug: bool, out: str, format: str):
 @click.option('--warehouse', required=False, type=str, help="Warehouse")
 def snowflake(ctx: click.Context, user: str, password: str, account: str, host: str, warehouse: str):
     """Analyze Snowflake Authorization"""
-    run_snowflake(ctx.obj['LOGGER'], user, password, account, host, warehouse, ctx.obj['FORMAT'], ctx.obj['OUT'])
+
+    run_snowflake(ctx.obj['LOGGER'], user, password, account, host, warehouse, ctx.obj["FORMAT"], ctx.obj['OUT'])
 
 
 @main.command()
