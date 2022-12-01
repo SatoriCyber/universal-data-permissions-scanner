@@ -52,8 +52,6 @@ toml = {version = "^0.10.2", optional = true}
 bump2version = {version = "^1.0.1", optional = true}
 jinja2={ version="^2.11.3", optional = true}
 markupsafe= {version="=2.0.1", optional = true}
-psycopg2 = "^2.9.5"
-psycopg2-binary = "^2.9.5"
 
 
 
