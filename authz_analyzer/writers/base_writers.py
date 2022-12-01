@@ -4,6 +4,8 @@ from typing import TextIO
 
 from authz_analyzer.models.model import AuthzEntry
 
+DEFAULT_OUTPUT_FILE = "authz-analyzer-export"
+
 
 class OutputFormat(Enum):
     Csv = auto()

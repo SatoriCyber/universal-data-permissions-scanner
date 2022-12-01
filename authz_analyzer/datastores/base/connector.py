@@ -21,7 +21,7 @@ class BaseConnector(ABC):
         """
 
     @abstractmethod
-    def execute(self, command: str, **kwargs: Any) -> Union[List[Tuple[Any]], List[Dict[Any, Any]]]:
+    def execute(self, command: str, **kwargs: Any) -> Union[List[Tuple[Any, ...]], List[Dict[Any, Any]]]:
         """Execute a single command against the datastore
 
         Args:
