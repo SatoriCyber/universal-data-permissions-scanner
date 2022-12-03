@@ -89,8 +89,7 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
         self.writer.close()
 
     def _get_users_to_role_mapping(self):
-        command = (COMMANDS_DIR / "user_grants.sql").read_text(encoding="utf-8")
-        rows: List[Tuple[str, str]] = self._get_rows(command=command)
+        rows: List[Tuple[str, str]] = self._get_rows(file_name_command=Path("user_grants.sql"))
 
         results: Dict[str, Set[DBRole]] = {}
 
@@ -103,48 +102,49 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
             roles.add(role)
         return results
 
-    def _get_role_to_role_mapping(self):
-        command = (COMMANDS_DIR / "roles_grants.sql").read_text(encoding="utf-8")
-        rows: List[Tuple[str, str]] = self._get_rows(command=command)
-        roles_grants_map: Dict[str, Set[DBRole]] = {}
+    @staticmethod
+    def _add_role_to_roles(role_name: str, granted_role_name: str, role_to_roles: Dict[str, Set[DBRole]]):
+        role = role_to_roles.setdefault(role_name, set())
+        granted_role = DBRole.new(name=granted_role_name, roles=set())
+        role.add(granted_role)
+
+    @staticmethod
+    def _add_role_to_resources(
+        role_name: str, table_name: str, raw_level: str, role_to_resources: Dict[str, Set[ResourceGrant]]
+    ):
+        level = permission_level_from_str(raw_level)
+        role_grants = role_to_resources.setdefault(role_name, set())
+        role_grants.add(ResourceGrant(table_name, level))
+
+    def _get_role_to_roles_and_role_to_resources(self):
+        rows: List[Tuple[str, str, str, Optional[str]]] = self._get_rows(file_name_command=Path("grants_roles.sql"))
+        role_to_roles: Dict[str, Set[DBRole]] = {}
+        role_to_resources: Dict[str, Set[ResourceGrant]] = {}
+
         for row in rows:
-            role_name = row[0]
-            granted_role_name = row[1]
+            name: str = row[0]
+            role: str = row[1]
+            privilege: str = row[2]
+            table_name: str = row[3]
 
-            role = roles_grants_map.setdefault(role_name, set())
-            granted_role = DBRole.new(name=granted_role_name, roles=set())
-            role.add(granted_role)
-        return roles_grants_map
-
-    def _get_grants_to_role(self) -> Dict[str, Set[ResourceGrant]]:
-        command = (COMMANDS_DIR / "roles_tables_resources.sql").read_text(encoding="utf-8")
-        rows: List[Tuple[str, str, str]] = self._get_rows(command=command)  # type: ignore
-        results: Dict[str, Set[ResourceGrant]] = {}
-
-        for row in rows:
-            role_name = row[0]
-            table_name = row[2]
-
-            level = permission_level_from_str(row[1])
-
-            role_grants = results.setdefault(role_name, set())
-            role_grants.add(ResourceGrant(table_name, level))
-        return results
+            if privilege == "USAGE":
+                SnowflakeAuthzAnalyzer._add_role_to_roles(name, role, role_to_roles)
+            elif table_name is not None:
+                SnowflakeAuthzAnalyzer._add_role_to_resources(
+                    role_name=role, raw_level=privilege, table_name=table_name, role_to_resources=role_to_resources
+                )
+        return role_to_roles, role_to_resources
 
     def _get_authorization_model(self):
         self.logger.info("Fetching users to roles grants")
         users_to_roles = self._get_users_to_role_mapping()
-
-        self.logger.info("Fetching roles to roles grants")
-        role_to_roles = self._get_role_to_role_mapping()
-
-        self.logger.info("Fetching roles to tables grants")
-        roles_to_grants = self._get_grants_to_role()
+        role_to_roles, roles_to_grants = self._get_role_to_roles_and_role_to_resources()
 
         return AuthorizationModel(
             users_to_roles=users_to_roles, role_to_roles=role_to_roles, roles_to_grants=roles_to_grants
         )
 
-    def _get_rows(self, command: str) -> List[Tuple[Any, ...]]:
+    def _get_rows(self, file_name_command: Path) -> List[Tuple[Any, ...]]:
+        command = (COMMANDS_DIR / file_name_command).read_text(encoding="utf-8")
         self.cursor.execute(command)
         return self.cursor.fetchall()  # type: ignore

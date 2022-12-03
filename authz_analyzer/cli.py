@@ -16,7 +16,7 @@ from authz_analyzer.writers import OutputFormat
 @click.option(
     "--format", required=False, type=click.Choice(["JSON", "CSV"], case_sensitive=False), help="Output format"
 )
-def main(ctx: click.Context, debug: bool, out: str, format: str):
+def main(ctx: click.Context, debug: bool, out: str, _output_format: str):
     """Database Authorization Analyzer"""
     ctx.ensure_object(dict)
     ctx.obj['DEBUG'] = debug

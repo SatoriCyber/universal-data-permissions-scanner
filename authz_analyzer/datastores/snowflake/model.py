@@ -42,9 +42,6 @@ class DBRole:
     def new(cls, name: str, roles: Set[DBRole]):
         return cls(name=name, roles=roles)
 
-    def add_role(self, role: DBRole):
-        self.roles.add(role)
-
     def __hash__(self) -> int:
         return hash(self.name)
 

@@ -13,7 +13,7 @@ def run_snowflake(
     account: str,
     host: str,
     warehouse: str,
-    format: OutputFormat,
+    output_format: OutputFormat,
     filename: str,
 ):
     snowflake_analyzer = SnowflakeAuthzAnalyzer.connect(
@@ -23,15 +23,15 @@ def run_snowflake(
         warehouse=warehouse,
         account=account,
         output_path=filename,
-        output_format=format,
+        output_format=output_format,
         logger=logger,
     )
     snowflake_analyzer.run()
 
 
 # BigQuery runner
-def run_bigquery(logger: Logger, project_id: str, format: OutputFormat, filename: str):
-    writer = get_writer(filename, format)
+def run_bigquery(logger: Logger, project_id: str, output_format: OutputFormat, filename: str):
+    writer = get_writer(filename, output_format)
     writer.write_header()
     analyzer = BigQueryAuthzAnalyzer.connect(logger=logger, writer=writer, project_id=project_id)
     analyzer.run()
