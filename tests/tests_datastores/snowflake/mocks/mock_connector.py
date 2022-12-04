@@ -7,14 +7,11 @@ from unittest.mock import MagicMock
 @dataclass
 class MockCursor:
     user_grants: List[Tuple[str, str]]
-    role_grants: List[Tuple[str, str]]
-    role_resources: List[Tuple[str, str, str]]
+    role_grants: List[Tuple[str, str, str, str]]
 
     def get(self):
         snowflake_mock = MagicMock(name="SnowflakeConnectionMock")
-        fetchall = MagicMock(
-            name="SnowflakFetchAllMock", side_effect=[self.user_grants, self.role_grants, self.role_resources]
-        )
+        fetchall = MagicMock(name="SnowflakFetchAllMock", side_effect=[self.user_grants, self.role_grants])
 
         snowflake_mock.fetchall = fetchall
 
