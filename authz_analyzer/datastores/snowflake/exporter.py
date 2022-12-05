@@ -38,6 +38,7 @@ def _iter_role_row(
             roles_to_grants=roles_to_grants,
             role_to_roles=role_to_roles,
         )
+    prev_roles.remove(role)
 
 
 def export(model: AuthorizationModel, writer: BaseWriter):
