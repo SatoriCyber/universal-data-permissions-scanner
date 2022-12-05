@@ -2,7 +2,8 @@ SELECT
     NAME as name,
     GRANTEE_NAME as grantee_name,
     PRIVILEGE as privilege,
-    concat(TABLE_CATALOG, '.', table_schema, '.', name) as table_name
+    concat(TABLE_CATALOG, '.', table_schema, '.', name) as table_name,
+    GRANTED_ON as granted_on
 FROM
     snowflake.account_usage.grants_to_roles
 where

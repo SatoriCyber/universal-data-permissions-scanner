@@ -117,7 +117,9 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
         role_grants.add(ResourceGrant(table_name, level))
 
     def _get_role_to_roles_and_role_to_resources(self):
-        rows: List[Tuple[str, str, str, Optional[str]]] = self._get_rows(file_name_command=Path("grants_roles.sql"))
+        rows: List[Tuple[str, str, str, Optional[str], str]] = self._get_rows(
+            file_name_command=Path("grants_roles.sql")
+        )
         role_to_roles: Dict[str, Set[DBRole]] = {}
         role_to_resources: Dict[str, Set[ResourceGrant]] = {}
 
@@ -126,10 +128,11 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
             role: str = row[1]
             privilege: str = row[2]
             table_name: str = row[3]
+            granted_on: str = row[4]
 
-            if privilege == "USAGE":
-                SnowflakeAuthzAnalyzer._add_role_to_roles(name, role, role_to_roles)
-            elif table_name is not None:
+            if privilege == "USAGE" and granted_on == "ROLE":
+                SnowflakeAuthzAnalyzer._add_role_to_roles(role, name, role_to_roles)
+            elif table_name is not None and granted_on in ("TABLE", "VIEW", "MATERIALIZED VIEW"):
                 SnowflakeAuthzAnalyzer._add_role_to_resources(
                     role_name=role, raw_level=privilege, table_name=table_name, role_to_resources=role_to_resources
                 )
