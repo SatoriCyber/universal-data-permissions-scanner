@@ -1,13 +1,10 @@
-from typing import List, Tuple
 from unittest.mock import MagicMock
 from authz_analyzer import SnowflakeAuthzAnalyzer
-from authz_analyzer.models.model import AuthzEntry, AuthzPathElement, PermissionLevel
-from authz_analyzer.writers.base_writers import OutputFormat
+from authz_analyzer.datastores.snowflake.exporter import USER_TYPE, ASSET_TYPE
+from authz_analyzer.models.model import AuthzEntry, AuthzPathElement, PermissionLevel, Identity, Asset
 from tests.tests_datastores.snowflake.mocks.mock_connector import MockCursor
 from tests.tests_datastores.snowflake.mocks import grants
 from tests.mocks.mock_writers import MockWriter
-import csv
-from authz_analyzer.writers.multi_json_exporter import MultiJsonWriter
 
 
 def test_user_role_no_role_grants():
@@ -25,10 +22,10 @@ def test_user_role_with_grant():
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
-            identity="user_1",
+            identity=Identity(name="user_1", id="user_1", type=USER_TYPE),
             path=[AuthzPathElement(id="role_1", name="role_1", type="role", note="")],
             permission=PermissionLevel.Read,
-            asset="db1.schema1.table1",
+            asset=Asset(name="db1.schema1.table1", type=ASSET_TYPE),
         )
     )
 
@@ -48,13 +45,13 @@ def test_user_role_to_role_with_grant():
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
-            identity="user_1",
+            identity=Identity(name="user_1", id="user_1", type=USER_TYPE),
             path=[
                 AuthzPathElement(id="role_1", name="role_1", type="role", note=""),
                 AuthzPathElement(id="role_2", name="role_2", type="role", note=""),
             ],
             permission=PermissionLevel.Read,
-            asset="db1.schema1.table1",
+            asset=Asset(name="db1.schema1.table1", type=ASSET_TYPE),
         )
     )
 
