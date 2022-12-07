@@ -31,12 +31,24 @@ class AuthzPathElement:
     def __repr__(self):
         return f"{self.type} {self.id} {self.name} {self.note}"
 
+@dataclass
+class Asset:
+    name: str
+    type: str
+
+
+@dataclass
+class Identity:
+    id: str
+    type: str
+    name: str
+
 
 @dataclass
 class AuthzEntry:
-    asset: str
+    asset: Asset
     path: List[AuthzPathElement]
-    identity: str
+    identity: Identity
     permission: PermissionLevel
 
     def __repr__(self):

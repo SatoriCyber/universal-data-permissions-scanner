@@ -2,15 +2,19 @@ from typing import Dict, Generator, List, Set
 
 from authz_analyzer.datastores.snowflake.model import AuthorizationModel, DBRole, ResourceGrant
 from authz_analyzer.models import PermissionLevel
-from authz_analyzer.models.model import AuthzEntry, AuthzPathElement
+from authz_analyzer.models.model import AuthzEntry, AuthzPathElement, Identity, Asset
 from authz_analyzer.writers import BaseWriter
 
+USER_TYPE = "USER"
+ASSET_TYPE = "TABLE/VIEW"
 
 def _yield_row(username: str, permission_level: PermissionLevel, grant_name: str, roles: List[DBRole]):
     auth_path_element = [AuthzPathElement(id=role.name, name=role.name, type="role", note="") for role in roles]
+    identity = Identity(id=username, name=username, type=USER_TYPE)
+    asset = Asset(name=grant_name, type=ASSET_TYPE)
     yield AuthzEntry(
-        identity=username,
-        asset=grant_name,
+        identity=identity,
+        asset=asset,
         path=auth_path_element,
         permission=permission_level,
     )
