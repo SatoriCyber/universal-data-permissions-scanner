@@ -23,22 +23,22 @@ The analyzer query to tables: snowflake.account_usage.grants_to_users, snowflake
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
+import networkx as nx
 import snowflake.connector
 from snowflake.connector.cursor import SnowflakeCursor
 
 from authz_analyzer.datastores.base import BaseAuthzAnalyzer
-from authz_analyzer.datastores.snowflake import exporter
 from authz_analyzer.datastores.snowflake.model import (
-    AuthorizationModel,
-    DBRole,
-    ResourceGrant,
     permission_level_from_str,
 )
+from authz_analyzer.exporters import graph_exporter
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
+
+from authz_analyzer.models.graph_model import Node, init_graph, ResourceNode
 
 COMMANDS_DIR = Path(__file__).parent / "commands"
 
@@ -81,71 +81,47 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
     def run(
         self,
     ):
+        (authorization_graph, start_node, end_node) = init_graph()
         self.logger.info("Starting to  query")
-        authorization_model = self._get_authorization_model()
+        self._build_authorization_graph(authorization_graph, start_node, end_node)
         self.logger.info("Starting to Analyze")
-        exporter.export(model=authorization_model, writer=self.writer)
+        graph_exporter.export(graph=authorization_graph, start_node=start_node, end_node=end_node, writer=self.writer)
         self.logger.info("Finished analyzing")
         self.writer.close()
 
-    def _get_users_to_role_mapping(self):
+    def _add_users_to_graph(self, graph: nx.DiGraph, start_node: Node):
         rows: List[Tuple[str, str]] = self._get_rows(file_name_command=Path("user_grants.sql"))
-
-        results: Dict[str, Set[DBRole]] = {}
-
         for row in rows:
-            user_name: str = row[0]
-            role_name = row[1]
+            user_node = Node.create_granted_to(name=row[0])
+            role_node = Node.create_granter(name=row[1])
 
-            roles = results.setdefault(user_name, set())
-            role = DBRole.new(name=role_name, roles=set())
-            roles.add(role)
-        return results
+            graph.add_edge(start_node, user_node)
+            graph.add_edge(user_node, role_node)
 
-    @staticmethod
-    def _add_role_to_roles(role_name: str, granted_role_name: str, role_to_roles: Dict[str, Set[DBRole]]):
-        role = role_to_roles.setdefault(role_name, set())
-        granted_role = DBRole.new(name=granted_role_name, roles=set())
-        role.add(granted_role)
-
-    @staticmethod
-    def _add_role_to_resources(
-        role_name: str, table_name: str, raw_level: str, role_to_resources: Dict[str, Set[ResourceGrant]]
-    ):
-        level = permission_level_from_str(raw_level)
-        role_grants = role_to_resources.setdefault(role_name, set())
-        role_grants.add(ResourceGrant(table_name, level))
-
-    def _get_role_to_roles_and_role_to_resources(self):
-        rows: List[Tuple[str, str, str, Optional[str], str]] = self._get_rows(
+    def _add_roles_and_resources(self, graph: nx.DiGraph, end_node: Node):
+        rows: List[Tuple[str, str, str, str, str]] = self._get_rows(
             file_name_command=Path("grants_roles.sql")
         )
-        role_to_roles: Dict[str, Set[DBRole]] = {}
-        role_to_resources: Dict[str, Set[ResourceGrant]] = {}
-
         for row in rows:
             name: str = row[0]
             role: str = row[1]
-            privilege: str = row[2]
+            permission_level = row[2]
             table_name: str = row[3]
             granted_on: str = row[4]
 
-            if privilege == "USAGE" and granted_on == "ROLE":
-                SnowflakeAuthzAnalyzer._add_role_to_roles(role, name, role_to_roles)
+            if permission_level == "USAGE" and granted_on == "ROLE":
+                graph.add_edge(Node.create_granter(name=role), Node.create_granter(name=name))
+            
             elif table_name is not None and granted_on in ("TABLE", "VIEW", "MATERIALIZED VIEW"):
-                SnowflakeAuthzAnalyzer._add_role_to_resources(
-                    role_name=role, raw_level=privilege, table_name=table_name, role_to_resources=role_to_resources
-                )
-        return role_to_roles, role_to_resources
+                resource_node = ResourceNode(name=table_name, permission_level=permission_level_from_str(permission_level))
+                graph.add_edge(Node.create_granter(name=role), resource_node)
+                graph.add_edge(resource_node, end_node)
 
-    def _get_authorization_model(self):
+    def _build_authorization_graph(self, graph: nx.DiGraph, start_node: Node, end_node: Node):
         self.logger.info("Fetching users to roles grants")
-        users_to_roles = self._get_users_to_role_mapping()
-        role_to_roles, roles_to_grants = self._get_role_to_roles_and_role_to_resources()
+        self._add_users_to_graph(graph, start_node)
+        self._add_roles_and_resources(graph, end_node)
 
-        return AuthorizationModel(
-            users_to_roles=users_to_roles, role_to_roles=role_to_roles, roles_to_grants=roles_to_grants
-        )
 
     def _get_rows(self, file_name_command: Path) -> List[Tuple[Any, ...]]:
         command = (COMMANDS_DIR / file_name_command).read_text(encoding="utf-8")
