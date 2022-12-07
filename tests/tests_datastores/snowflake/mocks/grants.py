@@ -1,4 +1,4 @@
-USER_ONE_ROLE_ONE = [("user_1", "role_1")]
+USER_ONE_ROLE_ONE = [("user_1", "role_1", "user_1@example.com")]
 ROLE_ONE_GRANT_TABLE_ONE = [("", "role_1", "SELECT", "db1.schema1.table1", "TABLE")]
 NO_ROLES_GRANTS = [("", "", "", "", "")]
 ROLE_ONE_TABLE_ONE_THROUGH_ROLE_TWO = [
