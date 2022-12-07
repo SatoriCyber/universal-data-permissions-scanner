@@ -34,6 +34,7 @@ from authz_analyzer.datastores.snowflake.model import (
     AuthorizationModel,
     DBRole,
     ResourceGrant,
+    User,
     permission_level_from_str,
 )
 from authz_analyzer.utils.logger import get_logger
@@ -89,15 +90,20 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
         self.writer.close()
 
     def _get_users_to_role_mapping(self):
-        rows: List[Tuple[str, str]] = self._get_rows(file_name_command=Path("user_grants.sql"))
+        rows: List[Tuple[str, str, Optional[str]]] = self._get_rows(file_name_command=Path("user_grants.sql"))
 
-        results: Dict[str, Set[DBRole]] = {}
+        results: Dict[User, Set[DBRole]] = {}
 
         for row in rows:
             user_name: str = row[0]
             role_name = row[1]
+            # row[2] is usually the email. if if it none then user_id will just be the name
+            user_id = row[2]
+            if user_id is None:
+                user_id = user_name
+            user = User(name=user_name, id=user_id)
 
-            roles = results.setdefault(user_name, set())
+            roles = results.setdefault(user, set())
             role = DBRole.new(name=role_name, roles=set())
             roles.add(role)
         return results

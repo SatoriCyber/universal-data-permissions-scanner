@@ -22,7 +22,7 @@ def test_user_role_with_grant():
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
-            identity=Identity(name="user_1", id="user_1", type=USER_TYPE),
+            identity=Identity(name="user_1", id="user_1@example.com", type=USER_TYPE),
             path=[AuthzPathElement(id="role_1", name="role_1", type="role", note="")],
             permission=PermissionLevel.Read,
             asset=Asset(name="db1.schema1.table1", type=ASSET_TYPE),
@@ -45,7 +45,7 @@ def test_user_role_to_role_with_grant():
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
-            identity=Identity(name="user_1", id="user_1", type=USER_TYPE),
+            identity=Identity(name="user_1", id="user_1@example.com", type=USER_TYPE),
             path=[
                 AuthzPathElement(id="role_1", name="role_1", type="role", note=""),
                 AuthzPathElement(id="role_2", name="role_2", type="role", note=""),

@@ -1,6 +1,6 @@
 from typing import Dict, Generator, List, Set
 
-from authz_analyzer.datastores.snowflake.model import AuthorizationModel, DBRole, ResourceGrant
+from authz_analyzer.datastores.snowflake.model import AuthorizationModel, DBRole, ResourceGrant, User
 from authz_analyzer.models import PermissionLevel
 from authz_analyzer.models.model import AuthzEntry, AuthzPathElement, Identity, Asset
 from authz_analyzer.writers import BaseWriter
@@ -8,9 +8,9 @@ from authz_analyzer.writers import BaseWriter
 USER_TYPE = "USER"
 ASSET_TYPE = "TABLE/VIEW"
 
-def _yield_row(username: str, permission_level: PermissionLevel, grant_name: str, roles: List[DBRole]):
+def _yield_row(user: User, permission_level: PermissionLevel, grant_name: str, roles: List[DBRole]):
     auth_path_element = [AuthzPathElement(id=role.name, name=role.name, type="role", note="") for role in roles]
-    identity = Identity(id=username, name=username, type=USER_TYPE)
+    identity = Identity(id=user.id, name=user.name, type=USER_TYPE)
     asset = Asset(name=grant_name, type=ASSET_TYPE)
     yield AuthzEntry(
         identity=identity,
@@ -21,7 +21,7 @@ def _yield_row(username: str, permission_level: PermissionLevel, grant_name: str
 
 
 def _iter_role_row(
-    user_name: str,
+    user_name: User,
     role: DBRole,
     prev_roles: List[DBRole],
     roles_to_grants: Dict[str, Set[ResourceGrant]],
@@ -31,7 +31,7 @@ def _iter_role_row(
     prev_roles.append(role)
     for grant in grants:
         yield from _yield_row(
-            username=user_name, permission_level=grant.permission_level, grant_name=grant.name, roles=prev_roles
+            user=user_name, permission_level=grant.permission_level, grant_name=grant.name, roles=prev_roles
         )
 
     for granted_role in role_to_roles.get(role.name, set()):

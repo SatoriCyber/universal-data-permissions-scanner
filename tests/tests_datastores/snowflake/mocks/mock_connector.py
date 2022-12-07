@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 @dataclass
 class MockCursor:
-    user_grants: List[Tuple[str, str]]
+    user_grants: List[Tuple[str, str, str]]
     role_grants: List[Tuple[str, str, str, str, str]]
 
     def get(self):
