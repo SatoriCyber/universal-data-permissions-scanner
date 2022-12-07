@@ -17,11 +17,13 @@ class MultiJsonWriter(BaseWriter):
         path: List[Dict[str, str]] = list(
             map(lambda x: {"type": x.type, "id": x.id, "name": x.name, "note": x.note}, entry.path)
         )
+        identity = {"id": entry.identity.id, "type": entry.identity.type, "name": entry.identity.name}
+        asset = {"name": entry.asset.name, "type": entry.asset.type}
 
         line = {
-            "identity": entry.identity,
+            "identity": identity,
             "permission": str(entry.permission),
-            "asset": entry.asset,
+            "asset": asset,
             "granted_by": path,
         }
         json_line = json.dumps(line, indent=None)
