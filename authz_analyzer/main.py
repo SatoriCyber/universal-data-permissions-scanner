@@ -3,6 +3,7 @@ from logging import Logger
 
 from authz_analyzer.datastores.bigquery.analyzer import BigQueryAuthzAnalyzer
 from authz_analyzer.datastores.snowflake.analyzer import SnowflakeAuthzAnalyzer
+from authz_analyzer.datastores.s3.analyzer import S3AuthzAnalyzer
 from authz_analyzer.writers import OutputFormat, get_writer
 
 
@@ -27,6 +28,31 @@ def run_snowflake(
         logger=logger,
     )
     snowflake_analyzer.run()
+
+
+# S3 runner
+def run_s3(
+    logger: Logger,
+    output_format: OutputFormat,
+    filename: str,
+    master_account_id: str,
+    master_account_role_name: str,
+    account_id: str,
+    account_role_name: str,
+):
+    writer = get_writer(filename, output_format)
+    writer.write_header()
+    analyzer = S3AuthzAnalyzer.connect(
+        master_account_id=master_account_id,
+        master_account_role_name=master_account_role_name,
+        account_id=account_id,
+        account_role_name=account_role_name,
+        output_path=filename,
+        output_format=output_format,
+        logger=logger,
+    )
+    analyzer.run()
+    writer.close()
 
 
 # BigQuery runner
