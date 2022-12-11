@@ -13,7 +13,7 @@ class Effect(str, Enum):
 class Statement(BaseModel):
     effect: Effect = Field(..., alias='Effect')
     sid: str = Field(..., alias='Sid')
-    principal: Optional[Union[str, Dict[str, str]]] = Field(default=Optional, alias='Principal')
+    principal: Optional[Union[str, Dict[str, str]]] = Field(default=None, alias='Principal')
     action: Union[str, List[str]] = Field(..., alias='Action')
     resource: Union[str, List[str]] = Field(..., alias='Resource')
     # condition: TODO
