@@ -6,21 +6,10 @@ from typing import Dict, Set
 from authz_analyzer.models import PermissionLevel
 
 READ_LEVEL_PERMISSIONS = {"SELECT", "REFERENCES"}
-WRITE_LEVEL_PERMISSIONS = {"INSERT", "UPDATE", "DELETE", "TRUNCATE", "REBUILD"}
-FULL_LEVEL_PERMISSIONS = {"OWNERSHIP", "ALL"}
-
-
-@dataclass
-class User:
-    name: str
-    id: str
-
-    def __hash__(self) -> int:
-        return hash(self.id)
-
+WRITE_LEVEL_PERMISSIONS = {"INSERT", "UPDATE", "DELETE", "TRUNCATE", "TRIGGER"}
+FULL_LEVEL_PERMISSIONS = {"SUPER_USER"}
 
 RoleName = str
-Username = User
 
 
 def permission_level_from_str(level: str):
@@ -47,10 +36,14 @@ class ResourceGrant:
 class DBRole:
     name: str
     roles: Set[DBRole]
+    can_login: bool
 
     @classmethod
-    def new(cls, name: str, roles: Set[DBRole]):
-        return cls(name=name, roles=roles)
+    def new(cls, name: str, roles: Set[DBRole], can_login: bool):
+        return cls(name=name, roles=roles, can_login=can_login)
+
+    def add_role(self, role: DBRole):
+        self.roles.add(role)
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -58,6 +51,5 @@ class DBRole:
 
 @dataclass
 class AuthorizationModel:
-    users_to_roles: Dict[Username, Set[DBRole]]
-    role_to_roles: Dict[RoleName, Set[DBRole]]
-    roles_to_grants: Dict[RoleName, Set[ResourceGrant]]
+    role_to_roles: Dict[DBRole, Set[DBRole]]
+    role_to_grants: Dict[RoleName, Set[ResourceGrant]]

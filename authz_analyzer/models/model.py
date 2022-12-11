@@ -31,6 +31,7 @@ class AuthzPathElement:
     def __repr__(self):
         return f"{self.type} {self.id} {self.name} {self.note}"
 
+
 @dataclass
 class Asset:
     name: str

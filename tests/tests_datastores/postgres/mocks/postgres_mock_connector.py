@@ -5,17 +5,18 @@ from unittest.mock import MagicMock
 
 
 @dataclass
-class MockCursor:
-    user_grants: List[Tuple[str, str, str]]
-    role_grants: List[Tuple[str, str, str, str, str]]
+class PostgresMockCursor:
+    roles: List[Tuple[str, bool, Optional[str], bool]]
+    role_grants: List[Tuple[str, str, str, str]]
+    all_tables: List[Tuple[str]]
 
     def get(self):
-        snowflake_mock = MagicMock(name="SnowflakeConnectionMock")
-        fetchall = MagicMock(name="SnowflakFetchAllMock", side_effect=[self.user_grants, self.role_grants])
+        Postgres_mock = MagicMock(name="PostgresConnectionMock")
+        fetchall = MagicMock(name="PostgresFetchAllMock", side_effect=[self.roles, self.role_grants, self.all_tables])
 
-        snowflake_mock.fetchall = fetchall
+        Postgres_mock.fetchall = fetchall
 
-        return snowflake_mock
+        return Postgres_mock
 
     def __enter__(self):
         self.cursor = self.get()
