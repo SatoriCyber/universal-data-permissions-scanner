@@ -143,12 +143,12 @@ class PostgresAuthzAnalyzer(BaseAuthzAnalyzer):
     def _add_super_user(self, role_to_grants: Dict[RoleName, Set[ResourceGrant]]):
         self.logger.info("Fetching all tables")
         command = (COMMANDS_DIR / "all_tables.sql").read_text()
+        all_tables: Set[ResourceGrant] = set()
         for pg_cursor in self.cursors:
             rows = PostgresAuthzAnalyzer._get_rows(pg_cursor, command)
-
-            all_tables = {ResourceGrant(table_name[0], PermissionLevel.Full) for table_name in rows}
-            super_user_role = "super_user"
-            role_to_grants[super_user_role] = all_tables
+            for table_name in rows:
+                all_tables.add(ResourceGrant(table_name[0], PermissionLevel.Full))
+        role_to_grants["super_user"] = all_tables
 
     @staticmethod
     def _get_rows(postgres_cursor: cursor, command: str):

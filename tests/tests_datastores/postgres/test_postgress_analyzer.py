@@ -1,3 +1,4 @@
+from typing import List, Optional, Tuple
 from unittest.mock import MagicMock
 from authz_analyzer import PostgresAuthzAnalyzer
 from authz_analyzer.models.model import AuthzEntry, AuthzPathElement, PermissionLevel, Identity, Asset
@@ -6,21 +7,24 @@ from tests.tests_datastores.postgres.mocks.postgres_mock_connector import Postgr
 from tests.mocks.mock_writers import MockWriter
 
 ALL_TABLES = [("db1.schema1.table3",)]
-USER_ONE_ROLE_ONE = [("user_1", False, "role_1", True)]
+USER_ONE_ROLE_ONE: List[Tuple[str, bool, Optional[str], bool]] = [("user_1", False, "role_1", True)]
 USER_ONE_DIRECT_ACCESS = [("grantor", "user_1", "db1.schema1.table1", "SELECT")]
 NO_ROLES_GRANTS = [("", "", "", "")]
 ROLE_ONE_GRANT_TABLE_ONE = [("grantor", "role_1", "db1.schema1.table1", "SELECT")]
 ROLE_TWO_GRANT_TABLE_ONE = [("grantor", "role_2", "db1.schema1.table1", "SELECT")]
-USER_ONE_ROLE_ONE_ROLE_2 = [("user_1", False, "role_1", True), ("role_1", False, "role_2", False)]
+USER_ONE_ROLE_ONE_ROLE_2: List[Tuple[str, bool, Optional[str], bool]] = [
+    ("user_1", False, "role_1", True),
+    ("role_1", False, "role_2", False),
+]
 
-THREE_ROLES_GRANTS = [
+THREE_ROLES_GRANTS: List[Tuple[str, bool, Optional[str], bool]] = [
     ("user_1", False, "role_1", True),
     ("role_1", False, "role_2", False),
     ("role_2", False, "role_3", False),
 ]
 ROLE_THREE_GRANT_TABLE_ONE = [("grantor", "role_3", "db1.schema1.table1", "SELECT")]
 
-USER_ONE_SUPER = [("user_1", True, "", True)]
+USER_ONE_SUPER: List[Tuple[str, bool, Optional[str], bool]] = [("user_1", True, None, True)]
 
 
 def test_user_role_no_role_grants():
