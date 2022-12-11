@@ -11,6 +11,7 @@ FULL_LEVEL_PERMISSIONS = {"SUPER_USER"}
 
 RoleName = str
 
+
 def permission_level_from_str(level: str):
     if level in READ_LEVEL_PERMISSIONS:
         return PermissionLevel.Read

@@ -9,6 +9,7 @@ READ_LEVEL_PERMISSIONS = {"SELECT", "REFERENCES"}
 WRITE_LEVEL_PERMISSIONS = {"INSERT", "UPDATE", "DELETE", "TRUNCATE", "REBUILD"}
 FULL_LEVEL_PERMISSIONS = {"OWNERSHIP", "ALL"}
 
+
 @dataclass
 class User:
     name: str
@@ -16,6 +17,7 @@ class User:
 
     def __hash__(self) -> int:
         return hash(self.id)
+
 
 RoleName = str
 Username = User
@@ -30,7 +32,6 @@ def permission_level_from_str(level: str):
         return PermissionLevel.Full
     else:
         return PermissionLevel.Unknown
-
 
 
 @dataclass

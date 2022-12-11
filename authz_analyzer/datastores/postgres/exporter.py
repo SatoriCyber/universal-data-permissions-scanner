@@ -2,7 +2,7 @@ from typing import Dict, Generator, List, Set
 
 from authz_analyzer.datastores.postgres.model import AuthorizationModel, DBRole, ResourceGrant
 from authz_analyzer.models import PermissionLevel
-from authz_analyzer.models.model import AuthzEntry, AuthzPathElement, Identity, Asset
+from authz_analyzer.models.model import Asset, AuthzEntry, AuthzPathElement, Identity
 from authz_analyzer.writers import BaseWriter
 
 
