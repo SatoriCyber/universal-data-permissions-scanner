@@ -6,6 +6,7 @@ def paginate_response_list(method: Callable, key_to_append_list: str, **kwargs):
     Paginate through a list of items from the AWS Management Console.
 
     method: The method to call on the client to get a page of items.
+    key_to_append_list: the key in the response dictionary to append 
     kwargs: Additional keyword arguments to pass to the method.
 
     Returns a list of all the items in the list.
