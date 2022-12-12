@@ -8,15 +8,6 @@ from authz_analyzer.datastores.bigquery.policy_tree import IamPolicyNode
 
 
 @dataclass
-class AuthzBigQueryBinding:
-    role: str
-    members: List[str]
-
-@dataclass
-class AuthzBigQueryPolicy:
-    bindings: List[AuthzBigQueryBinding]
-
-@dataclass
 class BigQueryService:
     project_id: str
     bq_client: bigquery.Client
