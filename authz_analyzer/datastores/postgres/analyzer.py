@@ -87,7 +87,12 @@ class PostgresAuthzAnalyzer(BaseAuthzAnalyzer):
 
     @staticmethod
     def _get_all_databases(postgres_cursor: cursor):
-        return {database[0] for database in PostgresAuthzAnalyzer._get_rows(postgres_cursor, (COMMANDS_DIR / "all_databases.sql").read_text())}
+        return {
+            database[0]
+            for database in PostgresAuthzAnalyzer._get_rows(
+                postgres_cursor, (COMMANDS_DIR / "all_databases.sql").read_text()
+            )
+        }
 
     def _get_authorization_model(self):
         self.logger.info("Fetching users to roles grants")
