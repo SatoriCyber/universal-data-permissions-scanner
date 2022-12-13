@@ -50,6 +50,7 @@ class PostgresAuthzAnalyzer(BaseAuthzAnalyzer):
         username: str,
         password: str,
         host: str,
+        dbname: str,
         logger: Optional[Logger] = None,
         output_format: OutputFormat = OutputFormat.Csv,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
@@ -60,7 +61,7 @@ class PostgresAuthzAnalyzer(BaseAuthzAnalyzer):
 
         writer = get_writer(filename=output_path, format=output_format)
         connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
-            user=username, password=password, host=host, **connection_kwargs
+            user=username, password=password, host=host, dbname=dbname, **connection_kwargs
         )
         connector.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
@@ -68,9 +69,12 @@ class PostgresAuthzAnalyzer(BaseAuthzAnalyzer):
 
         # We generate cursor one per database in order to fetch the table grants and the information schema
         postgres_cursors: List[cursor] = []
-        for dbname in PostgresAuthzAnalyzer._get_all_databases(postgres_cursor):
+        for database in PostgresAuthzAnalyzer._get_all_databases(postgres_cursor):
+            if database == "rdsadmin":
+                logger.debug("Skipping rdsadmin database, internal use by AWS")
+                continue
             db_connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
-                user=username, password=password, host=host, dbname=dbname, **connection_kwargs
+                user=username, password=password, host=host, dbname=database, **connection_kwargs
             )
             postgres_cursors.append(db_connector.cursor())
         return cls(logger=logger, cursors=postgres_cursors, writer=writer)
