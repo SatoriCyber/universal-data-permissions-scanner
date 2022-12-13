@@ -97,7 +97,6 @@ class IamPolicyNode(PolicyNode):
 class TableIamPolicyNode(PolicyNode):
     def __init__(self, table_id: str, name: str, policy: Policy):
         super().__init__(table_id, name, "TABLE")
-        binding: Dict[str, str]
         for binding in policy.bindings: #type: ignore
             role: str = binding.role #type: ignore
             if role is not None:
