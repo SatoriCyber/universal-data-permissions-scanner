@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "authz-analyzer"
-version = "2.3.2"
+version = "2.4.0"
 homepage = "https://github.com/satoricyber/authz-analyzer"
 description = "Analyze DB authorization."
 authors = ["SatoriCyber"]
@@ -90,6 +90,7 @@ authz-analyzer = 'authz_analyzer.cli:main'
 
 [tool.poetry.group.dev.dependencies]
 types-psycopg2 = "^2.9.21.2"
+google-api-python-client-stubs = "^1.13.0"
 
 [tool.black]
 line-length = 120

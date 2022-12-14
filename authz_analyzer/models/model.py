@@ -18,6 +18,12 @@ class PermissionLevel(Enum):
     def __str__(self) -> str:
         return self.name
 
+    def __repr__(self) -> str:
+        return self.name
+
+    def __hash__(self) -> int:
+        return hash(self.value)
+
 
 # Describes an element of the authorization entry path, for example a group or a role
 # that was used to grant permission to an asset.
