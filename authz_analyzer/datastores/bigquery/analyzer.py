@@ -69,22 +69,23 @@ Permissions are defined using roles, see the mapping of role to permissions in t
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Optional, TypedDict, Union
 
-from google.cloud.bigquery.table import TableListItem  # type: ignore
 from google.api_core.page_iterator import Iterator
+from google.cloud.bigquery.table import TableListItem  # type: ignore
 
-from authz_analyzer.datastores.bigquery.policy_tree import (
-    DatasetPolicyNode,
-    PolicyNode,
-    TableIamPolicyNode,
-)
+from authz_analyzer.datastores.bigquery.policy_tree import DatasetPolicyNode, PolicyNode, TableIamPolicyNode
 from authz_analyzer.datastores.bigquery.service import BigQueryService
-from authz_analyzer.models.model import Asset, AuthzEntry, AuthzPathElement, PermissionLevel
+from authz_analyzer.models.model import Asset, AuthzEntry, AuthzPathElement, Identity, PermissionLevel
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE, OutputFormat
 from authz_analyzer.writers.get_writers import get_writer
+
+
+class Member(TypedDict):
+    role: str
+    principal: str
 
 
 @dataclass
@@ -104,7 +105,7 @@ class BigQueryAuthzAnalyzer:
         writer = get_writer(filename=output_path, format=output_format)
         if logger is None:
             logger = get_logger(False)
-        return cls(logger, BigQueryService.load(project_id), writer)
+        return cls(logger, BigQueryService.load(project_id), writer=writer)
 
     def run(self):
         """Read all tables in all datasets and calculate authz paths"""
@@ -123,8 +124,6 @@ class BigQueryAuthzAnalyzer:
                 table_node.set_parent(dataset_node)
                 self._calc(Asset(fq_table_id, type="table"), table_node, [])
 
-    # Calculates permissions on the policy node and recursively search for more permissions
-    # on the nodes it references or its parent node.
     def _calc(
         self,
         fq_table_id: Asset,
@@ -132,6 +131,11 @@ class BigQueryAuthzAnalyzer:
         path: List[AuthzPathElement],
         permissions: Optional[List[PermissionLevel]] = None,
     ):
+        """
+        Calculates permissions on the policy node and recursively search for more permissions
+        on the nodes it references or its parent node.
+        """
+
         if permissions is None:
             permissions = [PermissionLevel.Read, PermissionLevel.Write, PermissionLevel.Full]
         self.logger.debug(
@@ -145,7 +149,7 @@ class BigQueryAuthzAnalyzer:
         # Start by listing all immediate permissions defined on this node
         for permission in permissions:
             for member in node.get_members(permission):
-                self._report_permission(fq_table_id, node, member, permission, path)
+                self._report_permission(fq_table_id, node, member, permission, path)  # type: ignore
 
         # Then go to each reference and get the permissions from it
         for permission in permissions:
@@ -169,7 +173,7 @@ class BigQueryAuthzAnalyzer:
     def _goto_parent(
         self, fq_table_id: Asset, node: PolicyNode, path: List[AuthzPathElement], permissions: List[PermissionLevel]
     ):
-        note = "{} is included in {} {}".format(node.type, node.parent.type.lower(), node.parent.name)  # type: ignore
+        note = f"{node.type} is included in {node.parent.type.lower()} {node.parent.name}"  # type: ignore
         self._add_to_path(path, node, note)
         self._calc(fq_table_id, node.parent, path, permissions)  # type: ignore
         path.pop()
@@ -182,12 +186,21 @@ class BigQueryAuthzAnalyzer:
         self,
         fq_table_id: Asset,
         node: PolicyNode,
-        member: Dict[str, Any],
+        member: Member,
         permission: PermissionLevel,
         path: List[AuthzPathElement],
     ):
-        note = "{} has role {}".format(member["principal"], member["role"])
+        principal = member["principal"]
+        role = member["role"]
+        note = f"{principal} has role {role}"
         self._add_to_path(path, node, note)
-        authz = AuthzEntry(fq_table_id, path=path, identity=member["principal"], permission=permission)
+        reversed_path = list(reversed(path))
+        try:
+            (member_type, member_name) = principal.split(":")
+        except ValueError:
+            member_type = "user"
+            member_name = principal
+        identity = Identity(id=principal, type=member_type, name=member_name)
+        authz = AuthzEntry(fq_table_id, path=reversed_path, identity=identity, permission=permission)
         self.writer.write_entry(authz)
         path.pop()
