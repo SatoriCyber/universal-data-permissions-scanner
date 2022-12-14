@@ -1,17 +1,25 @@
 from boto3 import Session
 from typing import Dict, Any, Optional, Type, List, Union
 from dataclasses import dataclass
+from pydantic import BaseModel
 from authz_analyzer.utils.aws.iam.policy import Policy, PolicyDocument
 from authz_analyzer.utils.aws.iam.role.role_policy import RolePolicy
 from authz_analyzer.utils.aws.pagination import paginate_response_list
 
 
-@dataclass
-class IAMPolicy:
+class IAMPolicy(BaseModel):
     policy: Policy
     policy_document: PolicyDocument
 
-
+    def __eq__(self, other):
+        return self.policy.policy_id == other.policy.policy_id
+    
+    def __hash__(self):
+        return hash(self.policy.policy_id)
+    
+    def __repr__(self):
+        return self.policy.arn
+    
 def get_iam_policies(session: Session) -> Dict[str, IAMPolicy]:
     iam_client = session.client('iam')
     ret: Dict[str, IAMPolicy] = {}

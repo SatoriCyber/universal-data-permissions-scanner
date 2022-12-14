@@ -1,18 +1,27 @@
 from boto3 import Session
 from typing import Dict, Any, Optional, Type, List, Union
 from dataclasses import dataclass
+from pydantic import BaseModel
 from authz_analyzer.utils.aws.pagination import paginate_response_list
 from authz_analyzer.utils.aws.iam.policy import UserPolicy, Policy, PolicyDocument
 
 
-@dataclass
-class IAMUser:
+class IAMUser(BaseModel):
     user_name: str
     user_id: str
     arn: str
     path: str
     user_policies: List[UserPolicy]
     attached_policies_arn: List[str]
+    
+    def __eq__(self, other):
+        return self.user_id == other.user_id
+
+    def __repr__(self):
+        return self.arn
+         
+    def __hash__(self):
+        return hash(self.user_id)
 
 
 def get_iam_users(session: Session) -> Dict[str, IAMUser]:

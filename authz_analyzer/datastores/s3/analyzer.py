@@ -8,50 +8,29 @@ from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
-
+from pydantic import BaseModel
 from authz_analyzer.utils.aws.create_session import create_session_with_assume_role
+from authz_analyzer.utils.aws.iam.iam_entities import IAMEntities
 from authz_analyzer.utils.aws.s3.bucket import get_buckets, S3Bucket
-from authz_analyzer.utils.aws.iam.iam_users import get_iam_users, IAMUser
-from authz_analyzer.utils.aws.iam.iam_groups import get_iam_groups, IAMGroup
-from authz_analyzer.utils.aws.iam.iam_roles import get_iam_roles, IAMRole
-from authz_analyzer.utils.aws.iam.iam_policies import get_iam_policies, IAMPolicy
 from authz_analyzer.datastores.base import BaseAuthzAnalyzer
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 
 
-@dataclass
-class S3AuthzAnalyzerCtx:
+class S3AuthzAnalyzerCtx(BaseModel):
     buckets: Dict[str, S3Bucket]
-    iam_users: Dict[str, IAMUser]  # key id user id
-    iam_groups: Dict[str, IAMGroup]  # key id group id
-    iam_roles: Dict[str, IAMRole]  # key id role id
-    iam_policies: Dict[str, IAMPolicy]  # key id policy arn
+    iam_entities: IAMEntities
 
     @classmethod
-    def load(cls, logger, session: Session, session_master: Optional[Session]):
+    def load(cls, logger, aws_account_id, session: Session):
+        iam_entities = IAMEntities.load(logger, aws_account_id, session)
         # Get the buckets to analyzed
         buckets = get_buckets(session)
         logger.info(f"Got buckets to analyzed: {buckets.keys()}")
-
-        # # # Get the iam users
-        iam_users = get_iam_users(session)
-        logger.info(f"Got iam_users: {iam_users.keys()}")
-
-        # # # Get the iam groups
-        iam_groups = get_iam_groups(session)
-        logger.info(f"Got iam_groups: {iam_groups.keys()}")
-
-        # # Get the iam roles
-        iam_roles = get_iam_roles(session)
-        logger.info(f"Got iam_roles: {iam_roles.keys()}")
-
-        # Get the iam policies
-        iam_policies = get_iam_policies(session)
-        logger.info(f"Got iam_policies: {iam_policies.keys()}")
+        
         return cls(
-            buckets=buckets, iam_users=iam_users, iam_groups=iam_groups, iam_roles=iam_roles, iam_policies=iam_policies
+            buckets=buckets, iam_entities=iam_entities
         )
 
 
@@ -113,4 +92,4 @@ class S3AuthzAnalyzer(BaseAuthzAnalyzer):
             f"Starting to analyzed AWS s3 for account id: {self.account_id}, master account id {self.master_account_id}"
         )
         session, session_master = self.create_sessions_for_account_and_account_master()
-        analyzed_ctx = S3AuthzAnalyzerCtx.load(self.logger, session, session_master)
+        analyzed_ctx = S3AuthzAnalyzerCtx.load(self.logger, self.account_id, session)

@@ -23,3 +23,6 @@ class Statement(BaseModel):
 
 class PolicyDocument(BaseModel):
     statement: List[Statement] = Field(..., alias='Statement')
+    
+    def is_contains_principal(self, principal_arn: str):
+        pass

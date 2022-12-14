@@ -1,13 +1,13 @@
 from boto3 import Session
 from typing import Dict, Any, Optional, Type, List, Union
 from dataclasses import dataclass
+from pydantic import BaseModel
 from authz_analyzer.utils.aws.iam.policy import PolicyDocument
 from authz_analyzer.utils.aws.iam.role.role_policy import RolePolicy
 from authz_analyzer.utils.aws.pagination import paginate_response_list
 
 
-@dataclass
-class IAMRole:
+class IAMRole(BaseModel):
     role_id: str
     role_name: str
     arn: str
@@ -16,6 +16,15 @@ class IAMRole:
     role_policies: List[RolePolicy]
     attached_policies_arn: List[str]
 
+    def __eq__(self, other):
+        return self.role_id == other.role_id
+    
+    def __hash__(self):
+        return hash(self.role_id)
+
+    def __repr__(self):
+        return self.arn
+    
 
 def get_iam_roles(session: Session) -> Dict[str, IAMRole]:
     iam_client = session.client('iam')

@@ -1,20 +1,28 @@
 from boto3 import Session
-from typing import Dict, Any, Optional, Type, List, Union
+from typing import Dict, Any, Optional, Type, List, Union, Set
 from dataclasses import dataclass
+from pydantic import BaseModel
 from authz_analyzer.utils.aws.pagination import paginate_response_list
 from authz_analyzer.utils.aws.iam.policy import GroupPolicy, Policy, PolicyDocument
 
 
-@dataclass
-class IAMGroup:
+class IAMGroup(BaseModel):
     group_name: str
     group_id: str
     arn: str
     path: str
-    group_user_ids: List[str]
+    group_user_ids: Set[str]
     group_policies: List[GroupPolicy]
     attached_policies_arn: List[str]
 
+    def __eq__(self, other):
+        return self.group_id == other.group_id
+    
+    def __hash__(self):
+        return hash(self.group_id)
+        
+    def __repr__(self):
+        return self.arn        
 
 def get_iam_groups(session: Session) -> Dict[str, IAMGroup]:
     iam_client = session.client('iam')
@@ -28,7 +36,9 @@ def get_iam_groups(session: Session) -> Dict[str, IAMGroup]:
         path = group['Path']
 
         group_users = paginate_response_list(iam_client.get_group, 'Users', GroupName=group_name)
-        group_user_ids = [group_user['UserId'] for group_user in group_users]
+        group_user_ids = set()
+        for group_user in group_users:
+            group_user_ids.add(group_user['UserId'])
         
         group_policies_response = paginate_response_list(iam_client.list_group_policies, 'PolicyNames', GroupName=group_name)
         group_policies: List[GroupPolicy] = []
