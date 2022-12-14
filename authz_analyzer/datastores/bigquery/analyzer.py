@@ -66,13 +66,15 @@ Organization - may have permissions defined directly on it
 Permissions are defined using roles, see the mapping of role to permissions in the policy_tree module.
 """
 
+import json
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import List, Optional, TypedDict, Union
+from typing import Any, List, Optional, TypedDict, Union
 
 from google.api_core.page_iterator import Iterator
 from google.cloud.bigquery.table import TableListItem  # type: ignore
+from google.oauth2.service_account import Credentials  # type: ignore
 
 from authz_analyzer.datastores.bigquery.policy_tree import DatasetPolicyNode, PolicyNode, TableIamPolicyNode
 from authz_analyzer.datastores.bigquery.service import BigQueryService
@@ -101,11 +103,18 @@ class BigQueryAuthzAnalyzer:
         logger: Optional[Logger] = None,
         output_format: OutputFormat = OutputFormat.Csv,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
+        credentials_str: Optional[str] = None,
+        **kwargs: Any,
     ):
         writer = get_writer(filename=output_path, format=output_format)
         if logger is None:
             logger = get_logger(False)
-        return cls(logger, BigQueryService.load(project_id), writer=writer)
+        if credentials_str is not None:
+            credentials = Credentials.from_service_account_info(json.loads(credentials_str))  # type: ignore
+            big_query_service = BigQueryService.load(project_id, credentials=credentials, **kwargs)
+        else:
+            big_query_service = BigQueryService.load(project_id, **kwargs)
+        return cls(logger, big_query_service, writer=writer)
 
     def run(self):
         """Read all tables in all datasets and calculate authz paths"""
