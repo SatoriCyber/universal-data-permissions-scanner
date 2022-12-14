@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from google.cloud import bigquery, resourcemanager_v3  # type: ignore
 from google.cloud.resourcemanager_v3.types import Project
@@ -18,14 +18,14 @@ class BigQueryService:
     org_client = resourcemanager_v3.OrganizationsClient()
 
     @classmethod
-    def load(cls, project_id: str):
-        projects_client = resourcemanager_v3.ProjectsClient()
+    def load(cls, project_id: str, **kwargs: Any):
+        projects_client = resourcemanager_v3.ProjectsClient(**kwargs)
         project = BigQueryService._get_project(projects_client, project_id)
 
         return cls(
             project_id=project_id,
             project=project,
-            bq_client=bigquery.Client(project=project_id),
+            bq_client=bigquery.Client(project=project_id, **kwargs),
             projects_client=projects_client,
         )
 
