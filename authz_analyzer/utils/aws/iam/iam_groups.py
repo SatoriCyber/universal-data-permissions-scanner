@@ -1,12 +1,14 @@
 from boto3 import Session
 from typing import Dict, Any, Optional, Type, List, Union, Set
 from dataclasses import dataclass
-from pydantic import BaseModel
 from authz_analyzer.utils.aws.pagination import paginate_response_list
 from authz_analyzer.utils.aws.iam.policy import GroupPolicy, Policy, PolicyDocument
+from serde import serde, from_dict , serialize, deserialize, serde
 
 
-class IAMGroup(BaseModel):
+@serde
+@dataclass
+class IAMGroup:
     group_name: str
     group_id: str
     arn: str
@@ -43,7 +45,7 @@ def get_iam_groups(session: Session) -> Dict[str, IAMGroup]:
         group_policies_response = paginate_response_list(iam_client.list_group_policies, 'PolicyNames', GroupName=group_name)
         group_policies: List[GroupPolicy] = []
         for group_policy_response in group_policies_response:
-            group_policies.append(GroupPolicy(**iam_client.get_group_policy(GroupName=group_name, PolicyName=group_policy_response)))
+            group_policies.append(from_dict(GroupPolicy, iam_client.get_group_policy(GroupName=group_name, PolicyName=group_policy_response)))
 
         attached_policies = paginate_response_list(
             iam_client.list_attached_group_policies, 'AttachedPolicies', GroupName=group_name, PathPrefix=path

@@ -1,13 +1,15 @@
 from boto3 import Session
 from typing import Dict, Any, Optional, Type, List, Union
 from dataclasses import dataclass
-from pydantic import BaseModel
 from authz_analyzer.utils.aws.iam.policy import Policy, PolicyDocument
 from authz_analyzer.utils.aws.iam.role.role_policy import RolePolicy
 from authz_analyzer.utils.aws.pagination import paginate_response_list
+from serde import serde, from_dict , serialize, deserialize
 
 
-class IAMPolicy(BaseModel):
+@serde
+@dataclass
+class IAMPolicy:
     policy: Policy
     policy_document: PolicyDocument
 
@@ -30,11 +32,11 @@ def get_iam_policies(session: Session) -> Dict[str, IAMPolicy]:
         # "IAM resource-listing operations return a subset of the available attributes for the resource. For example, this operation does not return tags, even though they are an attribute of the returned object. To view all of the information for a customer manged policy, see GetPolicy."
         arn = list_policy_response['Arn']
         policy_response = iam_client.get_policy(PolicyArn=arn)['Policy']
-        policy = Policy(**policy_response)
+        policy = from_dict(Policy, policy_response)
         
         policy_version_response = iam_client.get_policy_version(PolicyArn=arn, VersionId=policy.default_version_id)
         policy_version_response = policy_version_response['PolicyVersion']['Document']
-        policy_document = PolicyDocument(**policy_version_response)
+        policy_document = from_dict(PolicyDocument, policy_version_response)
         
         ret[policy.arn] = IAMPolicy(
             policy=policy,
