@@ -1,12 +1,15 @@
 from dataclasses import dataclass
-from pydantic import BaseModel, Field
 from typing import List
 from enum import Enum
+from serde import serde, deserialize, serialize, field
 
 
-class Owner(BaseModel):
-    display_name: str = Field(..., alias='DisplayName')
-    id: str = Field(..., alias='ID')
+@serde(rename_all = "pascalcase")
+@dataclass
+
+class Owner:
+    display_name: str
+    id: str = field(rename='ID')
 
 
 class Permission(str, Enum):
@@ -23,17 +26,23 @@ class GrantType(str, Enum):
     GROUP = "Group"
 
 
-class Grantee(BaseModel):
-    display_name: str = Field(..., alias='DisplayName')
-    id: str = Field(..., alias='ID')
-    type: GrantType = Field(..., alias='Type')
+@serde(rename_all = "pascalcase")
+@dataclass
+class Grantee:
+    display_name: str
+    type: GrantType
+    id: str = field(rename='ID')
 
 
-class Grants(BaseModel):
-    grantee: Grantee = Field(..., alias='Grantee')
-    permission: Permission = Field(..., alias='Permission')
+@serde(rename_all = "pascalcase")
+@dataclass
+class Grants:
+    grantee: Grantee
+    permission: Permission
 
 
-class S3BucketACL(BaseModel):
-    owner: Owner = Field(..., alias='Owner')
-    grants: List[Grants] = Field(..., alias='Grants')
+@serde(rename_all = "pascalcase")
+@dataclass
+class S3BucketACL:
+    owner: Owner
+    grants: List[Grants]

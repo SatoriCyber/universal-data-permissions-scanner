@@ -1,13 +1,16 @@
 from boto3 import Session
 from typing import Dict, Any, Optional, Type, List, Union
 from dataclasses import dataclass
-from pydantic import BaseModel
 from authz_analyzer.utils.aws.iam.policy import PolicyDocument
 from authz_analyzer.utils.aws.iam.role.role_policy import RolePolicy
 from authz_analyzer.utils.aws.pagination import paginate_response_list
+from serde import serde, from_dict , serialize, deserialize
 
 
-class IAMRole(BaseModel):
+@serde
+@dataclass
+
+class IAMRole:
     role_id: str
     role_name: str
     arn: str
@@ -38,12 +41,12 @@ def get_iam_roles(session: Session) -> Dict[str, IAMRole]:
         path = role['Path']
         assume_role_policy_document_response = role['AssumeRolePolicyDocument']
         if assume_role_policy_document_response:
-            assume_role_policy_document = PolicyDocument(**assume_role_policy_document_response)
+            assume_role_policy_document = from_dict(PolicyDocument, assume_role_policy_document_response)
             
             role_policies_response = paginate_response_list(iam_client.list_role_policies, 'PolicyNames', RoleName=role_name)
             role_policies: List[RolePolicy] = []
             for role_policy_response in role_policies_response:
-                role_policies.append(RolePolicy(**iam_client.get_role_policy(RoleName=role_name, PolicyName=role_policy_response)))
+                role_policies.append(from_dict(RolePolicy, iam_client.get_role_policy(RoleName=role_name, PolicyName=role_policy_response)))
 
             attached_policies = paginate_response_list(
                 iam_client.list_attached_role_policies, 'AttachedPolicies', RoleName=role_name, PathPrefix=path
