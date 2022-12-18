@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, TypedDict
+from typing import Any, Callable, Dict, List, Optional, Set, TypedDict
 
 from google.api_core.iam import Policy
 from google.cloud.bigquery.dataset import Dataset  # type: ignore
@@ -20,9 +20,18 @@ ROLE_TO_PERMISSION = {
     "roles/bigquery.jobUser": PermissionLevel.Write,
     "roles/bigquery.user": PermissionLevel.Read,
     "roles/bigquerydatapolicy.maskedReader": PermissionLevel.Read,
-    "OWNER": PermissionLevel.Full,
+    "OWNER": PermissionLevel.Write,
     "WRITER": PermissionLevel.Write,
     "READER": PermissionLevel.Read,
+}
+
+READ_PERMISSIONS = {"bigquery.dataPolicies.maskedGet", "bigquery.tables.getData"}
+WRITE_PERMISSIONS = {
+    "bigquery.dataPolicies.maskedSet",
+    "bigquery.tables.delete",
+    "bigquery.tables.restoreSnapshot",
+    "bigquery.tables.updateData",
+    "bigquery.transfers.update",
 }
 
 
@@ -141,24 +150,60 @@ class PolicyNode:
 
 
 class IamPolicyNode(PolicyNode):
-    def __init__(self, policy_id: str, name: str, policy_type: str, policy: Policy):
+    def __init__(
+        self,
+        policy_id: str,
+        name: str,
+        policy_type: str,
+        policy: Policy,
+        resolve_permission_callback: Callable[[str], Optional[PermissionLevel]],
+    ):
+        """Represents a GCP IAM policy node, Project, Folder, Organization, etc.
+
+        Args:
+            policy_id (str): The id of the policy
+            name (str): The name of the policy
+            policy_type (str): The policy type, for example: project, folder, organization
+            policy (Policy): Policy object as defined by google.cloud.iam.policy.Policy
+            resolve_permission_callback (Callable[[str], Optional[PermissionLevel]]): Resolve permission level from role, when BigQuery is configured with custom roles.
+        """
         super().__init__(policy_id, name, policy_type)
         binding: GcpBinding
         for binding in policy.bindings:  # type: ignore
             role = binding.role
-            permission = ROLE_TO_PERMISSION.get(role, PermissionLevel.Unknown)
+            permission = ROLE_TO_PERMISSION.get(role)
+            if permission is None:
+                permission = resolve_permission_callback(role)
+            if permission is None:
+                continue  # Role doesn't have permission to big query
             member: str
             for member in binding.members:
                 super().add_member(member, permission, role)
 
 
 class TableIamPolicyNode(PolicyNode):
-    def __init__(self, table_id: str, name: str, policy: Policy):
+    def __init__(
+        self,
+        table_id: str,
+        name: str,
+        policy: Policy,
+        resolve_permission_callback: Callable[[str], Optional[PermissionLevel]],
+    ):
+        """Represents a table IAM policy.
+
+        Args:
+            table_id (str): The ID of the table
+            name (str): table name
+            policy (Policy): BigQuery table IAM policy object as presented by the GCP
+            resolve_permission_callback (Callable[[str], Optional[PermissionLevel]]): Resolve permission level from role, when BigQuery is configured with custom roles.
+        """
         super().__init__(table_id, name, "TABLE")
         binding: GcpBindingDict
         for binding in policy.bindings:  # type: ignore
             role = binding["role"]
-            permission = ROLE_TO_PERMISSION.get(role, PermissionLevel.Unknown)
+            permission = ROLE_TO_PERMISSION.get(role, resolve_permission_callback(role))
+            if permission is None:
+                continue  # Role doesn't have permission to big query
             for member in binding["members"]:
                 if member.startswith("user:"):
                     super().add_member(member, permission, role)
@@ -169,7 +214,13 @@ class TableIamPolicyNode(PolicyNode):
 
 
 class DatasetPolicyNode(PolicyNode):
-    def __init__(self, dataset: Dataset):
+    def __init__(self, dataset: Dataset, resolve_permission_callback: Callable[[str], Optional[PermissionLevel]]):
+        """Represent a BigQuery dataset policy node.
+
+        Args:
+            dataset (Dataset): A BigQuery dataset object.
+            resolve_permission_callback (Callable[[str], Optional[PermissionLevel]]): Resolve permission level from role, when BigQuery is configured with custom roles.
+        """
         dataset_id: str = dataset.dataset_id  # type: ignore
         friendly_name: Optional[str] = dataset.friendly_name  # type: ignore
         name: str = friendly_name if friendly_name is not None else dataset_id  # type: ignore
@@ -186,8 +237,18 @@ class DatasetPolicyNode(PolicyNode):
                 # permissions from its parent project.
                 continue
             if entry.entity_type == "userByEmail":  # type: ignore
-                super().add_member(entry.entity_id, ROLE_TO_PERMISSION.get(entry.role, PermissionLevel.Unknown), entry.role)  # type: ignore
+                role: str = entry.role  # type: ignore
+                permission = ROLE_TO_PERMISSION.get(role)
+                if permission is None:
+                    permission = resolve_permission_callback(role)
+                if permission is None:
+                    continue  # Role doesn't have permission to big query
+                super().add_member(entry.entity_id, permission, entry.role)  # type: ignore
             else:
                 # catch all just so we don't miss stuff
                 # TODO - handle groups, domain, all, etc
-                super().add_member(entry.entity_id, ROLE_TO_PERMISSION.get(entry.role, PermissionLevel.Unknown), entry.role)  # type: ignore
+                role: str = entry.role  # type: ignore
+                permission = ROLE_TO_PERMISSION.get(role, resolve_permission_callback(role))
+                if permission is None:
+                    continue  # Role doesn't have permission to big query
+                super().add_member(entry.entity_id, permission, entry.role)  # type: ignore
