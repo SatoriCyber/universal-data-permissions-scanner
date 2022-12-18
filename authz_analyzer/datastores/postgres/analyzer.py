@@ -156,7 +156,7 @@ class PostgresAuthzAnalyzer(BaseAuthzAnalyzer):
         for pg_cursor in self.cursors:
             rows = PostgresAuthzAnalyzer._get_rows(pg_cursor, command)
             for table_name in rows:
-                all_tables.add(ResourceGrant(table_name[0], PermissionLevel.Full))
+                all_tables.add(ResourceGrant(table_name[0], PermissionLevel.FULL))
         role_to_grants["super_user"] = all_tables
 
     @staticmethod

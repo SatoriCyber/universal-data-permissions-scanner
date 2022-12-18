@@ -1,5 +1,4 @@
 import logging
-import sys
 
 
 def get_logger(debug: bool):
@@ -8,8 +7,8 @@ def get_logger(debug: bool):
     logger.setLevel(level)
 
     if logger.handlers:
-       return logger
-    
+        return logger
+
     ch = logging.StreamHandler()
     ch.setLevel(level)
     formatter = logging.Formatter('%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s')

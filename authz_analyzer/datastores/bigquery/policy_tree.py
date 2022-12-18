@@ -6,23 +6,23 @@ from typing import Any, Callable, Dict, List, Optional, Set, TypedDict
 from google.api_core.iam import Policy
 from google.cloud.bigquery.dataset import Dataset  # type: ignore
 
-from authz_analyzer.models.model import PermissionLevel
+from authz_analyzer.models.model import AuthzPathElementType, IdentityType, PermissionLevel
 
 ROLE_TO_PERMISSION = {
-    "roles/viewer": PermissionLevel.Read,
-    "roles/editor": PermissionLevel.Write,
-    "roles/owner": PermissionLevel.Full,
-    "roles/bigquery.admin": PermissionLevel.Full,
-    "roles/bigquery.dataEditor": PermissionLevel.Write,
-    "roles/bigquery.dataOwner": PermissionLevel.Full,
-    "roles/bigquery.dataViewer": PermissionLevel.Read,
-    "roles/bigquery.filteredDataViewer": PermissionLevel.Read,
-    "roles/bigquery.jobUser": PermissionLevel.Write,
-    "roles/bigquery.user": PermissionLevel.Read,
-    "roles/bigquerydatapolicy.maskedReader": PermissionLevel.Read,
-    "OWNER": PermissionLevel.Write,
-    "WRITER": PermissionLevel.Write,
-    "READER": PermissionLevel.Read,
+    "roles/viewer": PermissionLevel.READ,
+    "roles/editor": PermissionLevel.WRITE,
+    "roles/owner": PermissionLevel.FULL,
+    "roles/bigquery.admin": PermissionLevel.FULL,
+    "roles/bigquery.dataEditor": PermissionLevel.WRITE,
+    "roles/bigquery.dataOwner": PermissionLevel.FULL,
+    "roles/bigquery.dataViewer": PermissionLevel.READ,
+    "roles/bigquery.filteredDataViewer": PermissionLevel.READ,
+    "roles/bigquery.jobUser": PermissionLevel.WRITE,
+    "roles/bigquery.user": PermissionLevel.READ,
+    "roles/bigquerydatapolicy.maskedReader": PermissionLevel.READ,
+    "OWNER": PermissionLevel.FULL,
+    "WRITER": PermissionLevel.WRITE,
+    "READER": PermissionLevel.READ,
 }
 
 READ_PERMISSIONS = {"bigquery.dataPolicies.maskedGet", "bigquery.tables.getData"}
@@ -33,6 +33,34 @@ WRITE_PERMISSIONS = {
     "bigquery.tables.updateData",
     "bigquery.transfers.update",
 }
+
+
+GRANTED_BY_TO_PATHZ_ELEMENT = {
+    "table": AuthzPathElementType.TABLE,
+    "TABLE": AuthzPathElementType.TABLE,
+    "DATASET": AuthzPathElementType.DATASET,
+    "dataset": AuthzPathElementType.DATASET,
+    "project": AuthzPathElementType.PROJECT,
+    "PROJECT": AuthzPathElementType.PROJECT,
+    "folder": AuthzPathElementType.FOLDER,
+    "FOLDER": AuthzPathElementType.FOLDER,
+}
+
+IDENTITY_TYPE_MAP = {
+    "userByEmail": IdentityType.USER,
+    "user": IdentityType.USER,
+    "serviceAccount": IdentityType.SERVICE_ACCOUNT,
+    "group": IdentityType.GROUP,
+    "domain": IdentityType.CLOUD_IDENTITY_DOMAIN,
+    "allAuthenticatedUsers": IdentityType.WORKSPACE_ACCOUNT,
+}
+
+
+@dataclass
+class Member:
+    role: str
+    name: str
+    type: IdentityType
 
 
 @dataclass
@@ -94,34 +122,36 @@ class PolicyNode:
     name: str
     type: str
     parent: Optional[PolicyNode] = None
-    permissions: Dict[PermissionLevel, List[Dict[str, str]]] = field(
+    permissions: Dict[PermissionLevel, List[Member]] = field(
         default_factory=lambda: {
-            PermissionLevel.Read: [],
-            PermissionLevel.Write: [],
-            PermissionLevel.Full: [],
-            PermissionLevel.Unknown: [],
+            PermissionLevel.READ: [],
+            PermissionLevel.WRITE: [],
+            PermissionLevel.FULL: [],
+            PermissionLevel.UNKNOWN: [],
         }
     )
-    references: Dict[PermissionLevel, List[Dict[str, str]]] = field(
+    references: Dict[PermissionLevel, List[Member]] = field(
         default_factory=lambda: {
-            PermissionLevel.Read: [],
-            PermissionLevel.Write: [],
-            PermissionLevel.Full: [],
-            PermissionLevel.Unknown: [],
+            PermissionLevel.READ: [],
+            PermissionLevel.WRITE: [],
+            PermissionLevel.FULL: [],
+            PermissionLevel.UNKNOWN: [],
         }
     )
 
     def set_parent(self, parent: PolicyNode):
         self.parent = parent
 
-    def add_member(self, member: str, permission: PermissionLevel, role: str):
-        self.permissions[permission].append({"principal": member, "role": role})
+    def add_member(self, member: str, permission: PermissionLevel, role: str, role_type: str):
+        parsed_member = Member(role=role, name=member, type=IDENTITY_TYPE_MAP[role_type])
+        self.permissions[permission].append(parsed_member)
 
     def get_members(self, permission: PermissionLevel):
         return self.permissions[permission]
 
-    def add_reference(self, reference: str, permission: PermissionLevel, role: str):
-        self.references[permission].append({"principal": reference, "role": role})
+    def add_reference(self, reference: str, permission: PermissionLevel, role: str, role_type: str):
+        parsed_member = Member(role=role, name=reference, type=IDENTITY_TYPE_MAP[role_type])
+        self.references[permission].append(parsed_member)
 
     def get_references(self, permission: PermissionLevel):
         return self.references[permission]
@@ -140,12 +170,12 @@ class PolicyNode:
          """ % (
             self.name,
             self.parent,
-            self.get_members(PermissionLevel.Read),
-            self.get_members(PermissionLevel.Write),
-            self.get_members(PermissionLevel.Full),
-            self.get_references(PermissionLevel.Read),
-            self.get_references(PermissionLevel.Write),
-            self.get_references(PermissionLevel.Full),
+            self.get_members(PermissionLevel.READ),
+            self.get_members(PermissionLevel.WRITE),
+            self.get_members(PermissionLevel.FULL),
+            self.get_references(PermissionLevel.READ),
+            self.get_references(PermissionLevel.WRITE),
+            self.get_references(PermissionLevel.FULL),
         )
 
 
@@ -178,7 +208,8 @@ class IamPolicyNode(PolicyNode):
                 continue  # Role doesn't have permission to big query
             member: str
             for member in binding.members:
-                super().add_member(member, permission, role)
+                member_type, member_name = member.split(":")
+                super().add_member(member_name, permission, role, member_type)
 
 
 class TableIamPolicyNode(PolicyNode):
@@ -205,12 +236,8 @@ class TableIamPolicyNode(PolicyNode):
             if permission is None:
                 continue  # Role doesn't have permission to big query
             for member in binding["members"]:
-                if member.startswith("user:"):
-                    super().add_member(member, permission, role)
-                elif member.startswith("serviceAccount:"):
-                    super().add_member(member, permission, role)
-                else:
-                    super().add_reference(member, permission, role)
+                member_type, member_name = member.split(":")
+                super().add_member(member_name, permission, role, member_type)
 
 
 class DatasetPolicyNode(PolicyNode):
@@ -236,19 +263,10 @@ class DatasetPolicyNode(PolicyNode):
                 # These specialGroup permissions are legacy, because the dataset always inherits
                 # permissions from its parent project.
                 continue
-            if entry.entity_type == "userByEmail":  # type: ignore
-                role: str = entry.role  # type: ignore
-                permission = ROLE_TO_PERMISSION.get(role)
-                if permission is None:
-                    permission = resolve_permission_callback(role)
-                if permission is None:
-                    continue  # Role doesn't have permission to big query
-                super().add_member(entry.entity_id, permission, entry.role)  # type: ignore
-            else:
-                # catch all just so we don't miss stuff
-                # TODO - handle groups, domain, all, etc
-                role: str = entry.role  # type: ignore
-                permission = ROLE_TO_PERMISSION.get(role, resolve_permission_callback(role))
-                if permission is None:
-                    continue  # Role doesn't have permission to big query
-                super().add_member(entry.entity_id, permission, entry.role)  # type: ignore
+            role: str = entry.role  # type: ignore
+            permission = ROLE_TO_PERMISSION.get(role)
+            if permission is None:
+                permission = resolve_permission_callback(role)
+            if permission is None:
+                continue  # Role doesn't have permission to big query
+            super().add_member(entry.entity_id, permission, entry.role, entry.entity_type)  # type: ignore

@@ -8,12 +8,59 @@ from enum import Enum, auto
 from typing import List
 
 
-@dataclass
+class AssetType(Enum):
+    """Define the types of assets that are stored at the datastores."""
+
+    TABLE = auto()
+    VIEW = auto()
+
+
+class IdentityType(Enum):
+    """Defines the types of identities that are used by the datastores."""
+
+    USER = auto()  # Snowflake, GCP
+    ROLE_LOGIN = auto()  # Postgres
+    SERVICE_ACCOUNT = auto()  # GCP
+    GROUP = auto()  # GCP
+    WORKSPACE_ACCOUNT = auto()  # GCP
+    CLOUD_IDENTITY_DOMAIN = auto()  # GCP
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name
+
+    def __hash__(self) -> int:
+        return hash(self.value)
+
+
+class AuthzPathElementType(Enum):
+    """Defines the types of elements that can be used by datastores to grant permissions."""
+
+    ROLE = auto()  # Used by Snowflake, and Postgres
+    DATASET = auto()  # used by GCP
+    TABLE = auto()  # used by GCP
+    PROJECT = auto()  # used by GCP
+    FOLDER = auto()  # used by GCP
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name
+
+    def __hash__(self) -> int:
+        return hash(self.value)
+
+
 class PermissionLevel(Enum):
-    Read = auto()
-    Write = auto()
-    Full = auto()
-    Unknown = auto()
+    """Define the permission levels that can be granted to an asset."""
+
+    READ = auto()
+    WRITE = auto()
+    FULL = auto()
+    UNKNOWN = auto()
 
     def __str__(self) -> str:
         return self.name
@@ -31,7 +78,7 @@ class PermissionLevel(Enum):
 class AuthzPathElement:
     id: str
     name: str
-    type: str
+    type: AuthzPathElementType
     note: str
 
     def __repr__(self):
@@ -41,13 +88,13 @@ class AuthzPathElement:
 @dataclass
 class Asset:
     name: str
-    type: str
+    type: AssetType
 
 
 @dataclass
 class Identity:
     id: str
-    type: str
+    type: IdentityType
     name: str
 
 
