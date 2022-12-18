@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 from typing import Any, Callable, List, Optional
 
+import googleapiclient.discovery
 from google.cloud import bigquery, resourcemanager_v3  # type: ignore
 from google.cloud.resourcemanager_v3.types import Project
 from google.iam.v1 import iam_policy_pb2  # type: ignore
-import googleapiclient.discovery
 
 from authz_analyzer.datastores.bigquery.policy_tree import IamPolicyNode
 from authz_analyzer.models.model import PermissionLevel
+
 
 @dataclass
 class BigQueryService:
@@ -17,7 +18,7 @@ class BigQueryService:
     projects_client: resourcemanager_v3.ProjectsClient
     folders_client: resourcemanager_v3.FoldersClient
     org_client: resourcemanager_v3.OrganizationsClient
-    iam_client: Any #I don't know how to import this
+    iam_client: Any  # I don't know how to import this
     org_iam_client: Any
     project_iam_client: Any
 
@@ -27,9 +28,9 @@ class BigQueryService:
         project = BigQueryService._get_project(projects_client, project_id)
         folders_client = resourcemanager_v3.FoldersClient(**kwargs)
         org_client = resourcemanager_v3.OrganizationsClient(**kwargs)
-        iam_client = googleapiclient.discovery.build("iam", "v1", **kwargs) #type: ignore
-        org_iam_client = iam_client.organizations() #type: ignore #pylint: disable=no-member
-        project_iam_client = iam_client.projects() #type: ignore #pylint: disable=no-member
+        iam_client = googleapiclient.discovery.build("iam", "v1", **kwargs)  # type: ignore
+        org_iam_client = iam_client.organizations()  # type: ignore #pylint: disable=no-member
+        project_iam_client = iam_client.projects()  # type: ignore #pylint: disable=no-member
 
         return cls(
             project_id=project_id,
@@ -83,7 +84,7 @@ class BigQueryService:
     def lookup_ref(self, ref_id: str, resolve_permission_callback: Callable[[str], Optional[PermissionLevel]]):
         if ref_id == "PROJECT":
             return self.lookup_project(resolve_permission_callback)
-    
+
     def get_permissions_by_role(self, role: str) -> List[str]:
         """Provide permissions for a given role
 
@@ -117,7 +118,9 @@ class BigQueryService:
             if parent.startswith("folders/"):  # type: ignore #pylint: disable=(E1101:no-member)
                 folder = self._get_folder(parent)
                 folder_iam = self._get_folder_iam(parent)
-                folder_node = IamPolicyNode(folder.name, folder.display_name, "folder", folder_iam, resolve_permission_callback)
+                folder_node = IamPolicyNode(
+                    folder.name, folder.display_name, "folder", folder_iam, resolve_permission_callback
+                )
                 curr.set_parent(folder_node)
                 # Move to a parent folder or org
                 curr = folder_node

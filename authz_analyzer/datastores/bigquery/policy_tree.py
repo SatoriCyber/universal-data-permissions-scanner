@@ -25,8 +25,15 @@ ROLE_TO_PERMISSION = {
     "READER": PermissionLevel.Read,
 }
 
-READ_PERMISSIONS = {"bigquery.dataPolicies.maskedGet", "bigquery.tables.getData" }
-WRITE_PERMISSIONS = {"bigquery.dataPolicies.maskedSet", "bigquery.tables.delete", "bigquery.tables.restoreSnapshot", "bigquery.tables.updateData", "bigquery.transfers.update"}
+READ_PERMISSIONS = {"bigquery.dataPolicies.maskedGet", "bigquery.tables.getData"}
+WRITE_PERMISSIONS = {
+    "bigquery.dataPolicies.maskedSet",
+    "bigquery.tables.delete",
+    "bigquery.tables.restoreSnapshot",
+    "bigquery.tables.updateData",
+    "bigquery.transfers.update",
+}
+
 
 @dataclass
 class GcpBinding:
@@ -143,7 +150,14 @@ class PolicyNode:
 
 
 class IamPolicyNode(PolicyNode):
-    def __init__(self, policy_id: str, name: str, policy_type: str, policy: Policy, resolve_permission_callback: Callable[[str], Optional[PermissionLevel]]):
+    def __init__(
+        self,
+        policy_id: str,
+        name: str,
+        policy_type: str,
+        policy: Policy,
+        resolve_permission_callback: Callable[[str], Optional[PermissionLevel]],
+    ):
         """Represents a GCP IAM policy node, Project, Folder, Organization, etc.
 
         Args:
@@ -161,14 +175,20 @@ class IamPolicyNode(PolicyNode):
             if permission is None:
                 permission = resolve_permission_callback(role)
             if permission is None:
-                continue # Role doesn't have permission to big query
+                continue  # Role doesn't have permission to big query
             member: str
             for member in binding.members:
                 super().add_member(member, permission, role)
 
 
 class TableIamPolicyNode(PolicyNode):
-    def __init__(self, table_id: str, name: str, policy: Policy, resolve_permission_callback: Callable[[str], Optional[PermissionLevel]]):
+    def __init__(
+        self,
+        table_id: str,
+        name: str,
+        policy: Policy,
+        resolve_permission_callback: Callable[[str], Optional[PermissionLevel]],
+    ):
         """Represents a table IAM policy.
 
         Args:
@@ -183,7 +203,7 @@ class TableIamPolicyNode(PolicyNode):
             role = binding["role"]
             permission = ROLE_TO_PERMISSION.get(role, resolve_permission_callback(role))
             if permission is None:
-                continue # Role doesn't have permission to big query
+                continue  # Role doesn't have permission to big query
             for member in binding["members"]:
                 if member.startswith("user:"):
                     super().add_member(member, permission, role)
@@ -217,18 +237,18 @@ class DatasetPolicyNode(PolicyNode):
                 # permissions from its parent project.
                 continue
             if entry.entity_type == "userByEmail":  # type: ignore
-                role: str = entry.role #type: ignore
+                role: str = entry.role  # type: ignore
                 permission = ROLE_TO_PERMISSION.get(role)
                 if permission is None:
                     permission = resolve_permission_callback(role)
                 if permission is None:
-                    continue # Role doesn't have permission to big query
+                    continue  # Role doesn't have permission to big query
                 super().add_member(entry.entity_id, permission, entry.role)  # type: ignore
             else:
                 # catch all just so we don't miss stuff
                 # TODO - handle groups, domain, all, etc
-                role: str = entry.role #type: ignore
+                role: str = entry.role  # type: ignore
                 permission = ROLE_TO_PERMISSION.get(role, resolve_permission_callback(role))
                 if permission is None:
-                    continue # Role doesn't have permission to big query
+                    continue  # Role doesn't have permission to big query
                 super().add_member(entry.entity_id, permission, entry.role)  # type: ignore

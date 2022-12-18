@@ -76,7 +76,13 @@ from google.api_core.page_iterator import Iterator
 from google.cloud.bigquery.table import TableListItem  # type: ignore
 from google.oauth2.service_account import Credentials  # type: ignore
 
-from authz_analyzer.datastores.bigquery.policy_tree import DatasetPolicyNode, PolicyNode, TableIamPolicyNode, READ_PERMISSIONS, WRITE_PERMISSIONS
+from authz_analyzer.datastores.bigquery.policy_tree import (
+    READ_PERMISSIONS,
+    WRITE_PERMISSIONS,
+    DatasetPolicyNode,
+    PolicyNode,
+    TableIamPolicyNode,
+)
 from authz_analyzer.datastores.bigquery.service import BigQueryService
 from authz_analyzer.models.model import Asset, AuthzEntry, AuthzPathElement, Identity, PermissionLevel
 from authz_analyzer.utils.logger import get_logger
