@@ -76,7 +76,7 @@ from google.api_core.page_iterator import Iterator
 from google.cloud.bigquery.table import TableListItem  # type: ignore
 from google.oauth2.service_account import Credentials  # type: ignore
 
-from authz_analyzer.datastores.bigquery.policy_tree import DatasetPolicyNode, PolicyNode, TableIamPolicyNode
+from authz_analyzer.datastores.bigquery.policy_tree import DatasetPolicyNode, PolicyNode, TableIamPolicyNode, READ_PERMISSIONS, WRITE_PERMISSIONS
 from authz_analyzer.datastores.bigquery.service import BigQueryService
 from authz_analyzer.models.model import Asset, AuthzEntry, AuthzPathElement, Identity, PermissionLevel
 from authz_analyzer.utils.logger import get_logger
@@ -118,10 +118,10 @@ class BigQueryAuthzAnalyzer:
 
     def run(self):
         """Read all tables in all datasets and calculate authz paths"""
-        project_node = self.service.lookup_project()
+        project_node = self.service.lookup_project(self._resolve_custom_role_to_permissions)
         for dataset_id in self.service.list_datasets():
             dataset = self.service.get_dataset(dataset_id)
-            dataset_node = DatasetPolicyNode(dataset)
+            dataset_node = DatasetPolicyNode(dataset, self._resolve_custom_role_to_permissions)
             dataset_node.set_parent(project_node)
             tables: Iterator = self.service.list_tables(dataset_id)
             table: TableListItem
@@ -129,7 +129,7 @@ class BigQueryAuthzAnalyzer:
                 fq_table_id = f"{table.project}.{table.dataset_id}.{table.table_id}"  # type: ignore
                 table_iam = self.service.get_table_policy(table.reference)
                 name: str = table.table_id  # type: ignore
-                table_node = TableIamPolicyNode(fq_table_id, name, table_iam)
+                table_node = TableIamPolicyNode(fq_table_id, name, table_iam, self._resolve_custom_role_to_permissions)
                 table_node.set_parent(dataset_node)
                 self._calc(Asset(fq_table_id, type="table"), table_node, [])
 
@@ -163,13 +163,11 @@ class BigQueryAuthzAnalyzer:
         # Then go to each reference and get the permissions from it
         for permission in permissions:
             for member in node.get_references(permission):
-                ref_node = self.service.lookup_ref(member["principal"])
+                ref_node = self.service.lookup_ref(member["principal"], self._resolve_custom_role_to_permissions)
                 if ref_node is None:
                     self.logger.error("Unable to find ref_node for member %s", member)
                     continue
-                note = "{} references {} {} with permission {}".format(
-                    node.type, ref_node.type.lower(), ref_node.name, permission
-                )
+                note = f"{node.type} references {ref_node.type.lower()} {ref_node.name} with permission {permission}"
                 self._add_to_path(path, node, note)
                 self._calc(fq_table_id, ref_node, path, permissions=[permission])
                 path.pop()
@@ -213,3 +211,16 @@ class BigQueryAuthzAnalyzer:
         authz = AuthzEntry(fq_table_id, path=reversed_path, identity=identity, permission=permission)
         self.writer.write_entry(authz)
         path.pop()
+
+    def _resolve_custom_role_to_permissions(self, role: str) -> Optional[PermissionLevel]:
+        """
+        Resolve role to the highest permission level it has, or None if it has no permissions to bigquery
+        """
+        row_permissions = self.service.get_permissions_by_role(role)
+        permission_level: Optional[PermissionLevel] = None
+        for row_permission in row_permissions:
+            if row_permission in WRITE_PERMISSIONS:
+                return PermissionLevel.Write
+            if row_permission in READ_PERMISSIONS:
+                permission_level = PermissionLevel.Read
+        return permission_level
