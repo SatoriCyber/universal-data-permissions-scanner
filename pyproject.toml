@@ -29,6 +29,7 @@ google-api-python-client = "^2.66.0"
 boto3 = "^1.26.27"
 pydantic = "^1.10.2"
 networkx = "^2.8.8"
+pyserde = "^0.9.6"
 
 black  = { version = "^21.5b2", optional = true}
 isort  = { version = "^5.8.0", optional = true}

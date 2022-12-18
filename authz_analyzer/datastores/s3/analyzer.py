@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from pydantic import BaseModel
 from authz_analyzer.utils.aws.create_session import create_session_with_assume_role
 from authz_analyzer.utils.aws.iam.iam_entities import IAMEntities
 from authz_analyzer.utils.aws.s3.bucket import get_buckets, S3Bucket
@@ -16,9 +15,12 @@ from authz_analyzer.datastores.base import BaseAuthzAnalyzer
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
+from serde import serde
 
 
-class S3AuthzAnalyzerCtx(BaseModel):
+@serde
+@dataclass
+class S3AuthzAnalyzerCtx:
     buckets: Dict[str, S3Bucket]
     iam_entities: IAMEntities
 

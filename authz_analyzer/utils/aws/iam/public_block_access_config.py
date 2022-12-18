@@ -1,9 +1,11 @@
 from dataclasses import dataclass
-from pydantic import BaseModel, Field
+from serde import deserialize, serialize, serde
 
 
-class PublicAccessBlockConfiguration(BaseModel):
-    block_public_acls: bool = Field(..., alias='BlockPublicAcls')
-    ignore_public_acls: bool = Field(..., alias='IgnorePublicAcls')
-    block_public_policy: bool = Field(..., alias='BlockPublicPolicy')
-    restrict_public_buckets: bool = Field(..., alias='RestrictPublicBuckets')
+@serde(rename_all = "pascalcase")
+@dataclass
+class PublicAccessBlockConfiguration:
+    block_public_acls: bool
+    ignore_public_acls: bool
+    block_public_policy: bool
+    restrict_public_buckets: bool
