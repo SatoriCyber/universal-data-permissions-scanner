@@ -2,14 +2,24 @@ from typing import Dict, Generator, List, Set
 
 from authz_analyzer.datastores.postgres.model import AuthorizationModel, DBRole, ResourceGrant
 from authz_analyzer.models import PermissionLevel
-from authz_analyzer.models.model import Asset, AuthzEntry, AuthzPathElement, Identity
+from authz_analyzer.models.model import (
+    Asset,
+    AssetType,
+    AuthzEntry,
+    AuthzPathElement,
+    AuthzPathElementType,
+    Identity,
+    IdentityType,
+)
 from authz_analyzer.writers import BaseWriter
 
 
 def _yield_row(role_name: str, permission_level: PermissionLevel, grant_name: str, roles: List[DBRole]):
-    auth_path_element = [AuthzPathElement(id=role.name, name=role.name, type="Role", note="") for role in roles]
-    identity = Identity(id=role_name, name=role_name, type="Role")
-    asset = Asset(name=grant_name, type="TABLE/VIEW")
+    auth_path_element = [
+        AuthzPathElement(id=role.name, name=role.name, type=AuthzPathElementType.ROLE, note="") for role in roles
+    ]
+    identity = Identity(id=role_name, name=role_name, type=IdentityType.ROLE_LOGIN)
+    asset = Asset(name=grant_name, type=AssetType.TABLE)
     yield AuthzEntry(
         identity=identity,
         asset=asset,

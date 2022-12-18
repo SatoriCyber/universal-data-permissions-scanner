@@ -70,30 +70,27 @@ import json
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Any, List, Optional, TypedDict, Union
+from typing import Any, List, Optional, Union
 
 from google.api_core.page_iterator import Iterator
 from google.cloud.bigquery.table import TableListItem  # type: ignore
 from google.oauth2.service_account import Credentials  # type: ignore
 
 from authz_analyzer.datastores.bigquery.policy_tree import (
+    GRANTED_BY_TO_PATHZ_ELEMENT,
     READ_PERMISSIONS,
     WRITE_PERMISSIONS,
     DatasetPolicyNode,
+    Member,
     PolicyNode,
     TableIamPolicyNode,
 )
 from authz_analyzer.datastores.bigquery.service import BigQueryService
-from authz_analyzer.models.model import Asset, AuthzEntry, AuthzPathElement, Identity, PermissionLevel
+from authz_analyzer.models.model import Asset, AssetType, AuthzEntry, AuthzPathElement, Identity, PermissionLevel
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE, OutputFormat
 from authz_analyzer.writers.get_writers import get_writer
-
-
-class Member(TypedDict):
-    role: str
-    principal: str
 
 
 @dataclass
@@ -137,7 +134,7 @@ class BigQueryAuthzAnalyzer:
                 name: str = table.table_id  # type: ignore
                 table_node = TableIamPolicyNode(fq_table_id, name, table_iam, self._resolve_custom_role_to_permissions)
                 table_node.set_parent(dataset_node)
-                self._calc(Asset(fq_table_id, type="table"), table_node, [])
+                self._calc(Asset(fq_table_id, type=AssetType.TABLE), table_node, [])
 
     def _calc(
         self,
@@ -152,7 +149,7 @@ class BigQueryAuthzAnalyzer:
         """
 
         if permissions is None:
-            permissions = [PermissionLevel.Read, PermissionLevel.Write, PermissionLevel.Full]
+            permissions = [PermissionLevel.READ, PermissionLevel.WRITE, PermissionLevel.FULL]
         self.logger.debug(
             "calc for %s %s %s permissions = %s path = %s}",
             fq_table_id,
@@ -169,7 +166,7 @@ class BigQueryAuthzAnalyzer:
         # Then go to each reference and get the permissions from it
         for permission in permissions:
             for member in node.get_references(permission):
-                ref_node = self.service.lookup_ref(member["principal"], self._resolve_custom_role_to_permissions)
+                ref_node = self.service.lookup_ref(member.name, self._resolve_custom_role_to_permissions)
                 if ref_node is None:
                     self.logger.error("Unable to find ref_node for member %s", member)
                     continue
@@ -193,7 +190,8 @@ class BigQueryAuthzAnalyzer:
 
     def _add_to_path(self, path: List[AuthzPathElement], node: PolicyNode, note: str):
         self.logger.debug("Adding %s %s to path", node.type, node.name)
-        path.append(AuthzPathElement(node.id, node.name, node.type, note))
+        authz_type = GRANTED_BY_TO_PATHZ_ELEMENT[node.type]
+        path.append(AuthzPathElement(node.id, node.name, authz_type, note))
 
     def _report_permission(
         self,
@@ -203,17 +201,11 @@ class BigQueryAuthzAnalyzer:
         permission: PermissionLevel,
         path: List[AuthzPathElement],
     ):
-        principal = member["principal"]
-        role = member["role"]
-        note = f"{principal} has role {role}"
+        note = f"{member.name} has role {member.role}"
         self._add_to_path(path, node, note)
         reversed_path = list(reversed(path))
-        try:
-            (member_type, member_name) = principal.split(":")
-        except ValueError:
-            member_type = "user"
-            member_name = principal
-        identity = Identity(id=principal, type=member_type, name=member_name)
+
+        identity = Identity(id=str(member.type) + ":" + member.name, type=member.type, name=member.name)
         authz = AuthzEntry(fq_table_id, path=reversed_path, identity=identity, permission=permission)
         self.writer.write_entry(authz)
         path.pop()
@@ -226,7 +218,7 @@ class BigQueryAuthzAnalyzer:
         permission_level: Optional[PermissionLevel] = None
         for row_permission in row_permissions:
             if row_permission in WRITE_PERMISSIONS:
-                return PermissionLevel.Write
+                return PermissionLevel.WRITE
             if row_permission in READ_PERMISSIONS:
-                permission_level = PermissionLevel.Read
+                permission_level = PermissionLevel.READ
         return permission_level

@@ -1,7 +1,16 @@
 from typing import List, Optional, Tuple
 from unittest.mock import MagicMock
 from authz_analyzer import PostgresAuthzAnalyzer
-from authz_analyzer.models.model import AuthzEntry, AuthzPathElement, PermissionLevel, Identity, Asset
+from authz_analyzer.models.model import (
+    AuthzEntry,
+    AuthzPathElement,
+    PermissionLevel,
+    Identity,
+    Asset,
+    AuthzPathElementType,
+    IdentityType,
+    AssetType,
+)
 
 from tests.tests_datastores.postgres.mocks.postgres_mock_connector import PostgresMockCursor
 from tests.mocks.mock_writers import MockWriter
@@ -42,10 +51,10 @@ def test_user_role_with_grant():
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
-            identity=Identity(id="user_1", type="Role", name="user_1"),
-            path=[AuthzPathElement(id="role_1", name="role_1", type="Role", note="")],
-            permission=PermissionLevel.Read,
-            asset=Asset(name="db1.schema1.table1", type="TABLE/VIEW"),
+            identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
+            path=[AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note="")],
+            permission=PermissionLevel.READ,
+            asset=Asset(name="db1.schema1.table1", type=AssetType.TABLE),
         )
     )
 
@@ -65,13 +74,13 @@ def test_user_role_to_role_with_grant():
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
-            identity=Identity(id="user_1", type="Role", name="user_1"),
+            identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
             path=[
-                AuthzPathElement(id="role_1", name="role_1", type="Role", note=""),
-                AuthzPathElement(id="role_2", name="role_2", type="Role", note=""),
+                AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note=""),
+                AuthzPathElement(id="role_2", name="role_2", type=AuthzPathElementType.ROLE, note=""),
             ],
-            permission=PermissionLevel.Read,
-            asset=Asset(name="db1.schema1.table1", type="TABLE/VIEW"),
+            permission=PermissionLevel.READ,
+            asset=Asset(name="db1.schema1.table1", type=AssetType.TABLE),
         )
     )
 
@@ -83,13 +92,13 @@ def test_user_three_roles_with_grant():
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
-            identity=Identity(id="user_1", type="Role", name="user_1"),
+            identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
             path=[
-                AuthzPathElement(id="role_1", name="role_1", type="Role", note=""),
-                AuthzPathElement(id="role_2", name="role_2", type="Role", note=""),
+                AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note=""),
+                AuthzPathElement(id="role_2", name="role_2", type=AuthzPathElementType.ROLE, note=""),
             ],
-            permission=PermissionLevel.Read,
-            asset=Asset(name="db1.schema1.table1", type="TABLE/VIEW"),
+            permission=PermissionLevel.READ,
+            asset=Asset(name="db1.schema1.table1", type=AssetType.TABLE),
         )
     )
 
@@ -101,14 +110,14 @@ def test_user_role_with_direct_grant():
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
-            identity=Identity(id="user_1", type="Role", name="user_1"),
+            identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
             path=[
-                AuthzPathElement(id="role_1", name="role_1", type="Role", note=""),
-                AuthzPathElement(id="role_2", name="role_2", type="Role", note=""),
-                AuthzPathElement(id="role_3", name="role_3", type="Role", note=""),
+                AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note=""),
+                AuthzPathElement(id="role_2", name="role_2", type=AuthzPathElementType.ROLE, note=""),
+                AuthzPathElement(id="role_3", name="role_3", type=AuthzPathElementType.ROLE, note=""),
             ],
-            permission=PermissionLevel.Read,
-            asset=Asset(name="db1.schema1.table1", type="TABLE/VIEW"),
+            permission=PermissionLevel.READ,
+            asset=Asset(name="db1.schema1.table1", type=AssetType.TABLE),
         )
     )
 
@@ -120,12 +129,12 @@ def test_super_user_grant():
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
-            identity=Identity(id="user_1", type="Role", name="user_1"),
+            identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
             path=[
-                AuthzPathElement(id="super_user", name="super_user", type="Role", note=""),
+                AuthzPathElement(id="super_user", name="super_user", type=AuthzPathElementType.ROLE, note=""),
             ],
-            permission=PermissionLevel.Full,
-            asset=Asset(name="db1.schema1.table3", type="TABLE/VIEW"),
+            permission=PermissionLevel.FULL,
+            asset=Asset(name="db1.schema1.table3", type=AssetType.TABLE),
         )
     )
 

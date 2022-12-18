@@ -1,7 +1,14 @@
 from unittest.mock import MagicMock
 from authz_analyzer import SnowflakeAuthzAnalyzer
 from authz_analyzer.datastores.snowflake.exporter import USER_TYPE, ASSET_TYPE
-from authz_analyzer.models.model import AuthzEntry, AuthzPathElement, PermissionLevel, Identity, Asset
+from authz_analyzer.models.model import (
+    AuthzEntry,
+    AuthzPathElement,
+    PermissionLevel,
+    Identity,
+    Asset,
+    AuthzPathElementType,
+)
 from tests.tests_datastores.snowflake.mocks.snowflake_mock_connector import SnowflakeMockCursor
 from tests.tests_datastores.snowflake.mocks import grants
 from tests.mocks.mock_writers import MockWriter
@@ -23,8 +30,8 @@ def test_user_role_with_grant():
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
             identity=Identity(name="user_1", id="user_1@example.com", type=USER_TYPE),
-            path=[AuthzPathElement(id="role_1", name="role_1", type="role", note="")],
-            permission=PermissionLevel.Read,
+            path=[AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note="")],
+            permission=PermissionLevel.READ,
             asset=Asset(name="db1.schema1.table1", type=ASSET_TYPE),
         )
     )
@@ -47,10 +54,10 @@ def test_user_role_to_role_with_grant():
         AuthzEntry(
             identity=Identity(name="user_1", id="user_1@example.com", type=USER_TYPE),
             path=[
-                AuthzPathElement(id="role_1", name="role_1", type="role", note=""),
-                AuthzPathElement(id="role_2", name="role_2", type="role", note=""),
+                AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note=""),
+                AuthzPathElement(id="role_2", name="role_2", type=AuthzPathElementType.ROLE, note=""),
             ],
-            permission=PermissionLevel.Read,
+            permission=PermissionLevel.READ,
             asset=Asset(name="db1.schema1.table1", type=ASSET_TYPE),
         )
     )

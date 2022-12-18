@@ -14,13 +14,13 @@ RoleName = str
 
 def permission_level_from_str(level: str):
     if level in READ_LEVEL_PERMISSIONS:
-        return PermissionLevel.Read
+        return PermissionLevel.READ
     if level in WRITE_LEVEL_PERMISSIONS:
-        return PermissionLevel.Write
+        return PermissionLevel.WRITE
     if level in FULL_LEVEL_PERMISSIONS:
-        return PermissionLevel.Full
+        return PermissionLevel.FULL
     else:
-        return PermissionLevel.Unknown
+        return PermissionLevel.UNKNOWN
 
 
 @dataclass

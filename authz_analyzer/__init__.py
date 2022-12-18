@@ -2,7 +2,7 @@
 
 __author__ = """SatoriCyber"""
 __email__ = 'omer.shtivi@satoricyber.com'
-__version__ = '2.5.0'
+__version__ = '3.0.0'
 
 from authz_analyzer.datastores.bigquery.analyzer import BigQueryAuthzAnalyzer
 from authz_analyzer.datastores.postgres.analyzer import PostgresAuthzAnalyzer
