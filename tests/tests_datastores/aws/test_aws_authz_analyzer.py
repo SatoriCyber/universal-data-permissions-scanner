@@ -2,9 +2,9 @@ import os
 import pytest
 import pathlib
 import json
-from authz_analyzer.utils.aws.aws_authz_analyzer import AwsAuthzAnalyzer
-from authz_analyzer.utils.aws.s3.bucket import S3ServiceType
-from authz_analyzer.utils.aws.create_session import create_session_with_assume_role
+from authz_analyzer.datastores.aws.aws_authz_analyzer import AwsAuthzAnalyzer
+from authz_analyzer.datastores.aws.services.s3.bucket import S3ServiceType
+from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
 from authz_analyzer.utils.logger import get_logger
 from serde.json import to_json, from_dict
 

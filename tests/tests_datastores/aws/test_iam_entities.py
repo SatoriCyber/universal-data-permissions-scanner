@@ -2,8 +2,8 @@ import os
 import pytest
 import pathlib
 import json
-from authz_analyzer.utils.aws.iam.iam_entities import IAMEntities
-from authz_analyzer.utils.aws.create_session import create_session_with_assume_role
+from authz_analyzer.datastores.aws.iam.iam_entities import IAMEntities
+from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
 from authz_analyzer.utils.logger import get_logger
 from serde.json import to_json, from_dict
 

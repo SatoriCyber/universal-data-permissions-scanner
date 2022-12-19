@@ -2,9 +2,9 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from boto3 import Session
 from dataclasses import dataclass
 from logging import Logger
-from authz_analyzer.utils.aws.iam.iam_entities import IAMEntities
-from authz_analyzer.utils.aws.account_resources import AwsAccountResources
-from authz_analyzer.utils.aws.service_entity_base import ServiceType
+from authz_analyzer.datastores.aws.iam.iam_entities import IAMEntities
+from authz_analyzer.datastores.aws.account_resources import AwsAccountResources
+from authz_analyzer.datastores.aws.services.service_entity_base import ServiceType
 from serde import serde
 
 

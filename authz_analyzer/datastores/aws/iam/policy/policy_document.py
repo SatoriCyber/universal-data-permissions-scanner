@@ -2,7 +2,7 @@ import json
 from typing import Dict, Any, Optional, Type, List, Union
 from dataclasses import dataclass
 from enum import Enum
-from authz_analyzer.utils.aws.iam.policy.principal import AwsPolicyPrincipals, AwsPrincipal
+from authz_analyzer.datastores.aws.iam.policy.principal import AwsPolicyPrincipals, AwsPrincipal
 from serde import deserialize, serialize, field, serde
 
 

@@ -1,8 +1,8 @@
 from boto3 import Session
 from typing import Dict, Any, Optional, Type, List, Union, Set
 from dataclasses import dataclass
-from authz_analyzer.utils.aws.pagination import paginate_response_list
-from authz_analyzer.utils.aws.iam.policy import GroupPolicy, Policy, PolicyDocument
+from authz_analyzer.datastores.aws.utils.pagination import paginate_response_list
+from authz_analyzer.datastores.aws.iam.policy import GroupPolicy, Policy, PolicyDocument
 from serde import serde, from_dict , serialize, deserialize, serde
 
 

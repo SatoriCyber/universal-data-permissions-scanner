@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from boto3 import Session
 from logging import Logger
 from serde import serde
-from authz_analyzer.utils.aws.iam.policy.resolve_service_entities_base import ResolvedServiceEntitiesBase
+from authz_analyzer.datastores.aws.iam.policy.resolve_service_entities_base import ResolvedServiceEntitiesBase
 
 
 @serde
