@@ -43,6 +43,7 @@ class AuthzPathElementType(Enum):
     TABLE = auto()  # used by GCP
     PROJECT = auto()  # used by GCP
     FOLDER = auto()  # used by GCP
+    ORGANIZATION = auto()  # used by GCP
 
     def __str__(self) -> str:
         return self.name
