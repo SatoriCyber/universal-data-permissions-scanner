@@ -8,7 +8,7 @@ from authz_analyzer.utils.logger import get_logger
 from serde.json import to_json, from_dict
 
 
-IAM_ENTITIES_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(os.path.dirname(__file__), 'satori_dev_account.json')
+IAM_ENTITIES_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(os.path.dirname(__file__), 'satori_dev_account_iam_entities.json')
 
 @pytest.mark.skipif(
     not os.environ.get("AUTHZ_SATORI_DEV_ACCOUNT_TEST"),
