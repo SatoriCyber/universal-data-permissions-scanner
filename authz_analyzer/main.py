@@ -35,16 +35,12 @@ def run_s3(
     logger: Logger,
     output_format: OutputFormat,
     filename: str,
-    master_account_id: str,
-    master_account_role_name: str,
     account_id: str,
     account_role_name: str,
 ):
     writer = get_writer(filename, output_format)
     writer.write_header()
     analyzer = S3AuthzAnalyzer.connect(
-        master_account_id=master_account_id,
-        master_account_role_name=master_account_role_name,
         account_id=account_id,
         account_role_name=account_role_name,
         output_path=filename,
