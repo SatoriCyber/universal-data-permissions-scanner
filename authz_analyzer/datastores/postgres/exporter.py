@@ -54,6 +54,12 @@ def _iter_role_row(
 
 
 def export(model: AuthorizationModel, writer: BaseWriter):
+    """Export the model to the writer.
+
+    Args:
+        model (AuthorizationModel): Postgres model which describes the authorization
+        writer (BaseWriter): Write to write the entries
+    """
     for role, roles in model.role_to_roles.items():
         if role.can_login is True:
             for grant in model.role_to_grants.get(role.name, set()):

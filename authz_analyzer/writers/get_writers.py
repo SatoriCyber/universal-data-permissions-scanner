@@ -8,17 +8,19 @@ from authz_analyzer.writers.csv_writer import CSVWriter
 from authz_analyzer.writers.multi_json_exporter import MultiJsonWriter
 
 
-def get_writer(filename: Union[Path, str], format: OutputFormat):
+def get_writer(filename: Union[Path, str], output_format: OutputFormat):
     fh = sys.stdout if filename is None else open(filename, 'w', encoding="utf=8")
-    writer = _get_writer(fh, format)
-    writer.write_header()
+    writer = _get_writer(fh, output_format)
     return writer
 
 
-def _get_writer(fh: Union[TextIO, TextIOWrapper], format: OutputFormat):
-    if format is OutputFormat.MultiJson:
+def _get_writer(fh: Union[TextIO, TextIOWrapper], output_format: OutputFormat):
+    if output_format is OutputFormat.MULTI_JSON:
         return MultiJsonWriter(fh)
-    elif format is OutputFormat.Csv:
+    if output_format is OutputFormat.CSV:
         return CSVWriter(fh)
-    else:
-        raise BaseException("Output format not support")  # TODO: Better handle
+    raise WriterNotFoundException("Output format not support")
+
+
+class WriterNotFoundException(BaseException):
+    """The writer isn't defined."""

@@ -2,6 +2,14 @@ import logging
 
 
 def get_logger(debug: bool):
+    """Provides a logger in case one is not provided.
+
+    Args:
+        debug (bool): Should logs be in debug
+
+    Returns:
+        Logger: Python logger
+    """
     logger = logging.getLogger('authz-analyzer')
     level = logging.INFO if not debug else logging.DEBUG
     logger.setLevel(level)
