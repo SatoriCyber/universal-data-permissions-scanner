@@ -44,6 +44,8 @@ GRANTED_BY_TO_PATHZ_ELEMENT = {
     "PROJECT": AuthzPathElementType.PROJECT,
     "folder": AuthzPathElementType.FOLDER,
     "FOLDER": AuthzPathElementType.FOLDER,
+    "organization": AuthzPathElementType.ORGANIZATION,
+    "ORGANIZATION": AuthzPathElementType.ORGANIZATION,
 }
 
 IDENTITY_TYPE_MAP = {
