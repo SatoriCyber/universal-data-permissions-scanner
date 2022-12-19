@@ -41,7 +41,7 @@ twine = {version="^4.0.2", optional=true}
 
 [tool.poetry.extras]
 test = ["pytest", "pytest-cov", "black", "isort", "twine"]
-build = ["twine"]
+
 # Disable docs for now, need to figure it out
 # doc = [
 #     "mkdocs",
