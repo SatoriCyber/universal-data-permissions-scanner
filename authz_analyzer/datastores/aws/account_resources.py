@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from serde import field, serde, to_dict, from_dict
 from boto3 import Session
 from logging import Logger
-from authz_analyzer.utils.aws.service_entity_base import ServiceType, ServiceEntityBase
-from authz_analyzer.utils.aws.s3.bucket import S3ServiceType, S3Bucket, S3_SERVICE_NAME
+from authz_analyzer.datastores.aws.services.service_entity_base import ServiceType, ServiceEntityBase
+from authz_analyzer.datastores.aws.services.s3.bucket import S3ServiceType, S3Bucket, S3_SERVICE_NAME
 
 
 def to_dict_serializer(account_resources: Dict[ServiceType, List[ServiceEntityBase]]) -> Dict[str, List[Any]]:

@@ -3,7 +3,7 @@ from logging import Logger
 
 from authz_analyzer.datastores.bigquery.analyzer import BigQueryAuthzAnalyzer
 from authz_analyzer.datastores.snowflake.analyzer import SnowflakeAuthzAnalyzer
-from authz_analyzer.datastores.s3.analyzer import S3AuthzAnalyzer
+from authz_analyzer.datastores.aws.services.s3.analyzer import S3AuthzAnalyzer
 from authz_analyzer.writers import OutputFormat, get_writer
 
 

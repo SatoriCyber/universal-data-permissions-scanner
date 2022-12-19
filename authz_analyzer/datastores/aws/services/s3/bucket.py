@@ -4,11 +4,11 @@ from typing import Dict, Any, Optional, Type, List, Union
 from dataclasses import dataclass
 from logging import Logger
 from botocore.exceptions import ClientError
-from authz_analyzer.utils.aws.iam.policy import PolicyDocument
-from authz_analyzer.utils.aws.service_entity_base import ServiceType, ServiceEntityBase
-from authz_analyzer.utils.aws.iam.policy.resolve_service_entities_base import ResolvedServiceEntitiesBase
-from authz_analyzer.utils.aws.s3.bucket_acl import S3BucketACL
-from authz_analyzer.utils.aws.iam.public_block_access_config import PublicAccessBlockConfiguration
+from authz_analyzer.datastores.aws.iam.policy import PolicyDocument
+from authz_analyzer.datastores.aws.services.service_entity_base import ServiceType, ServiceEntityBase
+from authz_analyzer.datastores.aws.iam.policy.resolve_service_entities_base import ResolvedServiceEntitiesBase
+from authz_analyzer.datastores.aws.services.s3.bucket_acl import S3BucketACL
+from authz_analyzer.datastores.aws.iam.public_block_access_config import PublicAccessBlockConfiguration
 from serde import serde, field, from_dict
 
 

@@ -4,11 +4,11 @@ from pathlib import Path
 import networkx as nx
 from logging import Logger
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from authz_analyzer.utils.aws.s3.bucket import get_buckets, S3Bucket
-from authz_analyzer.utils.aws.iam.iam_users import get_iam_users, IAMUser
-from authz_analyzer.utils.aws.iam.iam_groups import get_iam_groups, IAMGroup
-from authz_analyzer.utils.aws.iam.iam_roles import get_iam_roles, IAMRole
-from authz_analyzer.utils.aws.iam.iam_policies import get_iam_policies, IAMPolicy
+from authz_analyzer.datastores.aws.services.s3.bucket import get_buckets, S3Bucket
+from authz_analyzer.datastores.aws.iam.iam_users import get_iam_users, IAMUser
+from authz_analyzer.datastores.aws.iam.iam_groups import get_iam_groups, IAMGroup
+from authz_analyzer.datastores.aws.iam.iam_roles import get_iam_roles, IAMRole
+from authz_analyzer.datastores.aws.iam.iam_policies import get_iam_policies, IAMPolicy
 from serde import serde, from_dict, serialize, deserialize, serde
 from dataclasses import dataclass
 
