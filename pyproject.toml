@@ -34,10 +34,10 @@ psycopg2 = "^2.9.5"
 psycopg2-binary = "^2.9.5"
 google-cloud-iam = "^2.10.0"
 pytest  = {version="^7.2.0", optional = true}
-
+pytest-cov  = {version="^4.0.0", optional = true}
 
 [tool.poetry.extras]
-test = ["pytest"]
+test = ["pytest", "pytest-cov"]
 # Disable docs for now, need to figure it out
 # doc = [
 #     "mkdocs",
