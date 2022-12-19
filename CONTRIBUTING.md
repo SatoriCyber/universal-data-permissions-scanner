@@ -59,7 +59,7 @@ Ready to contribute? Here's how to set up `authz-analyzer` for local development
 4. Install dependencies and start your virtualenv:
 
     ```
-    $ poetry install -E test -E doc -E dev
+    $ poetry install
     ```
 
 5. Create a branch for local development:
@@ -86,6 +86,13 @@ Ready to contribute? Here's how to set up `authz-analyzer` for local development
     ```
 
 8. Submit a pull request through the GitHub website.
+
+### hints
+If you are using MAC OS with M1 chip, add the following environment variable to your .bash_profile
+```
+export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
+export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
+```
 
 ## Pull Request Guidelines
 
