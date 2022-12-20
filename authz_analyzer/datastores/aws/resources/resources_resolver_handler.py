@@ -2,14 +2,14 @@ from typing import Dict, Any, Optional, Type, List, Union, Tuple, AnyStr, Set
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from logging import Logger
-from authz_analyzer.datastores.aws.services.service_entity_base import ServiceType, ServiceEntityBase
-from authz_analyzer.datastores.aws.iam.policy.resolve_service_entities_base import ResolvedServiceEntitiesBase
-from authz_analyzer.datastores.aws.account_resources import AwsAccountResources
+from authz_analyzer.datastores.aws.services.service_base import ServiceType, ServiceResourceBase
+from authz_analyzer.datastores.aws.resources.service_resources_resolver_base import ServiceResourcesResolverBase
+from authz_analyzer.datastores.aws.resources.account_resources import AwsAccountResources
 
 
 @dataclass
-class ResolvedResourcesHandler:
-    resolved_resources: Dict[ServiceType, ResolvedServiceEntitiesBase]
+class ResourcesResolverHandler:
+    resolved_resources: Dict[ServiceType, ServiceResourcesResolverBase]
 
     # def subtraction(self, other: 'ResolvedResources'):
     #     for resolved_resource in self.resolved_resources:
@@ -23,27 +23,27 @@ class ResolvedResourcesHandler:
         stmt_resource_regex: str,
         account_resources: AwsAccountResources,
         allow_types_to_resolve: Set[ServiceType],
-    ) -> Dict[ServiceType, ResolvedServiceEntitiesBase]:
-        ret: Dict[ServiceType, ResolvedServiceEntitiesBase] = dict()
-        for service_type, service_entities in account_resources.account_resources.items():
+    ) -> Dict[ServiceType, ServiceResourcesResolverBase]:
+        ret: Dict[ServiceType, ServiceResourcesResolverBase] = dict()
+        for service_type, service_resources in account_resources.account_resources.items():
             if stmt_resource_regex != "*" or service_type not in allow_types_to_resolve:
                 continue
 
-            service_prefix = f"{service_type.get_service_prefix()}:"
+            service_prefix = service_type.get_resource_service_prefix()
             stmt_relative_id_regex = (
                 "*"
                 if stmt_resource_regex == "*"
-                else stmt_resource_regex[len(service_prefix) :]
+                else stmt_resource_regex[len(service_prefix):]
                 if stmt_resource_regex.startswith(service_prefix)
                 else None
             )
             if stmt_relative_id_regex is None:
                 continue
 
-            resolved_service_entities: ResolvedServiceEntitiesBase = service_type.load_resolver_service_entities(
-                logger, stmt_relative_id_regex, service_entities
+            resolved_service_resources: ServiceResourcesResolverBase = service_type.load_resolver_service_resources(
+                logger, stmt_relative_id_regex, service_resources
             )
-            ret[service_type] = resolved_service_entities
+            ret[service_type] = resolved_service_resources
 
         return ret
 
@@ -54,22 +54,22 @@ class ResolvedResourcesHandler:
         stmt_resource_regexes: Union[str, List[str]],
         account_resources: AwsAccountResources,
         allow_types_to_resolve: Set[ServiceType],
-    ) -> 'ResolvedResourcesHandler':
-        resolved_resources: Dict[ServiceType, ResolvedServiceEntitiesBase] = dict()
+    ) -> 'ResourcesResolverHandler':
+        resolved_resources: Dict[ServiceType, ServiceResourcesResolverBase] = dict()
         if isinstance(stmt_resource_regexes, str):
             stmt_resource_regexes = [stmt_resource_regexes]
 
         for stmt_resource_regex in stmt_resource_regexes:
-            ret: Dict[ServiceType, ResolvedServiceEntitiesBase] = ResolvedResourcesHandler.resolve_stmt_resource_regex(
+            ret: Dict[ServiceType, ServiceResourcesResolverBase] = ResourcesResolverHandler.resolve_stmt_resource_regex(
                 logger, stmt_resource_regex, account_resources, allow_types_to_resolve
             )
-            for service_type, resolved_service_entities in ret.items():
-                curr_resolved_service_entities: Optional[ResolvedServiceEntitiesBase] = resolved_resources.get(
+            for service_type, resolved_service_resources in ret.items():
+                curr_resolved_service_resources: Optional[ServiceResourcesResolverBase] = resolved_resources.get(
                     service_type, None
                 )
-                if curr_resolved_service_entities is not None:
-                    curr_resolved_service_entities.merge(resolved_service_entities)
+                if curr_resolved_service_resources is not None:
+                    curr_resolved_service_resources.merge(resolved_service_resources)
                 else:
-                    resolved_resources[service_type] = resolved_service_entities
+                    resolved_resources[service_type] = resolved_service_resources
 
         return cls(resolved_resources=resolved_resources)
