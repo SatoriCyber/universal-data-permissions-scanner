@@ -9,8 +9,8 @@ from authz_analyzer.writers.base_writers import BaseWriter
 class CSVWriter(BaseWriter):
     """Writer for CSV."""
     def __init__(self, fh: TextIO):
+        self.writer = csv.writer(fh, dialect="excel", escapechar="\\", strict=True)
         super().__init__(fh)
-        self.writer = csv.writer(self.fh, dialect="excel", escapechar="\\", strict=True)
 
     def _write_header(self):
         self.writer.writerow(["identity", "permission", "asset", "granted_by"])

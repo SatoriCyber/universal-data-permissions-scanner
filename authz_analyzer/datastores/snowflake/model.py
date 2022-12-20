@@ -5,7 +5,6 @@ from typing import Dict, Set
 
 from authz_analyzer.models import PermissionLevel
 
-
 PERMISSION_LEVEL_MAP = {
     "SELECT": PermissionLevel.READ,
     "REFERENCES": PermissionLevel.READ,
