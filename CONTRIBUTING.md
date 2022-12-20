@@ -28,6 +28,15 @@ wanted" is open to whoever wants to implement it.
 Look through the GitHub issues for features. Anything tagged with "enhancement"
 and "help wanted" is open to whoever wants to implement it.
 
+## Adding a new datastore
+Each datastore need to implement the following methods:
+* connect
+* run
+
+The connect will create a connection to the datastore.
+The run will build the model as described in the [Model](authz_analyzer/models/model.py) package.
+The run needs to call BaseWriter.write_entry() with AuthzEntry object which presents a line.
+
 ### Write Documentation
 
 authz-analyzer could always use more documentation, whether as part of the
