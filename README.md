@@ -12,14 +12,14 @@ John Doe, ACCOUNTADMIN, WRITE, test.public.customers
 
 ## Features
 
-### Supported datastores:
+### Supported datastores
 * PostgreSQL
 * Snowflake
 * BigQuery
 * S3
 
 
-### Supported formats:
+### Supported formats
 * CSV
 * MultiJson
 
