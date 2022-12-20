@@ -23,11 +23,11 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, cursor
 
 from authz_analyzer.datastores.postgres import exporter
 from authz_analyzer.datastores.postgres.model import (
+    PERMISSION_LEVEL_MAP,
     AuthorizationModel,
     DBRole,
     ResourceGrant,
     RoleName,
-    PERMISSION_LEVEL_MAP
 )
 from authz_analyzer.models.model import PermissionLevel
 from authz_analyzer.utils.logger import get_logger

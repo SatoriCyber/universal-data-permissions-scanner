@@ -1,15 +1,16 @@
 """Console script for authz_analyzer."""
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import Optional
+
 import click
 
 if sys.executable != sys.argv[0]:
     sys.path.insert(0, (os.path.join(os.path.dirname(__file__), "..")))
 
 
-from authz_analyzer.main import run_bigquery, run_snowflake, run_s3, run_postgres
+from authz_analyzer.main import run_bigquery, run_postgres, run_s3, run_snowflake
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import OutputFormat
 

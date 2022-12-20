@@ -30,11 +30,11 @@ from snowflake.connector.cursor import SnowflakeCursor
 
 from authz_analyzer.datastores.snowflake import exporter
 from authz_analyzer.datastores.snowflake.model import (
+    PERMISSION_LEVEL_MAP,
     AuthorizationModel,
     DBRole,
     ResourceGrant,
     User,
-    PERMISSION_LEVEL_MAP
 )
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
