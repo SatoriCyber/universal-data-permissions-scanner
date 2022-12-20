@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
 from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
-from authz_analyzer.datastores.aws.account_resources import AwsAccountResources
-from authz_analyzer.datastores.aws.services.s3.bucket import S3ServiceType
+from authz_analyzer.datastores.aws.resources.account_resources import AwsAccountResources
+from authz_analyzer.datastores.aws.services.s3.s3_service import S3ServiceType
 from authz_analyzer.datastores.aws.aws_authz_analyzer import AwsAuthzAnalyzer
 from authz_analyzer.datastores.base import BaseAuthzAnalyzer
 from authz_analyzer.utils.logger import get_logger

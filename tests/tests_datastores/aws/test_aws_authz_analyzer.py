@@ -3,7 +3,7 @@ import pytest
 import pathlib
 import json
 from authz_analyzer.datastores.aws.aws_authz_analyzer import AwsAuthzAnalyzer
-from authz_analyzer.datastores.aws.services.s3.bucket import S3ServiceType
+from authz_analyzer.datastores.aws.services.s3.s3_service import S3ServiceType
 from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
 from authz_analyzer.utils.logger import get_logger
 from serde.json import to_json, from_dict
@@ -40,15 +40,3 @@ def test_authz_analyzer_load_satori_dev_json_file():
         authz_analyzer_json_from_serde = json.loads(to_json(authz_analyzer))
 
         assert authz_analyzer_json_from_file == authz_analyzer_json_from_serde
-
-
-# @pytest.mark.skipif(
-#     not os.environ.get("AUTHZ_SATORI_DEV_ACCOUNT_TEST"),
-#     reason="not really a test, just pull latest satori dev account config and write it to file",
-# )
-# def test_iam_entities_satori_dev_build_principals_network_graph():
-#     logger = get_logger(False)
-#     iam_entities: IAMEntities = IAMEntities.load_from_json_file(
-#         logger, IAM_ENTITIES_SATORI_DEV_JSON_FILE
-#     )
-#     iam_entities.build_principal_network_graph(logger)
