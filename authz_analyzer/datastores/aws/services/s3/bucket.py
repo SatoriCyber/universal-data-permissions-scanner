@@ -1,7 +1,6 @@
 import json
 from dataclasses import dataclass
-from logging import Logger
-from typing import Any, Dict, Iterable, List, Optional, Set, Type, Union, cast
+from typing import List, Optional
 
 from boto3 import Session
 from botocore.exceptions import ClientError

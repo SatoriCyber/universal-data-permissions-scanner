@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from serde import deserialize, serde, serialize
+from serde import serde
 
 
 @serde(rename_all = "pascalcase")

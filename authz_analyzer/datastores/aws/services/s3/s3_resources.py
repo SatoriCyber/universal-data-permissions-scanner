@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 from enum import Enum, auto
 from logging import Logger
-from typing import Any, Dict, Iterable, List, Optional, Set, Type, Union, cast
+from typing import List, Optional, Set
 
 from authz_analyzer.datastores.aws.resources.service_resources_resolver_base import ServiceResourcesResolverBase
 from authz_analyzer.datastores.aws.services.s3.bucket import S3Bucket
@@ -39,7 +39,7 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
 
     @classmethod
     def load(
-        cls, logger: Logger, stmt_relative_id_regex: str, service_resources: List[S3Bucket]
+        cls, _logger: Logger, stmt_relative_id_regex: str, service_resources: List[S3Bucket]
     ) -> 'S3ServiceResourcesResolver':
         res = stmt_relative_id_regex.split('/', 1)
         # https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-arn-format.html

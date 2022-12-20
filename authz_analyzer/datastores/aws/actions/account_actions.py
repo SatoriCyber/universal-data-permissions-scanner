@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Any, AnyStr, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Dict, List, Set
 
 from serde import field, from_dict, serde, to_dict
 

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Set
 
 from boto3 import Session
 from serde import serde

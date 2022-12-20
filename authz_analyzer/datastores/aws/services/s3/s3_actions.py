@@ -1,9 +1,9 @@
 import re
 from dataclasses import dataclass
 from logging import Logger
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Union
+from typing import List, Set
 
-from serde import field, from_dict, serde
+from serde import serde
 
 from authz_analyzer.datastores.aws.actions.service_actions_resolver_base import ServiceActionsResolverBase
 from authz_analyzer.datastores.aws.services.s3.s3_resources import S3ResourceType
@@ -36,7 +36,7 @@ class S3Action(ServiceActionBase):
         return self.permission_level
 
     @classmethod
-    def load_s3_actions(cls, logger: Logger) -> List[ServiceActionBase]:
+    def load_s3_actions(cls, _logger: Logger) -> List[ServiceActionBase]:
         return s3_actions
 
 
@@ -60,7 +60,7 @@ class S3ServiceActionsResolver(ServiceActionsResolverBase):
 
     @classmethod
     def load(
-        cls, logger: Logger, stmt_relative_id_regex: str, service_actions: List[S3Action]
+        cls, _logger: Logger, stmt_relative_id_regex: str, service_actions: List[S3Action]
     ) -> 'ServiceActionsResolverBase':
         # https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-arn-format.html
         # aws traits the '?' as regex '.' (any character)
