@@ -5,6 +5,7 @@ from pathlib import Path
 from authz_analyzer.datastores.aws.services.s3.analyzer import S3AuthzAnalyzer
 from authz_analyzer.datastores.bigquery.analyzer import BigQueryAuthzAnalyzer
 from authz_analyzer.datastores.postgres.analyzer import PostgresAuthzAnalyzer
+from authz_analyzer.datastores.redshift.analyzer import RedshiftAuthzAnalyzer
 from authz_analyzer.datastores.snowflake.analyzer import SnowflakeAuthzAnalyzer
 from authz_analyzer.writers import OutputFormat, get_writer
 
@@ -76,6 +77,7 @@ def run_bigquery(logger: Logger, project_id: str, output_format: OutputFormat, o
     analyzer = BigQueryAuthzAnalyzer.connect(logger=logger, project_id=project_id, output_path=output_path, output_format=output_format)
     analyzer.run()
 
+
 def run_postgres(logger: Logger, username: str, password: str, host: str, dbname: str, output_format: OutputFormat, output_path: Path, port: int):
     """Run Postgres analyzer.
 
@@ -90,3 +92,19 @@ def run_postgres(logger: Logger, username: str, password: str, host: str, dbname
         port (int): Postgres port
     """
     PostgresAuthzAnalyzer.connect(username=username, password=password, host=host, dbname=dbname, output_path=output_path, output_format=output_format, logger=logger, port=port)
+
+
+def run_redshift(logger: Logger, username: str, password: str, host: str, dbname: str, output_format: OutputFormat, output_path: Path, port: int):
+    """Run Redshift analyzer.
+
+    Args:
+        logger (Logger): Logger
+        username (str): Postgres username
+        password (str): Postgres password
+        host (str): FQDN or IP of the postgres DB
+        dbname (str): Postgres database name, for example postgres
+        output_format (OutputFormat): Output format, CSV or JSON
+        output_path (str): Where to write the output
+        port (int): Redshift port
+    """
+    RedshiftAuthzAnalyzer.connect(username=username, password=password, host=host, dbname=dbname, output_path=output_path, output_format=output_format, logger=logger, port=port)
