@@ -1,20 +1,22 @@
-# authz-analyzer
-
-
-
-
-Analyze DB authorization will connect to your database, and analyze which user has which permission and will provide you a CSV file of the follow:
-USERNAME, ROLE, ACCESS LEVEL, TABLE, GRATED TIME
+# Authz-Analyzer
+Authz Analyzer is a tool that will help you analyze your database authorization.
+Which identity has access to which table/view, and what is the access level.
+The tool will provide a simple access permission type, read/write/full.
+Analyze DB authorization will connect to your datastore/database, and analyze which user has which permission and will provide you a CSV file of the follow:
+USERNAME, ROLE, ACCESS LEVEL, TABLE
 
 For example:
 
-John Doe, ACCOUNTADMIN, WRITE, customers, 2022-11-01 09:20:00
+John Doe, ACCOUNTADMIN, WRITE, test.public.customers
 
 
 ## Features
 
-* TODO
+* Supported datastores: PostgreSQL, Snowflake, BigQuery, S3.
 
+
+## Contributing
+Please follow the [contributing guidelines](CONTRIBUTING.md).
 
 ## Credits
 

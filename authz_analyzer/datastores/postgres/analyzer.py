@@ -21,14 +21,13 @@ from typing import Any, Dict, List, Optional, Set, Union
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, cursor
 
-from authz_analyzer.datastores.base import BaseAuthzAnalyzer
 from authz_analyzer.datastores.postgres import exporter
 from authz_analyzer.datastores.postgres.model import (
     AuthorizationModel,
     DBRole,
     ResourceGrant,
     RoleName,
-    permission_level_from_str,
+    PERMISSION_LEVEL_MAP
 )
 from authz_analyzer.models.model import PermissionLevel
 from authz_analyzer.utils.logger import get_logger
@@ -39,7 +38,8 @@ COMMANDS_DIR = Path(__file__).parent / "commands"
 
 
 @dataclass
-class PostgresAuthzAnalyzer(BaseAuthzAnalyzer):
+class PostgresAuthzAnalyzer:
+    """Analyze authorization for Postgres."""
     cursors: List[cursor]
     writer: BaseWriter
     logger: Logger
@@ -52,14 +52,26 @@ class PostgresAuthzAnalyzer(BaseAuthzAnalyzer):
         host: str,
         dbname: str,
         logger: Optional[Logger] = None,
-        output_format: OutputFormat = OutputFormat.Csv,
+        output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
         **connection_kwargs: Any,
     ):
+        """Connect to Postgres and return an analyzer.
+
+        Args:
+            username (str): Postgres username
+            password (str): Postgres password
+            host (str): Postgres host, can be a hostname or an IP address
+            dbname (str): Postgres database name
+            logger (Optional[Logger], optional): Python logger. Defaults to None.
+            output_path (Union[Path, str], optional): Path to write the file. Defaults to ./authz-analyzer-export.
+            output_format (OutputFormat, optional): Output format. Defaults to OutputFormat.CSV.
+            credentials_str (Optional[str], optional): ServiceAccount to connect to BigQuery. Defaults to None.
+        """
         if logger is None:
             logger = get_logger(False)
 
-        writer = get_writer(filename=output_path, format=output_format)
+        writer = get_writer(filename=output_path, output_format=output_format)
         connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
             user=username, password=password, host=host, dbname=dbname, **connection_kwargs
         )
@@ -82,6 +94,7 @@ class PostgresAuthzAnalyzer(BaseAuthzAnalyzer):
     def run(
         self,
     ):
+        """Read all tables in all databases and calculate authz paths."""
         authorization_model = self._get_authorization_model()
 
         self.logger.info("Starting to Analyze")
@@ -142,7 +155,7 @@ class PostgresAuthzAnalyzer(BaseAuthzAnalyzer):
                 _grantor = row[0]
                 role = row[1]
                 table_name = row[2]
-                level = permission_level_from_str(row[3])
+                level = PERMISSION_LEVEL_MAP.get(row[3], PermissionLevel.UNKNOWN)
 
                 role_grants = results.setdefault(role, set())
                 role_grants.add(ResourceGrant(table_name, level))

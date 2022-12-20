@@ -12,6 +12,7 @@ from authz_analyzer.models.model import PermissionLevel
 
 @dataclass
 class BigQueryService:
+    """BigQueryService is a wrapper for the BigQuery client."""
     project_id: str
     bq_client: bigquery.Client
     project: Project
@@ -24,6 +25,11 @@ class BigQueryService:
 
     @classmethod
     def load(cls, project_id: str, **kwargs: Any):
+        """Connect to the BigQuery.
+
+        Args:
+            project_id (str): GCP Project ID
+        """
         projects_client = resourcemanager_v3.ProjectsClient(**kwargs)
         project = BigQueryService._get_project(projects_client, project_id)
         folders_client = resourcemanager_v3.FoldersClient(**kwargs)
@@ -70,18 +76,56 @@ class BigQueryService:
         return self.org_client.get_iam_policy(request=request)  # type: ignore
 
     def list_datasets(self) -> List[str]:
+        """List all datasets in the GCP project
+
+        Returns:
+            List[str]: A list of all dataset IDs
+        """
         return list(map(lambda dataset: dataset.dataset_id, self.bq_client.list_datasets()))  # type: ignore
 
     def get_dataset(self, dataset_id: str):
+        """Get a dataset
+
+        Args:
+            dataset_id (str): Dataset ID
+
+        Returns:
+            Dataset: A GCP Dataset object
+        """
         return self.bq_client.get_dataset(dataset_id)  # type: ignore
 
     def list_tables(self, dataset_id: str):
+        """List all tables in a dataset
+
+        Args:
+            dataset_id (str): Dataset ID
+
+        Returns:
+            HTTPIterator: Iterator of Table objects
+        """
         return self.bq_client.list_tables(dataset_id)  # type: ignore
 
     def get_table_policy(self, table_fqn: str):
+        """Get the IAM policy for a table
+
+        Args:
+            table_fqn (str): The table full name, e.g. project.dataset.table
+
+        Returns:
+            Policy: A GCP Policy object
+        """
         return self.bq_client.get_iam_policy(table_fqn)  # type: ignore
 
     def lookup_ref(self, ref_id: str, resolve_permission_callback: Callable[[str], Optional[PermissionLevel]]):
+        """_summary_
+
+        Args:
+            ref_id (str): A reference ID, e.g. PROJECT, FOLDER:123, ORGANIZATION:123
+            resolve_permission_callback (Callable[[str], Optional[PermissionLevel]]): Resolve permission from role to a permission level
+
+        Returns:
+            IamPolicyNode: A node in the IAM policy tree
+        """
         if ref_id == "PROJECT":
             return self.lookup_project(resolve_permission_callback)
 
@@ -106,7 +150,7 @@ class BigQueryService:
         """Read project folder and org info
 
         Returns:
-            _type_: _description_
+            IamPolicyNode: A node in the IAM policy tree
         """
 
         project_iam = self._get_project_iam()

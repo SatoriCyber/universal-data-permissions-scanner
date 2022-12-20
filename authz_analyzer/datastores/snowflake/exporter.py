@@ -57,6 +57,7 @@ def _iter_role_row(
 
 
 def export(model: AuthorizationModel, writer: BaseWriter):
+    """Export the model to the writer."""
     for username, roles in model.users_to_roles.items():
         for role in roles:
             for entry in _iter_role_row(

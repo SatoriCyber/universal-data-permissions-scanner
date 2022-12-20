@@ -28,14 +28,13 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import snowflake.connector
 from snowflake.connector.cursor import SnowflakeCursor
 
-from authz_analyzer.datastores.base import BaseAuthzAnalyzer
 from authz_analyzer.datastores.snowflake import exporter
 from authz_analyzer.datastores.snowflake.model import (
     AuthorizationModel,
     DBRole,
     ResourceGrant,
     User,
-    permission_level_from_str,
+    PERMISSION_LEVEL_MAP
 )
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
@@ -45,7 +44,8 @@ COMMANDS_DIR = Path(__file__).parent / "commands"
 
 
 @dataclass
-class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
+class SnowflakeAuthzAnalyzer:
+    """Analyze authorization for Snowflake."""
     cursor: SnowflakeCursor
     writer: BaseWriter
     logger: Logger
@@ -59,14 +59,26 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
         password: str,
         warehouse: str,
         logger: Optional[Logger] = None,
-        output_format: OutputFormat = OutputFormat.Csv,
+        output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
         **snowflake_connection_kwargs: Any,
     ):
+        """Connect to Snowflake and return an analyzer.
+
+        Args:
+            host (str): Snowflake host
+            account (str): Snowflake account
+            username (str): Snowflake username to connect with
+            password (str): Snowflake password to connect with
+            warehouse (str): Snowflake warehouse to use
+            logger (Optional[Logger], optional): Python logger. Defaults to None.
+            output_path (Union[Path, str], optional): Path to write the file. Defaults to ./authz-analyzer-export.
+            output_format (OutputFormat, optional): Output format. Defaults to OutputFormat.CSV.
+        """
         if logger is None:
             logger = get_logger(False)
 
-        writer = get_writer(filename=output_path, format=output_format)
+        writer = get_writer(filename=output_path, output_format=output_format)
 
         connector = snowflake.connector.connect(  # type: ignore
             user=username,
@@ -81,7 +93,8 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
 
     def run(
         self,
-    ):
+    ): 
+        """Run the analyzer."""
         self.logger.info("Starting to  query")
         authorization_model = self._get_authorization_model()
         self.logger.info("Starting to Analyze")
@@ -118,7 +131,7 @@ class SnowflakeAuthzAnalyzer(BaseAuthzAnalyzer):
     def _add_role_to_resources(
         role_name: str, table_name: str, raw_level: str, role_to_resources: Dict[str, Set[ResourceGrant]]
     ):
-        level = permission_level_from_str(raw_level)
+        level = PERMISSION_LEVEL_MAP[raw_level]
         role_grants = role_to_resources.setdefault(role_name, set())
         role_grants.add(ResourceGrant(table_name, level))
 

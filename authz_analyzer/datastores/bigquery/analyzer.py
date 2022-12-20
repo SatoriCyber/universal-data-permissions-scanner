@@ -2,7 +2,7 @@
 
 Bigquery authorization is based on GCP IAM.
 With IAM, you manage access control by defining who (identity) has what access (role) for which resource.
-In IAM, permission to access a resource isn't granted directly to the end user.
+In IAM, permission to access a resource isn't granted directly to the end user,
 Instead, permissions are grouped into roles, and roles are granted to authenticated principals.
 This model for access management has three main parts:
 
@@ -10,38 +10,22 @@ Principal:
 A principal can be a Google Account (for end users).
 A service account (for applications and compute workloads).
 A Google group.
-A Google Workspace account or Cloud Identity domain that can access a resource. 
+A Google Workspace account or Cloud Identity domain that can access a resource.
 Each principal has its own identifier, which is typically an email address.
 
-Role: 
-A role is a collection of permissions. 
-Permissions determine what operations are allowed on a resource. 
+Role:
+A role is a collection of permissions.
+Permissions determine what operations are allowed on a resource.
 When you grant a role to a principal, you grant all the permissions that the role contains.
 
-Policy: 
-The allow policy is a collection of role bindings that bind one or more principals to individual roles. 
-When you want to define who (principal) has what type of access (role) on a resource, 
+Policy:
+The allow policy is a collection of role bindings that bind one or more principals to individual roles.
+When you want to define who (principal) has what type of access (role) on a resource,
 you create an allow policy and attach it to the resource.
 
-All authenticated users
-The value allAuthenticatedUsers is a special identifier that represents 
-all service accounts and all users on the internet who have authenticated with a Google Account. 
-This identifier includes accounts that aren't connected to a Google Workspace account or Cloud Identity domain, 
-such as personal Gmail accounts. 
-Users who aren't authenticated, such as anonymous visitors, aren't included.
-This principal type doesn't include identities that come from external identity providers (IdPs). 
-If you use workforce identity federation or workload identity federation, don't use allAuthenticatedUsers. Instead, use one of the following:
-
-To include users from all IdPs, use allUsers.
-To include users from specific external IdPs, 
-use the identifier for all identities in a workforce identity pool or all identities in a workload identity pool.
-
-All users
-The value allUsers is a special identifier that represents anyone who is on the internet, 
-including authenticated and unauthenticated users.
-
 You can grant access to a project.
-Most services support IAM permission with finer granularity, like access to specific bucket at the storage and etc'.
+Most services support IAM permission with finer granularity,
+like access to specific bucket at the storage and etc'.
 
 There are several kinds of roles in IAM:
 Basic roles: Roles historically available in the Google Cloud console. These roles are Owner, Editor, and Viewer.
@@ -95,6 +79,7 @@ from authz_analyzer.writers.get_writers import get_writer
 
 @dataclass
 class BigQueryAuthzAnalyzer:
+    """BigQuery authorization analyzer."""
     logger: Logger
     service: BigQueryService
     writer: BaseWriter
@@ -104,12 +89,21 @@ class BigQueryAuthzAnalyzer:
         cls,
         project_id: str,
         logger: Optional[Logger] = None,
-        output_format: OutputFormat = OutputFormat.Csv,
+        output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
         credentials_str: Optional[str] = None,
         **kwargs: Any,
     ):
-        writer = get_writer(filename=output_path, format=output_format)
+        """Connect to BigQuery and return an instance of the analyzer.
+
+        Args:
+            project_id (str): GCP project id to analyze.
+            logger (Optional[Logger], optional): Python logger. Defaults to None.
+            output_format (OutputFormat, optional): file format to export. Defaults to OutputFormat.CSV.
+            output_path (Union[Path, str], optional): Path to write the file. Defaults to ./authz-analyzer-export.
+            credentials_str (Optional[str], optional): ServiceAccount to connect to BigQuery. Defaults to None.
+        """
+        writer = get_writer(filename=output_path, output_format=output_format)
         if logger is None:
             logger = get_logger(False)
         if credentials_str is not None:
@@ -135,6 +129,7 @@ class BigQueryAuthzAnalyzer:
                 table_node = TableIamPolicyNode(fq_table_id, name, table_iam, self._resolve_custom_role_to_permissions)
                 table_node.set_parent(dataset_node)
                 self._calc(Asset(fq_table_id, type=AssetType.TABLE), table_node, [])
+        self.writer.close()
 
     def _calc(
         self,

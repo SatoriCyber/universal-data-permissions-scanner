@@ -1,6 +1,6 @@
 """Generic data model.
 
-Describes a permission to an asset that was granted to an identity. 
+Describes a permission to an asset that was granted to an identity.
 The way the permission was granted is described in the path.
 """
 from dataclasses import dataclass
@@ -9,14 +9,14 @@ from typing import List
 
 
 class AssetType(Enum):
-    """Define the types of assets that are stored at the datastores."""
+    """Types of assets that are stored at the datastores."""
 
     TABLE = auto()
     VIEW = auto()
 
 
 class IdentityType(Enum):
-    """Defines the types of identities that are used by the datastores."""
+    """Types of identities that are used by the datastores."""
 
     USER = auto()  # Snowflake, GCP
     ROLE_LOGIN = auto()  # Postgres
@@ -36,7 +36,7 @@ class IdentityType(Enum):
 
 
 class AuthzPathElementType(Enum):
-    """Defines the types of elements that can be used by datastores to grant permissions."""
+    """Types of elements that can be used by datastores to grant permissions."""
 
     ROLE = auto()  # Used by Snowflake, and Postgres
     DATASET = auto()  # used by GCP
@@ -56,7 +56,7 @@ class AuthzPathElementType(Enum):
 
 
 class PermissionLevel(Enum):
-    """Define the permission levels that can be granted to an asset."""
+    """Permission levels that can be granted to an asset."""
 
     READ = auto()
     WRITE = auto()
@@ -73,10 +73,12 @@ class PermissionLevel(Enum):
         return hash(self.value)
 
 
-# Describes an element of the authorization entry path, for example a group or a role
-# that was used to grant permission to an asset.
+
 @dataclass
 class AuthzPathElement:
+    """Element of the authorization entry path which grants access.
+    For example a group or a role that was used to grant permission to an asset.
+    """
     id: str
     name: str
     type: AuthzPathElementType
@@ -88,12 +90,18 @@ class AuthzPathElement:
 
 @dataclass
 class Asset:
+    """Datastore asset.
+    For example, a table, or a view.
+    """
     name: str
     type: AssetType
 
 
 @dataclass
 class Identity:
+    """An identity which has access to an asset.
+    For example, User, Role, ServiceAccount etc'
+    """
     id: str
     type: IdentityType
     name: str
@@ -101,6 +109,9 @@ class Identity:
 
 @dataclass
 class AuthzEntry:
+    """A single entry which describe access to an asset.
+    For example, USER has role ROLE1 which grants access to TABLE1.
+    """
     asset: Asset
     path: List[AuthzPathElement]
     identity: Identity

@@ -60,6 +60,7 @@ IDENTITY_TYPE_MAP = {
 
 @dataclass
 class Member:
+    """Defines a GCP member, which is a combination of a role and an identity."""
     role: str
     name: str
     type: IdentityType
@@ -108,18 +109,8 @@ class GcpBindingDict(TypedDict):
 
 
 @dataclass
-class AuthzBigQueryBinding:
-    role: str
-    members: List[str]
-
-
-@dataclass
-class AuthzBigQueryPolicy:
-    bindings: List[AuthzBigQueryBinding]
-
-
-@dataclass
 class PolicyNode:
+    """Base class for a policy node, other policies node inherit from this class."""
     id: str
     name: str
     type: str
@@ -142,13 +133,30 @@ class PolicyNode:
     )
 
     def set_parent(self, parent: PolicyNode):
+        """Defines the parent of the node, for example a dataset is the parent of a table."""
         self.parent = parent
 
-    def add_member(self, member: str, permission: PermissionLevel, role: str, role_type: str):
-        parsed_member = Member(role=role, name=member, type=IDENTITY_TYPE_MAP[role_type])
+    def add_member(self, member: str, permission: PermissionLevel, role: str, member_type: str):
+        """Add a member of the node, for example user X have access to project Y with role Z.
+
+        Args:
+            member (str): The identity of the member, for example USER_1
+            permission (PermissionLevel): What permission he has, for example READ
+            role (str): The role that granted the permission.
+            member_type (str): Type of the member, for example user, group, service account.
+        """
+        parsed_member = Member(role=role, name=member, type=IDENTITY_TYPE_MAP[member_type])
         self.permissions[permission].append(parsed_member)
 
     def get_members(self, permission: PermissionLevel):
+        """Get all member for specific permission, for example all users that have READ access for project Y.
+
+        Args:
+            permission (PermissionLevel): Permission level, for example READ
+
+        Returns:
+            List[Member]: all members who has this permission.
+        """
         return self.permissions[permission]
 
     def add_reference(self, reference: str, permission: PermissionLevel, role: str, role_type: str):
@@ -159,29 +167,22 @@ class PolicyNode:
         return self.references[permission]
 
     def __repr__(self):
-        return """%s:
-    Parent: %s
+        return f"""{self.name}:
+    Parent: {self.parent}
     Permissions:
-        - READ: %s
-        - WRITE: %s
-        - FULL: %s
+        - READ: {self.get_members(PermissionLevel.READ)}
+        - WRITE: {self.get_members(PermissionLevel.WRITE)}
+        - FULL: {self.get_members(PermissionLevel.FULL)}
     References:
-        - READ: %s
-        - WRITE: %s
-        - FULL: %s
-         """ % (
-            self.name,
-            self.parent,
-            self.get_members(PermissionLevel.READ),
-            self.get_members(PermissionLevel.WRITE),
-            self.get_members(PermissionLevel.FULL),
-            self.get_references(PermissionLevel.READ),
-            self.get_references(PermissionLevel.WRITE),
-            self.get_references(PermissionLevel.FULL),
-        )
+        - READ: {self.get_references(PermissionLevel.READ)}
+        - WRITE: {self.get_references(PermissionLevel.WRITE)}
+        - FULL: {self.get_references(PermissionLevel.FULL)}"
+        """
 
 
 class IamPolicyNode(PolicyNode):
+    """Represents a GCP IAM policy node, for example a project, folder, organization.
+    """
     def __init__(
         self,
         policy_id: str,
@@ -215,6 +216,7 @@ class IamPolicyNode(PolicyNode):
 
 
 class TableIamPolicyNode(PolicyNode):
+    """Represents a BigQuery table IAM policy."""
     def __init__(
         self,
         table_id: str,
@@ -243,6 +245,7 @@ class TableIamPolicyNode(PolicyNode):
 
 
 class DatasetPolicyNode(PolicyNode):
+    """Represents a BigQuery dataset policy node."""
     def __init__(self, dataset: Dataset, resolve_permission_callback: Callable[[str], Optional[PermissionLevel]]):
         """Represent a BigQuery dataset policy node.
 
