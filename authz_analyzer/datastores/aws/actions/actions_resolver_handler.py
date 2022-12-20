@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Any, AnyStr, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import Dict, List, Optional, Set, Union
 
 from authz_analyzer.datastores.aws.actions.account_actions import AwsAccountActions
 from authz_analyzer.datastores.aws.actions.service_actions_resolver_base import ServiceActionsResolverBase

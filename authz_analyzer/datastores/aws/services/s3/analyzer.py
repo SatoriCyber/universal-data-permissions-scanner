@@ -4,10 +4,9 @@
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Optional, Union
 
 from authz_analyzer.datastores.aws.aws_authz_analyzer import AwsAuthzAnalyzer
-from authz_analyzer.datastores.aws.resources.account_resources import AwsAccountResources
 from authz_analyzer.datastores.aws.services.s3.s3_service import S3ServiceType
 from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
 from authz_analyzer.utils.logger import get_logger
@@ -46,7 +45,7 @@ class S3AuthzAnalyzer():
     def run(
         self,
     ):
-        self.logger.info(f"Starting to analyzed AWS s3 for account id: {self.account_id}")
+        self.logger.info("Starting to analyzed AWS s3 for account id: %s", self.account_id)
         session = create_session_with_assume_role(self.account_id, self.account_role_name)
-        self.logger.info(f"Successfully assume the role {self.account_role_name} for account id {self.account_id}")
-        analyzed_ctx = AwsAuthzAnalyzer.load(self.logger, self.account_id, session, set([S3ServiceType()]))
+        self.logger.info("Successfully assume the role %s for account id %s", self.account_role_name, self.account_id)
+        _analyzed_ctx = AwsAuthzAnalyzer.load(self.logger, self.account_id, session, set([S3ServiceType()]))

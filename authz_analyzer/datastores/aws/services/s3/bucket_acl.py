@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List
 
-from serde import deserialize, field, serde, serialize
+from serde import field, serde
 
 
 @serde(rename_all = "pascalcase")

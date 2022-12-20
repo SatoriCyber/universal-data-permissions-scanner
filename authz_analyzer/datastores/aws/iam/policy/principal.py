@@ -1,9 +1,8 @@
-import json
 import re
 from dataclasses import dataclass
-from typing import Any, AnyStr, Dict, List, Optional, Tuple, Type, Union
+from typing import Dict, List, Optional, Union
 
-from serde import deserialize, field, serde, serialize
+from serde import field, serde
 
 from authz_analyzer.datastores.aws.principals.principal_type import AwsPrincipalType
 
