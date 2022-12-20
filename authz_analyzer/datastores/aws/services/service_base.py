@@ -1,11 +1,14 @@
-from typing import Dict, Any, Optional, Type, List, Union, Tuple, AnyStr, Set, Type
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from boto3 import Session
 from logging import Logger
+from typing import Any, AnyStr, Dict, List, Optional, Set, Tuple, Type, Union
+
+from boto3 import Session
 from serde import serde
-from authz_analyzer.datastores.aws.resources.service_resources_resolver_base import ServiceResourcesResolverBase
+
 from authz_analyzer.datastores.aws.actions.service_actions_resolver_base import ServiceActionsResolverBase
+from authz_analyzer.datastores.aws.resources.service_resources_resolver_base import ServiceResourcesResolverBase
+from authz_analyzer.models import PermissionLevel
 
 
 @serde
@@ -15,6 +18,10 @@ class ServiceActionBase(ABC):
     def get_action_name(self) -> str:
         pass
 
+    @abstractmethod
+    def get_action_permission_level(self) -> PermissionLevel:
+        pass
+    
 
 @serde
 @dataclass

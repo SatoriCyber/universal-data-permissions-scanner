@@ -26,6 +26,15 @@ class IdentityType(Enum):
     GROUP = auto()  # GCP
     WORKSPACE_ACCOUNT = auto()  # GCP
     CLOUD_IDENTITY_DOMAIN = auto()  # GCP
+    AWS_ACCOUNT = auto()  # AWS
+    AWS_SERVICE = auto() # AWS
+    IAM_USER = auto() # AWS
+    IAM_ROLE = auto() # AWS
+    ROLE_SESSION = auto() # AWS
+    WEB_IDENTITY_SESSION = auto() # AWS
+    FEDERATED_USER = auto() # AWS
+    ALL_USERS = auto() # AWS
+    
 
     def __str__(self) -> str:
         return self.name

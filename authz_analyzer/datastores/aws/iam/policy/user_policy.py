@@ -1,9 +1,11 @@
 import json
-from typing import Dict, Any, Optional, Type, List, Union
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional, Type, Union
+
+from serde import deserialize, serde, serialize
+
 from authz_analyzer.datastores.aws.iam.policy.policy_document import PolicyDocument
-from serde import serde, deserialize, serialize
 
 
 @serde(rename_all = "pascalcase")

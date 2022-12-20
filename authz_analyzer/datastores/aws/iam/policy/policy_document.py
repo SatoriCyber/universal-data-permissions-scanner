@@ -1,9 +1,11 @@
 import json
-from typing import Dict, Any, Optional, Type, List, Union
 from dataclasses import dataclass
 from enum import Enum
-from authz_analyzer.datastores.aws.iam.policy.principal import PolicyPrincipals, PolicyPrincipal
-from serde import deserialize, serialize, field, serde
+from typing import Any, Dict, List, Optional, Type, Union
+
+from serde import deserialize, field, serde, serialize
+
+from authz_analyzer.datastores.aws.iam.policy.principal import PolicyPrincipal, PolicyPrincipals
 
 
 class Effect(str, Enum):

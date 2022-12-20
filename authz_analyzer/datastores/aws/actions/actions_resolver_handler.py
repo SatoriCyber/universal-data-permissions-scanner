@@ -1,9 +1,10 @@
-from typing import Dict, Any, Optional, Type, List, Union, Tuple, AnyStr, Set
 from dataclasses import dataclass
 from logging import Logger
-from authz_analyzer.datastores.aws.services.service_base import ServiceType
-from authz_analyzer.datastores.aws.actions.service_actions_resolver_base import ServiceActionsResolverBase
+from typing import Any, AnyStr, Dict, List, Optional, Set, Tuple, Type, Union
+
 from authz_analyzer.datastores.aws.actions.account_actions import AwsAccountActions
+from authz_analyzer.datastores.aws.actions.service_actions_resolver_base import ServiceActionsResolverBase
+from authz_analyzer.datastores.aws.services.service_base import ServiceType
 
 
 @dataclass
@@ -27,13 +28,15 @@ class ActionsResolverHandler:
         for service_type, service_actions in account_actions.account_actions.items():
             if stmt_action_regex != "*" or service_type not in allow_types_to_resolve:
                 continue
-
-            service_prefix = service_type.get_action_service_prefix()
+                
+            # Actions are case insensitive
+            service_prefix = service_type.get_action_service_prefix().lower()
+            stmt_action_regex_lower = stmt_action_regex.lower()
             stmt_relative_id_regex = (
                 "*"
-                if stmt_action_regex == "*"
-                else stmt_action_regex[len(service_prefix):]
-                if stmt_action_regex.startswith(service_prefix)
+                if stmt_action_regex_lower == "*"
+                else stmt_action_regex_lower[len(service_prefix):]
+                if stmt_action_regex_lower.startswith(service_prefix)
                 else None
             )
             if stmt_relative_id_regex is None:

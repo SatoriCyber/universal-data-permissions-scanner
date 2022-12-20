@@ -20,7 +20,7 @@ from authz_analyzer.writers import OutputFormat
 @click.option("--debug", '-d', is_flag=True, default=False, show_default=True, help="Enable debug logs")
 @click.option("--out", '-o', required=False, type=str, help="Destination output of report", default="authz-analyzer-export.csv")
 @click.option(
-    "--out_format", '-f', required=False, type=click.Choice(["JSON", "CSV"], case_sensitive=False), help="Output format", default="CSV"
+   "--out-format", '-f', required=False, type=click.Choice(["JSON", "CSV"], case_sensitive=False), help="Output format", default="CSV"
 )
 def main(ctx: click.Context, debug: bool, out: str, out_format: str):
     """Database Authorization Analyzer"""
@@ -81,3 +81,6 @@ def postgres(ctx: click.Context, username: str, password: str, port: int, host: 
     """Analyzer Postgres Authorization"""
     run_postgres(logger=ctx.obj['LOGGER'], output_format=ctx.obj['FORMAT'], output_path=ctx.obj['OUT'], username=username, password=password, port=port, host=host, dbname=dbname)
 
+
+if __name__ == "__main__":
+    main(obj={})
