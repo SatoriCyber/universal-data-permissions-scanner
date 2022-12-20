@@ -2,6 +2,8 @@
 
 Describes a permission to an asset that was granted to an identity.
 The way the permission was granted is described in the path.
+Each writer will use the model to write the data in the format it needs.
+Each datastore needs to create the model from the data it has, each entry should be of type AuthzEntry.
 """
 from dataclasses import dataclass
 from enum import Enum, auto
