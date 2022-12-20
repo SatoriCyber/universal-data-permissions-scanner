@@ -42,9 +42,9 @@ jobs:
 
       - name: list files
         run: ls -l .
-
-      - uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
-          files: coverage.xml
+# Remove codecov until we will go open source
+# - uses: codecov/codecov-action@v1
+#   with:
+#     token: ${{ secrets.CODECOV_TOKEN }}
+#     fail_ci_if_error: true
+#     files: coverage.xml
