@@ -65,6 +65,7 @@ class PostgresAuthzAnalyzer:
             dbname (str): Postgres database name
             logger (Optional[Logger], optional): Python logger. Defaults to None.
             output_path (Union[Path, str], optional): Path to write the file. Defaults to ./authz-analyzer-export.
+            output_format (OutputFormat, optional): Output format. Defaults to OutputFormat.CSV.
             credentials_str (Optional[str], optional): ServiceAccount to connect to BigQuery. Defaults to None.
         """
         if logger is None:
@@ -154,7 +155,7 @@ class PostgresAuthzAnalyzer:
                 _grantor = row[0]
                 role = row[1]
                 table_name = row[2]
-                level = PERMISSION_LEVEL_MAP[row[3]]
+                level = PERMISSION_LEVEL_MAP.get(row[3], PermissionLevel.UNKNOWN)
 
                 role_grants = results.setdefault(role, set())
                 role_grants.add(ResourceGrant(table_name, level))
