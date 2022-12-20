@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import List
 from enum import Enum
-from serde import serde, deserialize, serialize, field
+from typing import List
+
+from serde import deserialize, field, serde, serialize
 
 
 @serde(rename_all = "pascalcase")

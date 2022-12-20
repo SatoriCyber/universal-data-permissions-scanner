@@ -1,6 +1,6 @@
-from typing import Dict, Any, Optional, Type, List, Union, Tuple, AnyStr, Set
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any, AnyStr, Dict, List, Optional, Set, Tuple, Type, Union
 
 
 @dataclass
@@ -16,7 +16,3 @@ class ServiceResourcesResolverBase:
     @abstractmethod
     def merge(self, other: 'ServiceResourcesResolverBase'):
         pass
-
-    # @abstractmethod
-    # def get_valid_actions_for_resource(self, other: 'ResolvedServiceResourceBase', all_actions):
-    #     pass

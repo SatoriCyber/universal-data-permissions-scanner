@@ -1,15 +1,16 @@
 import json
-from boto3 import Session
-from typing import Dict, Any, Optional, Type, List, Union, Set, Iterable, cast
 from dataclasses import dataclass
 from logging import Logger
-from botocore.exceptions import ClientError
-from authz_analyzer.datastores.aws.iam.policy import PolicyDocument
-from authz_analyzer.datastores.aws.services.service_base import ServiceResourceBase
-from authz_analyzer.datastores.aws.services.s3.bucket_acl import S3BucketACL
-from authz_analyzer.datastores.aws.iam.public_block_access_config import PublicAccessBlockConfiguration
-from serde import serde, field, from_dict
+from typing import Any, Dict, Iterable, List, Optional, Set, Type, Union, cast
 
+from boto3 import Session
+from botocore.exceptions import ClientError
+from serde import field, from_dict, serde
+
+from authz_analyzer.datastores.aws.iam.policy import PolicyDocument
+from authz_analyzer.datastores.aws.iam.public_block_access_config import PublicAccessBlockConfiguration
+from authz_analyzer.datastores.aws.services.s3.bucket_acl import S3BucketACL
+from authz_analyzer.datastores.aws.services.service_base import ServiceResourceBase
 
 S3_RESOURCE_SERVICE_PREFIX = "arn:aws:s3:::"
 

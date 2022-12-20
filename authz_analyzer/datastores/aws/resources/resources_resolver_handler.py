@@ -1,10 +1,11 @@
-from typing import Dict, Any, Optional, Type, List, Union, Tuple, AnyStr, Set
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from logging import Logger
-from authz_analyzer.datastores.aws.services.service_base import ServiceType, ServiceResourceBase
-from authz_analyzer.datastores.aws.resources.service_resources_resolver_base import ServiceResourcesResolverBase
+from typing import Any, AnyStr, Dict, List, Optional, Set, Tuple, Type, Union
+
 from authz_analyzer.datastores.aws.resources.account_resources import AwsAccountResources
+from authz_analyzer.datastores.aws.resources.service_resources_resolver_base import ServiceResourcesResolverBase
+from authz_analyzer.datastores.aws.services.service_base import ServiceType
 
 
 @dataclass

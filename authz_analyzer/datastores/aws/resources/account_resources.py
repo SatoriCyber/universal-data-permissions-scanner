@@ -1,11 +1,13 @@
-from typing import Dict, Any, Optional, Type, List, Union, Tuple, AnyStr, Set
 from dataclasses import dataclass
-from serde import field, serde, to_dict, from_dict
-from boto3 import Session
 from logging import Logger
-from authz_analyzer.datastores.aws.services.service_base import ServiceType, ServiceResourceBase
+from typing import Any, AnyStr, Dict, List, Optional, Set, Tuple, Type, Union
+
+from boto3 import Session
+from serde import field, from_dict, serde, to_dict
+
 from authz_analyzer.datastores.aws.services.s3.bucket import S3Bucket
 from authz_analyzer.datastores.aws.services.s3.s3_service import S3_SERVICE_NAME, S3ServiceType
+from authz_analyzer.datastores.aws.services.service_base import ServiceResourceBase, ServiceType
 
 
 def to_dict_serializer(account_resources: Dict[ServiceType, List[ServiceResourceBase]]) -> Dict[str, List[Any]]:

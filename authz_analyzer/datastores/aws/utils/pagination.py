@@ -1,6 +1,7 @@
 
 from typing import Callable
 
+
 def paginate_response_list(method: Callable, key_to_append_list: str, **kwargs):
     """
     Paginate through a list of items from the AWS Management Console.

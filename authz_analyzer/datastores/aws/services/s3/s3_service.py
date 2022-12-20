@@ -1,14 +1,20 @@
-from typing import Dict, Any, Optional, Type, List, Union, Set, Iterable, cast
-from boto3 import Session
 from dataclasses import dataclass
 from logging import Logger
-from authz_analyzer.datastores.aws.services.service_base import ServiceType, ServiceResourceBase, ServiceActionBase
-from authz_analyzer.datastores.aws.resources.service_resources_resolver_base import ServiceResourcesResolverBase
-from authz_analyzer.datastores.aws.actions.service_actions_resolver_base import ServiceActionsResolverBase
-from authz_analyzer.datastores.aws.services.s3.bucket import S3Bucket, get_buckets, S3_RESOURCE_SERVICE_PREFIX
-from authz_analyzer.datastores.aws.services.s3.s3_resources_resolver import S3ServiceResourcesResolver
+from typing import Any, Dict, Iterable, List, Optional, Set, Type, Union, cast
+
+from boto3 import Session
 from serde import serde
 
+from authz_analyzer.datastores.aws.actions.service_actions_resolver_base import ServiceActionsResolverBase
+from authz_analyzer.datastores.aws.resources.service_resources_resolver_base import ServiceResourcesResolverBase
+from authz_analyzer.datastores.aws.services.s3.bucket import S3_RESOURCE_SERVICE_PREFIX, S3Bucket, get_buckets
+from authz_analyzer.datastores.aws.services.s3.s3_actions import (
+    S3_ACTION_SERVICE_PREFIX,
+    S3Action,
+    S3ServiceActionsResolver,
+)
+from authz_analyzer.datastores.aws.services.s3.s3_resources import S3ServiceResourcesResolver
+from authz_analyzer.datastores.aws.services.service_base import ServiceActionBase, ServiceResourceBase, ServiceType
 
 S3_SERVICE_NAME = "s3"
 
@@ -19,7 +25,7 @@ class S3ServiceType(ServiceType):
         return S3_RESOURCE_SERVICE_PREFIX
 
     def get_action_service_prefix(self) -> str:
-        return "S3_ACTION_SERVICE_PREFIX"
+        return S3_ACTION_SERVICE_PREFIX
 
     def get_service_name(self) -> str:
         return S3_SERVICE_NAME
@@ -42,8 +48,9 @@ class S3ServiceType(ServiceType):
     def load_resolver_service_actions(
         cls, logger: Logger, stmt_relative_id_regex: str, service_actions: List[ServiceActionBase]
     ) -> ServiceActionsResolverBase:
-        pass # TODO
+        s3_actions: List[S3Action] = [s for s in service_actions if isinstance(s, S3Action)]
+        return S3ServiceActionsResolver.load(logger, stmt_relative_id_regex, s3_actions)
 
     @classmethod
     def load_service_actions(cls, logger: Logger) -> List[ServiceActionBase]:
-        pass # TODO
+        return S3Action.load_s3_actions(logger)

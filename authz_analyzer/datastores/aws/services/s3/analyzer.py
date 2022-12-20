@@ -1,22 +1,22 @@
 """Analyze authorization for S3.
 
 """
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+
+from authz_analyzer.datastores.aws.aws_authz_analyzer import AwsAuthzAnalyzer
 from authz_analyzer.datastores.aws.resources.account_resources import AwsAccountResources
 from authz_analyzer.datastores.aws.services.s3.s3_service import S3ServiceType
-from authz_analyzer.datastores.aws.aws_authz_analyzer import AwsAuthzAnalyzer
-from authz_analyzer.datastores.base import BaseAuthzAnalyzer
+from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 
 
 @dataclass
-class S3AuthzAnalyzer(BaseAuthzAnalyzer):
+class S3AuthzAnalyzer():
     writer: BaseWriter
     logger: Logger
     account_id: str
@@ -28,13 +28,13 @@ class S3AuthzAnalyzer(BaseAuthzAnalyzer):
         account_id,
         account_role_name,
         logger: Optional[Logger] = None,
-        output_format: OutputFormat = OutputFormat.Csv,
+        output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
     ):
         if logger is None:
             logger = get_logger(False)
 
-        writer = get_writer(filename=output_path, format=output_format)
+        writer = get_writer(filename=output_path, output_format=output_format)
 
         return cls(
             logger=logger,

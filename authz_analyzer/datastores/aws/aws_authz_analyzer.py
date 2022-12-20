@@ -1,12 +1,14 @@
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from boto3 import Session
 from dataclasses import dataclass
 from logging import Logger
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+
+from boto3 import Session
+from serde import serde
+
+from authz_analyzer.datastores.aws.actions.account_actions import AwsAccountActions
 from authz_analyzer.datastores.aws.iam.iam_entities import IAMEntities
 from authz_analyzer.datastores.aws.resources.account_resources import AwsAccountResources
-from authz_analyzer.datastores.aws.actions.account_actions import AwsAccountActions
 from authz_analyzer.datastores.aws.services.service_base import ServiceType
-from serde import serde
 
 
 @serde

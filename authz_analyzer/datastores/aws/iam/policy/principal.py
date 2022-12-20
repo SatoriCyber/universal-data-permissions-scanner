@@ -1,10 +1,11 @@
 import json
 import re
-from typing import Dict, Any, Optional, Type, List, Union, Tuple, AnyStr
 from dataclasses import dataclass
-from serde import deserialize, serialize, field, serde
-from authz_analyzer.datastores.aws.principals.principal_type import AwsPrincipalType
+from typing import Any, AnyStr, Dict, List, Optional, Tuple, Type, Union
 
+from serde import deserialize, field, serde, serialize
+
+from authz_analyzer.datastores.aws.principals.principal_type import AwsPrincipalType
 
 regex_saml_provider = re.compile(r"^arn:aws:iam::([0-9]+):saml-provider/(.+)$")
 regex_role_name = re.compile(r"^arn:aws:iam::([0-9]+):role/(.+)$")
