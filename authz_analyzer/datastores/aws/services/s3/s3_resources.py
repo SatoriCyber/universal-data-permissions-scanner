@@ -4,6 +4,7 @@ from enum import Enum, auto
 from logging import Logger
 from typing import List, Optional, Set
 
+from authz_analyzer.datastores.aws.iam.policy import PolicyDocument
 from authz_analyzer.datastores.aws.resources.service_resources_resolver_base import ServiceResourcesResolverBase
 from authz_analyzer.datastores.aws.services.s3.bucket import S3Bucket
 
@@ -41,13 +42,12 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
     def load(
         cls, _logger: Logger, stmt_relative_id_regex: str, service_resources: List[S3Bucket]
     ) -> 'S3ServiceResourcesResolver':
+        stmt_relative_id_regex = PolicyDocument.fix_stmt_regex_to_valid_regex(stmt_relative_id_regex)
         res = stmt_relative_id_regex.split('/', 1)
-        # https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-arn-format.html
-        # aws traits the '?' as regex '.' (any character)
-        stmt_relative_id_buckets_regex: str = res[0].replace("?", ".")
+        stmt_relative_id_buckets_regex: str = res[0]
         stmt_relative_id_objects_regex: Optional[str] = None
         if len(res) == 2:
-            stmt_relative_id_objects_regex = res[1].replace("?", ".")
+            stmt_relative_id_objects_regex = res[1]
 
         resolved_buckets = S3ServiceResourcesResolver.resolve_buckets_by_regex(
             stmt_relative_id_buckets_regex, service_resources

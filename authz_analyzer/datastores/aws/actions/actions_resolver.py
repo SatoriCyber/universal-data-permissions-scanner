@@ -7,10 +7,7 @@ from authz_analyzer.datastores.aws.actions.service_actions_resolver_base import 
 from authz_analyzer.datastores.aws.services.service_base import ServiceType
 
 
-@dataclass
-class ActionsResolverHandler:
-    resolved_actions: Dict[ServiceType, ServiceActionsResolverBase]
-
+class ActionsResolver:
     # def subtraction(self, other: 'ResolvedResources'):
     #     for resolved_resource in self.resolved_actions:
 
@@ -18,7 +15,7 @@ class ActionsResolverHandler:
     #     pass
 
     @staticmethod
-    def resolve_stmt_action_regex(
+    def _resolve_stmt_action_regex(
         logger: Logger,
         stmt_action_regex: str,
         account_actions: AwsAccountActions,
@@ -50,19 +47,19 @@ class ActionsResolverHandler:
         return ret
 
     @classmethod
-    def load_from_stmt_action_regexes(
+    def resolve_stmt_action_regexes(
         cls,
         logger: Logger,
         stmt_action_regexes: Union[str, List[str]],
         account_actions: AwsAccountActions,
         allow_types_to_resolve: Set[ServiceType],
-    ) -> 'ActionsResolverHandler':
+    ) -> Dict[ServiceType, ServiceActionsResolverBase]:
         resolved_actions: Dict[ServiceType, ServiceActionsResolverBase] = dict()
         if isinstance(stmt_action_regexes, str):
             stmt_action_regexes = [stmt_action_regexes]
 
         for stmt_action_regex in stmt_action_regexes:
-            ret: Dict[ServiceType, ServiceActionsResolverBase] = ActionsResolverHandler.resolve_stmt_action_regex(
+            ret: Dict[ServiceType, ServiceActionsResolverBase] = ActionsResolver._resolve_stmt_action_regex(
                 logger, stmt_action_regex, account_actions, allow_types_to_resolve
             )
             for service_type, resolved_service_actions in ret.items():
@@ -74,4 +71,4 @@ class ActionsResolverHandler:
                 else:
                     resolved_actions[service_type] = resolved_service_actions
 
-        return cls(resolved_actions=resolved_actions)
+        return resolved_actions

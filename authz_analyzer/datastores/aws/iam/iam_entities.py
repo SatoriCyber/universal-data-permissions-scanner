@@ -25,14 +25,14 @@ class IAMEntities:
     iam_policies: Dict[str, IAMPolicy]  # key is policy arn
 
     @classmethod
-    def load_from_json_file(cls, logger, file_path: Path):
+    def load_from_json_file(cls, logger: Logger, file_path: Path) -> 'IAMEntities':
         with open(file_path, "r") as f:
             analyzed_ctx_json = json.load(f)
-            analyzed_ctx_loaded = from_dict(IAMEntities, analyzed_ctx_json)
+            analyzed_ctx_loaded: 'IAMEntities' = from_dict(IAMEntities, analyzed_ctx_json)
             return analyzed_ctx_loaded
 
     @classmethod
-    def load(cls, logger, aws_account_id: str, session: Session):
+    def load(cls, logger: Logger, aws_account_id: str, session: Session):
         logger.info(f"Start pulling IAM entities from aws account: {aws_account_id}...")
         # Get the iam users
         iam_users = get_iam_users(session)
@@ -57,7 +57,7 @@ class IAMEntities:
             iam_policies=iam_policies,
         )
 
-    def build_principal_network_graph(self, logger: Logger):
+    def build_principal_network_graph(self, logger: Logger) -> nx.DiGraph:
         logger.info(f"Building the principal network graph for aws account id: {self.account_id}")
         g = nx.DiGraph()
         g.add_node("START_NODE")
@@ -118,9 +118,6 @@ class IAMEntities:
                 # A iam group with embedded user policies might achieve access to resource directly
                 if len(iam_group.group_policies) != 0:
                     g.add_edge(iam_group, "END_NODE")
-
-        for node in nx.all_simple_paths(g, source="START_NODE", target="END_NODE"):
-            logger.info(f"{node}")
 
         logger.info(f"Finish to build the principal network graph for aws account id: {self.account_id}: {g}")
         return g

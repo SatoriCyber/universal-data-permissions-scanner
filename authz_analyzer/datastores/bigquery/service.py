@@ -144,7 +144,7 @@ class BigQueryService:
             request = self.project_iam_client.roles().get(name=role)
         else:
             request = self.iam_client.roles().get(name=role)
-        return request.execute()["includedPermissions"]
+        return request.execute()["includedPermissions"]  # type: ignore
 
     def lookup_project(self, resolve_permission_callback: Callable[[str], Optional[PermissionLevel]]):
         """Read project folder and org info

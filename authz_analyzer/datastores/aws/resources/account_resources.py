@@ -1,13 +1,16 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set, Type
 
 from boto3 import Session
 from serde import field, from_dict, serde, to_dict
 
-from authz_analyzer.datastores.aws.services.s3.bucket import S3Bucket
-from authz_analyzer.datastores.aws.services.s3.s3_service import S3_SERVICE_NAME, S3ServiceType
-from authz_analyzer.datastores.aws.services.service_base import ServiceResourceBase, ServiceType
+from authz_analyzer.datastores.aws.services.service_base import (
+    ServiceResourceBase,
+    ServiceType,
+    get_service_resource_by_name,
+    get_service_type_by_name,
+)
 
 
 def to_dict_serializer(account_resources: Dict[ServiceType, List[ServiceResourceBase]]) -> Dict[str, List[Any]]:
@@ -19,13 +22,14 @@ def from_dict_deserializer(
 ) -> Dict[ServiceType, List[ServiceResourceBase]]:
     account_resources: Dict[ServiceType, List[ServiceResourceBase]] = dict()
     for service_key_name, service_resources_base in account_resources_from_deserializer.items():
-        if service_key_name == S3_SERVICE_NAME:
-            service_key = S3ServiceType()
+        service_type: Optional[Type[ServiceType]] = get_service_type_by_name(service_key_name)
+        service_resource: Optional[Type[ServiceResourceBase]] = get_service_resource_by_name(service_key_name)
+        if service_type and service_resource:
             value: List[ServiceResourceBase] = [
-                from_dict(S3Bucket, service_resource_base_dict) for service_resource_base_dict in service_resources_base
+                from_dict(service_resource, service_resource_base_dict)
+                for service_resource_base_dict in service_resources_base
             ]
-            account_resources[service_key] = value
-
+            account_resources[service_type()] = value
     return account_resources
 
 
