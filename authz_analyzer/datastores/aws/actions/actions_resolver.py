@@ -23,17 +23,15 @@ class ActionsResolver:
     ) -> Dict[ServiceType, ServiceActionsResolverBase]:
         ret: Dict[ServiceType, ServiceActionsResolverBase] = dict()
         for service_type, service_actions in account_actions.account_actions.items():
-            if stmt_action_regex != "*" or service_type not in allow_types_to_resolve:
+            if service_type not in allow_types_to_resolve:
                 continue
-                
-            # Actions are case insensitive
-            service_prefix = service_type.get_action_service_prefix().lower()
-            stmt_action_regex_lower = stmt_action_regex.lower()
+
+            service_prefix = service_type.get_action_service_prefix()
             stmt_relative_id_regex = (
                 "*"
-                if stmt_action_regex_lower == "*"
-                else stmt_action_regex_lower[len(service_prefix):]
-                if stmt_action_regex_lower.startswith(service_prefix)
+                if stmt_action_regex == "*"
+                else stmt_action_regex[len(service_prefix):]
+                if stmt_action_regex.startswith(service_prefix)
                 else None
             )
             if stmt_relative_id_regex is None:
@@ -42,7 +40,8 @@ class ActionsResolver:
             resolved_service_actions: ServiceActionsResolverBase = service_type.load_resolver_service_actions(
                 logger, stmt_relative_id_regex, service_actions
             )
-            ret[service_type] = resolved_service_actions
+            if not resolved_service_actions.is_empty():
+                ret[service_type] = resolved_service_actions
 
         return ret
 
@@ -53,8 +52,9 @@ class ActionsResolver:
         stmt_action_regexes: Union[str, List[str]],
         account_actions: AwsAccountActions,
         allow_types_to_resolve: Set[ServiceType],
-    ) -> Dict[ServiceType, ServiceActionsResolverBase]:
+    ) -> Optional[Dict[ServiceType, ServiceActionsResolverBase]]:
         resolved_actions: Dict[ServiceType, ServiceActionsResolverBase] = dict()
+        
         if isinstance(stmt_action_regexes, str):
             stmt_action_regexes = [stmt_action_regexes]
 
@@ -71,4 +71,4 @@ class ActionsResolver:
                 else:
                     resolved_actions[service_type] = resolved_service_actions
 
-        return resolved_actions
+        return resolved_actions if resolved_actions else None

@@ -34,7 +34,7 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
     ) -> Set[S3Bucket]:
         regex = re.compile(stmt_relative_id_objects_regex)
         bucket_matches: List[S3Bucket] = [
-            s for s in service_resources if regex.search(s.get_resource_name()) is not None
+            s for s in service_resources if regex.match(s.get_resource_name()) is not None
         ]
         return set(bucket_matches)
 

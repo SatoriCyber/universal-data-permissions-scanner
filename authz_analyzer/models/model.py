@@ -15,6 +15,7 @@ class AssetType(Enum):
 
     TABLE = auto()
     VIEW = auto()
+    S3_BUCKET = auto() # AWS S3
 
 
 class IdentityType(Enum):
@@ -58,6 +59,14 @@ class AuthzPathElementType(Enum):
     PROJECT = auto()  # used by GCP
     FOLDER = auto()  # used by GCP
     ORGANIZATION = auto()  # used by GCP
+    AWS_ACCOUNT = auto()  # AWS
+    AWS_SERVICE = auto() # AWS
+    IAM_USER = auto() # AWS
+    IAM_ROLE = auto() # AWS
+    ROLE_SESSION = auto() # AWS
+    WEB_IDENTITY_SESSION = auto() # AWS
+    FEDERATED_USER = auto() # AWS
+    ALL_USERS = auto() # AWS
 
     def __str__(self) -> str:
         return self.name

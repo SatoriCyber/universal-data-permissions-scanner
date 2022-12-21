@@ -23,6 +23,10 @@ class IAMGroup(PolicyDocumentGetterBase):
     def policy_documents(self) -> List[PolicyDocument]:
         return list(map(lambda x: x.policy_document , self.group_policies))
     
+    @property
+    def parent_arn(self) -> str:
+        return self.arn
+    
     def __eq__(self, other):
         return self.group_id == other.group_id
     

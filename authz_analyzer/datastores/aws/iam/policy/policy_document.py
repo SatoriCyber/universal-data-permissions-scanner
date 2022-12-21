@@ -46,6 +46,11 @@ class PolicyDocumentGetterBase(ABC):
     @abstractmethod
     def policy_documents(self) -> List['PolicyDocument']:
         pass
+    
+    @property
+    @abstractmethod
+    def parent_arn(self) -> str:
+        pass    
 
 
 @serde(rename_all="pascalcase")
@@ -58,9 +63,7 @@ class PolicyDocument:
 
     @staticmethod
     def fix_stmt_regex_to_valid_regex(stmt_regex: str) -> str:
-        if stmt_regex == "*":
-            return ".*" # convert to valid wildcard regex
-            
+        stmt_regex = stmt_regex.replace("*", ".*") # convert to valid wildcard regex
         # https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-arn-format.html
         # aws traits the '?' as regex '.' (any character)
         stmt_regex = stmt_regex.replace("?", ".")
@@ -69,16 +72,31 @@ class PolicyDocument:
     def resolve(
         self,
         logger: Logger,
+        parent_arn: str,
         account_actions: AwsAccountActions,
         account_resources: AwsAccountResources,
         allow_types_to_resolve: Set[ServiceType],
     ):
         for statement in self.statement:
-            if statement.resource:
-                statement.resolved_resource = ResourcesResolver.resolve_stmt_resource_regexes(
-                    logger, statement.resource, account_resources, allow_types_to_resolve
+            if statement.action is None or statement.resource is None:
+                # missing action or resource on this stmt, noting to resolve
+                continue
+            
+            resolved_action: Optional[Dict[ServiceType, ServiceActionsResolverBase]] = ActionsResolver.resolve_stmt_action_regexes(
+                logger, statement.action, account_actions, allow_types_to_resolve
+            )
+            if resolved_action:
+                logger.debug("Resolved actions for %s, stmt %s: %s", parent_arn, statement.sid, resolved_action)
+                # has relevant resolved actions, Check the resolved resources
+                resolved_service_actions = set([k for (k, v) in resolved_action.items()]) # type: ignore
+                # need to resolve resources from the allowed service types which also appears from the resolved actions
+                allow_types_to_resolve_for_resources = allow_types_to_resolve.intersection(resolved_service_actions)
+                resolved_resource: Optional[Dict[ServiceType, ServiceResourcesResolverBase]] = ResourcesResolver.resolve_stmt_resource_regexes(
+                    logger, statement.resource, account_resources, allow_types_to_resolve_for_resources
                 )
-            if statement.action:
-                statement.resolved_action = ActionsResolver.resolve_stmt_action_regexes(
-                    logger, statement.action, account_actions, allow_types_to_resolve
-                )
+                
+                if resolved_resource:
+                    logger.info("Resolved both resources & actions for %s, stmt %s: %s ; %s",parent_arn, statement.sid, resolved_action, resolved_resource)
+                    statement.resolved_action = resolved_action
+                    statement.resolved_resource = resolved_resource
+                    

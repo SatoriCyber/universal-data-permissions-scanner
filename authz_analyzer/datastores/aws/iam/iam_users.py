@@ -32,7 +32,11 @@ class IAMUser(PolicyDocumentGetterBase):
     def policy_documents(self) -> List[PolicyDocument]:
         return list(map(lambda x: x.policy_document , self.user_policies))
     
+    @property
+    def parent_arn(self) -> str:
+        return self.arn.principal_str
 
+    
 def get_iam_users(session: Session) -> Dict[str, IAMUser]:
     iam_client = session.client('iam')
     ret: Dict[str, IAMUser] = {}

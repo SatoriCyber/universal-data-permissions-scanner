@@ -55,9 +55,10 @@ class S3ServiceActionsResolver(ServiceActionsResolverBase):
 
     @staticmethod
     def resolve_actions(stmt_relative_id_objects_regex: str, service_actions: List[S3Action]) -> Set[S3Action]:
-        regex = re.compile(stmt_relative_id_objects_regex)
-        bucket_matches: List[S3Action] = [s for s in service_actions if regex.search(s.get_action_name()) is not None]
-        return set(bucket_matches)
+        # actions are case insensitive
+        regex = re.compile(f"(?i){stmt_relative_id_objects_regex}")
+        service_actions_matches: List[S3Action] = [s for s in service_actions if regex.match(s.get_action_name()) is not None]
+        return set(service_actions_matches)
 
     @classmethod
     def load(

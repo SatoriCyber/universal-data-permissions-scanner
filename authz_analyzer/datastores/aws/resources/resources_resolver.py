@@ -25,7 +25,7 @@ class ResourcesResolver:
     ) -> Dict[ServiceType, ServiceResourcesResolverBase]:
         ret: Dict[ServiceType, ServiceResourcesResolverBase] = dict()
         for service_type, service_resources in account_resources.account_resources.items():
-            if stmt_resource_regex != "*" or service_type not in allow_types_to_resolve:
+            if service_type not in allow_types_to_resolve:
                 continue
 
             service_prefix = service_type.get_resource_service_prefix()
@@ -42,7 +42,9 @@ class ResourcesResolver:
             resolved_service_resources: ServiceResourcesResolverBase = service_type.load_resolver_service_resources(
                 logger, stmt_relative_id_regex, service_resources
             )
-            ret[service_type] = resolved_service_resources
+            
+            if not resolved_service_resources.is_empty():
+                ret[service_type] = resolved_service_resources
 
         return ret
 
@@ -53,7 +55,7 @@ class ResourcesResolver:
         stmt_resource_regexes: Union[str, List[str]],
         account_resources: AwsAccountResources,
         allow_types_to_resolve: Set[ServiceType],
-    ) -> Dict[ServiceType, ServiceResourcesResolverBase]:
+    ) -> Optional[Dict[ServiceType, ServiceResourcesResolverBase]]:
         resolved_resources: Dict[ServiceType, ServiceResourcesResolverBase] = dict()
         if isinstance(stmt_resource_regexes, str):
             stmt_resource_regexes = [stmt_resource_regexes]
@@ -71,4 +73,4 @@ class ResourcesResolver:
                 else:
                     resolved_resources[service_type] = resolved_service_resources
 
-        return resolved_resources
+        return resolved_resources if resolved_resources else None

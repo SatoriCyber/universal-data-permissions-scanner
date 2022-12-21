@@ -58,9 +58,9 @@ class AwsAuthzAnalyzer:
             if isinstance(node, PolicyDocumentGetterBase):
                 for policy_document in node.policy_documents:  # type: PolicyDocument
                     policy_document.resolve(
-                        logger, self.account_actions, self.account_resources, self.service_types_to_load
+                        logger, node.parent_arn, self.account_actions, self.account_resources, self.service_types_to_load
                     )
-                    logger.info(f"{node}, {type(node)}")
+                    logger.debug(f"{node}, {type(node)}")
 
         # for iam_user_path in nx.all_simple_paths(principal_graph, source="START_NODE", target="END_NODE"):
         #     for node in iam_user_path[1:-1]:
