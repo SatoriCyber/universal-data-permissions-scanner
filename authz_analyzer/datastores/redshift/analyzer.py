@@ -21,10 +21,10 @@ from authz_analyzer.datastores.redshift import exporter
 from authz_analyzer.datastores.redshift.model import (
     AuthorizationModel,
     DBIdentity,
-    ResourcePrivilege,
     IdentityId,
     IdentityType,
-    Privilege
+    Privilege,
+    ResourcePrivilege,
 )
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
