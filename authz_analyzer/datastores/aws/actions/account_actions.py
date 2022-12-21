@@ -1,12 +1,15 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set, Type
 
 from serde import field, from_dict, serde, to_dict
 
-from authz_analyzer.datastores.aws.services.s3.s3_actions import S3Action
-from authz_analyzer.datastores.aws.services.s3.s3_service import S3_SERVICE_NAME, S3ServiceType
-from authz_analyzer.datastores.aws.services.service_base import ServiceActionBase, ServiceType
+from authz_analyzer.datastores.aws.services.service_base import (
+    ServiceActionBase,
+    ServiceType,
+    get_service_action_by_name,
+    get_service_type_by_name,
+)
 
 
 def to_dict_serializer(account_actions: Dict[ServiceType, List[ServiceActionBase]]) -> Dict[str, List[Any]]:
@@ -18,12 +21,13 @@ def from_dict_deserializer(
 ) -> Dict[ServiceType, List[ServiceActionBase]]:
     account_actions: Dict[ServiceType, List[ServiceActionBase]] = dict()
     for service_key_name, service_actions_base in account_actions_from_deserializer.items():
-        if service_key_name == S3_SERVICE_NAME:
-            service_key = S3ServiceType()
+        service_type: Optional[Type[ServiceType]] = get_service_type_by_name(service_key_name)
+        service_action: Optional[Type[ServiceActionBase]] = get_service_action_by_name(service_key_name)
+        if service_type and service_action:
             value: List[ServiceActionBase] = [
-                from_dict(S3Action, service_action_base_dict) for service_action_base_dict in service_actions_base
+                from_dict(service_action, service_action_base_dict) for service_action_base_dict in service_actions_base
             ]
-            account_actions[service_key] = value
+            account_actions[service_type()] = value
 
     return account_actions
 

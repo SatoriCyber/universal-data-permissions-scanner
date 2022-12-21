@@ -6,6 +6,7 @@ from typing import List, Set
 from serde import serde
 
 from authz_analyzer.datastores.aws.actions.service_actions_resolver_base import ServiceActionsResolverBase
+from authz_analyzer.datastores.aws.iam.policy import PolicyDocument
 from authz_analyzer.datastores.aws.services.s3.s3_resources import S3ResourceType
 from authz_analyzer.datastores.aws.services.service_base import ServiceActionBase
 from authz_analyzer.models import PermissionLevel
@@ -62,9 +63,7 @@ class S3ServiceActionsResolver(ServiceActionsResolverBase):
     def load(
         cls, _logger: Logger, stmt_relative_id_regex: str, service_actions: List[S3Action]
     ) -> 'ServiceActionsResolverBase':
-        # https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-arn-format.html
-        # aws traits the '?' as regex '.' (any character)
-        stmt_relative_id_regex = stmt_relative_id_regex.replace("?", ".")
+        stmt_relative_id_regex = PolicyDocument.fix_stmt_regex_to_valid_regex(stmt_relative_id_regex)
 
         resolved_actions = S3ServiceActionsResolver.resolve_actions(stmt_relative_id_regex, service_actions)
         return cls(

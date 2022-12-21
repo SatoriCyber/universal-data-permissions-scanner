@@ -4,14 +4,14 @@ from typing import Any, Dict, List, Optional, Type, Union
 from boto3 import Session
 from serde import deserialize, field, from_dict, serde, serialize
 
-from authz_analyzer.datastores.aws.iam.policy import Policy, PolicyDocument, UserPolicy
+from authz_analyzer.datastores.aws.iam.policy import Policy, PolicyDocument, PolicyDocumentGetterBase, UserPolicy
 from authz_analyzer.datastores.aws.iam.policy.principal import PolicyPrincipal
 from authz_analyzer.datastores.aws.utils.pagination import paginate_response_list
 
 
 @serde
 @dataclass
-class IAMUser:
+class IAMUser(PolicyDocumentGetterBase):
     user_name: str
     user_id: str
     path: str
@@ -28,6 +28,10 @@ class IAMUser:
     def __hash__(self):
         return hash(self.user_id)
 
+    @property
+    def policy_documents(self) -> List[PolicyDocument]:
+        return list(map(lambda x: x.policy_document , self.user_policies))
+    
 
 def get_iam_users(session: Session) -> Dict[str, IAMUser]:
     iam_client = session.client('iam')

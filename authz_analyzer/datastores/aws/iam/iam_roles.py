@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Type, Union
 from boto3 import Session
 from serde import deserialize, from_dict, serde, serialize
 
-from authz_analyzer.datastores.aws.iam.policy import PolicyDocument
+from authz_analyzer.datastores.aws.iam.policy import PolicyDocument, PolicyDocumentGetterBase
 from authz_analyzer.datastores.aws.iam.role.role_policy import RolePolicy
 from authz_analyzer.datastores.aws.utils.pagination import paginate_response_list
 
@@ -12,7 +12,7 @@ from authz_analyzer.datastores.aws.utils.pagination import paginate_response_lis
 @serde
 @dataclass
 
-class IAMRole:
+class IAMRole(PolicyDocumentGetterBase):
     role_id: str
     role_name: str
     arn: str
@@ -29,6 +29,12 @@ class IAMRole:
 
     def __repr__(self):
         return self.arn
+    
+    @property
+    def policy_documents(self) -> List[PolicyDocument]:
+        ret: List[PolicyDocument] = list(map(lambda x: x.policy_document , self.role_policies))
+        ret.append(self.assume_role_policy_document)
+        return ret
     
 
 def get_iam_roles(session: Session) -> Dict[str, IAMRole]:

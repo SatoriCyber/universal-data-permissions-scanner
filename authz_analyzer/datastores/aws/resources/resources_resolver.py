@@ -9,9 +9,7 @@ from authz_analyzer.datastores.aws.services.service_base import ServiceType
 
 
 @dataclass
-class ResourcesResolverHandler:
-    resolved_resources: Dict[ServiceType, ServiceResourcesResolverBase]
-
+class ResourcesResolver:
     # def subtraction(self, other: 'ResolvedResources'):
     #     for resolved_resource in self.resolved_resources:
 
@@ -19,7 +17,7 @@ class ResourcesResolverHandler:
     #     pass
 
     @staticmethod
-    def resolve_stmt_resource_regex(
+    def _resolve_stmt_resource_regex(
         logger: Logger,
         stmt_resource_regex: str,
         account_resources: AwsAccountResources,
@@ -49,19 +47,19 @@ class ResourcesResolverHandler:
         return ret
 
     @classmethod
-    def load_from_stmt_resource_regexes(
+    def resolve_stmt_resource_regexes(
         cls,
         logger: Logger,
         stmt_resource_regexes: Union[str, List[str]],
         account_resources: AwsAccountResources,
         allow_types_to_resolve: Set[ServiceType],
-    ) -> 'ResourcesResolverHandler':
+    ) -> Dict[ServiceType, ServiceResourcesResolverBase]:
         resolved_resources: Dict[ServiceType, ServiceResourcesResolverBase] = dict()
         if isinstance(stmt_resource_regexes, str):
             stmt_resource_regexes = [stmt_resource_regexes]
 
         for stmt_resource_regex in stmt_resource_regexes:
-            ret: Dict[ServiceType, ServiceResourcesResolverBase] = ResourcesResolverHandler.resolve_stmt_resource_regex(
+            ret: Dict[ServiceType, ServiceResourcesResolverBase] = ResourcesResolver._resolve_stmt_resource_regex(
                 logger, stmt_resource_regex, account_resources, allow_types_to_resolve
             )
             for service_type, resolved_service_resources in ret.items():
@@ -73,4 +71,4 @@ class ResourcesResolverHandler:
                 else:
                     resolved_resources[service_type] = resolved_service_resources
 
-        return cls(resolved_resources=resolved_resources)
+        return resolved_resources

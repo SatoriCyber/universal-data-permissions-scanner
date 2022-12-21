@@ -4,13 +4,13 @@ from typing import Any, Dict, List, Optional, Set, Type, Union
 from boto3 import Session
 from serde import deserialize, from_dict, serde, serialize
 
-from authz_analyzer.datastores.aws.iam.policy import GroupPolicy, Policy, PolicyDocument
+from authz_analyzer.datastores.aws.iam.policy import GroupPolicy, Policy, PolicyDocument, PolicyDocumentGetterBase
 from authz_analyzer.datastores.aws.utils.pagination import paginate_response_list
 
 
 @serde
 @dataclass
-class IAMGroup:
+class IAMGroup(PolicyDocumentGetterBase):
     group_name: str
     group_id: str
     arn: str
@@ -19,6 +19,10 @@ class IAMGroup:
     group_policies: List[GroupPolicy]
     attached_policies_arn: List[str]
 
+    @property
+    def policy_documents(self) -> List[PolicyDocument]:
+        return list(map(lambda x: x.policy_document , self.group_policies))
+    
     def __eq__(self, other):
         return self.group_id == other.group_id
     

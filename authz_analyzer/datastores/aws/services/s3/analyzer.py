@@ -48,4 +48,5 @@ class S3AuthzAnalyzer():
         self.logger.info("Starting to analyzed AWS s3 for account id: %s", self.account_id)
         session = create_session_with_assume_role(self.account_id, self.account_role_name)
         self.logger.info("Successfully assume the role %s for account id %s", self.account_role_name, self.account_id)
-        _analyzed_ctx = AwsAuthzAnalyzer.load(self.logger, self.account_id, session, set([S3ServiceType()]))
+        aws_authz_analyzer = AwsAuthzAnalyzer.load(self.logger, self.account_id, session, set([S3ServiceType()]))
+        aws_authz_analyzer.write_permissions(self.logger, self.writer)
