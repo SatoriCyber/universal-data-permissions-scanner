@@ -20,10 +20,11 @@ class AssetType(Enum):
 class IdentityType(Enum):
     """Types of identities that are used by the datastores."""
 
-    USER = auto()  # Snowflake, GCP
+    USER = auto()  # Snowflake, GCP, Redshift
+    GROUP = auto()  # GCP, Redshift
+    ROLE = auto()  # Redshift
     ROLE_LOGIN = auto()  # Postgres
     SERVICE_ACCOUNT = auto()  # GCP
-    GROUP = auto()  # GCP
     WORKSPACE_ACCOUNT = auto()  # GCP
     CLOUD_IDENTITY_DOMAIN = auto()  # GCP
     AWS_ACCOUNT = auto()  # AWS
@@ -49,6 +50,8 @@ class IdentityType(Enum):
 class AuthzPathElementType(Enum):
     """Types of elements that can be used by datastores to grant permissions."""
 
+    USER = auto()  # Used by Redshift
+    GROUP = auto()  # Used by Redshift
     ROLE = auto()  # Used by Snowflake, and Postgres
     DATASET = auto()  # used by GCP
     TABLE = auto()  # used by GCP
@@ -82,7 +85,6 @@ class PermissionLevel(Enum):
 
     def __hash__(self) -> int:
         return hash(self.value)
-
 
 
 @dataclass
