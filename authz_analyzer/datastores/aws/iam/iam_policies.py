@@ -27,6 +27,10 @@ class IAMPolicy(PolicyDocumentGetterBase):
     @property
     def policy_documents(self) -> List[PolicyDocument]:
         return [self.policy_document]
+    
+    @property
+    def parent_arn(self) -> str:
+        return self.policy.arn    
         
         
 def get_iam_policies(session: Session) -> Dict[str, IAMPolicy]:

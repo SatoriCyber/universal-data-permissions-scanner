@@ -36,6 +36,9 @@ class IAMRole(PolicyDocumentGetterBase):
         ret.append(self.assume_role_policy_document)
         return ret
     
+    @property
+    def parent_arn(self) -> str:
+        return self.arn
 
 def get_iam_roles(session: Session) -> Dict[str, IAMRole]:
     iam_client = session.client('iam')
