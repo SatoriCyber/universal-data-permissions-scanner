@@ -8,6 +8,7 @@ IdentityId = id
 
 
 class IdentityType(Enum):
+    UNKNOWN = auto()
     USER = auto()
     GROUP = auto()
     ROLE = auto()
