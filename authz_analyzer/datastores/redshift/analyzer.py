@@ -113,8 +113,6 @@ class RedshiftAuthzAnalyzer:
         self.logger.info("Fetching identities to table privileges")
         identity_to_resource_privilege = self._get_identities_privileges()
 
-        # self._add_super_user(identity_to_resource_privilege)
-
         return AuthorizationModel(identity_to_identities=identity_to_identities,
                                   identity_to_resource_privilege=identity_to_resource_privilege)
 
@@ -148,8 +146,8 @@ class RedshiftAuthzAnalyzer:
                                                   type_=granted_identity_type,
                                                   relations=set())
                 identity_grants.add(granted_identity)
-            # if superuser is True:
-            #     role_grants.add(DBIdentity.new("super_user", set(), False))
+            if identity.type_ == IdentityType.USER.name:
+                identity_grants.add(DBIdentity.new(id_=0, name="public", type_=IdentityType.UNKNOWN, relations=set()))
 
         return results
 
@@ -157,6 +155,7 @@ class RedshiftAuthzAnalyzer:
         command = (COMMANDS_DIR / "identities_privileges.sql").read_text()
         results: Dict[IdentityId, Set[ResourcePrivilege]] = {}
         for pg_cursor in self.cursors:
+            db_name = pg_cursor.connection.info.dbname
             rows = RedshiftAuthzAnalyzer._get_rows(pg_cursor, command)
             for row in rows:
                 _grantor = row[0]
@@ -165,19 +164,9 @@ class RedshiftAuthzAnalyzer:
                 level: Privilege = row[3]
 
                 identity_grants = results.setdefault(identity, set())
-                identity_grants.add(ResourcePrivilege(table_name, level))
+                identity_grants.add(ResourcePrivilege(db_name + "." + table_name, level))
 
         return results
-
-    def _add_super_user(self, identity_to_grants: Dict[IdentityId, Set[ResourcePrivilege]]):
-        self.logger.info("Fetching all tables")
-        command = (COMMANDS_DIR / "all_tables.sql").read_text()
-        all_tables: Set[ResourcePrivilege] = set()
-        for pg_cursor in self.cursors:
-            rows = RedshiftAuthzAnalyzer._get_rows(pg_cursor, command)
-            for table_name in rows:
-                all_tables.add(ResourcePrivilege(table_name[0], Privilege.USAGE))
-        identity_to_grants["super_user"] = all_tables
 
     @staticmethod
     def _get_rows(redshift_cursor: cursor, command: str):
