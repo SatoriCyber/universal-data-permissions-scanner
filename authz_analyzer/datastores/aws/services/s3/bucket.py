@@ -10,6 +10,7 @@ from authz_analyzer.datastores.aws.iam.policy import PolicyDocument
 from authz_analyzer.datastores.aws.iam.public_block_access_config import PublicAccessBlockConfiguration
 from authz_analyzer.datastores.aws.services.s3.bucket_acl import S3BucketACL
 from authz_analyzer.datastores.aws.services.service_base import ServiceResourceBase
+from authz_analyzer.models.model import AssetType
 
 S3_RESOURCE_SERVICE_PREFIX = "arn:aws:s3:::"
 
@@ -36,6 +37,9 @@ class S3Bucket(ServiceResourceBase):
 
     def get_resource_name(self) -> str:
         return self.name
+
+    def get_asset_type(self) -> AssetType:
+        return AssetType.S3_BUCKET
 
 
 def get_buckets(session: Session) -> List[ServiceResourceBase]:

@@ -2,6 +2,8 @@ import os
 import pytest
 import pathlib
 import json
+from authz_analyzer.writers.get_writers import get_writer
+from authz_analyzer.writers.base_writers import OutputFormat
 from authz_analyzer.datastores.aws.aws_authz_analyzer import AwsAuthzAnalyzer
 from authz_analyzer.datastores.aws.services.s3.s3_service import S3ServiceType, S3_SERVICE_NAME
 from authz_analyzer.datastores.aws.services.s3.s3_actions import S3Action
@@ -14,11 +16,13 @@ from authz_analyzer.datastores.aws.services.service_base import (
 from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
 from authz_analyzer.utils.logger import get_logger
 from serde.json import to_json, from_dict
-from tests.mocks.mock_writers import MockWriter
 
 
 AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(
     os.path.dirname(__file__), 'satori_dev_account_authz_analyzer.json'
+)
+AWS_AUTHZ_ANALYZER_SATORI_DEV_RESULT_JSON_FILE = pathlib.Path().joinpath(
+    os.path.dirname(__file__), 'satori_dev_account_authz_analyzer_result.json'
 )
 
 
@@ -65,5 +69,5 @@ def test_aws_authz_analyzer_analyzed_permissions_satori_dev_json_file(register_s
     with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "r") as f:
         authz_analyzer_json_from_file = json.load(f)
         authz_analyzer: AwsAuthzAnalyzer = from_dict(AwsAuthzAnalyzer, authz_analyzer_json_from_file)
-        mocked_writer = MockWriter.get()
-        authz_analyzer.write_permissions(get_logger(False), mocked_writer.mocked_writer)
+        writer = get_writer(AWS_AUTHZ_ANALYZER_SATORI_DEV_RESULT_JSON_FILE, OutputFormat.MULTI_JSON)
+        authz_analyzer.write_permissions(get_logger(False), writer)

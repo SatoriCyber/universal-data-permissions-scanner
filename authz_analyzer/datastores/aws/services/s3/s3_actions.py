@@ -1,24 +1,29 @@
 import re
 from dataclasses import dataclass
+from enum import Enum, auto
 from logging import Logger
 from typing import List, Set
 
 from serde import serde
 
-from authz_analyzer.datastores.aws.actions.service_actions_resolver_base import ServiceActionsResolverBase
 from authz_analyzer.datastores.aws.iam.policy import PolicyDocument
-from authz_analyzer.datastores.aws.services.s3.s3_resources import S3ResourceType
-from authz_analyzer.datastores.aws.services.service_base import ServiceActionBase
+from authz_analyzer.datastores.aws.services.service_base import ServiceActionBase, ServiceActionsResolverBase
 from authz_analyzer.models import PermissionLevel
 
 S3_ACTION_SERVICE_PREFIX = "s3:"
+
+
+class S3ActionType(Enum):
+    # Resource types defined by Amazon S3: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3.html
+    BUCKET = auto()
+    OBJECT = auto()
 
 
 @serde
 @dataclass
 class S3Action(ServiceActionBase):
     name: str
-    resource_type: S3ResourceType
+    action_type: S3ActionType
     permission_level: PermissionLevel
 
     def __repr__(self):
@@ -43,15 +48,13 @@ class S3Action(ServiceActionBase):
 
 @dataclass
 class S3ServiceActionsResolver(ServiceActionsResolverBase):
-    stmt_relative_id_regex: str
     resolved_actions: Set[S3Action]
 
     def is_empty(self) -> bool:
         return len(self.resolved_actions) == 0
 
-    def merge(self, other: 'ServiceActionsResolverBase'):
-        if isinstance(other, S3ServiceActionsResolver):
-            self.resolved_actions.union(other.resolved_actions)
+    def get_resolved_actions(self) -> Set[ServiceActionBase]:
+        return self.resolved_actions  # type: ignore[return-value]
 
     @staticmethod
     def resolve_actions(stmt_relative_id_objects_regex: str, service_actions: List[S3Action]) -> Set[S3Action]:
@@ -62,19 +65,20 @@ class S3ServiceActionsResolver(ServiceActionsResolverBase):
 
     @classmethod
     def load(
-        cls, _logger: Logger, stmt_relative_id_regex: str, service_actions: List[S3Action]
+        cls, _logger: Logger, stmt_relative_id_regexes: List[str], service_actions: List[S3Action]
     ) -> 'ServiceActionsResolverBase':
-        stmt_relative_id_regex = PolicyDocument.fix_stmt_regex_to_valid_regex(stmt_relative_id_regex)
-
-        resolved_actions = S3ServiceActionsResolver.resolve_actions(stmt_relative_id_regex, service_actions)
+        resolved_actions: Set[S3Action] = set()
+        for stmt_relative_id_regex in stmt_relative_id_regexes:
+            stmt_relative_id_regex = PolicyDocument.fix_stmt_regex_to_valid_regex(stmt_relative_id_regex)
+            resolved_actions = resolved_actions.union(S3ServiceActionsResolver.resolve_actions(stmt_relative_id_regex, service_actions))
+            
         return cls(
             resolved_actions=resolved_actions,
-            stmt_relative_id_regex=stmt_relative_id_regex,
         )
 
 
 s3_actions: List[ServiceActionBase] = [
-    S3Action("GetBucketPolicy", S3ResourceType.BUCKET, PermissionLevel.READ),
-    S3Action("GetObject", S3ResourceType.OBJECT, PermissionLevel.READ),
-    S3Action("DeleteObject", S3ResourceType.OBJECT, PermissionLevel.WRITE),
+    S3Action("GetBucketPolicy", S3ActionType.BUCKET, PermissionLevel.READ),
+    S3Action("GetObject", S3ActionType.OBJECT, PermissionLevel.READ),
+    S3Action("DeleteObject", S3ActionType.OBJECT, PermissionLevel.WRITE),
 ]
