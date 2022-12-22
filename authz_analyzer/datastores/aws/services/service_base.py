@@ -1,14 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Optional, Set, Type
 
 from boto3 import Session
 from serde import serde
 
-from authz_analyzer.datastores.aws.actions.service_actions_resolver_base import ServiceActionsResolverBase
-from authz_analyzer.datastores.aws.resources.service_resources_resolver_base import ServiceResourcesResolverBase
-from authz_analyzer.models import PermissionLevel
+from authz_analyzer.models.model import AssetType, PermissionLevel
 
 _service_type_by_name: Dict[str, Type['ServiceType']] = dict()
 
@@ -61,6 +59,21 @@ class ServiceActionBase(ABC):
         pass
 
 
+@dataclass
+class ServiceActionsResolverBase(ABC):
+    @abstractmethod
+    def is_empty(self) -> bool:
+        pass
+
+    # @abstractmethod
+    # def subtraction_actions(self, other: 'ServiceActionsResolverBase'):
+    #     pass
+
+    @abstractmethod
+    def get_resolved_actions(self) -> Set[ServiceActionBase]:
+        pass
+    
+
 @serde
 @dataclass
 class ServiceResourceBase(ABC):
@@ -72,6 +85,41 @@ class ServiceResourceBase(ABC):
     def get_resource_name(self) -> str:
         pass
 
+    @abstractmethod
+    def get_asset_type(self) -> AssetType:
+        pass
+    
+    @abstractmethod
+    def __repr__(self):
+        pass
+
+    @abstractmethod
+    def __eq__(self, other):
+        pass
+
+    @abstractmethod
+    def __hash__(self):
+        pass
+    
+
+@dataclass
+class ServiceResourcesResolverBase(ABC):
+    @abstractmethod
+    def is_empty(self) -> bool:
+        pass
+
+    # @abstractmethod
+    # def subtraction_entities_for_actions(self, other: 'ServiceResourcesResolverBase', actions):
+    #     pass
+
+    @abstractmethod
+    def get_resolved_resources(self) -> Dict[ServiceResourceBase, Set[ServiceActionBase]]:
+        pass
+
+    @abstractmethod
+    def merge(self, other: 'ServiceResourcesResolverBase'):
+        pass
+    
 
 @serde
 class ServiceType(ABC):
@@ -90,7 +138,11 @@ class ServiceType(ABC):
     @classmethod
     @abstractmethod
     def load_resolver_service_resources(
-        cls, logger: Logger, stmt_relative_id_regex: str, service_resources: List[ServiceResourceBase]
+        cls,
+        logger: Logger,
+        stmt_relative_id_regexes: List[str],
+        service_resources: List[ServiceResourceBase],
+        resolved_actions: Set[ServiceActionBase],
     ) -> ServiceResourcesResolverBase:
         pass
 
@@ -102,7 +154,7 @@ class ServiceType(ABC):
     @classmethod
     @abstractmethod
     def load_resolver_service_actions(
-        cls, logger: Logger, stmt_relative_id_regex: str, service_actions: List[ServiceActionBase]
+        cls, logger: Logger, stmt_relative_id_regexes: List[str], service_actions: List[ServiceActionBase]
     ) -> ServiceActionsResolverBase:
         pass
 
