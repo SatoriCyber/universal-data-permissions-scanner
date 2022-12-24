@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from boto3 import Session
 from serde import deserialize, field, from_dict, serde, serialize
@@ -17,20 +17,20 @@ class IAMUser(PolicyDocumentGetterBase):
     path: str
     user_policies: List[UserPolicy]
     attached_policies_arn: List[str]
-    arn: PolicyPrincipal = field(deserializer=PolicyPrincipal.from_iam_user, serializer=PolicyPrincipal.to_iam_user)
+    arn: PolicyPrincipal = field(deserializer=PolicyPrincipal.from_iam_user_arn, serializer=PolicyPrincipal.to_iam_user_arn)
     
     def __eq__(self, other):
         return self.user_id == other.user_id
 
     def __repr__(self):
-        return self.arn.to_iam_user()
+        return self.arn.to_iam_user_arn()
          
     def __hash__(self):
         return hash(self.user_id)
 
     @property
-    def policy_documents(self) -> List[PolicyDocument]:
-        return list(map(lambda x: x.policy_document , self.user_policies))
+    def inline_policy_documents_and_names(self) -> List[Tuple['PolicyDocument', str]]:
+        return list(map(lambda x: (x.policy_document,  x.policy_name), self.user_policies))
     
     @property
     def parent_arn(self) -> str:

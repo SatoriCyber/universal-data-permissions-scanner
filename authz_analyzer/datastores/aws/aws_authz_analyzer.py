@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List, Optional, Set, Type
+from typing import Dict, List, Optional, Set, Tuple, Type
 
 import networkx as nx
 from boto3 import Session
@@ -8,8 +8,11 @@ from serde import field, serde
 
 from authz_analyzer.datastores.aws.actions.account_actions import AwsAccountActions
 from authz_analyzer.datastores.aws.iam.iam_entities import IAMEntities
+from authz_analyzer.datastores.aws.iam.iam_groups import IAMGroup
+from authz_analyzer.datastores.aws.iam.iam_policies import IAMPolicy
+from authz_analyzer.datastores.aws.iam.iam_roles import IAMRole
 from authz_analyzer.datastores.aws.iam.iam_users import IAMUser, UserPolicy
-from authz_analyzer.datastores.aws.iam.policy.policy_document import PolicyDocument, PolicyDocumentGetterBase
+from authz_analyzer.datastores.aws.iam.policy.policy_document import Effect, PolicyDocument, PolicyDocumentGetterBase
 from authz_analyzer.datastores.aws.resources.account_resources import AwsAccountResources
 from authz_analyzer.datastores.aws.services.service_base import (
     ServiceActionBase,
@@ -67,42 +70,132 @@ class AwsAuthzAnalyzer:
             service_types_to_load=service_types_to_load,
         )
 
+    def write_permissions_for_assets(
+        self,
+        logger: Logger,
+        writer: BaseWriter,
+        identity: Identity,
+        path: List[AuthzPathElement],
+        policy_document: PolicyDocument,
+        parent_arn: str,
+    ):
+        service_resources_resolver: Optional[
+            Dict[ServiceType, ServiceResourcesResolverBase]
+        ] = policy_document.get_services_resources_resolver(
+            logger,
+            parent_arn,
+            self.account_actions,
+            self.account_resources,
+            Effect.Allow,
+            self.service_types_to_load,
+        )
+
+        if not service_resources_resolver:
+            return
+
+        for service_type, service_resolver in service_resources_resolver.items():
+            servicer_resolved_resources: Dict[
+                ServiceResourceBase, Set[ServiceActionBase]
+            ] = service_resolver.get_resolved_resources()
+
+            for resource, actions in servicer_resolved_resources.items():
+                asset = Asset(name=resource.get_resource_name(), type=resource.get_asset_type())
+                if any(action.get_action_permission_level() == PermissionLevel.WRITE for action in actions):
+                    writer.write_entry(
+                        AuthzEntry(asset=asset, path=path, identity=identity, permission=PermissionLevel.WRITE)
+                    )
+                if any(action.get_action_permission_level() == PermissionLevel.READ for action in actions):
+                    writer.write_entry(
+                        AuthzEntry(asset=asset, path=path, identity=identity, permission=PermissionLevel.READ)
+                    )
+                if any(action.get_action_permission_level() == PermissionLevel.FULL for action in actions):
+                    writer.write_entry(
+                        AuthzEntry(asset=asset, path=path, identity=identity, permission=PermissionLevel.FULL)
+                    )
+
     def write_permissions(self, logger: Logger, writer: BaseWriter):
         principal_graph: nx.DiGraph = self.iam_entities.build_principal_network_graph(logger)
         for iam_user_path in nx.all_simple_paths(principal_graph, source="START_NODE", target="END_NODE"):
-            path: List[AuthzPathElement] = []
+            logger.info("%s", iam_user_path)
+
+            # Get the Identity from the first node
             identity: Optional[Identity] = None
-            for node in iam_user_path[1:-1]:        
-                if isinstance(node, IAMUser):
-                    identity = Identity(id=node.user_id, type=IdentityType.IAM_USER, name=node.user_name)
-                    
-            last_node = iam_user_path[-2]
-            if identity and isinstance(last_node, IAMUser):
-                for user_policy in last_node.user_policies:  # type: UserPolicy
-                    resolved_buckets: Optional[Dict[ServiceType, ServiceResourcesResolverBase]] = user_policy.policy_document.resolve(
-                        logger,
-                        last_node.parent_arn,
-                        self.account_actions,
-                        self.account_resources,
-                        self.service_types_to_load,
+            identity_node = iam_user_path[1]
+            if isinstance(identity_node, IAMUser):
+                identity = Identity(
+                    id=identity_node.arn.to_iam_user_arn(), type=IdentityType.IAM_USER, name=identity_node.user_name
+                )
+            elif isinstance(identity_node, IAMRole):
+                identity = Identity(id=identity_node.arn, type=IdentityType.IAM_ROLE, name=identity_node.role_name)
+            else:
+                raise BaseException(
+                    f"Invalid type of 'Identity' node {type(identity_node)} In {iam_user_path}, valid types are IAMUser, IAMRole"
+                )
+                
+            # Get the path of AuthzPathElement
+            path: List[AuthzPathElement] = []
+            for node in iam_user_path[2:-1]:
+                if isinstance(node, IAMRole):
+                    path.append(
+                        AuthzPathElement(
+                            id=node.arn,
+                            name=node.role_name,
+                            type=AuthzPathElementType.IAM_ROLE,
+                            note="",
+                        )
                     )
-                    
-                    if not resolved_buckets:
-                        continue
-                    
-                    path.append(AuthzPathElement(id=last_node.user_id, name=user_policy.policy_name, type=AuthzPathElementType.IAM_USER, note=""))
-                    for service_type, service_resolver in resolved_buckets.items():
-                        resolved_resources: Dict[ServiceResourceBase, Set[ServiceActionBase]] = service_resolver.get_resolved_resources()
-                        for resource, actions in resolved_resources.items():
-                            has_write = any(action.get_action_permission_level() == PermissionLevel.WRITE for action in actions)
-                            has_read = any(action.get_action_permission_level() == PermissionLevel.READ for action in actions)
-                            has_full = any(action.get_action_permission_level() == PermissionLevel.FULL for action in actions)
-                            asset = Asset(name=resource.get_resource_name(), type=resource.get_asset_type()) 
-                            if has_write:                     
-                                writer.write_entry(AuthzEntry(asset=asset, path=path, identity=identity, permission=PermissionLevel.WRITE))
-                            if has_read:                     
-                                writer.write_entry(AuthzEntry(asset=asset, path=path, identity=identity, permission=PermissionLevel.READ))
-                            if has_full:                     
-                                writer.write_entry(AuthzEntry(asset=asset, path=path, identity=identity, permission=PermissionLevel.FULL))                                                                
-                            
+                elif isinstance(node, IAMPolicy):
+                    path.append(
+                        AuthzPathElement(
+                            id=node.policy.arn,
+                            name=node.policy.policy_name,
+                            type=AuthzPathElementType.IAM_POLICY,
+                            note="",
+                        )
+                    )
+                elif isinstance(node, IAMGroup):
+                    path.append(
+                        AuthzPathElement(
+                            id=node.arn,
+                            name=node.group_name,
+                            type=AuthzPathElementType.IAM_GROUP,
+                            note="",
+                        )
+                    )
+                else:
+                    raise BaseException(
+                        f"Invalid type of 'AuthzPathElement' node {type(node)} in {iam_user_path}, valid types are IAMRole, IAMPolicy, IAMGroup"
+                    )
+            
+            # For the identity and its path, writes the assets permissions
+            node_with_policies_to_resolve = iam_user_path[-2]
+            if isinstance(node_with_policies_to_resolve, PolicyDocumentGetterBase):
+                policy_documents_and_names: List[
+                    Tuple[PolicyDocument, str]
+                ] = node_with_policies_to_resolve.inline_policy_documents_and_names
+                parent_arn: str = node_with_policies_to_resolve.parent_arn
+                for policy_document_and_name in policy_documents_and_names:
+                    policy_document: PolicyDocument = policy_document_and_name[0]
+                    policy_name: str = policy_document_and_name[1]
+                    try:
+                        path.append(
+                            AuthzPathElement(
+                                id=parent_arn,
+                                name=policy_name,
+                                type=AuthzPathElementType.IAM_INLINE_POLICY,
+                                note="",
+                            )
+                        )
+                        self.write_permissions_for_assets(logger, writer, identity, path, policy_document, parent_arn)
+                    finally:
+                        path.pop()
+            elif isinstance(node_with_policies_to_resolve, IAMPolicy):
+                policy_document: PolicyDocument = node_with_policies_to_resolve.policy_document # type: ignore[no-redef]
+                parent_arn: str = node_with_policies_to_resolve.policy.arn # type: ignore[no-redef]
+                self.write_permissions_for_assets(logger, writer, identity, path, policy_document, parent_arn)
+            else:
+                raise BaseException(
+                    f"Invalid type of 'Asset' node {type(node_with_policies_to_resolve)} In {iam_user_path}, not instance of PolicyDocumentGetterBase or IAMPolicy"
+                )
+
         writer.close()
