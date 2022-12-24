@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set, Type, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 from boto3 import Session
 from serde import deserialize, from_dict, serde, serialize
@@ -20,8 +20,8 @@ class IAMGroup(PolicyDocumentGetterBase):
     attached_policies_arn: List[str]
 
     @property
-    def policy_documents(self) -> List[PolicyDocument]:
-        return list(map(lambda x: x.policy_document , self.group_policies))
+    def inline_policy_documents_and_names(self) -> List[Tuple['PolicyDocument', str]]:
+        return list(map(lambda x: (x.policy_document,  x.policy_name), self.group_policies))
     
     @property
     def parent_arn(self) -> str:

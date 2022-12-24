@@ -32,15 +32,19 @@ class S3ServiceType(ServiceType):
 
     def get_service_name(self) -> str:
         return S3_SERVICE_NAME
-        
+
     @classmethod
     def load_resolver_service_resources(
-        cls, logger: Logger, stmt_relative_id_regexes: List[str], service_resources: List[ServiceResourceBase], resolved_actions: Set[ServiceActionBase],
+        cls,
+        logger: Logger,
+        stmt_relative_id_regexes: List[str],
+        service_resources: List[ServiceResourceBase],
+        resolved_actions: Set[ServiceActionBase],
     ) -> ServiceResourcesResolverBase:
         s3_buckets: List[S3Bucket] = [s for s in service_resources if isinstance(s, S3Bucket)]
         resolved_s3_actions: Set[S3Action] = set([a for a in resolved_actions if isinstance(a, S3Action)])
         return S3ServiceResourcesResolver.load(logger, stmt_relative_id_regexes, s3_buckets, resolved_s3_actions)
-    
+
     @classmethod
     def load_service_resources_from_session(cls, logger: Logger, session: Session) -> List[ServiceResourceBase]:
         # Get the buckets to analyzed

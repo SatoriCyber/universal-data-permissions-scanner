@@ -18,7 +18,7 @@ class ActionsResolver:
     #     pass
 
     @staticmethod
-    def _get_stmt_action_regexes_pre_service_type(
+    def _get_stmt_action_regexes_per_service_type(
         logger: Logger,
         stmt_action_regexes: List[str],
         allow_types_to_resolve: Set[ServiceType],
@@ -58,7 +58,7 @@ class ActionsResolver:
         if isinstance(stmt_action_regexes, str):
             stmt_action_regexes = [stmt_action_regexes]
             
-        ret: Dict[ServiceType, List[str]] = ActionsResolver._get_stmt_action_regexes_pre_service_type(
+        ret: Dict[ServiceType, List[str]] = ActionsResolver._get_stmt_action_regexes_per_service_type(
             logger, stmt_action_regexes, allow_types_to_resolve
         )
         for service_type, service_regexes in ret.items():

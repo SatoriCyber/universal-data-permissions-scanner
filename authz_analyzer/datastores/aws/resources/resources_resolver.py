@@ -22,7 +22,7 @@ class ResourcesResolver:
     #     pass
 
     @staticmethod
-    def _get_stmt_resource_regexes_pre_service_type(
+    def _get_stmt_resource_regexes_per_service_type(
         logger: Logger,
         stmt_resource_regexes: List[str],
         allow_types_to_resolve: Set[ServiceType],
@@ -63,7 +63,7 @@ class ResourcesResolver:
         if isinstance(stmt_resource_regexes, str):
             stmt_resource_regexes = [stmt_resource_regexes]
 
-        ret: Dict[ServiceType, List[str]] = ResourcesResolver._get_stmt_resource_regexes_pre_service_type(
+        ret: Dict[ServiceType, List[str]] = ResourcesResolver._get_stmt_resource_regexes_per_service_type(
             logger, stmt_resource_regexes, allow_types_to_resolve
         )
         for service_type, service_regexes in ret.items():

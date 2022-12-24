@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from boto3 import Session
 from serde import deserialize, from_dict, serde, serialize
@@ -31,10 +31,8 @@ class IAMRole(PolicyDocumentGetterBase):
         return self.arn
     
     @property
-    def policy_documents(self) -> List[PolicyDocument]:
-        ret: List[PolicyDocument] = list(map(lambda x: x.policy_document , self.role_policies))
-        ret.append(self.assume_role_policy_document)
-        return ret
+    def inline_policy_documents_and_names(self) -> List[Tuple['PolicyDocument', str]]:
+        return list(map(lambda x: (x.policy_document,  x.policy_name), self.role_policies))
     
     @property
     def parent_arn(self) -> str:

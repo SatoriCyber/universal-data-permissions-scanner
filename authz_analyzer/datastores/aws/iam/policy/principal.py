@@ -23,10 +23,10 @@ class PolicyPrincipal:
     principal_metadata: Optional[Dict[str, str]] = field(skip=True)
 
     @classmethod
-    def from_iam_user(cls, principal_arn: str) -> "PolicyPrincipal":
+    def from_iam_user_arn(cls, principal_arn: str) -> "PolicyPrincipal":
         return PolicyPrincipal.load_aws(principal_arn)
          
-    def to_iam_user(self) -> str:
+    def to_iam_user_arn(self) -> str:
         return self.principal_str
 
     def contains(self, other: 'PolicyPrincipal') -> bool:
