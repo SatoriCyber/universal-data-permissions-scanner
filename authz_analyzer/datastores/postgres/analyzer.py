@@ -40,6 +40,7 @@ COMMANDS_DIR = Path(__file__).parent / "commands"
 @dataclass
 class PostgresAuthzAnalyzer:
     """Analyze authorization for Postgres."""
+
     cursors: List[cursor]
     writer: BaseWriter
     logger: Logger

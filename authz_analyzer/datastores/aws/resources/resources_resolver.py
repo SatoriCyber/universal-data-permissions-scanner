@@ -34,7 +34,7 @@ class ResourcesResolver:
                 stmt_relative_id_regex = (
                     "*"
                     if stmt_resource_regex == "*"
-                    else stmt_resource_regex[len(service_prefix):]
+                    else stmt_resource_regex[len(service_prefix) :]
                     if stmt_resource_regex.startswith(service_prefix)
                     else None
                 )

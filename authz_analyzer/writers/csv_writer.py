@@ -8,6 +8,7 @@ from authz_analyzer.writers.base_writers import BaseWriter
 
 class CSVWriter(BaseWriter):
     """Writer for CSV."""
+
     def __init__(self, fh: TextIO):
         self.writer = csv.writer(fh, dialect="excel", escapechar="\\", strict=True)
         super().__init__(fh)

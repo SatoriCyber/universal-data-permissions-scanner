@@ -17,6 +17,7 @@ class MultiJsonWriter(BaseWriter):
     Each entry is a valid json, example:
     {"identity": {"id": "USER_1", "type": "USER", "name": "USER_1"}, "permission": "Read", "asset": {"name": "db.schema.table", "type": "table"}, "granted_by": [{"type": "ROLE", "id": "super-user", "name": "super-user", "note": "USER_1 has a super-user ROLE"}]}
     """
+
     def write_entry(self, entry: AuthzEntry):
         path: List[Dict[str, str]] = list(
             map(lambda x: {"type": str(x.type), "id": x.id, "name": x.name, "note": x.note}, entry.path)

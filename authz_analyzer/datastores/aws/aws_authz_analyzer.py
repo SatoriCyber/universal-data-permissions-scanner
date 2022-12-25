@@ -131,7 +131,7 @@ class AwsAuthzAnalyzer:
                 raise BaseException(
                     f"Invalid type of 'Identity' node {type(identity_node)} In {iam_user_path}, valid types are IAMUser, IAMRole"
                 )
-                
+
             # Get the path of AuthzPathElement
             path: List[AuthzPathElement] = []
             for node in iam_user_path[2:-1]:
@@ -166,7 +166,7 @@ class AwsAuthzAnalyzer:
                     raise BaseException(
                         f"Invalid type of 'AuthzPathElement' node {type(node)} in {iam_user_path}, valid types are IAMRole, IAMPolicy, IAMGroup"
                     )
-            
+
             # For the identity and its path, writes the assets permissions
             node_with_policies_to_resolve = iam_user_path[-2]
             if isinstance(node_with_policies_to_resolve, PolicyDocumentGetterBase):
@@ -190,8 +190,8 @@ class AwsAuthzAnalyzer:
                     finally:
                         path.pop()
             elif isinstance(node_with_policies_to_resolve, IAMPolicy):
-                policy_document: PolicyDocument = node_with_policies_to_resolve.policy_document # type: ignore[no-redef]
-                parent_arn: str = node_with_policies_to_resolve.policy.arn # type: ignore[no-redef]
+                policy_document: PolicyDocument = node_with_policies_to_resolve.policy_document  # type: ignore[no-redef]
+                parent_arn: str = node_with_policies_to_resolve.policy.arn  # type: ignore[no-redef]
                 self.write_permissions_for_assets(logger, writer, identity, path, policy_document, parent_arn)
             else:
                 raise BaseException(

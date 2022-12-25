@@ -61,6 +61,7 @@ IDENTITY_TYPE_MAP = {
 @dataclass
 class Member:
     """Defines a GCP member, which is a combination of a role and an identity."""
+
     role: str
     name: str
     type: IdentityType
@@ -111,6 +112,7 @@ class GcpBindingDict(TypedDict):
 @dataclass
 class PolicyNode:
     """Base class for a policy node, other policies node inherit from this class."""
+
     id: str
     name: str
     type: str
@@ -181,8 +183,8 @@ class PolicyNode:
 
 
 class IamPolicyNode(PolicyNode):
-    """Represents a GCP IAM policy node, for example a project, folder, organization.
-    """
+    """Represents a GCP IAM policy node, for example a project, folder, organization."""
+
     def __init__(
         self,
         policy_id: str,
@@ -217,6 +219,7 @@ class IamPolicyNode(PolicyNode):
 
 class TableIamPolicyNode(PolicyNode):
     """Represents a BigQuery table IAM policy."""
+
     def __init__(
         self,
         table_id: str,
@@ -246,6 +249,7 @@ class TableIamPolicyNode(PolicyNode):
 
 class DatasetPolicyNode(PolicyNode):
     """Represents a BigQuery dataset policy node."""
+
     def __init__(self, dataset: Dataset, resolve_permission_callback: Callable[[str], Optional[PermissionLevel]]):
         """Represent a BigQuery dataset policy node.
 

@@ -16,6 +16,7 @@ PERMISSION_LEVEL_MAP = {
     "OWNERSHIP": PermissionLevel.FULL,
 }
 
+
 @dataclass
 class User:
     name: str
@@ -32,6 +33,7 @@ Username = User
 @dataclass
 class ResourceGrant:
     """Define a resource, e.g. a table, and the permission level."""
+
     name: str
     permission_level: PermissionLevel
 
@@ -42,6 +44,7 @@ class ResourceGrant:
 @dataclass
 class DBRole:
     """Define a role which grants access from a user to a resource."""
+
     name: str
     roles: Set[DBRole]
 
@@ -61,6 +64,7 @@ class AuthorizationModel:
     Role to roles -> map a role to the roles it has
     Role to grants -> map a role to the grants it has
     """
+
     users_to_roles: Dict[Username, Set[DBRole]]
     role_to_roles: Dict[RoleName, Set[DBRole]]
     roles_to_grants: Dict[RoleName, Set[ResourceGrant]]

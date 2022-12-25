@@ -24,19 +24,19 @@ class ActionsResolver:
         allow_types_to_resolve: Set[ServiceType],
     ) -> Dict[ServiceType, List[str]]:
         ret: Dict[ServiceType, List[str]] = dict()
-        for stmt_action_regex in stmt_action_regexes:    
+        for stmt_action_regex in stmt_action_regexes:
             for service_type in allow_types_to_resolve:
                 service_prefix = service_type.get_action_service_prefix()
                 stmt_relative_id_regex = (
                     "*"
                     if stmt_action_regex == "*"
-                    else stmt_action_regex[len(service_prefix):]
+                    else stmt_action_regex[len(service_prefix) :]
                     if stmt_action_regex.startswith(service_prefix)
                     else None
                 )
                 if stmt_relative_id_regex is None:
                     continue
-                
+
                 regexes_list: Optional[List[str]] = ret.get(service_type, None)
                 if regexes_list:
                     regexes_list.append(stmt_relative_id_regex)
@@ -54,10 +54,10 @@ class ActionsResolver:
         allow_types_to_resolve: Set[ServiceType],
     ) -> Optional[Dict[ServiceType, ServiceActionsResolverBase]]:
         services_action_resolver: Dict[ServiceType, ServiceActionsResolverBase] = dict()
-        
+
         if isinstance(stmt_action_regexes, str):
             stmt_action_regexes = [stmt_action_regexes]
-            
+
         ret: Dict[ServiceType, List[str]] = ActionsResolver._get_stmt_action_regexes_per_service_type(
             logger, stmt_action_regexes, allow_types_to_resolve
         )

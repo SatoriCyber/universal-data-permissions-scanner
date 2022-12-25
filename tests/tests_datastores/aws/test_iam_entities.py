@@ -8,7 +8,10 @@ from authz_analyzer.utils.logger import get_logger
 from serde.json import to_json, from_dict
 
 
-IAM_ENTITIES_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(os.path.dirname(__file__), 'satori_dev_account_iam_entities.json')
+IAM_ENTITIES_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(
+    os.path.dirname(__file__), 'satori_dev_account_iam_entities.json'
+)
+
 
 @pytest.mark.skipif(
     not os.environ.get("AUTHZ_SATORI_DEV_ACCOUNT_TEST"),
@@ -34,16 +37,15 @@ def test_iam_entities_load_satori_dev_json_file():
         iam_entities_json_from_file = json.load(f)
         iam_entities = from_dict(IAMEntities, iam_entities_json_from_file)
         iam_entities_json_from_serde = json.loads(to_json(iam_entities))
-        
-        assert(iam_entities_json_from_file == iam_entities_json_from_serde)
-        
+
+        assert iam_entities_json_from_file == iam_entities_json_from_serde
+
+
 @pytest.mark.skipif(
     not os.environ.get("AUTHZ_SATORI_DEV_ACCOUNT_TEST"),
     reason="not really a test, just pull latest satori dev account config and write it to file",
 )
 def test_iam_entities_satori_dev_build_principals_network_graph():
     logger = get_logger(False)
-    iam_entities: IAMEntities = IAMEntities.load_from_json_file(
-        logger, IAM_ENTITIES_SATORI_DEV_JSON_FILE
-    )
+    iam_entities: IAMEntities = IAMEntities.load_from_json_file(logger, IAM_ENTITIES_SATORI_DEV_JSON_FILE)
     iam_entities.build_principal_network_graph(logger)

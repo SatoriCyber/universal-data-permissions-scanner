@@ -18,9 +18,16 @@ from authz_analyzer.writers import OutputFormat
 @click.group()
 @click.pass_context
 @click.option("--debug", '-d', is_flag=True, default=False, show_default=True, help="Enable debug logs")
-@click.option("--out", '-o', required=False, type=str, help="Destination output of report", default="authz-analyzer-export.csv")
 @click.option(
-   "--out-format", '-f', required=False, type=click.Choice(["JSON", "CSV"], case_sensitive=False), help="Output format", default="CSV"
+    "--out", '-o', required=False, type=str, help="Destination output of report", default="authz-analyzer-export.csv"
+)
+@click.option(
+    "--out-format",
+    '-f',
+    required=False,
+    type=click.Choice(["JSON", "CSV"], case_sensitive=False),
+    help="Output format",
+    default="CSV",
 )
 def main(ctx: click.Context, debug: bool, out: str, out_format: str):
     """Database Authorization Analyzer"""
@@ -53,7 +60,7 @@ def snowflake(ctx: click.Context, user: str, password: str, account: str, host: 
 
 @main.command()
 @click.pass_context
-@click.option('--project', '-p',  required=True, type=str, help="GCP project ID, for example: acme-webapp-prod")
+@click.option('--project', '-p', required=True, type=str, help="GCP project ID, for example: acme-webapp-prod")
 @click.option('--key-file', '-k', required=False, type=str, help="Path to GCP service account file")
 def bigquery(ctx: click.Context, project: str, key_file: Optional[str] = None):
     """Analyze Google BigQuery Authorization"""
@@ -79,7 +86,16 @@ def s3(ctx: click.Context, account_id, account_role_name):
 @click.option('--dbname', '-d', required=False, type=str, help="Postgres database name", default="postgres")
 def postgres(ctx: click.Context, username: str, password: str, port: int, host: str, dbname: str):
     """Analyzer Postgres Authorization"""
-    run_postgres(logger=ctx.obj['LOGGER'], output_format=ctx.obj['FORMAT'], output_path=ctx.obj['OUT'], username=username, password=password, port=port, host=host, dbname=dbname)
+    run_postgres(
+        logger=ctx.obj['LOGGER'],
+        output_format=ctx.obj['FORMAT'],
+        output_path=ctx.obj['OUT'],
+        username=username,
+        password=password,
+        port=port,
+        host=host,
+        dbname=dbname,
+    )
 
 
 if __name__ == "__main__":
