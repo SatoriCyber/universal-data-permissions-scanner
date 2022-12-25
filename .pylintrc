@@ -1,3 +1,2 @@
 [MASTER]
-disable=C0114, # missing-module-docstring
-disable=C0116, # missing-function-docstring
+disable=C0114, C0115, C0116 ; missing-module-docstring ,  missing-class-docstring, missing-function-docstring
