@@ -11,7 +11,6 @@ from authz_analyzer.datastores.aws.utils.pagination import paginate_response_lis
 
 @serde
 @dataclass
-
 class IAMRole(PolicyDocumentGetterBase):
     role_id: str
     role_name: str
@@ -23,20 +22,21 @@ class IAMRole(PolicyDocumentGetterBase):
 
     def __eq__(self, other):
         return self.role_id == other.role_id
-    
+
     def __hash__(self):
         return hash(self.role_id)
 
     def __repr__(self):
         return self.arn
-    
+
     @property
     def inline_policy_documents_and_names(self) -> List[Tuple['PolicyDocument', str]]:
-        return list(map(lambda x: (x.policy_document,  x.policy_name), self.role_policies))
-    
+        return list(map(lambda x: (x.policy_document, x.policy_name), self.role_policies))
+
     @property
     def parent_arn(self) -> str:
         return self.arn
+
 
 def get_iam_roles(session: Session) -> Dict[str, IAMRole]:
     iam_client = session.client('iam')
@@ -51,11 +51,17 @@ def get_iam_roles(session: Session) -> Dict[str, IAMRole]:
         assume_role_policy_document_response = role['AssumeRolePolicyDocument']
         if assume_role_policy_document_response:
             assume_role_policy_document = from_dict(PolicyDocument, assume_role_policy_document_response)
-            
-            role_policies_response = paginate_response_list(iam_client.list_role_policies, 'PolicyNames', RoleName=role_name)
+
+            role_policies_response = paginate_response_list(
+                iam_client.list_role_policies, 'PolicyNames', RoleName=role_name
+            )
             role_policies: List[RolePolicy] = []
             for role_policy_response in role_policies_response:
-                role_policies.append(from_dict(RolePolicy, iam_client.get_role_policy(RoleName=role_name, PolicyName=role_policy_response)))
+                role_policies.append(
+                    from_dict(
+                        RolePolicy, iam_client.get_role_policy(RoleName=role_name, PolicyName=role_policy_response)
+                    )
+                )
 
             attached_policies = paginate_response_list(
                 iam_client.list_attached_role_policies, 'AttachedPolicies', RoleName=role_name, PathPrefix=path

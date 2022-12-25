@@ -16,7 +16,7 @@ regex_arn_account_id = re.compile(r"^arn:aws:iam::([0-9]+):root$")
 
 
 @serde
-@dataclass    
+@dataclass
 class PolicyPrincipal:
     principal_type: AwsPrincipalType = field(skip=True)
     principal_str: str = field(skip=True)
@@ -25,7 +25,7 @@ class PolicyPrincipal:
     @classmethod
     def from_iam_user_arn(cls, principal_arn: str) -> "PolicyPrincipal":
         return PolicyPrincipal.load_aws(principal_arn)
-         
+
     def to_iam_user_arn(self) -> str:
         return self.principal_str
 
@@ -47,7 +47,9 @@ class PolicyPrincipal:
 
     @classmethod
     def load_all(cls) -> "PolicyPrincipal":
-        return PolicyPrincipal(principal_type=AwsPrincipalType.ALL_PRINCIPALS, principal_str="*", principal_metadata=None)
+        return PolicyPrincipal(
+            principal_type=AwsPrincipalType.ALL_PRINCIPALS, principal_str="*", principal_metadata=None
+        )
 
     @classmethod
     def load_canonical_user(cls, principal_str: str) -> "PolicyPrincipal":
@@ -149,9 +151,11 @@ class PolicyPrincipals:
         if self is None:
             return None
         return self.policy_document_principal
-        
+
     @classmethod
-    def from_policy_document_principal(cls, policy_principal: Union[str, Dict[str, Union[str, List[str]]]]) -> "PolicyPrincipals":
+    def from_policy_document_principal(
+        cls, policy_principal: Union[str, Dict[str, Union[str, List[str]]]]
+    ) -> "PolicyPrincipals":
         principals: List[PolicyPrincipal] = []
         if isinstance(policy_principal, str):
             if policy_principal == '*':

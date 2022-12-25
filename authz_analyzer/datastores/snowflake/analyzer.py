@@ -46,6 +46,7 @@ COMMANDS_DIR = Path(__file__).parent / "commands"
 @dataclass
 class SnowflakeAuthzAnalyzer:
     """Analyze authorization for Snowflake."""
+
     cursor: SnowflakeCursor
     writer: BaseWriter
     logger: Logger
@@ -93,7 +94,7 @@ class SnowflakeAuthzAnalyzer:
 
     def run(
         self,
-    ): 
+    ):
         """Run the analyzer."""
         self.logger.info("Starting to  query")
         authorization_model = self._get_authorization_model()

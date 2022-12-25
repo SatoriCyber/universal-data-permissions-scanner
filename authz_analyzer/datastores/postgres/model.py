@@ -22,6 +22,7 @@ PERMISSION_LEVEL_MAP = {
 @dataclass
 class ResourceGrant:
     """Define a resource, e.g. a table, and the permission level."""
+
     name: str
     permission_level: PermissionLevel
 
@@ -32,6 +33,7 @@ class ResourceGrant:
 @dataclass
 class DBRole:
     """Define a role, e.g. a user, and the roles it has, and if it can login."""
+
     name: str
     roles: Set[DBRole]
     can_login: bool
@@ -54,5 +56,6 @@ class AuthorizationModel:
     Map a role to the roles it has, and the grants it has.
     Map a role to the grants it has.
     """
+
     role_to_roles: Dict[DBRole, Set[DBRole]]
     role_to_grants: Dict[RoleName, Set[ResourceGrant]]

@@ -74,11 +74,22 @@ def run_bigquery(logger: Logger, project_id: str, output_format: OutputFormat, o
         output_format (OutputFormat): Output format, CSV or JSON
         output_path (str): Where to write the output
     """
-    analyzer = BigQueryAuthzAnalyzer.connect(logger=logger, project_id=project_id, output_path=output_path, output_format=output_format)
+    analyzer = BigQueryAuthzAnalyzer.connect(
+        logger=logger, project_id=project_id, output_path=output_path, output_format=output_format
+    )
     analyzer.run()
 
 
-def run_postgres(logger: Logger, username: str, password: str, host: str, dbname: str, output_format: OutputFormat, output_path: Path, port: int):
+def run_postgres(
+    logger: Logger,
+    username: str,
+    password: str,
+    host: str,
+    dbname: str,
+    output_format: OutputFormat,
+    output_path: Path,
+    port: int,
+):
     """Run Postgres analyzer.
 
     Args:
@@ -91,10 +102,28 @@ def run_postgres(logger: Logger, username: str, password: str, host: str, dbname
         output_path (str): Where to write the output
         port (int): Postgres port
     """
-    PostgresAuthzAnalyzer.connect(username=username, password=password, host=host, dbname=dbname, output_path=output_path, output_format=output_format, logger=logger, port=port)
+    PostgresAuthzAnalyzer.connect(
+        username=username,
+        password=password,
+        host=host,
+        dbname=dbname,
+        output_path=output_path,
+        output_format=output_format,
+        logger=logger,
+        port=port,
+    )
 
 
-def run_redshift(logger: Logger, username: str, password: str, host: str, dbname: str, output_format: OutputFormat, output_path: Path, port: int):
+def run_redshift(
+    logger: Logger,
+    username: str,
+    password: str,
+    host: str,
+    dbname: str,
+    output_format: OutputFormat,
+    output_path: Path,
+    port: int,
+):
     """Run Redshift analyzer.
 
     Args:
@@ -107,4 +136,13 @@ def run_redshift(logger: Logger, username: str, password: str, host: str, dbname
         output_path (str): Where to write the output
         port (int): Redshift port
     """
-    RedshiftAuthzAnalyzer.connect(username=username, password=password, host=host, dbname=dbname, output_path=output_path, output_format=output_format, logger=logger, port=port)
+    RedshiftAuthzAnalyzer.connect(
+        username=username,
+        password=password,
+        host=host,
+        dbname=dbname,
+        output_path=output_path,
+        output_format=output_format,
+        logger=logger,
+        port=port,
+    )

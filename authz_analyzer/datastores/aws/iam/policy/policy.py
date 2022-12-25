@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Type, Union
 from serde import deserialize, field, serde, serialize
 
 
-@serde(rename_all = "pascalcase")
+@serde(rename_all="pascalcase")
 @dataclass
 class Policy:
     policy_name: str

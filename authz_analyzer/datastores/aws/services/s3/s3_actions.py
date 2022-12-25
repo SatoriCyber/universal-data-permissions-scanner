@@ -60,7 +60,9 @@ class S3ServiceActionsResolver(ServiceActionsResolverBase):
     def resolve_actions(stmt_relative_id_objects_regex: str, service_actions: List[S3Action]) -> Set[S3Action]:
         # actions are case insensitive
         regex = re.compile(f"(?i){stmt_relative_id_objects_regex}")
-        service_actions_matches: List[S3Action] = [s for s in service_actions if regex.match(s.get_action_name()) is not None]
+        service_actions_matches: List[S3Action] = [
+            s for s in service_actions if regex.match(s.get_action_name()) is not None
+        ]
         return set(service_actions_matches)
 
     @classmethod
@@ -70,8 +72,10 @@ class S3ServiceActionsResolver(ServiceActionsResolverBase):
         resolved_actions: Set[S3Action] = set()
         for stmt_relative_id_regex in stmt_relative_id_regexes:
             stmt_relative_id_regex = PolicyDocument.fix_stmt_regex_to_valid_regex(stmt_relative_id_regex)
-            resolved_actions = resolved_actions.union(S3ServiceActionsResolver.resolve_actions(stmt_relative_id_regex, service_actions))
-            
+            resolved_actions = resolved_actions.union(
+                S3ServiceActionsResolver.resolve_actions(stmt_relative_id_regex, service_actions)
+            )
+
         return cls(
             resolved_actions=resolved_actions,
         )

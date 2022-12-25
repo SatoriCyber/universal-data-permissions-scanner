@@ -46,10 +46,12 @@ IDENTITY_TYPE_MODEL_TO_AuthzPathElementType = {
 
 def _yield_row(identity: DBIdentity, privilege_type: Privilege, grant_name: str, relations: List[DBIdentity]):
     auth_path_element = [
-        AuthzPathElement(id=path_identity.id_,
-                         name=path_identity.name,
-                         type=IDENTITY_TYPE_MODEL_TO_AuthzPathElementType.get(path_identity.type_),
-                         note="")
+        AuthzPathElement(
+            id=path_identity.id_,
+            name=path_identity.name,
+            type=IDENTITY_TYPE_MODEL_TO_AuthzPathElementType.get(path_identity.type_),
+            note="",
+        )
         for path_identity in relations
     ]
     identity = Identity(id=identity.id_, name=identity.name, type=IDENTITY_TYPE_MODEL_TO_OUTPUT.get(identity.type_))

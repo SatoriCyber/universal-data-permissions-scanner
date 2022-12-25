@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from serde import serde
 
 
-@serde(rename_all = "pascalcase")
+@serde(rename_all="pascalcase")
 @dataclass
 class PublicAccessBlockConfiguration:
     block_public_acls: bool

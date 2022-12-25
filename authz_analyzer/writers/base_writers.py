@@ -10,13 +10,14 @@ DEFAULT_OUTPUT_FILE = "authz-analyzer-export"
 
 class OutputFormat(Enum):
     """The file format to write the output."""
+
     CSV = auto()
     MULTI_JSON = auto()
 
 
 class BaseWriter(ABC):
     """Base class for writers."""
-    
+
     def __init__(self, fh: TextIO) -> None:
         self.fh = fh
         self._write_header()

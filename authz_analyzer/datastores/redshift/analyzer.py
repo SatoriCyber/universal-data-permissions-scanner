@@ -36,6 +36,7 @@ COMMANDS_DIR = Path(__file__).parent / "commands"
 @dataclass
 class RedshiftAuthzAnalyzer:
     """Analyze authorization for Redshift."""
+
     cursors: List[cursor]
     writer: BaseWriter
     logger: Logger
@@ -113,8 +114,9 @@ class RedshiftAuthzAnalyzer:
         self.logger.info("Fetching identities to table privileges")
         identity_to_resource_privilege = self._get_identities_privileges()
 
-        return AuthorizationModel(identity_to_identities=identity_to_identities,
-                                  identity_to_resource_privilege=identity_to_resource_privilege)
+        return AuthorizationModel(
+            identity_to_identities=identity_to_identities, identity_to_resource_privilege=identity_to_resource_privilege
+        )
 
     def _get_identity_identities_mapping(self):
         command = (COMMANDS_DIR / "identities.sql").read_text()
@@ -133,18 +135,15 @@ class RedshiftAuthzAnalyzer:
             granted_identity_type: IdentityType = row[5]
             is_admin: bool = row[6]
 
-            identity = DBIdentity.new(id_=identity_id,
-                                      name=identity_name,
-                                      type_=identity_type,
-                                      is_admin=is_admin,
-                                      relations=set())
+            identity = DBIdentity.new(
+                id_=identity_id, name=identity_name, type_=identity_type, is_admin=is_admin, relations=set()
+            )
 
             identity_grants = results.setdefault(identity, set())
             if granted_identity_id is not None:
-                granted_identity = DBIdentity.new(id_=granted_identity_id,
-                                                  name=granted_identity_name,
-                                                  type_=granted_identity_type,
-                                                  relations=set())
+                granted_identity = DBIdentity.new(
+                    id_=granted_identity_id, name=granted_identity_name, type_=granted_identity_type, relations=set()
+                )
                 identity_grants.add(granted_identity)
             if identity.type_ == IdentityType.USER.name:
                 identity_grants.add(DBIdentity.new(id_=0, name="public", type_=IdentityType.UNKNOWN, relations=set()))

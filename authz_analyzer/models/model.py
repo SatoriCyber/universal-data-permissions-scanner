@@ -15,7 +15,7 @@ class AssetType(Enum):
 
     TABLE = auto()
     VIEW = auto()
-    S3_BUCKET = auto() # AWS S3
+    S3_BUCKET = auto()  # AWS S3
 
 
 class IdentityType(Enum):
@@ -29,15 +29,14 @@ class IdentityType(Enum):
     WORKSPACE_ACCOUNT = auto()  # GCP
     CLOUD_IDENTITY_DOMAIN = auto()  # GCP
     AWS_ACCOUNT = auto()  # AWS
-    AWS_SERVICE = auto() # AWS
-    IAM_USER = auto() # AWS
-    IAM_ROLE = auto() # AWS
-    ROLE_SESSION = auto() # AWS
-    WEB_IDENTITY_SESSION = auto() # AWS
-    SAML_SESSION = auto() # AWS
-    FEDERATED_USER = auto() # AWS
-    ALL_USERS = auto() # AWS
-    
+    AWS_SERVICE = auto()  # AWS
+    IAM_USER = auto()  # AWS
+    IAM_ROLE = auto()  # AWS
+    ROLE_SESSION = auto()  # AWS
+    WEB_IDENTITY_SESSION = auto()  # AWS
+    SAML_SESSION = auto()  # AWS
+    FEDERATED_USER = auto()  # AWS
+    ALL_USERS = auto()  # AWS
 
     def __str__(self) -> str:
         return self.name
@@ -61,17 +60,17 @@ class AuthzPathElementType(Enum):
     FOLDER = auto()  # used by GCP
     ORGANIZATION = auto()  # used by GCP
     AWS_ACCOUNT = auto()  # AWS
-    AWS_SERVICE = auto() # AWS
-    IAM_USER = auto() # AWS
-    IAM_GROUP = auto() # AWS    
-    IAM_INLINE_POLICY = auto() # AWS
-    IAM_POLICY = auto() # AWS
-    IAM_ROLE = auto() # AWS
-    ROLE_SESSION = auto() # AWS
-    WEB_IDENTITY_SESSION = auto() # AWS
-    SAML_SESSION = auto() # AWS
-    FEDERATED_USER = auto() # AWS
-    ALL_USERS = auto() # AWS
+    AWS_SERVICE = auto()  # AWS
+    IAM_USER = auto()  # AWS
+    IAM_GROUP = auto()  # AWS
+    IAM_INLINE_POLICY = auto()  # AWS
+    IAM_POLICY = auto()  # AWS
+    IAM_ROLE = auto()  # AWS
+    ROLE_SESSION = auto()  # AWS
+    WEB_IDENTITY_SESSION = auto()  # AWS
+    SAML_SESSION = auto()  # AWS
+    FEDERATED_USER = auto()  # AWS
+    ALL_USERS = auto()  # AWS
 
     def __str__(self) -> str:
         return self.name
@@ -106,6 +105,7 @@ class AuthzPathElement:
     """Element of the authorization entry path which grants access.
     For example a group or a role that was used to grant permission to an asset.
     """
+
     id: str
     name: str
     type: AuthzPathElementType
@@ -120,6 +120,7 @@ class Asset:
     """Datastore asset.
     For example, a table, or a view.
     """
+
     name: str
     type: AssetType
 
@@ -129,6 +130,7 @@ class Identity:
     """An identity which has access to an asset.
     For example, User, Role, ServiceAccount etc'
     """
+
     id: str
     type: IdentityType
     name: str
@@ -139,6 +141,7 @@ class AuthzEntry:
     """A single entry which describe access to an asset.
     For example, USER has role ROLE1 which grants access to TABLE1.
     """
+
     asset: Asset
     path: List[AuthzPathElement]
     identity: Identity
