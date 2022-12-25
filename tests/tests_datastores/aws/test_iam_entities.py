@@ -1,11 +1,12 @@
 import os
-import pytest
 import pathlib
 import json
+import pytest
+from serde.json import to_json, from_dict
+
 from authz_analyzer.datastores.aws.iam.iam_entities import IAMEntities
 from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
 from authz_analyzer.utils.logger import get_logger
-from serde.json import to_json, from_dict
 
 
 IAM_ENTITIES_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(
@@ -24,7 +25,7 @@ def test_iam_entities_write_satori_dev_account():
     iam_entities = IAMEntities.load(get_logger(False), aws_account_id, session)
 
     iam_entities_json = to_json(iam_entities)
-    with open(IAM_ENTITIES_SATORI_DEV_JSON_FILE, "w") as outfile:
+    with open(IAM_ENTITIES_SATORI_DEV_JSON_FILE, "w", encoding="utf-8") as outfile:
         outfile.write(iam_entities_json)
 
 
@@ -33,8 +34,8 @@ def test_iam_entities_write_satori_dev_account():
     reason="not really a test, just pull latest satori dev account config and write it to file",
 )
 def test_iam_entities_load_satori_dev_json_file():
-    with open(IAM_ENTITIES_SATORI_DEV_JSON_FILE, "r") as f:
-        iam_entities_json_from_file = json.load(f)
+    with open(IAM_ENTITIES_SATORI_DEV_JSON_FILE, "r", encoding="utf-8") as file:
+        iam_entities_json_from_file = json.load(file)
         iam_entities = from_dict(IAMEntities, iam_entities_json_from_file)
         iam_entities_json_from_serde = json.loads(to_json(iam_entities))
 

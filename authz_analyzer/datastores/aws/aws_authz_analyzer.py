@@ -11,7 +11,7 @@ from authz_analyzer.datastores.aws.iam.iam_entities import IAMEntities
 from authz_analyzer.datastores.aws.iam.iam_groups import IAMGroup
 from authz_analyzer.datastores.aws.iam.iam_policies import IAMPolicy
 from authz_analyzer.datastores.aws.iam.iam_roles import IAMRole
-from authz_analyzer.datastores.aws.iam.iam_users import IAMUser, UserPolicy
+from authz_analyzer.datastores.aws.iam.iam_users import IAMUser
 from authz_analyzer.datastores.aws.iam.policy.policy_document import Effect, PolicyDocument, PolicyDocumentGetterBase
 from authz_analyzer.datastores.aws.resources.account_resources import AwsAccountResources
 from authz_analyzer.datastores.aws.services.service_base import (
@@ -23,7 +23,6 @@ from authz_analyzer.datastores.aws.services.service_base import (
 )
 from authz_analyzer.models.model import (
     Asset,
-    AssetType,
     AuthzEntry,
     AuthzPathElement,
     AuthzPathElementType,
@@ -93,7 +92,7 @@ class AwsAuthzAnalyzer:
         if not service_resources_resolver:
             return
 
-        for service_type, service_resolver in service_resources_resolver.items():
+        for _service_type, service_resolver in service_resources_resolver.items():
             servicer_resolved_resources: Dict[
                 ServiceResourceBase, Set[ServiceActionBase]
             ] = service_resolver.get_resolved_resources()

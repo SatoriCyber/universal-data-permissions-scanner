@@ -57,7 +57,7 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
         return {k: v.actions for k, v in self.resolved_buckets.items()}  # type: ignore
 
     @staticmethod
-    def load_single_regex(
+    def update_resolved_bucket_from_single_regex(
         resolved_buckets: Dict[S3Bucket, ResolvedBucketActions],
         stmt_relative_id_buckets_regex: str,
         stmt_relative_id_objects_regex: Optional[str],
@@ -121,7 +121,7 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
             if len(res) == 2:
                 stmt_relative_id_objects_regex = res[1]
 
-            resolved_buckets_single_stmt_regex = S3ServiceResourcesResolver.load_single_regex(
+            S3ServiceResourcesResolver.update_resolved_bucket_from_single_regex(
                 resolved_buckets,
                 stmt_relative_id_buckets_regex,
                 stmt_relative_id_objects_regex,

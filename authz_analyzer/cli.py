@@ -10,9 +10,14 @@ if sys.executable != sys.argv[0]:
     sys.path.insert(0, (os.path.join(os.path.dirname(__file__), "..")))
 
 
-from authz_analyzer.main import run_bigquery, run_postgres, run_s3, run_snowflake
-from authz_analyzer.utils.logger import get_logger
-from authz_analyzer.writers import OutputFormat
+from authz_analyzer.main import (  # pylint: disable=wrong-import-position
+    run_bigquery,
+    run_postgres,
+    run_s3,
+    run_snowflake,
+)
+from authz_analyzer.utils.logger import get_logger  # pylint: disable=wrong-import-position
+from authz_analyzer.writers import OutputFormat  # pylint: disable=wrong-import-position
 
 
 @click.group()
@@ -99,4 +104,4 @@ def postgres(ctx: click.Context, username: str, password: str, port: int, host: 
 
 
 if __name__ == "__main__":
-    main(obj={})
+    main(obj={})  # pylint: disable=no-value-for-parameter

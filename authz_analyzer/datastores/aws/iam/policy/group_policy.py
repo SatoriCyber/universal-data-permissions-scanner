@@ -1,9 +1,5 @@
-import json
 from dataclasses import dataclass
-from enum import Enum
-from typing import Any, Dict, List, Optional, Type, Union
-
-from serde import deserialize, serde, serialize
+from serde import serde
 
 from authz_analyzer.datastores.aws.iam.policy.policy_document import PolicyDocument
 

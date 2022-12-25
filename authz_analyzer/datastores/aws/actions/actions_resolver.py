@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from logging import Logger
 from typing import Dict, List, Optional, Set, Union
 
@@ -19,7 +18,7 @@ class ActionsResolver:
 
     @staticmethod
     def _get_stmt_action_regexes_per_service_type(
-        logger: Logger,
+        _logger: Logger,
         stmt_action_regexes: List[str],
         allow_types_to_resolve: Set[ServiceType],
     ) -> Dict[ServiceType, List[str]]:

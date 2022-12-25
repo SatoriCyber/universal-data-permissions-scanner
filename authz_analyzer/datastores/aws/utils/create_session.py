@@ -6,7 +6,7 @@ def create_session_with_assume_role(account_id: str, role_name: str, role_sessio
     # Create a session with the role you want to assume
     sts_client = boto3.client('sts')
     assumed_role_object = sts_client.assume_role(
-        RoleArn="arn:aws:iam::{}:role/{}".format(account_id, role_name), RoleSessionName=role_session_name
+        RoleArn=f"arn:aws:iam::{account_id}:role/{role_name}", RoleSessionName=role_session_name
     )
 
     # Use the assumed role's temporary credentials to create a new session

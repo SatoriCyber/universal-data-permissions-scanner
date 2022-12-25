@@ -1,11 +1,9 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from logging import Logger
-from typing import Any, AnyStr, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import Dict, List, Optional, Set, Union
 
 from authz_analyzer.datastores.aws.resources.account_resources import AwsAccountResources
 from authz_analyzer.datastores.aws.services.service_base import (
-    ServiceActionBase,
     ServiceActionsResolverBase,
     ServiceResourceBase,
     ServiceResourcesResolverBase,
@@ -23,7 +21,7 @@ class ResourcesResolver:
 
     @staticmethod
     def _get_stmt_resource_regexes_per_service_type(
-        logger: Logger,
+        _logger: Logger,
         stmt_resource_regexes: List[str],
         allow_types_to_resolve: Set[ServiceType],
     ) -> Dict[ServiceType, List[str]]:

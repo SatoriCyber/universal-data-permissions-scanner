@@ -8,43 +8,37 @@ from serde import serde
 
 from authz_analyzer.models.model import AssetType, PermissionLevel
 
-_service_type_by_name: Dict[str, Type['ServiceType']] = dict()
+_SERVICE_TYPE_BY_NAME: Dict[str, Type['ServiceType']] = dict()
 
 
 def register_service_type_by_name(service_name: str, service_type: Type['ServiceType']):
-    global _service_type_by_name
-    _service_type_by_name[service_name] = service_type
+    _SERVICE_TYPE_BY_NAME[service_name] = service_type
 
 
 def get_service_type_by_name(service_name: str) -> Optional[Type['ServiceType']]:
-    global _service_type_by_name
-    return _service_type_by_name.get(service_name, None)
+    return _SERVICE_TYPE_BY_NAME.get(service_name, None)
 
 
-_service_action_by_name: Dict[str, Type['ServiceActionBase']] = dict()
+_SERVICE_ACTION_BY_NAME: Dict[str, Type['ServiceActionBase']] = dict()
 
 
 def register_service_action_by_name(service_name: str, service_action: Type['ServiceActionBase']):
-    global _service_action_by_name
-    _service_action_by_name[service_name] = service_action
+    _SERVICE_ACTION_BY_NAME[service_name] = service_action
 
 
 def get_service_action_by_name(service_name: str) -> Optional[Type['ServiceActionBase']]:
-    global _service_action_by_name
-    return _service_action_by_name.get(service_name, None)
+    return _SERVICE_ACTION_BY_NAME.get(service_name, None)
 
 
-_service_resource_by_name: Dict[str, Type['ServiceResourceBase']] = dict()
+_SERVICE_RESOURCE_BY_NAME: Dict[str, Type['ServiceResourceBase']] = dict()
 
 
 def register_service_resource_by_name(service_name: str, service_action: Type['ServiceResourceBase']):
-    global _service_resource_by_name
-    _service_resource_by_name[service_name] = service_action
+    _SERVICE_RESOURCE_BY_NAME[service_name] = service_action
 
 
 def get_service_resource_by_name(service_name: str) -> Optional[Type['ServiceResourceBase']]:
-    global _service_resource_by_name
-    return _service_resource_by_name.get(service_name, None)
+    return _SERVICE_RESOURCE_BY_NAME.get(service_name, None)
 
 
 @serde

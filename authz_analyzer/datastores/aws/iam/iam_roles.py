@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Dict, List, Tuple
 
 from boto3 import Session
-from serde import deserialize, from_dict, serde, serialize
+from serde import serde, from_dict
 
 from authz_analyzer.datastores.aws.iam.policy import PolicyDocument, PolicyDocumentGetterBase
 from authz_analyzer.datastores.aws.iam.role.role_policy import RolePolicy
