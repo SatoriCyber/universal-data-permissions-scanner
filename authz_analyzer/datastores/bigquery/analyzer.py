@@ -70,7 +70,15 @@ from authz_analyzer.datastores.bigquery.policy_tree import (
     TableIamPolicyNode,
 )
 from authz_analyzer.datastores.bigquery.service import BigQueryService
-from authz_analyzer.models.model import Asset, AssetType, AuthzEntry, AuthzPathElement, Identity, PermissionLevel
+from authz_analyzer.models.model import (
+    Asset,
+    AssetType,
+    AuthzEntry,
+    AuthzPathElement,
+    AuthzPathElementType,
+    Identity,
+    PermissionLevel,
+)
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE, OutputFormat
@@ -189,6 +197,14 @@ class BigQueryAuthzAnalyzer:
         authz_type = GRANTED_BY_TO_PATHZ_ELEMENT[node.type]
         path.append(AuthzPathElement(node.id, node.name, authz_type, note))
 
+    def _add_role_to_path(self, path: List[AuthzPathElement], member: Member):
+        self.logger.debug("Adding role %s to path", member.role)
+        path.append(
+            AuthzPathElement(
+                member.role, member.role, AuthzPathElementType.ROLE, f"Role {member.role} is granted to {member.name}"
+            )
+        )
+
     def _report_permission(
         self,
         fq_table_id: Asset,
@@ -199,6 +215,7 @@ class BigQueryAuthzAnalyzer:
     ):
         note = f"{member.name} has role {member.role}"
         self._add_to_path(path, node, note)
+        self._add_role_to_path(path, member)
         reversed_path = list(reversed(path))
 
         identity = Identity(id=str(member.type) + ":" + member.name, type=member.type, name=member.name)
