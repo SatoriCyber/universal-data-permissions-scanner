@@ -72,7 +72,7 @@ class ServiceActionsResolverBase(ABC):
     @abstractmethod
     def get_resolved_actions(self) -> Set[ServiceActionBase]:
         pass
-    
+
 
 @serde
 @dataclass
@@ -88,7 +88,7 @@ class ServiceResourceBase(ABC):
     @abstractmethod
     def get_asset_type(self) -> AssetType:
         pass
-    
+
     @abstractmethod
     def __repr__(self):
         pass
@@ -100,7 +100,7 @@ class ServiceResourceBase(ABC):
     @abstractmethod
     def __hash__(self):
         pass
-    
+
 
 @dataclass
 class ServiceResourcesResolverBase(ABC):
@@ -119,7 +119,7 @@ class ServiceResourcesResolverBase(ABC):
     @abstractmethod
     def merge(self, other: 'ServiceResourcesResolverBase'):
         pass
-    
+
 
 @serde
 class ServiceType(ABC):

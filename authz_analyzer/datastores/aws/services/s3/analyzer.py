@@ -15,7 +15,7 @@ from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 
 
 @dataclass
-class S3AuthzAnalyzer():
+class S3AuthzAnalyzer:
     writer: BaseWriter
     logger: Logger
     account_id: str

@@ -13,6 +13,7 @@ from authz_analyzer.models.model import PermissionLevel
 @dataclass
 class BigQueryService:
     """BigQueryService is a wrapper for the BigQuery client."""
+
     project_id: str
     bq_client: bigquery.Client
     project: Project

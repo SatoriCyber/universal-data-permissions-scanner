@@ -26,7 +26,7 @@ class ResolvedBucketActions:
     def merge(self, other: 'ResolvedBucketActions'):
         self.stmt_relative_id_objects_regexes += other.stmt_relative_id_objects_regexes
         self.actions = self.actions.union(other.actions)
-        
+
     @classmethod
     def load(cls, actions: Set[S3Action], stmt_relative_id_objects_regex: Optional[str]) -> 'ResolvedBucketActions':
         stmt_relative_id_objects_regexes = []
@@ -48,14 +48,14 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
                 other_resolved_bucket_actions: Optional[ResolvedBucketActions] = other.resolved_buckets.get(s3_bucket)
                 if other_resolved_bucket_actions is not None:
                     resolved_bucket_actions.merge(other_resolved_bucket_actions)
-                    
+
             for s3_bucket, other_resolved_bucket_actions in other.resolved_buckets.items():
                 if self.resolved_buckets.get(s3_bucket) is None:
                     self.resolved_buckets[s3_bucket] = other_resolved_bucket_actions
 
-    def get_resolved_resources(self) -> Dict[ServiceResourceBase, Set[ServiceActionBase]]:                   
-        return { k:v.actions for k, v in self.resolved_buckets.items()} # type: ignore
-        
+    def get_resolved_resources(self) -> Dict[ServiceResourceBase, Set[ServiceActionBase]]:
+        return {k: v.actions for k, v in self.resolved_buckets.items()}  # type: ignore
+
     @staticmethod
     def load_single_regex(
         resolved_buckets: Dict[S3Bucket, ResolvedBucketActions],
@@ -85,7 +85,7 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
 
         if not resolved_actions:
             return
-    
+
         regex = re.compile(stmt_relative_id_buckets_regex)
         for bucket in service_resources:
             if regex.match(bucket.get_resource_name()) is not None:

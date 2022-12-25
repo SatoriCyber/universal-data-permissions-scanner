@@ -5,9 +5,8 @@ from typing import List
 from serde import field, serde
 
 
-@serde(rename_all = "pascalcase")
+@serde(rename_all="pascalcase")
 @dataclass
-
 class Owner:
     display_name: str
     id: str = field(rename='ID')
@@ -27,7 +26,7 @@ class GrantType(str, Enum):
     GROUP = "Group"
 
 
-@serde(rename_all = "pascalcase")
+@serde(rename_all="pascalcase")
 @dataclass
 class Grantee:
     display_name: str
@@ -35,14 +34,14 @@ class Grantee:
     id: str = field(rename='ID')
 
 
-@serde(rename_all = "pascalcase")
+@serde(rename_all="pascalcase")
 @dataclass
 class Grants:
     grantee: Grantee
     permission: Permission
 
 
-@serde(rename_all = "pascalcase")
+@serde(rename_all="pascalcase")
 @dataclass
 class S3BucketACL:
     owner: Owner

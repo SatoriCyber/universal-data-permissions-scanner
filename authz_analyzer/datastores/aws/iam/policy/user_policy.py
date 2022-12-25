@@ -8,7 +8,7 @@ from serde import deserialize, serde, serialize
 from authz_analyzer.datastores.aws.iam.policy.policy_document import PolicyDocument
 
 
-@serde(rename_all = "pascalcase")
+@serde(rename_all="pascalcase")
 @dataclass
 class UserPolicy:
     user_name: str

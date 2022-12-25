@@ -35,6 +35,7 @@ class Privilege(Enum):
 @dataclass
 class ResourcePrivilege:
     """Define a resource, e.g. a table, and the privilege level."""
+
     name: str
     privilege_type: Privilege
 
@@ -45,6 +46,7 @@ class ResourcePrivilege:
 @dataclass
 class DBIdentity:
     """Define an identity, e.g. User, Group, role."""
+
     id_: IdentityId
     name: str
     type_: IdentityType
@@ -69,5 +71,6 @@ class AuthorizationModel:
     Map a role to the roles it has, and the grants it has.
     Map a role to the grants it has.
     """
+
     identity_to_identities: Dict[DBIdentity, Set[DBIdentity]]
     identity_to_resource_privilege: Dict[IdentityId, Set[ResourcePrivilege]]

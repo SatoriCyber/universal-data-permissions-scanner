@@ -11,20 +11,20 @@ from authz_analyzer.datastores.aws.utils.pagination import paginate_response_lis
 
 @serde
 @dataclass
-class IAMPolicy():
+class IAMPolicy:
     policy: Policy
     policy_document: PolicyDocument
 
     def __eq__(self, other):
         return self.policy.policy_id == other.policy.policy_id
-    
+
     def __hash__(self):
         return hash(self.policy.policy_id)
-    
+
     def __repr__(self):
         return self.policy.arn
-    
-            
+
+
 def get_iam_policies(session: Session) -> Dict[str, IAMPolicy]:
     iam_client = session.client('iam')
     ret: Dict[str, IAMPolicy] = {}
@@ -36,11 +36,11 @@ def get_iam_policies(session: Session) -> Dict[str, IAMPolicy]:
         arn = list_policy_response['Arn']
         policy_response = iam_client.get_policy(PolicyArn=arn)['Policy']
         policy = from_dict(Policy, policy_response)
-        
+
         policy_version_response = iam_client.get_policy_version(PolicyArn=arn, VersionId=policy.default_version_id)
         policy_version_response = policy_version_response['PolicyVersion']['Document']
         policy_document = from_dict(PolicyDocument, policy_version_response)
-        
+
         ret[policy.arn] = IAMPolicy(
             policy=policy,
             policy_document=policy_document,

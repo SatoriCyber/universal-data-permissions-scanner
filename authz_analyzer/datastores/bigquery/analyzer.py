@@ -80,6 +80,7 @@ from authz_analyzer.writers.get_writers import get_writer
 @dataclass
 class BigQueryAuthzAnalyzer:
     """BigQuery authorization analyzer."""
+
     logger: Logger
     service: BigQueryService
     writer: BaseWriter

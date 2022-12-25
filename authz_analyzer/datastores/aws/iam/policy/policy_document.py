@@ -80,7 +80,7 @@ class PolicyDocument:
             if statement.action is None or statement.resource is None:
                 # missing action or resource on this stmt, noting to resolve
                 continue
-        
+
             if statement.effect != effect:
                 continue
 
