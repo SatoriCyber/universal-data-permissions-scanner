@@ -14,8 +14,7 @@ from logging import Logger
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union
 
-import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, cursor
+import redshift_connector
 
 from authz_analyzer.datastores.redshift import exporter
 from authz_analyzer.datastores.redshift.model import (
@@ -36,7 +35,7 @@ COMMANDS_DIR = Path(__file__).parent / "commands"
 @dataclass
 class RedshiftAuthzAnalyzer:
     """Analyze authorization for Redshift."""
-    cursors: List[cursor]
+    cursors: List[redshift_connector.Cursor]
     writer: BaseWriter
     logger: Logger
 
@@ -46,6 +45,7 @@ class RedshiftAuthzAnalyzer:
         username: str,
         password: str,
         host: str,
+        port: int,
         dbname: str,
         logger: Optional[Logger] = None,
         output_format: OutputFormat = OutputFormat.CSV,
@@ -67,21 +67,19 @@ class RedshiftAuthzAnalyzer:
             logger = get_logger(False)
 
         writer = get_writer(filename=output_path, output_format=output_format)
-        connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
-            user=username, password=password, host=host, dbname=dbname, **connection_kwargs
+        connector: redshift_connector.Connection = redshift_connector.connect(
+            user=username, password=password, host=host, port=port, database=dbname
         )
-        connector.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-
         redshift_cursor = connector.cursor()
 
         # We generate cursor one per database in order to fetch the table grants and the information schema
-        redshift_cursors: List[cursor] = []
+        redshift_cursors: List[redshift_connector.Cursor] = []
         for database in RedshiftAuthzAnalyzer._get_all_databases(redshift_cursor):
             if database == "rdsadmin":
                 logger.debug("Skipping rdsadmin database, internal use by AWS")
                 continue
-            db_connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
-                user=username, password=password, host=host, dbname=database, **connection_kwargs
+            db_connector: redshift_connector.Connection = redshift_connector.connect(
+                user=username, password=password, host=host, database=database
             )
             redshift_cursors.append(db_connector.cursor())
         return cls(logger=logger, cursors=redshift_cursors, writer=writer)
@@ -98,7 +96,7 @@ class RedshiftAuthzAnalyzer:
         self.writer.close()
 
     @staticmethod
-    def _get_all_databases(redshift_cursor: cursor):
+    def _get_all_databases(redshift_cursor: redshift_connector.Cursor):
         return {
             database[0]
             for database in RedshiftAuthzAnalyzer._get_rows(
@@ -155,7 +153,7 @@ class RedshiftAuthzAnalyzer:
         command = (COMMANDS_DIR / "identities_privileges.sql").read_text()
         results: Dict[IdentityId, Set[ResourcePrivilege]] = {}
         for pg_cursor in self.cursors:
-            db_name = pg_cursor.connection.info.dbname
+            db_name = pg_cursor.connection.__getattribute__("_database")
             rows = RedshiftAuthzAnalyzer._get_rows(pg_cursor, command)
             for row in rows:
                 _grantor = row[0]
@@ -169,6 +167,6 @@ class RedshiftAuthzAnalyzer:
         return results
 
     @staticmethod
-    def _get_rows(redshift_cursor: cursor, command: str):
+    def _get_rows(redshift_cursor: redshift_connector.Cursor, command: str):
         redshift_cursor.execute(command)
         return redshift_cursor.fetchall()
