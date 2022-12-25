@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Dict, List, Tuple
 
 from boto3 import Session
-from serde import deserialize, field, from_dict, serde, serialize
+from serde import serde, field, from_dict
 
-from authz_analyzer.datastores.aws.iam.policy import Policy, PolicyDocument, PolicyDocumentGetterBase, UserPolicy
+from authz_analyzer.datastores.aws.iam.policy import PolicyDocument, PolicyDocumentGetterBase, UserPolicy
 from authz_analyzer.datastores.aws.iam.policy.principal import PolicyPrincipal
 from authz_analyzer.datastores.aws.utils.pagination import paginate_response_list
 

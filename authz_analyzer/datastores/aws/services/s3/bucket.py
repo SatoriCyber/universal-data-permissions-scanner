@@ -12,6 +12,7 @@ from authz_analyzer.datastores.aws.services.s3.bucket_acl import S3BucketACL
 from authz_analyzer.datastores.aws.services.service_base import ServiceResourceBase
 from authz_analyzer.models.model import AssetType
 
+
 S3_RESOURCE_SERVICE_PREFIX = "arn:aws:s3:::"
 
 

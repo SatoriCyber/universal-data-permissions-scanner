@@ -1,7 +1,10 @@
-import os
-import pytest
 import pathlib
 import json
+import os
+import pytest
+
+from serde.json import to_json, from_dict
+
 from authz_analyzer.writers.get_writers import get_writer
 from authz_analyzer.writers.base_writers import OutputFormat
 from authz_analyzer.datastores.aws.aws_authz_analyzer import AwsAuthzAnalyzer
@@ -15,7 +18,6 @@ from authz_analyzer.datastores.aws.services.service_base import (
 )
 from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
 from authz_analyzer.utils.logger import get_logger
-from serde.json import to_json, from_dict
 
 
 AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(
@@ -27,7 +29,7 @@ AWS_AUTHZ_ANALYZER_SATORI_DEV_RESULT_JSON_FILE = pathlib.Path().joinpath(
 
 
 @pytest.fixture
-def register_services_for_deserialize_from_file(tmpdir):
+def register_services_for_deserialize_from_file():
     register_service_type_by_name(S3_SERVICE_NAME, S3ServiceType)
     register_service_action_by_name(S3_SERVICE_NAME, S3Action)
     register_service_resource_by_name(S3_SERVICE_NAME, S3Bucket)
@@ -44,7 +46,7 @@ def test_aws_authz_analyzer_with_s3_write_satori_dev_account():
     authz_analyzer = AwsAuthzAnalyzer.load(get_logger(False), aws_account_id, session, set([S3ServiceType()]))
 
     authz_analyzer_json = to_json(authz_analyzer)
-    with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "w") as outfile:
+    with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "w", encoding="utf-8") as outfile:
         outfile.write(authz_analyzer_json)
 
 
@@ -52,8 +54,11 @@ def test_aws_authz_analyzer_with_s3_write_satori_dev_account():
     not os.environ.get("AUTHZ_SATORI_DEV_ACCOUNT_TEST"),
     reason="not really a test, just pull latest satori dev account config and write it to file",
 )
-def test_aws_authz_analyzer_load_satori_dev_json_file(register_services_for_deserialize_from_file):
-    with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "r") as f:
+def test_aws_authz_analyzer_load_satori_dev_json_file(
+    # pylint: disable=unused-argument,redefined-outer-name
+    register_services_for_deserialize_from_file,
+):
+    with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "r", encoding="utf-8") as f:
         authz_analyzer_json_from_file = json.load(f)
         authz_analyzer = from_dict(AwsAuthzAnalyzer, authz_analyzer_json_from_file)
         authz_analyzer_json_from_serde = json.loads(to_json(authz_analyzer))
@@ -65,8 +70,10 @@ def test_aws_authz_analyzer_load_satori_dev_json_file(register_services_for_dese
     not os.environ.get("AUTHZ_SATORI_DEV_ACCOUNT_TEST"),
     reason="not really a test, just pull latest satori dev account config and write it to file",
 )
-def test_aws_authz_analyzer_analyzed_permissions_satori_dev_json_file(register_services_for_deserialize_from_file):
-    with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "r") as f:
+def test_aws_authz_analyzer_analyzed_permissions_satori_dev_json_file(
+    register_services_for_deserialize_from_file,
+):  # pylint: disable=unused-argument,redefined-outer-name
+    with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "r", encoding="utf-8") as f:
         authz_analyzer_json_from_file = json.load(f)
         authz_analyzer: AwsAuthzAnalyzer = from_dict(AwsAuthzAnalyzer, authz_analyzer_json_from_file)
         writer = get_writer(AWS_AUTHZ_ANALYZER_SATORI_DEV_RESULT_JSON_FILE, OutputFormat.MULTI_JSON)

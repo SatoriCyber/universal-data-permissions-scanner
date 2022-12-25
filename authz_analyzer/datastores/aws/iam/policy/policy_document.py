@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum
 from logging import Logger
 from typing import Dict, List, Optional, Set, Tuple, Union
 

@@ -2,17 +2,16 @@ import json
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Dict
 
 import networkx as nx
 from boto3 import Session
-from serde import deserialize, from_dict, serde, serialize
+from serde import serde, from_dict
 
 from authz_analyzer.datastores.aws.iam.iam_groups import IAMGroup, get_iam_groups
 from authz_analyzer.datastores.aws.iam.iam_policies import IAMPolicy, get_iam_policies
 from authz_analyzer.datastores.aws.iam.iam_roles import IAMRole, get_iam_roles
 from authz_analyzer.datastores.aws.iam.iam_users import IAMUser, get_iam_users
-from authz_analyzer.datastores.aws.services.s3.bucket import S3Bucket, get_buckets
 
 
 @serde
@@ -25,9 +24,9 @@ class IAMEntities:
     iam_policies: Dict[str, IAMPolicy]  # key is policy arn
 
     @classmethod
-    def load_from_json_file(cls, logger: Logger, file_path: Path) -> 'IAMEntities':
-        with open(file_path, "r") as f:
-            analyzed_ctx_json = json.load(f)
+    def load_from_json_file(cls, _logger: Logger, file_path: Path) -> 'IAMEntities':
+        with open(file_path, "r", encoding="utf-8") as file:
+            analyzed_ctx_json = json.load(file)
             analyzed_ctx_loaded: 'IAMEntities' = from_dict(IAMEntities, analyzed_ctx_json)
             return analyzed_ctx_loaded
 
@@ -62,7 +61,7 @@ class IAMEntities:
         g = nx.DiGraph()
         g.add_node("START_NODE")
         g.add_node("END_NODE")
-        # TODO LALON what about role to role ?? possible to get loop in the graph ?
+        # LALON what about role to role ?? possible to get loop in the graph ?
 
         # First added the iam roles to the graph
         for iam_role in self.iam_roles.values():
