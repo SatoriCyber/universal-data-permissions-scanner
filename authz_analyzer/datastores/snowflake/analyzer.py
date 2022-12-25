@@ -118,8 +118,10 @@ class SnowflakeAuthzAnalyzer:
             user = User(name=user_name, id=user_id)
 
             roles = results.setdefault(user, set())
-            role = DBRole.new(name=role_name, roles=set())
-            roles.add(role)
+            if role_name is not None:
+                role = DBRole.new(name=role_name, roles=set())
+                roles.add(role)
+            roles.add(DBRole(name="PUBLIC", roles=set()))
         return results
 
     @staticmethod
