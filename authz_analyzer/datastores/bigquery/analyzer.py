@@ -222,6 +222,7 @@ class BigQueryAuthzAnalyzer:
         authz = AuthzEntry(fq_table_id, path=reversed_path, identity=identity, permission=permission)
         self.writer.write_entry(authz)
         path.pop()
+        path.pop()
 
     def _resolve_custom_role_to_permissions(self, role: str) -> Optional[PermissionLevel]:
         """
