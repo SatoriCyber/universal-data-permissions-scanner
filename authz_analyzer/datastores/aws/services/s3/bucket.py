@@ -21,7 +21,7 @@ S3_RESOURCE_SERVICE_PREFIX = "arn:aws:s3:::"
 class S3Bucket(ServiceResourceBase):
     name: str
     acl: S3BucketACL
-    public_access_block_config: PublicAccessBlockConfiguration
+    public_access_block_config: Optional[PublicAccessBlockConfiguration]
     policy_document: Optional[PolicyDocument] = field(default=None, skip_if_default=True)
 
     def __repr__(self):
@@ -62,10 +62,17 @@ def get_buckets(session: Session) -> List[ServiceResourceBase]:
                 raise error
 
         acl = from_dict(S3BucketACL, s3_client.get_bucket_acl(Bucket=bucket_name))
-        public_access_block = from_dict(
-            PublicAccessBlockConfiguration,
-            s3_client.get_public_access_block(Bucket=bucket_name)['PublicAccessBlockConfiguration'],
-        )
+        public_access_block = None
+        try:
+            public_access_block = from_dict(
+                PublicAccessBlockConfiguration,
+                s3_client.get_public_access_block(Bucket=bucket_name)['PublicAccessBlockConfiguration'],
+            )
+        except ClientError as error:
+            if error.response['Error']['Code'] == 'NoSuchPublicAccessBlockConfiguration':
+                pass
+            else:
+                raise error
 
         ret.append(
             S3Bucket(
