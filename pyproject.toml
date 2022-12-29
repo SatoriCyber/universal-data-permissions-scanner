@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "authz-analyzer"
-version = "3.2.4"
+version = "3.2.5"
 homepage = "https://github.com/satoricyber/authz-analyzer"
 description = "Analyze DB authorization."
 authors = ["SatoriCyber"]

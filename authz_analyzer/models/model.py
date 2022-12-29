@@ -17,6 +17,15 @@ class AssetType(Enum):
     VIEW = auto()
     S3_BUCKET = auto()  # AWS S3
 
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name
+
+    def __hash__(self) -> int:
+        return hash(self.value)
+
 
 class IdentityType(Enum):
     """Types of identities that are used by the datastores."""
