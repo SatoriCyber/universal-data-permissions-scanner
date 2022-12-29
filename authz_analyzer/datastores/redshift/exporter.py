@@ -2,7 +2,7 @@ from typing import Dict, Generator, List, Set
 
 from authz_analyzer.datastores.redshift.model import AuthorizationModel, DBIdentity, IdentityId
 from authz_analyzer.datastores.redshift.model import IdentityType as IdentityModelType
-from authz_analyzer.datastores.redshift.model import Privilege, ResourcePrivilege
+from authz_analyzer.datastores.redshift.model import ResourcePermission
 from authz_analyzer.models.model import (
     Asset,
     AssetType,
@@ -14,21 +14,6 @@ from authz_analyzer.models.model import (
     PermissionLevel,
 )
 from authz_analyzer.writers import BaseWriter
-
-PRIVILEGE_MODEL_TO_OUTPUT = {
-    Privilege.SELECT.name: PermissionLevel.READ,
-    Privilege.INSERT.name: PermissionLevel.WRITE,
-    Privilege.UPDATE.name: PermissionLevel.WRITE,
-    Privilege.DELETE.name: PermissionLevel.WRITE,
-    Privilege.REFERENCES.name: PermissionLevel.WRITE,
-    Privilege.DROP.name: PermissionLevel.WRITE,
-    Privilege.TEMPORARY.name: PermissionLevel.WRITE,
-    Privilege.CREATE.name: PermissionLevel.WRITE,
-    Privilege.USAGE.name: PermissionLevel.WRITE,
-    Privilege.RULE.name: PermissionLevel.WRITE,
-    Privilege.TRIGGER.name: PermissionLevel.READ,
-    Privilege.EXECUTE.name: PermissionLevel.FULL,
-}
 
 IDENTITY_TYPE_MODEL_TO_OUTPUT = {
     IdentityModelType.USER.name: IdentityType.USER,
@@ -44,7 +29,7 @@ IDENTITY_TYPE_MODEL_TO_AuthzPathElementType = {
 }
 
 
-def _yield_row(identity: DBIdentity, privilege_type: Privilege, grant_name: str, relations: List[DBIdentity]):
+def _yield_row(identity: DBIdentity, permission_level: PermissionLevel, grant_name: str, relations: List[DBIdentity]):
     auth_path_element = [
         AuthzPathElement(
             id=path_identity.id_,
@@ -60,7 +45,7 @@ def _yield_row(identity: DBIdentity, privilege_type: Privilege, grant_name: str,
         identity=identity,
         asset=asset,
         path=auth_path_element,
-        permission=PRIVILEGE_MODEL_TO_OUTPUT.get(privilege_type),
+        permission=permission_level,
     )
 
 
@@ -68,14 +53,14 @@ def _iter_role_row(
     identity: DBIdentity,
     granted_identity: DBIdentity,
     prev_roles: List[DBIdentity],
-    roles_to_grants: Dict[IdentityId, Set[ResourcePrivilege]],
+    roles_to_grants: Dict[IdentityId, Set[ResourcePermission]],
     role_to_roles: Dict[DBIdentity, Set[DBIdentity]],
 ) -> Generator[AuthzEntry, None, None]:
     grants = roles_to_grants.get(granted_identity.id_, set())
     prev_roles.append(granted_identity)
     for grant in grants:
         yield from _yield_row(
-            identity=identity, privilege_type=grant.privilege_type, grant_name=grant.name, relations=prev_roles
+            identity=identity, permission_level=grant.permission_level, grant_name=grant.name, relations=prev_roles
         )
 
     for nested_granted_identity in role_to_roles.get(granted_identity, set()):
@@ -100,7 +85,7 @@ def export(model: AuthorizationModel, writer: BaseWriter):
         if role.type_ == "USER":
             for grant in model.identity_to_resource_privilege.get(role.id_, set()):
                 for entry in _yield_row(
-                    identity=role, privilege_type=grant.privilege_type, grant_name=grant.name, relations=[role]
+                    identity=role, permission_level=grant.permission_level, grant_name=grant.name, relations=[role]
                 ):
                     writer.write_entry(entry)
 
