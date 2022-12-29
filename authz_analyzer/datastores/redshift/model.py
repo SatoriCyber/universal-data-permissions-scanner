@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Dict, Set
 
+from authz_analyzer.models import PermissionLevel
+
 IdentityId = id
 
 
@@ -32,12 +34,28 @@ class Privilege(Enum):
     EXECUTE = auto()
 
 
+PERMISSION_LEVEL_MAP = {
+    Privilege.SELECT.name: PermissionLevel.READ,
+    Privilege.INSERT.name: PermissionLevel.WRITE,
+    Privilege.UPDATE.name: PermissionLevel.WRITE,
+    Privilege.DELETE.name: PermissionLevel.WRITE,
+    Privilege.REFERENCES.name: PermissionLevel.READ,
+    Privilege.DROP.name: PermissionLevel.WRITE,
+    Privilege.TEMPORARY.name: PermissionLevel.WRITE,
+    Privilege.CREATE.name: PermissionLevel.WRITE,
+    Privilege.USAGE.name: PermissionLevel.WRITE,
+    Privilege.RULE.name: PermissionLevel.WRITE,
+    Privilege.TRIGGER.name: PermissionLevel.READ,
+    Privilege.EXECUTE.name: PermissionLevel.FULL,
+}
+
+
 @dataclass
-class ResourcePrivilege:
-    """Define a resource, e.g. a table, and the privilege level."""
+class ResourcePermission:
+    """Define a resource, e.g. a table, and the permission level."""
 
     name: str
-    privilege_type: Privilege
+    permission_level: PermissionLevel
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -73,4 +91,4 @@ class AuthorizationModel:
     """
 
     identity_to_identities: Dict[DBIdentity, Set[DBIdentity]]
-    identity_to_resource_privilege: Dict[IdentityId, Set[ResourcePrivilege]]
+    identity_to_resource_privilege: Dict[IdentityId, Set[ResourcePermission]]
