@@ -18,13 +18,14 @@ import redshift_connector
 
 from authz_analyzer.datastores.redshift import exporter
 from authz_analyzer.datastores.redshift.model import (
+    PERMISSION_LEVEL_MAP,
     AuthorizationModel,
     DBIdentity,
     IdentityId,
     IdentityType,
-    Privilege,
-    ResourcePrivilege,
+    ResourcePermission,
 )
+from authz_analyzer.models import PermissionLevel
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
@@ -144,13 +145,13 @@ class RedshiftAuthzAnalyzer:
                 )
                 identity_grants.add(granted_identity)
             if identity.type_ == IdentityType.USER.name:
-                identity_grants.add(DBIdentity.new(id_=0, name="public", type_=IdentityType.UNKNOWN, relations=set()))
+                identity_grants.add(DBIdentity.new(id_=0, name="public", type_=IdentityType.GROUP, relations=set()))
 
         return results
 
-    def _get_identities_privileges(self) -> Dict[IdentityId, Set[ResourcePrivilege]]:
+    def _get_identities_privileges(self) -> Dict[IdentityId, Set[ResourcePermission]]:
         command = (COMMANDS_DIR / "identities_privileges.sql").read_text()
-        results: Dict[IdentityId, Set[ResourcePrivilege]] = {}
+        results: Dict[IdentityId, Set[ResourcePermission]] = {}
         for pg_cursor in self.cursors:
             db_name = pg_cursor.connection.__getattribute__("_database")
             rows = RedshiftAuthzAnalyzer._get_rows(pg_cursor, command)
@@ -158,10 +159,10 @@ class RedshiftAuthzAnalyzer:
                 _grantor = row[0]
                 identity = row[1]
                 table_name = row[2]
-                level: Privilege = row[3]
+                level = PERMISSION_LEVEL_MAP.get(row[3], PermissionLevel.UNKNOWN)
 
                 identity_grants = results.setdefault(identity, set())
-                identity_grants.add(ResourcePrivilege(db_name + "." + table_name, level))
+                identity_grants.add(ResourcePermission(db_name + "." + table_name, level))
 
         return results
 

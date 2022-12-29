@@ -110,6 +110,8 @@ ENV/
 .vscode/
 .idea/
 
+.cache_ggshield
+
 # mkdocs build dir
 site/
 tests/tests_datastores/aws/satori_dev_account_authz_analyzer.json
