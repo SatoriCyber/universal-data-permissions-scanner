@@ -2,29 +2,23 @@ from logging import Logger
 from typing import Dict, List, Optional, Set, Union
 
 from authz_analyzer.datastores.aws.actions.account_actions import AwsAccountActions
-from authz_analyzer.datastores.aws.services.service_base import (
+from authz_analyzer.datastores.aws.services import (
     ServiceActionBase,
     ServiceActionsResolverBase,
-    ServiceType,
+    ServiceActionType,
 )
 
 
 class ActionsResolver:
-    # def subtraction(self, other: 'ResolvedResources'):
-    #     for resolved_resource in self.resolved_actions:
-
-    # def is_empty(self, type: ResourceType) -> bool:
-    #     pass
-
     @staticmethod
     def _get_stmt_action_regexes_per_service_type(
         _logger: Logger,
         stmt_action_regexes: List[str],
-        allow_types_to_resolve: Set[ServiceType],
-    ) -> Dict[ServiceType, List[str]]:
-        ret: Dict[ServiceType, List[str]] = dict()
+        service_types_to_resolve: Set[ServiceActionType],
+    ) -> Dict[ServiceActionType, List[str]]:
+        ret: Dict[ServiceActionType, List[str]] = dict()
         for stmt_action_regex in stmt_action_regexes:
-            for service_type in allow_types_to_resolve:
+            for service_type in service_types_to_resolve:
                 service_prefix = service_type.get_action_service_prefix()
                 stmt_relative_id_regex = (
                     "*"
@@ -50,21 +44,23 @@ class ActionsResolver:
         logger: Logger,
         stmt_action_regexes: Union[str, List[str]],
         account_actions: AwsAccountActions,
-        allow_types_to_resolve: Set[ServiceType],
-    ) -> Optional[Dict[ServiceType, ServiceActionsResolverBase]]:
-        services_action_resolver: Dict[ServiceType, ServiceActionsResolverBase] = dict()
+    ) -> Optional[Dict[ServiceActionType, ServiceActionsResolverBase]]:
+        services_action_resolver: Dict[ServiceActionType, ServiceActionsResolverBase] = dict()
 
         if isinstance(stmt_action_regexes, str):
             stmt_action_regexes = [stmt_action_regexes]
 
-        ret: Dict[ServiceType, List[str]] = ActionsResolver._get_stmt_action_regexes_per_service_type(
-            logger, stmt_action_regexes, allow_types_to_resolve
+        service_types_to_resolve: Set[ServiceActionType] = set(account_actions.account_actions.keys())
+        ret: Dict[ServiceActionType, List[str]] = ActionsResolver._get_stmt_action_regexes_per_service_type(
+            logger, stmt_action_regexes, service_types_to_resolve
         )
         for service_type, service_regexes in ret.items():
             service_actions: Optional[List[ServiceActionBase]] = account_actions.account_actions.get(service_type)
             if service_actions:
-                service_action_resolver: ServiceActionsResolverBase = service_type.load_resolver_service_actions(
-                    logger, service_regexes, service_actions
+                service_action_resolver: ServiceActionsResolverBase = (
+                    service_type.load_resolver_service_actions_from_single_stmt(
+                        logger, service_regexes, service_actions
+                    )
                 )
                 if not service_action_resolver.is_empty():
                     services_action_resolver[service_type] = service_action_resolver

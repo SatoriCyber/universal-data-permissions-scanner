@@ -8,13 +8,17 @@ from serde import field, serde
 from authz_analyzer.datastores.aws.actions.account_actions import AwsAccountActions
 from authz_analyzer.datastores.aws.actions.actions_resolver import ActionsResolver
 from authz_analyzer.datastores.aws.iam.policy.effect import Effect
-from authz_analyzer.datastores.aws.iam.policy.principal import PolicyPrincipal, PolicyPrincipals
+from authz_analyzer.datastores.aws.iam.policy.principal import StmtPrincipals
 from authz_analyzer.datastores.aws.resources.account_resources import AwsAccountResources
 from authz_analyzer.datastores.aws.resources.resources_resolver import ResourcesResolver
-from authz_analyzer.datastores.aws.services.service_base import (
+from authz_analyzer.datastores.aws.services.role_trust.role_trust_principals import RoleTrustServicePrincipalsResolver
+from authz_analyzer.datastores.aws.services.role_trust.role_trust_service import RoleTrustServiceType
+from authz_analyzer.datastores.aws.services.role_trust.role_trust_actions import RoleTrustServiceActionsResolver
+from authz_analyzer.datastores.aws.services import (
     ServiceActionsResolverBase,
     ServiceResourcesResolverBase,
-    ServiceType,
+    ServiceActionType,
+    ServiceResourceType,
 )
 
 
@@ -23,11 +27,11 @@ from authz_analyzer.datastores.aws.services.service_base import (
 class Statement:
     effect: Effect
     sid: Optional[str] = field(default=None, skip_if_default=True)
-    principal: Optional[PolicyPrincipals] = field(
+    principal: Optional[StmtPrincipals] = field(
         default=None,
         skip_if_default=True,
-        deserializer=PolicyPrincipals.from_policy_document_principal,
-        serializer=PolicyPrincipals.to_policy_document_principal,
+        deserializer=StmtPrincipals.from_stmt_document_principal,
+        serializer=StmtPrincipals.to_stmt_document_principal,
     )
     action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
     not_action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
@@ -53,16 +57,60 @@ class PolicyDocumentGetterBase(ABC):
 class PolicyDocument:
     statement: List[Statement]
 
-    def is_contains_principal(self, principal_arn: PolicyPrincipal):
-        return any(s.principal is not None and s.principal.contains(principal_arn) for s in self.statement)
+    def get_role_trust_resolver(
+        self,
+        logger: Logger,
+        parent_arn: str,
+        account_actions: AwsAccountActions,
+        effect: Effect,
+    ) -> Optional[RoleTrustServicePrincipalsResolver]:
+        role_trust_service_principal_resolver: Optional[RoleTrustServicePrincipalsResolver] = None
+        role_trust_action_service_type = RoleTrustServiceType()
 
-    @staticmethod
-    def fix_stmt_regex_to_valid_regex(stmt_regex: str) -> str:
-        stmt_regex = stmt_regex.replace("*", ".*")  # convert to valid wildcard regex
-        # https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-arn-format.html
-        # aws traits the '?' as regex '.' (any character)
-        stmt_regex = stmt_regex.replace("?", ".")
-        return stmt_regex
+        for statement in self.statement:
+            if statement.action is None or statement.principal is None:
+                # missing principal stmt, noting to resolve
+                continue
+
+            if statement.effect != effect:
+                continue
+
+            single_stmt_service_actions_resolvers: Optional[
+                Dict[ServiceActionType, ServiceActionsResolverBase]
+            ] = ActionsResolver.resolve_stmt_action_regexes(logger, statement.action, account_actions)
+            if single_stmt_service_actions_resolvers is None:
+                continue
+
+            res = single_stmt_service_actions_resolvers.get(role_trust_action_service_type)
+            single_stmt_role_trust_actions_resolvers: Optional[RoleTrustServiceActionsResolver] = (
+                res if res and isinstance(res, RoleTrustServiceActionsResolver) else None
+            )
+            if single_stmt_role_trust_actions_resolvers is None:
+                continue
+
+            logger.debug(
+                "Resolved actions for %s, stmt %s: %s",
+                parent_arn,
+                statement.sid,
+                single_stmt_service_actions_resolvers,
+            )
+
+            curr_role_trust_service_principal_resolver: RoleTrustServicePrincipalsResolver = (
+                RoleTrustServicePrincipalsResolver.load_from_single_stmt(
+                    logger, statement.principal, single_stmt_role_trust_actions_resolvers.resolved_actions
+                )
+            )
+            if curr_role_trust_service_principal_resolver.is_empty():
+                continue
+
+            if role_trust_service_principal_resolver is None:
+                role_trust_service_principal_resolver = curr_role_trust_service_principal_resolver
+                continue
+            else:
+                role_trust_service_principal_resolver.add(curr_role_trust_service_principal_resolver)
+
+        logger.debug("Resolved role trust for %s: %s", parent_arn, role_trust_service_principal_resolver)
+        return role_trust_service_principal_resolver
 
     def get_services_resources_resolver(
         self,
@@ -71,10 +119,9 @@ class PolicyDocument:
         account_actions: AwsAccountActions,
         account_resources: AwsAccountResources,
         effect: Effect,
-        allow_types_to_resolve: Set[ServiceType],
-    ) -> Optional[Dict[ServiceType, ServiceResourcesResolverBase]]:
+    ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
 
-        all_stmts_service_resources_resolvers: Dict[ServiceType, ServiceResourcesResolverBase] = dict()
+        all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase] = dict()
         for statement in self.statement:
             if statement.action is None or statement.resource is None:
                 # missing action or resource on this stmt, noting to resolve
@@ -84,10 +131,8 @@ class PolicyDocument:
                 continue
 
             single_stmt_service_actions_resolvers: Optional[
-                Dict[ServiceType, ServiceActionsResolverBase]
-            ] = ActionsResolver.resolve_stmt_action_regexes(
-                logger, statement.action, account_actions, allow_types_to_resolve
-            )
+                Dict[ServiceActionType, ServiceActionsResolverBase]
+            ] = ActionsResolver.resolve_stmt_action_regexes(logger, statement.action, account_actions)
 
             if single_stmt_service_actions_resolvers:
                 logger.debug(
@@ -96,17 +141,15 @@ class PolicyDocument:
                     statement.sid,
                     single_stmt_service_actions_resolvers,
                 )
-                # has relevant resolved actions, Check the resolved resources
-                resolved_service_actions = set([k for (k, v) in single_stmt_service_actions_resolvers.items()])  # type: ignore
-                # need to resolve resources from the allowed service types which also appears from the resolved actions
-                allow_types_to_resolve_for_resources = allow_types_to_resolve.intersection(resolved_service_actions)
+                # has relevant resolved actions, check the resolved resources
+                resolved_services_action: Set[ServiceActionType] = set(single_stmt_service_actions_resolvers.keys())
                 single_stmt_service_resources_resolvers: Optional[
-                    Dict[ServiceType, ServiceResourcesResolverBase]
+                    Dict[ServiceResourceType, ServiceResourcesResolverBase]
                 ] = ResourcesResolver.resolve_stmt_resource_regexes(
                     logger,
                     statement.resource,
                     account_resources,
-                    allow_types_to_resolve_for_resources,
+                    resolved_services_action,
                     single_stmt_service_actions_resolvers,
                 )
 
@@ -116,7 +159,7 @@ class PolicyDocument:
                             ServiceResourcesResolverBase
                         ] = single_stmt_service_resources_resolvers.get(service_type)
                         if curr_service_resolver is not None:
-                            all_stmts_service_resolver.merge(curr_service_resolver)
+                            all_stmts_service_resolver.add_from_single_stmt(curr_service_resolver)
 
                     for service_type, single_stmt_service_resolver in single_stmt_service_resources_resolvers.items():
                         if all_stmts_service_resources_resolvers.get(service_type) is None:

@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional, List, Iterable
 
 import networkx as nx
 from boto3 import Session
@@ -10,6 +10,10 @@ from serde import serde, from_dict
 
 from authz_analyzer.datastores.aws.iam.iam_groups import IAMGroup, get_iam_groups
 from authz_analyzer.datastores.aws.iam.iam_policies import IAMPolicy, get_iam_policies
+from authz_analyzer.datastores.aws.actions.account_actions import AwsAccountActions
+from authz_analyzer.datastores.aws.services.role_trust.role_trust_principals import RoleTrustServicePrincipalsResolver
+from authz_analyzer.datastores.aws.iam.policy.effect import Effect
+from authz_analyzer.datastores.aws.iam.policy.principal import StmtPrincipal
 from authz_analyzer.datastores.aws.iam.iam_roles import IAMRole, get_iam_roles
 from authz_analyzer.datastores.aws.iam.iam_users import IAMUser, get_iam_users
 
@@ -18,9 +22,9 @@ from authz_analyzer.datastores.aws.iam.iam_users import IAMUser, get_iam_users
 @dataclass
 class IAMEntities:
     account_id: str
-    iam_users: Dict[str, IAMUser]  # key is user id
-    iam_groups: Dict[str, IAMGroup]  # key is group id
-    iam_roles: Dict[str, IAMRole]  # key is role id
+    iam_users: Dict[str, IAMUser]  # key is user arn
+    iam_groups: Dict[str, IAMGroup]  # key is group arn
+    iam_roles: Dict[str, IAMRole]  # key is role arn
     iam_policies: Dict[str, IAMPolicy]  # key is policy arn
 
     @classmethod
@@ -56,16 +60,42 @@ class IAMEntities:
             iam_policies=iam_policies,
         )
 
-    def build_principal_network_graph(self, logger: Logger) -> nx.DiGraph:
+    def get_trusted_no_entity_principal(
+        self, _logger: Logger, trusted_principal: StmtPrincipal
+    ) -> Optional[StmtPrincipal]:
+        if trusted_principal.is_no_entity_principal():
+            return trusted_principal
+        return None
+
+    def get_trusted_roles(self, _logger: Logger, trusted_principal: StmtPrincipal) -> Iterable[IAMRole]:
+        if trusted_principal.is_all_principals():
+            return self.iam_roles.values()
+        elif trusted_principal.is_role_principal():
+            trusted_role: Optional[IAMRole] = self.iam_roles.get(trusted_principal.get_arn())
+            return [trusted_role] if trusted_role else []
+        else:
+            return []
+
+    def get_trusted_iam_users(self, _logger: Logger, trusted_principal: StmtPrincipal) -> Iterable[IAMUser]:
+        if trusted_principal.is_all_principals():
+            return self.iam_users.values()
+        elif trusted_principal.is_iam_user_principal():
+            ret: List[IAMUser] = []
+            for iam_user in self.iam_users.values():
+                if trusted_principal.contains(iam_user.arn):
+                    ret.append(iam_user)
+            return ret
+        else:
+            return []
+
+    def build_principal_network_graph(self, logger: Logger, account_actions: AwsAccountActions) -> nx.DiGraph:
         logger.info(f"Building the principal network graph for aws account id: {self.account_id}")
         g = nx.DiGraph()
         g.add_node("START_NODE")
         g.add_node("END_NODE")
-        # LALON what about role to role ?? possible to get loop in the graph ?
-
         # First added the iam roles to the graph
         for iam_role in self.iam_roles.values():
-            g.add_node(iam_role, name=iam_role.arn)
+            g.add_node(iam_role)
 
             # Role has attached policies, edged them
             for attached_policy_arn in iam_role.attached_policies_arn:
@@ -75,12 +105,40 @@ class IAMEntities:
                 # there is no such thing policy points to another policy, so edges the policy to the END_NODE
                 g.add_edge(policy, "END_NODE")
 
+            # Check the role's trusted entities
+            role_trust_service_principal_resolver: Optional[
+                RoleTrustServicePrincipalsResolver
+            ] = iam_role.assume_role_policy_document.get_role_trust_resolver(
+                logger, iam_role.arn, account_actions, Effect.Allow
+            )
+            if role_trust_service_principal_resolver is None:
+                continue
+
+            trusted_principals: List[StmtPrincipal] = role_trust_service_principal_resolver.get_trusted_principals()
+            logger.debug("Got role name %s with resolved trusted principal %s", iam_role.role_name, trusted_principals)
+            for trusted_principal in trusted_principals:
+                trusted_roles: Iterable[IAMRole] = self.get_trusted_roles(logger, trusted_principal)
+                for trusted_role in trusted_roles:
+                    if trusted_role.arn != iam_role.arn:
+                        g.add_edge(trusted_role, iam_role)
+
+                no_entity_principal: Optional[StmtPrincipal] = self.get_trusted_no_entity_principal(
+                    logger, trusted_principal
+                )
+                if no_entity_principal:
+                    g.add_edge("START_NODE", no_entity_principal)
+                    g.add_edge(no_entity_principal, iam_role)
+
+                trusted_iam_users: Iterable[IAMUser] = self.get_trusted_iam_users(logger, trusted_principal)
+                for trusted_iam_user in trusted_iam_users:
+                    g.add_edge(trusted_iam_user, iam_role)
+
             # Role has embedded policies, connect it to the END_NODE
             if len(iam_role.role_policies) != 0:
                 g.add_edge(iam_role, "END_NODE")
 
         for iam_user in self.iam_users.values():
-            g.add_node(iam_user, name=iam_user.user_name)
+            g.add_node(iam_user)
             g.add_edge("START_NODE", iam_user)
             # A iam user with embedded user policies might achieve access to resource directly
             if len(iam_user.user_policies) != 0:
@@ -89,17 +147,10 @@ class IAMEntities:
             for attached_policy_arn in iam_user.attached_policies_arn:
                 # policy attached directly to the iam user, additional flow
                 policy = self.iam_policies[attached_policy_arn]
-                g.add_node(policy, name=policy.policy.policy_name)
+                g.add_node(policy)
                 g.add_edge(iam_user, policy)
                 # there is no such thing policy points to another policy, so edges the policy to the END_NODE
                 g.add_edge(policy, "END_NODE")
-
-            # handle iam_roles with trusted policy for this iam_user
-            for iam_role in self.iam_roles.values():
-                if iam_role.assume_role_policy_document.is_contains_principal(iam_user.arn):
-                    # one of the statement contains the principal, edged iam_user -> iam_role
-                    g.add_node(iam_role)
-                    g.add_edge(iam_user, iam_role)
 
             for iam_group in self.iam_groups.values():
                 # policy attached directly to the iam user, additional flow

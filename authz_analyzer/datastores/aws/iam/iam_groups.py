@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import Dict, List, Set, Tuple
 
 from boto3 import Session
-from serde import deserialize, from_dict, serde, serialize
+from serde import from_dict, serde
 
-from authz_analyzer.datastores.aws.iam.policy import GroupPolicy, Policy, PolicyDocument, PolicyDocumentGetterBase
+from authz_analyzer.datastores.aws.iam.policy import GroupPolicy, PolicyDocument, PolicyDocumentGetterBase
 from authz_analyzer.datastores.aws.utils.pagination import paginate_response_list
 
 
@@ -69,7 +69,7 @@ def get_iam_groups(session: Session) -> Dict[str, IAMGroup]:
         )
         attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
 
-        ret[group_id] = IAMGroup(
+        ret[arn] = IAMGroup(
             group_name=group_name,
             group_id=group_id,
             arn=arn,

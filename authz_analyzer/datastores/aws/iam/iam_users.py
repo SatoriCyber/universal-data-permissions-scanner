@@ -5,7 +5,7 @@ from boto3 import Session
 from serde import serde, field, from_dict
 
 from authz_analyzer.datastores.aws.iam.policy import PolicyDocument, PolicyDocumentGetterBase, UserPolicy
-from authz_analyzer.datastores.aws.iam.policy.principal import PolicyPrincipal
+from authz_analyzer.datastores.aws.iam.policy.principal import StmtPrincipal
 from authz_analyzer.datastores.aws.utils.pagination import paginate_response_list
 
 
@@ -17,15 +17,16 @@ class IAMUser(PolicyDocumentGetterBase):
     path: str
     user_policies: List[UserPolicy]
     attached_policies_arn: List[str]
-    arn: PolicyPrincipal = field(
-        deserializer=PolicyPrincipal.from_iam_user_arn, serializer=PolicyPrincipal.to_iam_user_arn
+    arn: StmtPrincipal = field(
+        deserializer=StmtPrincipal.from_policy_principal_str,
+        serializer=StmtPrincipal.to_policy_principal_str,
     )
 
     def __eq__(self, other):
         return self.user_id == other.user_id
 
     def __repr__(self):
-        return self.arn.to_iam_user_arn()
+        return self.arn.get_arn()
 
     def __hash__(self):
         return hash(self.user_id)
@@ -36,7 +37,7 @@ class IAMUser(PolicyDocumentGetterBase):
 
     @property
     def parent_arn(self) -> str:
-        return self.arn.principal_str
+        return self.arn.get_arn()
 
 
 def get_iam_users(session: Session) -> Dict[str, IAMUser]:
@@ -63,8 +64,8 @@ def get_iam_users(session: Session) -> Dict[str, IAMUser]:
             iam_client.list_attached_user_policies, 'AttachedPolicies', UserName=user_name, PathPrefix=path
         )
         attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
-        user_principal_arn = PolicyPrincipal.load_aws(arn)
-        ret[user_id] = IAMUser(
+        user_principal_arn = StmtPrincipal.load_aws(arn)
+        ret[arn] = IAMUser(
             user_name=user_name,
             user_id=user_id,
             arn=user_principal_arn,
