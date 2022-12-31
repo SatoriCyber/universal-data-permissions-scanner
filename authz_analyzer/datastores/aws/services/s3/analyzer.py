@@ -6,8 +6,10 @@ from logging import Logger
 from pathlib import Path
 from typing import Optional, Union
 
+from authz_analyzer.datastores.aws.iam.iam_entities import IAMEntities
 from authz_analyzer.datastores.aws.aws_authz_analyzer import AwsAuthzAnalyzer
 from authz_analyzer.datastores.aws.services.s3.s3_service import S3ServiceType
+from authz_analyzer.datastores.aws.services.role_trust.role_trust_service import RoleTrustServiceType
 from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
@@ -48,5 +50,8 @@ class S3AuthzAnalyzer:
         self.logger.info("Starting to analyzed AWS s3 for account id: %s", self.account_id)
         session = create_session_with_assume_role(self.account_id, self.account_role_name)
         self.logger.info("Successfully assume the role %s for account id %s", self.account_role_name, self.account_id)
-        aws_authz_analyzer = AwsAuthzAnalyzer.load(self.logger, self.account_id, session, set([S3ServiceType()]))
+        iam_entities = IAMEntities.load(self.logger, self.account_id, session)
+        aws_authz_analyzer = AwsAuthzAnalyzer.load(
+            self.logger, iam_entities, session, set([S3ServiceType(), RoleTrustServiceType()])
+        )
         aws_authz_analyzer.write_permissions(self.logger, self.writer)

@@ -7,14 +7,21 @@ from serde.json import to_json, from_dict
 
 from authz_analyzer.writers.get_writers import get_writer
 from authz_analyzer.writers.base_writers import OutputFormat
+from authz_analyzer.datastores.aws.iam.iam_entities import IAMEntities
 from authz_analyzer.datastores.aws.aws_authz_analyzer import AwsAuthzAnalyzer
 from authz_analyzer.datastores.aws.services.s3.s3_service import S3ServiceType, S3_SERVICE_NAME
+from authz_analyzer.datastores.aws.services.role_trust.role_trust_service import (
+    RoleTrustServiceType,
+    ROLE_TRUST_SERVICE_NAME,
+)
+from authz_analyzer.datastores.aws.services.role_trust.role_trust_actions import RoleTrustAction
 from authz_analyzer.datastores.aws.services.s3.s3_actions import S3Action
 from authz_analyzer.datastores.aws.services.s3.bucket import S3Bucket
-from authz_analyzer.datastores.aws.services.service_base import (
+from authz_analyzer.datastores.aws.services import (
+    register_service_action_type_by_name,
     register_service_action_by_name,
+    register_service_resource_type_by_name,
     register_service_resource_by_name,
-    register_service_type_by_name,
 )
 from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
 from authz_analyzer.utils.logger import get_logger
@@ -30,9 +37,13 @@ AWS_AUTHZ_ANALYZER_SATORI_DEV_RESULT_JSON_FILE = pathlib.Path().joinpath(
 
 @pytest.fixture
 def register_services_for_deserialize_from_file():
-    register_service_type_by_name(S3_SERVICE_NAME, S3ServiceType)
+    # add resolvers here action the type and the service
     register_service_action_by_name(S3_SERVICE_NAME, S3Action)
     register_service_resource_by_name(S3_SERVICE_NAME, S3Bucket)
+    register_service_action_by_name(ROLE_TRUST_SERVICE_NAME, RoleTrustAction)
+    register_service_action_type_by_name(S3_SERVICE_NAME, S3ServiceType)
+    register_service_resource_type_by_name(S3_SERVICE_NAME, S3ServiceType)
+    register_service_action_type_by_name(ROLE_TRUST_SERVICE_NAME, RoleTrustServiceType)
 
 
 @pytest.mark.skipif(
@@ -43,7 +54,10 @@ def test_aws_authz_analyzer_with_s3_write_satori_dev_account():
     aws_account_id = '105246067165'
     assume_role_name = 'LalonFromStage'
     session = create_session_with_assume_role(aws_account_id, assume_role_name)
-    authz_analyzer = AwsAuthzAnalyzer.load(get_logger(False), aws_account_id, session, set([S3ServiceType()]))
+    iam_entities = IAMEntities.load(get_logger(False), aws_account_id, session)
+    authz_analyzer = AwsAuthzAnalyzer.load(
+        get_logger(False), iam_entities, session, set([S3ServiceType(), RoleTrustServiceType()])
+    )
 
     authz_analyzer_json = to_json(authz_analyzer)
     with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "w", encoding="utf-8") as outfile:

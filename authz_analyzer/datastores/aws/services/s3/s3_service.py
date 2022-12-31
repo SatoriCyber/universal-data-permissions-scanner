@@ -11,19 +11,19 @@ from authz_analyzer.datastores.aws.services.s3.s3_actions import (
     S3ServiceActionsResolver,
 )
 from authz_analyzer.datastores.aws.services.s3.s3_resources import S3ServiceResourcesResolver
-from authz_analyzer.datastores.aws.services.service_base import (
+from authz_analyzer.datastores.aws.services import (
     ServiceActionBase,
     ServiceActionsResolverBase,
     ServiceResourceBase,
+    ServiceResourceType,
     ServiceResourcesResolverBase,
-    ServiceType,
 )
 
 S3_SERVICE_NAME = "s3"
 
 
 @serde
-class S3ServiceType(ServiceType):
+class S3ServiceType(ServiceResourceType):
     def get_resource_service_prefix(self) -> str:
         return S3_RESOURCE_SERVICE_PREFIX
 
@@ -34,7 +34,7 @@ class S3ServiceType(ServiceType):
         return S3_SERVICE_NAME
 
     @classmethod
-    def load_resolver_service_resources(
+    def load_resolver_service_resources_from_single_stmt(
         cls,
         logger: Logger,
         stmt_relative_id_regexes: List[str],
@@ -53,7 +53,7 @@ class S3ServiceType(ServiceType):
         return buckets
 
     @classmethod
-    def load_resolver_service_actions(
+    def load_resolver_service_actions_from_single_stmt(
         cls, logger: Logger, stmt_relative_id_regexes: List[str], service_actions: List[ServiceActionBase]
     ) -> ServiceActionsResolverBase:
         s3_actions: List[S3Action] = [s for s in service_actions if isinstance(s, S3Action)]

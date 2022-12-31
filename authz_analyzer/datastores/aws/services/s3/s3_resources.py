@@ -1,12 +1,12 @@
 import re
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Generator, Tuple
 
-from authz_analyzer.datastores.aws.iam.policy import PolicyDocument
+from authz_analyzer.datastores.aws.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
 from authz_analyzer.datastores.aws.services.s3.bucket import S3Bucket
 from authz_analyzer.datastores.aws.services.s3.s3_actions import S3Action, S3ActionType
-from authz_analyzer.datastores.aws.services.service_base import (
+from authz_analyzer.datastores.aws.services import (
     ServiceActionBase,
     ServiceResourceBase,
     ServiceResourcesResolverBase,
@@ -23,10 +23,6 @@ class ResolvedBucketActions:
             self.stmt_relative_id_objects_regexes.append(stmt_relative_id_objects_regex)
         self.actions = self.actions.union(actions)
 
-    def merge(self, other: 'ResolvedBucketActions'):
-        self.stmt_relative_id_objects_regexes += other.stmt_relative_id_objects_regexes
-        self.actions = self.actions.union(other.actions)
-
     @classmethod
     def load(cls, actions: Set[S3Action], stmt_relative_id_objects_regex: Optional[str]) -> 'ResolvedBucketActions':
         stmt_relative_id_objects_regexes = []
@@ -37,24 +33,21 @@ class ResolvedBucketActions:
 
 @dataclass
 class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
-    resolved_buckets: Dict[S3Bucket, ResolvedBucketActions]
+    resolved_buckets: List[Dict[S3Bucket, ResolvedBucketActions]]
 
     def is_empty(self) -> bool:
         return len(self.resolved_buckets) == 0
 
-    def merge(self, other: ServiceResourcesResolverBase):
+    def add_from_single_stmt(self, other: ServiceResourcesResolverBase):
         if isinstance(other, S3ServiceResourcesResolver):
-            for s3_bucket, resolved_bucket_actions in self.resolved_buckets.items():
-                other_resolved_bucket_actions: Optional[ResolvedBucketActions] = other.resolved_buckets.get(s3_bucket)
-                if other_resolved_bucket_actions is not None:
-                    resolved_bucket_actions.merge(other_resolved_bucket_actions)
+            self.resolved_buckets.extend(other.resolved_buckets)
 
-            for s3_bucket, other_resolved_bucket_actions in other.resolved_buckets.items():
-                if self.resolved_buckets.get(s3_bucket) is None:
-                    self.resolved_buckets[s3_bucket] = other_resolved_bucket_actions
-
-    def get_resolved_resources(self) -> Dict[ServiceResourceBase, Set[ServiceActionBase]]:
-        return {k: v.actions for k, v in self.resolved_buckets.items()}  # type: ignore
+    def yield_resolved_resource_with_actions(
+        self,
+    ) -> Generator[Tuple[ServiceResourceBase, Set[ServiceActionBase]], None, None]:
+        for resolved_buckets_dict in self.resolved_buckets:
+            for bucket, resolved_bucket_actions in resolved_buckets_dict.items():
+                yield (bucket, resolved_bucket_actions.actions)  # type: ignore
 
     @staticmethod
     def update_resolved_bucket_from_single_regex(
@@ -86,7 +79,7 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
         if not resolved_actions:
             return
 
-        regex = re.compile(stmt_relative_id_buckets_regex)
+        regex = re.compile(fix_stmt_regex_to_valid_regex(stmt_relative_id_buckets_regex, with_case_insensitive=False))
         for bucket in service_resources:
             if regex.match(bucket.get_resource_name()) is not None:
                 resolved_bucket_actions: Optional[ResolvedBucketActions] = resolved_buckets.get(bucket)
@@ -114,7 +107,6 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
         )
 
         for stmt_relative_id_regex in stmt_relative_id_regexes:
-            stmt_relative_id_regex = PolicyDocument.fix_stmt_regex_to_valid_regex(stmt_relative_id_regex)
             res = stmt_relative_id_regex.split('/', 1)
             stmt_relative_id_buckets_regex: str = res[0]
             stmt_relative_id_objects_regex: Optional[str] = None
@@ -131,4 +123,4 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
                 resolved_actions_object,
             )
 
-        return cls(resolved_buckets=resolved_buckets)
+        return cls(resolved_buckets=[resolved_buckets])

@@ -4,24 +4,24 @@ from typing import Any, Dict, List, Optional, Set, Type
 
 from serde import field, from_dict, serde, to_dict
 
-from authz_analyzer.datastores.aws.services.service_base import (
+from authz_analyzer.datastores.aws.services import (
     ServiceActionBase,
-    ServiceType,
+    ServiceActionType,
+    get_service_action_type_by_name,
     get_service_action_by_name,
-    get_service_type_by_name,
 )
 
 
-def to_dict_serializer(account_actions: Dict[ServiceType, List[ServiceActionBase]]) -> Dict[str, List[Any]]:
+def to_dict_serializer(account_actions: Dict[ServiceActionType, List[ServiceActionBase]]) -> Dict[str, List[Any]]:
     return dict([(k.get_service_name(), to_dict(v)) for (k, v) in account_actions.items()])
 
 
 def from_dict_deserializer(
     account_actions_from_deserializer: Dict[str, List[Any]]
-) -> Dict[ServiceType, List[ServiceActionBase]]:
-    account_actions: Dict[ServiceType, List[ServiceActionBase]] = dict()
+) -> Dict[ServiceActionType, List[ServiceActionBase]]:
+    account_actions: Dict[ServiceActionType, List[ServiceActionBase]] = dict()
     for service_key_name, service_actions_base in account_actions_from_deserializer.items():
-        service_type: Optional[Type[ServiceType]] = get_service_type_by_name(service_key_name)
+        service_type: Optional[Type[ServiceActionType]] = get_service_action_type_by_name(service_key_name)
         service_action: Optional[Type[ServiceActionBase]] = get_service_action_by_name(service_key_name)
         if service_type and service_action:
             value: List[ServiceActionBase] = [
@@ -35,14 +35,14 @@ def from_dict_deserializer(
 @serde
 @dataclass
 class AwsAccountActions:
-    account_actions: Dict[ServiceType, List[ServiceActionBase]] = field(
+    account_actions: Dict[ServiceActionType, List[ServiceActionBase]] = field(
         serializer=to_dict_serializer, deserializer=from_dict_deserializer
     )
 
     @classmethod
-    def load(cls, logger: Logger, aws_account_id: str, service_types_to_load: Set[ServiceType]):
+    def load(cls, logger: Logger, aws_account_id: str, service_types_to_load: Set[ServiceActionType]):
         logger.info(f"Init AWS account {aws_account_id} with actions {service_types_to_load}...")
-        account_actions: Dict[ServiceType, List[ServiceActionBase]] = dict()
+        account_actions: Dict[ServiceActionType, List[ServiceActionBase]] = dict()
         for service_type_to_load in service_types_to_load:
             ret: List[ServiceActionBase] = service_type_to_load.load_service_actions(logger)
             account_actions[service_type_to_load] = ret

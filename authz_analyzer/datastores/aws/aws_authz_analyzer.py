@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List, Optional, Set, Tuple, Type
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import networkx as nx
 from boto3 import Session
-from serde import field, serde
+from serde import serde
 
 from authz_analyzer.datastores.aws.actions.account_actions import AwsAccountActions
 from authz_analyzer.datastores.aws.iam.iam_entities import IAMEntities
@@ -13,13 +13,12 @@ from authz_analyzer.datastores.aws.iam.iam_policies import IAMPolicy
 from authz_analyzer.datastores.aws.iam.iam_roles import IAMRole
 from authz_analyzer.datastores.aws.iam.iam_users import IAMUser
 from authz_analyzer.datastores.aws.iam.policy.policy_document import Effect, PolicyDocument, PolicyDocumentGetterBase
+from authz_analyzer.datastores.aws.iam.policy.principal import StmtPrincipal
 from authz_analyzer.datastores.aws.resources.account_resources import AwsAccountResources
-from authz_analyzer.datastores.aws.services.service_base import (
-    ServiceActionBase,
-    ServiceResourceBase,
+from authz_analyzer.datastores.aws.services import (
+    ServiceActionType,
     ServiceResourcesResolverBase,
-    ServiceType,
-    get_service_type_by_name,
+    ServiceResourceType,
 )
 from authz_analyzer.models.model import (
     Asset,
@@ -33,40 +32,34 @@ from authz_analyzer.models.model import (
 from authz_analyzer.writers.base_writers import BaseWriter
 
 
-def to_serializer(service_types_to_load: Set[ServiceType]) -> List[str]:
-    return [s.get_service_name() for s in service_types_to_load]
-
-
-def from_deserializer(service_types_to_load_from_deserializer: List[str]) -> Set[ServiceType]:
-    service_types_to_load: Set[ServiceType] = set()
-    for service_key_name in service_types_to_load_from_deserializer:
-        service_type: Optional[Type[ServiceType]] = get_service_type_by_name(service_key_name)
-        if service_type:
-            service_types_to_load.add(service_type())
-
-    return service_types_to_load
-
-
 @serde
 @dataclass
 class AwsAuthzAnalyzer:
-    aws_account_id: str
     account_actions: AwsAccountActions
     account_resources: AwsAccountResources
     iam_entities: IAMEntities
-    service_types_to_load: Set[ServiceType] = field(serializer=to_serializer, deserializer=from_deserializer)
 
     @classmethod
-    def load(cls, logger: Logger, aws_account_id: str, session: Session, service_types_to_load: Set[ServiceType]):
-        account_actions = AwsAccountActions.load(logger, aws_account_id, service_types_to_load)
-        account_resources = AwsAccountResources.load(logger, aws_account_id, session, service_types_to_load)
-        iam_entities = IAMEntities.load(logger, aws_account_id, session)
+    def load(
+        cls,
+        logger: Logger,
+        iam_entities: IAMEntities,
+        session: Session,
+        service_types_to_load: Set[Union[ServiceResourceType, ServiceActionType]],
+    ):
+        action_service_types_to_load: Set[ServiceActionType] = set(
+            [x for x in service_types_to_load if isinstance(x, ServiceActionType)]
+        )
+        resource_service_types_to_load: Set[ServiceResourceType] = set(
+            [x for x in service_types_to_load if isinstance(x, ServiceResourceType)]
+        )
+        aws_account_id = iam_entities.account_id
+        account_actions = AwsAccountActions.load(logger, aws_account_id, action_service_types_to_load)
+        account_resources = AwsAccountResources.load(logger, aws_account_id, session, resource_service_types_to_load)
         return cls(
             account_actions=account_actions,
             account_resources=account_resources,
             iam_entities=iam_entities,
-            aws_account_id=aws_account_id,
-            service_types_to_load=service_types_to_load,
         )
 
     def write_permissions_for_assets(
@@ -79,25 +72,20 @@ class AwsAuthzAnalyzer:
         parent_arn: str,
     ):
         service_resources_resolver: Optional[
-            Dict[ServiceType, ServiceResourcesResolverBase]
+            Dict[ServiceResourceType, ServiceResourcesResolverBase]
         ] = policy_document.get_services_resources_resolver(
             logger,
             parent_arn,
             self.account_actions,
             self.account_resources,
             Effect.Allow,
-            self.service_types_to_load,
         )
 
         if not service_resources_resolver:
             return
 
         for _service_type, service_resolver in service_resources_resolver.items():
-            servicer_resolved_resources: Dict[
-                ServiceResourceBase, Set[ServiceActionBase]
-            ] = service_resolver.get_resolved_resources()
-
-            for resource, actions in servicer_resolved_resources.items():
+            for resource, actions in service_resolver.yield_resolved_resource_with_actions():
                 asset = Asset(name=resource.get_resource_name(), type=resource.get_asset_type())
                 if any(action.get_action_permission_level() == PermissionLevel.WRITE for action in actions):
                     writer.write_entry(
@@ -113,7 +101,7 @@ class AwsAuthzAnalyzer:
                     )
 
     def write_permissions(self, logger: Logger, writer: BaseWriter):
-        principal_graph: nx.DiGraph = self.iam_entities.build_principal_network_graph(logger)
+        principal_graph: nx.DiGraph = self.iam_entities.build_principal_network_graph(logger, self.account_actions)
         for iam_user_path in nx.all_simple_paths(principal_graph, source="START_NODE", target="END_NODE"):
             logger.info("%s", iam_user_path)
 
@@ -122,10 +110,13 @@ class AwsAuthzAnalyzer:
             identity_node = iam_user_path[1]
             if isinstance(identity_node, IAMUser):
                 identity = Identity(
-                    id=identity_node.arn.to_iam_user_arn(), type=IdentityType.IAM_USER, name=identity_node.user_name
+                    id=identity_node.arn.get_arn(), type=IdentityType.IAM_USER, name=identity_node.user_name
                 )
             elif isinstance(identity_node, IAMRole):
                 identity = Identity(id=identity_node.arn, type=IdentityType.IAM_ROLE, name=identity_node.role_name)
+            elif isinstance(identity_node, StmtPrincipal):
+                identity_type = identity_node.principal_type.to_identity_type()
+                identity = Identity(id=identity_node.get_arn(), type=identity_type, name=identity_node.get_name())
             else:
                 raise BaseException(
                     f"Invalid type of 'Identity' node {type(identity_node)} In {iam_user_path}, valid types are IAMUser, IAMRole"

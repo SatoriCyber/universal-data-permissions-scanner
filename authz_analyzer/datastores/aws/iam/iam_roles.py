@@ -68,7 +68,7 @@ def get_iam_roles(session: Session) -> Dict[str, IAMRole]:
             )
             attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
 
-            ret[role_id] = IAMRole(
+            ret[arn] = IAMRole(
                 role_name=role_name,
                 role_id=role_id,
                 arn=arn,
