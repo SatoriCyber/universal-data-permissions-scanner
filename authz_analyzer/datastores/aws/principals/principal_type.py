@@ -36,4 +36,4 @@ class PrincipalType(Enum):
         elif self == PrincipalType.ALL_PRINCIPALS:
             return IdentityType.ALL_USERS
         else:
-            raise BaseException(f"unable to convert from {self} to IdentityType")
+            raise Exception(f"unable to convert from {self} to IdentityType")

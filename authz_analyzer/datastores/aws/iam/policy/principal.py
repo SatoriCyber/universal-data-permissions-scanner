@@ -226,7 +226,7 @@ class StmtPrincipal:
                 principal_metadata=metadata,
             )
 
-        raise BaseException(f"Invalid principal: {principal_str}")
+        raise Exception(f"Invalid principal: {principal_str}")
 
 
 @serde
@@ -249,7 +249,7 @@ class StmtPrincipals:
             if stmt_document_principal == "*":
                 principals = [StmtPrincipal.load_all()]
             else:
-                raise BaseException(f"Invalid principal: {stmt_document_principal}")
+                raise Exception(f"Invalid principal: {stmt_document_principal}")
         elif isinstance(stmt_document_principal, dict):
             for principal_type, principal_value in stmt_document_principal.items():
                 values: List[str] = principal_value if type(principal_value) == list else [str(principal_value)]
@@ -264,9 +264,9 @@ class StmtPrincipals:
                         principals.append(StmtPrincipal.load_service(v))
 
             if len(principals) == 0:
-                raise BaseException(f"Invalid type of principal: {stmt_document_principal}")
+                raise Exception(f"Invalid type of principal: {stmt_document_principal}")
         else:
-            raise BaseException(
+            raise Exception(
                 f"Invalid type of principal: {stmt_document_principal}, type: {type(stmt_document_principal)}"
             )
 

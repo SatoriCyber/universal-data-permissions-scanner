@@ -44,7 +44,7 @@ def main(ctx: click.Context, debug: bool, out: str, out_format: str):
     if out_format == "JSON":
         ctx.obj["FORMAT"] = OutputFormat.MULTI_JSON
     else:
-        raise BaseException("Unknown format")
+        raise Exception("Unknown format")
     # Initializing logger early so we can use it here as needed
     logger = get_logger(debug)
     ctx.obj['LOGGER'] = logger
