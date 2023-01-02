@@ -29,7 +29,5 @@ SELECT role_id           AS identity_id,
        FALSE             as is_admin
 FROM svv_role_grants
 
---WHERE
---    identity_name != 'vigorouslyhelpedguinea'
---  AND
---   identity_name != 'rdsdb';
+WHERE
+   identity_name != 'rdsdb';
