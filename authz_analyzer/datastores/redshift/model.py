@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Dict, Set
+from typing import Dict, List, Set
 
 from authz_analyzer.models import PermissionLevel
 
@@ -56,6 +56,7 @@ class ResourcePermission:
 
     name: str
     permission_level: PermissionLevel
+    db_permissions: List[str]
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -91,4 +92,4 @@ class AuthorizationModel:
     """
 
     identity_to_identities: Dict[DBIdentity, Set[DBIdentity]]
-    identity_to_resource_privilege: Dict[IdentityId, Set[ResourcePermission]]
+    identity_to_resource_privilege: Dict[IdentityId, Dict[str, Set[ResourcePermission]]]

@@ -149,9 +149,9 @@ class RedshiftAuthzAnalyzer:
 
         return results
 
-    def _get_identities_privileges(self) -> Dict[IdentityId, Set[ResourcePermission]]:
+    def _get_identities_privileges(self) -> Dict[IdentityId, Dict[str, Set[ResourcePermission]]]:
         command = (COMMANDS_DIR / "identities_privileges.sql").read_text()
-        results: Dict[IdentityId, Set[ResourcePermission]] = {}
+        results: Dict[IdentityId, Dict[str, Set[ResourcePermission]]] = {}
         for pg_cursor in self.cursors:
             db_name = pg_cursor.connection.__getattribute__("_database")
             rows = RedshiftAuthzAnalyzer._get_rows(pg_cursor, command)
@@ -159,10 +159,21 @@ class RedshiftAuthzAnalyzer:
                 _grantor = row[0]
                 identity = row[1]
                 table_name = row[2]
-                level = PERMISSION_LEVEL_MAP.get(row[3], PermissionLevel.UNKNOWN)
+                db_permission = row[3]
+                level = PERMISSION_LEVEL_MAP.get(db_permission, PermissionLevel.UNKNOWN)
 
-                identity_grants = results.setdefault(identity, set())
-                identity_grants.add(ResourcePermission(db_name + "." + table_name, level))
+                identity_grants_to_table = results.setdefault(identity, dict())
+                full_table_name = db_name + "." + table_name
+                resource_permissions = identity_grants_to_table.setdefault(full_table_name, set())
+                updated: bool = False
+                # create resource permission level
+                for resource_permission in resource_permissions:
+                    if resource_permission.permission_level == level:
+                        updated = True
+                        resource_permission.db_permissions.append(db_permission)
+                # otherwise, update existing permission level
+                if not updated:
+                    resource_permissions.add(ResourcePermission(full_table_name, level, [db_permission]))
 
         return results
 
