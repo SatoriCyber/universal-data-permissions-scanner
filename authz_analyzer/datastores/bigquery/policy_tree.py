@@ -25,13 +25,18 @@ ROLE_TO_PERMISSION = {
     "READER": PermissionLevel.READ,
 }
 
-READ_PERMISSIONS = {"bigquery.dataPolicies.maskedGet", "bigquery.tables.getData"}
+READ_PERMISSIONS = {"bigquery.dataPolicies.maskedGet", "bigquery.tables.getData", "bigquery.jobs.get", "bigquery.models.getData", "bigquery.models.export", "bigquery.readsessions.getData", "bigquery.rowAccessPolicies.getFilteredData", "bigquery.tables.export"}
 WRITE_PERMISSIONS = {
     "bigquery.dataPolicies.maskedSet",
     "bigquery.tables.delete",
     "bigquery.tables.restoreSnapshot",
     "bigquery.tables.updateData",
     "bigquery.transfers.update",
+    "bigquery.jobs.create",
+    "bigquery.jobs.update",
+    "bigquery.models.updateData",
+    "bigquery.tables.deleteSnapshot",
+    "bigquery.models.delete",
 }
 
 
@@ -213,7 +218,9 @@ class IamPolicyNode(PolicyNode):
                 continue  # Role doesn't have permission to big query
             member: str
             for member in binding.members:
-                member_type, member_name, *_ = member.split(":")
+                if member.startswith("deleted:"):
+                    continue
+                member_type, member_name = member.split(":")
                 super().add_member(member_name, permission, role, member_type)
 
 
