@@ -213,7 +213,7 @@ class IamPolicyNode(PolicyNode):
                 continue  # Role doesn't have permission to big query
             member: str
             for member in binding.members:
-                member_type, member_name = member.split(":")
+                member_type, member_name, *_ = member.split(":")
                 super().add_member(member_name, permission, role, member_type)
 
 

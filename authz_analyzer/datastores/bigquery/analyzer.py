@@ -124,8 +124,10 @@ class BigQueryAuthzAnalyzer:
 
     def run(self):
         """Read all tables in all datasets and calculate authz paths"""
+        self.logger.info("Starting BigQuery authorization analysis for project %s", self.service.project_id)
         project_node = self.service.lookup_project(self._resolve_custom_role_to_permissions)
         for dataset_id in self.service.list_datasets():
+            self.logger.info("Scanning dataset %s", dataset_id)
             dataset = self.service.get_dataset(dataset_id)
             dataset_node = DatasetPolicyNode(dataset, self._resolve_custom_role_to_permissions)
             dataset_node.set_parent(project_node)
