@@ -2,12 +2,12 @@
 Handle all the communication with MongoDB Atlas.
 """
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, Set
 
 import requests
 from requests.auth import HTTPDigestAuth
 
-from authz_analyzer.datastores.mongodb.atlas.model import DatabaseUser, OrganizationTeam, OrganizationUser, ProjectTeam
+from authz_analyzer.datastores.mongodb.atlas.model import DatabaseUser, OrganizationRoleName, OrganizationTeam, OrganizationTeamId, OrganizationUser
 from authz_analyzer.datastores.mongodb.atlas.model import Cluster, Organization, Project
 
 
@@ -57,10 +57,10 @@ class AtlasService:
         json_response = self._get_resource(f"orgs/{organization.id}/users")
         return {OrganizationUser.build_from_response(entry) for entry in json_response["results"]}
 
-    def get_all_organization_teams_for_organization(self, organization: Organization):
+    def get_teams_for_organization(self, organization: Organization):
         """Get all organization teams for organization."""
         json_response = self._get_resource(f"orgs/{organization.id}/teams")
-        return {entry["id"]: OrganizationTeam(id=entry["id"], name=entry["name"]) for entry in json_response["results"]}
+        return {entry["id"]: OrganizationTeam.build_from_response(entry) for entry in json_response["results"]}
 
 
     def get_all_projects(self):
@@ -78,10 +78,14 @@ class AtlasService:
         json_response = self._get_resource(f"groups/{project.id}/users")
         return {OrganizationUser.build_from_response(entry) for entry in json_response["results"]}
     
-    def get_all_organization_teams_for_project(self, project: Project):
-        """Get all teams for project."""
+    def get_teams_roles(self, project: Project):
+        """Get all teams and their roles for specific project."""
         json_response = self._get_resource(f"groups/{project.id}/teams")
-        return {entry["teamId"]: ProjectTeam.build_from_response(entry) for entry in json_response["results"]}
+        results: Dict[OrganizationTeamId, Set[OrganizationRoleName]] = {}
+        for entry in json_response["results"]:
+            results[entry["teamId"]] = entry["roleNames"]
+
+        return results
     
     def get_all_clusters_for_project(self, project: Project):
         """Get all clusters for project."""
