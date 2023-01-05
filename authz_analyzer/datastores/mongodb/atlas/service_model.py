@@ -75,3 +75,30 @@ class ClusterEntry(TypedDict):
     connectionStrings: ClusterConnectionStringEntry
 
 
+
+class InheritedRoleEntry(TypedDict):
+    """Inherited role entry."""
+
+    role: str
+    db: str
+
+
+class ResourceEntry(TypedDict):
+    """Resource entry."""
+
+    cluster: bool
+    collection: str
+    db: str
+
+class ActionEntry(TypedDict):
+    """Action entry."""
+
+    action: str
+    resources: List[ResourceEntry]
+
+class CustomRoleEntry(TypedDict):
+    """A custom role entry."""
+
+    roleName: str
+    actions: List[ActionEntry]
+    inheritedRoles: List[InheritedRoleEntry]

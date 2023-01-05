@@ -43,8 +43,8 @@ from pymongo import MongoClient
 
 
 from authz_analyzer.datastores.mongodb.atlas.service import AtlasService
-from authz_analyzer.datastores.mongodb.atlas.model import Cluster, Organization, Project
-from authz_analyzer.datastores.mongodb.atlas.permission_resolvers import PermissionScope, resolve_organization_role, resolve_project_role, resolve_database_role
+from authz_analyzer.datastores.mongodb.atlas.model import Cluster, CustomRole, Organization, Project
+from authz_analyzer.datastores.mongodb.atlas.permission_resolvers import PermissionScope, resolve_organization_role, resolve_permission, resolve_project_role, resolve_database_role
 from authz_analyzer.datastores.mongodb.atlas.model import (
     OrganizationRoleName,
     OrganizationTeam,
@@ -110,24 +110,21 @@ class MongoDBAuthzAnalyzer:
         """Analyze authorization for a user and resource."""
         organizations = self.atlas_service.get_all_organizations()
         for organization in organizations:
+            organization.users = self.atlas_service.get_all_organization_users_for_organization(organization)
+            organization.teams = self.atlas_service.get_teams_for_organization(organization)
             self._handle_organization(organization)
+        
+    
 
     def _handle_organization(self, organization: Organization):
-        organization_users = self.atlas_service.get_all_organization_users_for_organization(organization)
-        organization_teams = self.atlas_service.get_teams_for_organization(organization)
-        
         for project in self.atlas_service.get_all_project_for_organization(organization):
-            self._handle_project(organization, project, organization_users, organization_teams)
+            self._handle_project(organization, project)
     
     def _handle_project(
         self,
         organization: Organization,
         project: Project,
-        organization_users: set[OrganizationUser],
-        organization_teams: Dict[str, OrganizationTeam],
-    ):
-        # path = [AuthzPathElement(id=project.id, name=project.name, type=AuthzPathElementType.PROJECT, note="")]
-        
+    ):  
         for cluster in self.atlas_service.get_all_clusters_for_project(project):
             mongo_client: MongoClient[Any] = MongoClient(
                 cluster.connection_string,
@@ -145,37 +142,47 @@ class MongoDBAuthzAnalyzer:
                 )
                 for collection in collections:
                     asset = Asset(name= db + "." + collection, type=AssetType.COLLECTION)
-                    self._report_organization_users(organization_users, asset=asset, organization=organization, project=project, cluster=cluster)
-                    self._report_project_users(project, asset, path=path, organization_teams=organization_teams)
+                    self._report_organization_users(asset=asset, organization=organization, project=project, cluster=cluster, db=db)
+                    self._report_project_users(project, asset, db=db, organization_teams=organization.teams, cluster=cluster)
                     self._report_db_users(asset=asset, db=db, project=project, cluster=cluster)
 
-    def _report_organization_users(self, organization_users: Set[OrganizationUser] , asset: Asset, organization: Organization, project: Project, cluster: Cluster):
-        path = 
-        for user in organization_users:
+    def _report_organization_users(self, asset: Asset, organization: Organization, project: Project, cluster: Cluster, db: str):
+        path = [
+            AuthzPathElement(id=project.id, name=project.name, type=AuthzPathElementType.PROJECT, note=f"cluster {cluster.name} is part of project {project.name}"),
+            AuthzPathElement(id=cluster.name, name=cluster.name, type=AuthzPathElementType.CLUSTER, note=f"database {db} is part of cluster {cluster.name}"),
+        ]
+        for user in organization.users:
             identity = Identity(id=user.email_address, type=IdentityType.USER, name=user.username)
+            path.insert(0, AuthzPathElement(id=organization.id, name=organization.name, type=AuthzPathElementType.ORGANIZATION, note=f"Organization user {user.username} is part of organization {organization.name}"))
             for role in user.roles:
                 permission_level = resolve_organization_role(role)
                 if permission_level is not None:
-                    role_entry = AuthzPathElement(id=role, name=role, type=AuthzPathElementType.ROLE, note=f"{user.username} has {role} role which grants {permission_level} on {asset.name}")
-                    path.append(role_entry)
-                    revered_path = list(reversed(path))
-                    entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=revered_path)
+                    role_entry = AuthzPathElement(id=role, name=role, type=AuthzPathElementType.ROLE, note=f"{user.username} has {role} role which grants {permission_level} access on {asset.name}")
+                    path.insert(0, role_entry)
+                    entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
                     self.writer.write_entry(entry)
-                    path.pop()
+                    path.pop(0)
+            path.pop(0)
     
     def _report_project_users(
         self,
         project: Project,
         asset: Asset,
-        path: List[AuthzPathElement],
+        cluster: Cluster,
+        db: str, 
         organization_teams: Dict[str, OrganizationTeam],
     ):
+        path = [
+            AuthzPathElement(id=cluster.name, name=cluster.name, type=AuthzPathElementType.CLUSTER, note=f"database {db} is part of cluster {cluster.name}"),
+        ]
         users = self.atlas_service.get_all_organization_users_for_project(project)
         project_teams_roles = self.atlas_service.get_teams_roles(project)
         for user in users:
             identity = Identity(id=user.email_address, type=IdentityType.USER, name=user.username)
             for role in user.roles:
+                path.insert(0, AuthzPathElement(id=project.id, name=project.name, type=AuthzPathElementType.PROJECT, note=f"User {user.username} has {role} role defined at {project.name}"))
                 self._report_entry_project_user(identity, asset, role, path)
+                path.pop(0)
             for team_id in user.teams_ids:
                 team_roles = project_teams_roles.get(team_id)
                 if team_roles is not None:
@@ -196,15 +203,16 @@ class MongoDBAuthzAnalyzer:
     ):
         permission_level = resolve_project_role(role)
         if permission_level is not None:
-            role_entry = AuthzPathElement(id=role, name=role, type=AuthzPathElementType.ROLE, note="")
-            path.append(role_entry)
-            revered_path = list(reversed(path))
-            entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=revered_path)
-            path.pop()
+            role_entry = AuthzPathElement(id=role, name=role, type=AuthzPathElementType.ROLE, note=f"User {identity.name} has {role} role which grants {permission_level} access on {asset.name}")
+            path.insert(0, role_entry)
+            entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
             self.writer.write_entry(entry)
+            path.pop(0)
+            
 
     def _report_db_users(self, project: Project, asset: Asset, db: str, cluster: Cluster):
         db_users = self.atlas_service.get_all_db_users_for_project(project)
+        project_custom_roles = self.atlas_service.get_custom_roles_by_project(project)
         for db_user in db_users:
             if len(db_user.scopes) != 0:
                 db_user_scopes = {scope.name for scope in db_user.scopes}
@@ -212,13 +220,14 @@ class MongoDBAuthzAnalyzer:
                     continue
             identity = Identity(id=db_user.name, type=IdentityType.USER, name=db_user.name)
             for role in db_user.roles:
-                self._report_entry_db_user(identity, asset, role, db)
+                self._report_entry_db_user(identity, asset, role, db, project_custom_roles)
 
-    def _report_entry_db_user(self, identity: Identity, asset: Asset, role: DatabaseRole, db: str):
+    def _report_entry_db_user(self, identity: Identity, asset: Asset, role: DatabaseRole, db: str, project_custom_roles: dict[Any, Set[CustomRole]]):
         role_map = resolve_database_role(role.name)
+        
         if role_map is not None:
             permission_level, scope = role_map
-            path = [AuthzPathElement(id=role.name, name=role.name, type=AuthzPathElementType.ROLE, note="")]
+            path = [AuthzPathElement(id=role.name, name=role.name, type=AuthzPathElementType.ROLE, note=f"DB user {identity.name} has {role.name} role which grants {permission_level} access on {asset.name}")]
             entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
             if scope == PermissionScope.PROJECT:
                 self.writer.write_entry(entry)
@@ -229,3 +238,26 @@ class MongoDBAuthzAnalyzer:
                     self.writer.write_entry(entry)
                 elif role.collection == asset.name:
                     self.writer.write_entry(entry)
+        else:
+            custom_roles = project_custom_roles.get(role.name, set())
+            for custom_role in custom_roles:
+                if custom_role.inherited_role is not None:
+                    role_map = resolve_database_role(custom_role.inherited_role.role)
+                    if role_map is not None:
+                        permission_level, scope = role_map
+                        path = [AuthzPathElement(id=custom_role.name, name=custom_role.name, type=AuthzPathElementType.ROLE, note=f"DB user {identity.name} has {custom_role.name} role which grants {permission_level} access on {asset.name}")]
+                        entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
+                        if scope == PermissionScope.PROJECT:
+                            self.writer.write_entry(entry)
+                        elif scope == PermissionScope.DATABASE and custom_role.inherited_role.db == db:
+                            self.writer.write_entry(entry)
+                if custom_role.action is not None:
+                    permission_level = resolve_permission(custom_role.action.permission)
+                    if permission_level is not None:
+                        path = [AuthzPathElement(id=custom_role.name, name=custom_role.name, type=AuthzPathElementType.ROLE, note=f"DB user {identity.name} has {custom_role.name} role which grants {permission_level} access on {asset.name}")]
+                        entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
+                        if custom_role.action.resource.database is not None and custom_role.action.resource.database == db:
+                            if custom_role.action.resource.collection == '':
+                                self.writer.write_entry(entry)
+                            elif custom_role.action.resource.collection == asset.name:
+                                self.writer.write_entry(entry)

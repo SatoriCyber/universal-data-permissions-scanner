@@ -2,6 +2,7 @@
 
 
 from enum import Enum, auto
+from authz_analyzer.datastores.mongodb.atlas.model import Permission
 from authz_analyzer.models.model import PermissionLevel
 
 
@@ -36,18 +37,19 @@ BUILT_IN_ROLE_MAPPING_DATABASE = {
     "readWrite": (PermissionLevel.WRITE, PermissionScope.COLLECTION),
 }
 
-PRIVILEGE_MAPPING = {
-    "find": PermissionLevel.READ,
-    "insert": PermissionLevel.WRITE,
-    "remove": PermissionLevel.WRITE,
-    "update": PermissionLevel.WRITE,
-    "changeStream": PermissionLevel.READ,
-    "dropCollection": PermissionLevel.WRITE,
-    "dropDatabase": PermissionLevel.WRITE,
-    "listCollections": PermissionLevel.READ,
-    "listIndexes": PermissionLevel.READ,
-    "listDatabases": PermissionLevel.READ,
-    "anyAction": PermissionLevel.FULL,
+ACTION_MAPPING = {
+    Permission.FIND: PermissionLevel.READ,
+    Permission.INSERT: PermissionLevel.WRITE,
+    Permission.REMOVE: PermissionLevel.WRITE,
+    Permission.UPDATE: PermissionLevel.WRITE,
+    Permission.DROP_COLLECTION: PermissionLevel.WRITE,
+    Permission.DROP_DATABASE: PermissionLevel.WRITE,
+    Permission.RENAME_COLLECTION_SAME_DB: PermissionLevel.READ,
+    Permission.LIST_COLLECTIONS: PermissionLevel.READ,
+    Permission.SQL_GET_SCHEMA: PermissionLevel.READ,
+    Permission.SQL_SET_SCHEMA: PermissionLevel.WRITE,
+    Permission.OUT_TO_S3: PermissionLevel.READ,
+
 }
 
 
@@ -62,3 +64,7 @@ def resolve_project_role(role: str):
 def resolve_database_role(role: str):
     """Resolve the permission level and scope for a given database role."""
     return BUILT_IN_ROLE_MAPPING_DATABASE.get(role)
+
+def resolve_permission(permission: Permission):
+    """Resolve MongoDB permission to permission level."""
+    return ACTION_MAPPING.get(permission)

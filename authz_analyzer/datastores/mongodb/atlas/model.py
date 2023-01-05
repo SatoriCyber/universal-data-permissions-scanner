@@ -1,83 +1,20 @@
 """Translate the MongoDB Atlas API to the model used by the analyzer."""
+from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Optional, Set
+from typing import Dict, Optional, Set
 
 from authz_analyzer.datastores.mongodb.atlas.service_model import (
     ClusterEntry,
+    CustomRoleEntry,
     DataBaseUserEntry,
     OrganizationTeamEntry,
     OrganizationUserEntry,
 )
 
-
-@dataclass
-class Organization:
-    """MongoDB organization."""
-
-    name: str
-    id: str
-
-    def __hash__(self) -> int:
-        return hash(self.id)
-
-
-@dataclass
-class Project:
-    """Single MongoDB project."""
-
-    id: str
-    name: str
-
-    def __hash__(self) -> int:
-        return hash(self.id)
-
-
-@dataclass
-class Cluster:
-    """Single MongoDB cluster."""
-
-    id: str
-    name: str
-    connection_string: str
-
-    def __hash__(self) -> int:
-        return hash(self.id)
-
-    @classmethod
-    def build_from_response(cls, response: ClusterEntry):
-        """Build cluster from response."""
-        # The connection string is built from two parts, we need only the first one.
-        connection_string = response["connectionStrings"]["standardSrv"].split(',')[0]
-        return Cluster(id=response["id"], connection_string=connection_string, name=response["name"])
-
-
 OrganizationRoleName = str
 OrganizationTeamId = str
-
-
-@dataclass
-class DatabaseRole:
-    """Database role, used by MongoDB and not Atlas."""
-
-    name: str
-    database_name: str
-    collection: Optional[str]
-
-    def __hash__(self) -> int:
-        return hash(self.name) + hash(self.database_name)
-
-
-@dataclass
-class OrganizationRole:
-    """Define an Atlas organization role."""
-
-    id: str
-    name: str
-
-    def __hash__(self) -> int:
-        return hash(self.id)
 
 
 @dataclass
@@ -124,6 +61,78 @@ class OrganizationTeam:
         return cls(id=entry["id"], name=entry["name"])
 
 
+@dataclass
+class Organization:
+    """MongoDB organization."""
+
+    name: str
+    id: str
+    users: Set[OrganizationUser]
+    teams: Dict[OrganizationTeamId, OrganizationTeam]
+
+    @classmethod
+    def new(cls, name: str, org_id: str):
+        return cls(name, org_id, set(), {})
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+
+@dataclass
+class Project:
+    """Single MongoDB project."""
+
+    id: str
+    name: str
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+
+@dataclass
+class Cluster:
+    """Single MongoDB cluster."""
+
+    id: str
+    name: str
+    connection_string: str
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    @classmethod
+    def build_from_response(cls, response: ClusterEntry):
+        """Build cluster from response."""
+        # The connection string is built from two parts, we need only the first one.
+        connection_string = response["connectionStrings"]["standardSrv"].split(',')[0]
+        return Cluster(id=response["id"], connection_string=connection_string, name=response["name"])
+
+
+
+@dataclass
+class DatabaseRole:
+    """Database role, used by MongoDB and not Atlas."""
+
+    name: str
+    database_name: str
+    collection: Optional[str]
+
+    def __hash__(self) -> int:
+        return hash(self.name) + hash(self.database_name)
+
+
+@dataclass
+class OrganizationRole:
+    """Define an Atlas organization role."""
+
+    id: str
+    name: str
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+
+
 class DatabaseUserScopeType(Enum):
     CLUSTER = auto()
 
@@ -160,3 +169,82 @@ class DatabaseUser:
             collection_name = role.get("collectionName")
             roles.add(DatabaseRole(role["roleName"], role["databaseName"], collection_name))
         return cls(entry["username"], roles, scopes)
+
+
+class Permission(Enum):
+    """Permission allowed by a role."""
+
+    FIND = auto() 
+    INSERT = auto() 
+    REMOVE = auto()
+    UPDATE = auto()
+    DROP_COLLECTION = auto()
+    DROP_DATABASE = auto()
+    RENAME_COLLECTION_SAME_DB = auto()
+    LIST_COLLECTIONS = auto()
+    SQL_GET_SCHEMA = auto()
+    SQL_SET_SCHEMA = auto()
+    OUT_TO_S3 = auto()
+
+
+@dataclass
+class Resource:
+    collection: str
+    database: str
+
+    def __hash__(self) -> int:
+        return  hash(self.collection) + hash(self.database)
+
+
+@dataclass
+class Action:
+    """List of resources and the permission granted on them"""
+    resource: Resource
+    permission: Permission
+
+    def __hash__(self) -> int:
+        return hash(self.resource) + hash(self.permission)
+
+
+@dataclass
+class InheritedRole:
+    """Define an inherited role."""
+
+    db: str
+    role: str
+
+    def __hash__(self) -> int:
+        return hash(self.db) + hash(self.role)
+
+@dataclass
+class CustomRole:
+    """Define a custom role."""
+
+    name: str
+    action: Optional[Action]
+    inherited_role: Optional[InheritedRole]
+
+
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+    @staticmethod
+    def build_custom_roles_from_response(entry: CustomRoleEntry) -> Set[CustomRole]:
+        """Build set of custom roles from the response.
+        
+        Instead of having a single custom roles with all the action and inherited roles, we split them into multiple custom roles.
+        """
+        custom_roles: Set[CustomRole] = set()
+        for action in entry["actions"]:
+            try:
+                permission = Permission[action["action"]]
+            except KeyError: # ignore actions that doesn't access data, we don't need them
+                continue
+            for resource in action["resources"]:
+                resolved_resource = Resource(collection=resource["collection"], database=resource["db"])
+                custom_roles.add(CustomRole(name = entry["roleName"], action = Action(resource=resolved_resource, permission=permission), inherited_role = None))
+            
+        for inherited_role in entry["inheritedRoles"]:
+            custom_roles.add(CustomRole(name = entry["roleName"], action = None, inherited_role = InheritedRole(db=inherited_role["db"], role=inherited_role["role"])))
+
+        return custom_roles

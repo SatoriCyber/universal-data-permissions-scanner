@@ -2,14 +2,14 @@
 Handle all the communication with MongoDB Atlas.
 """
 from dataclasses import dataclass
-from typing import Any, Dict, Set
+from typing import Any, Dict, List, Set
 
 import requests
 from requests.auth import HTTPDigestAuth
 
-from authz_analyzer.datastores.mongodb.atlas.model import DatabaseUser, OrganizationRoleName, OrganizationTeam, OrganizationTeamId, OrganizationUser
+from authz_analyzer.datastores.mongodb.atlas.model import CustomRole, DatabaseUser, OrganizationRoleName, OrganizationTeam, OrganizationTeamId, OrganizationUser
 from authz_analyzer.datastores.mongodb.atlas.model import Cluster, Organization, Project
-
+from authz_analyzer.datastores.mongodb.atlas.service_model import CustomRoleEntry
 
 
 BASE_API = "https://cloud.mongodb.com/api/atlas/v1.0/"
@@ -50,7 +50,7 @@ class AtlasService:
             Set[Organization]: Set of organizations.
         """
         json_response = self._get_resource("orgs")
-        return {Organization(name=org["name"], id=org["id"]) for org in json_response["results"]}
+        return {Organization.new(name=org["name"], org_id=org["id"]) for org in json_response["results"]}
     
     def get_all_organization_users_for_organization(self, organization: Organization):
         """Get all organization users for organization."""
@@ -97,3 +97,8 @@ class AtlasService:
         json_response = self._get_resource(f"groups/{project.id}/databaseUsers")
         return {DatabaseUser.build_from_response(entry) for entry in json_response["results"]}
 
+
+    def get_custom_roles_by_project(self, project: Project) -> Dict[str, Set[CustomRole]]:
+        """Get all custom roles for project."""
+        json_response: List[CustomRoleEntry] = self._get_resource(f"groups/{project.id}/customDBRoles/roles") # type: ignore # looks like a bug in Atlas API
+        return {entry["roleName"]: CustomRole.build_custom_roles_from_response(entry) for entry in json_response}
