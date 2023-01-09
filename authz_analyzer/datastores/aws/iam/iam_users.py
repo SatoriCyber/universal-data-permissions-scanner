@@ -4,20 +4,21 @@ from typing import Dict, List, Tuple
 from boto3 import Session
 from serde import serde, field, from_dict
 
-from authz_analyzer.datastores.aws.iam.policy import PolicyDocument, PolicyDocumentGetterBase, UserPolicy
+from authz_analyzer.datastores.aws.iam.policy import PolicyDocument, UserPolicy
+from authz_analyzer.datastores.aws.permissions_resolver.identity_to_resource_line import IdentityNodeBase
 from authz_analyzer.datastores.aws.iam.policy.principal import StmtPrincipal
 from authz_analyzer.datastores.aws.utils.pagination import paginate_response_list
 
 
 @serde
 @dataclass
-class IAMUser(PolicyDocumentGetterBase):
+class IAMUser(IdentityNodeBase):
     user_name: str
     user_id: str
     path: str
     user_policies: List[UserPolicy]
     attached_policies_arn: List[str]
-    arn: StmtPrincipal = field(
+    identity_principal: StmtPrincipal = field(
         deserializer=StmtPrincipal.from_policy_principal_str,
         serializer=StmtPrincipal.to_policy_principal_str,
     )
@@ -26,18 +27,21 @@ class IAMUser(PolicyDocumentGetterBase):
         return self.user_id == other.user_id
 
     def __repr__(self):
-        return self.arn.get_arn()
+        return self.identity_principal.get_arn()
 
     def __hash__(self):
         return hash(self.user_id)
 
-    @property
-    def inline_policy_documents_and_names(self) -> List[Tuple['PolicyDocument', str]]:
-        return list(map(lambda x: (x.policy_document, x.policy_name), self.user_policies))
+    # impl IdentityNodeBase
+    def get_stmt_principal(self) -> StmtPrincipal:
+        return self.identity_principal
 
-    @property
-    def parent_arn(self) -> str:
-        return self.arn.get_arn()
+    # IdentityPoliciesNodeBase
+    def get_attached_policies_arn(self) -> List[str]:
+        return self.attached_policies_arn
+
+    def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
+        return list(map(lambda x: (x.policy_document, x.policy_name), self.user_policies))
 
 
 def get_iam_users(session: Session) -> Dict[str, IAMUser]:
@@ -64,11 +68,11 @@ def get_iam_users(session: Session) -> Dict[str, IAMUser]:
             iam_client.list_attached_user_policies, 'AttachedPolicies', UserName=user_name, PathPrefix=path
         )
         attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
-        user_principal_arn = StmtPrincipal.load_aws(arn)
+        user_principal_arn = StmtPrincipal.load_from_iam_user(arn)
         ret[arn] = IAMUser(
             user_name=user_name,
             user_id=user_id,
-            arn=user_principal_arn,
+            identity_principal=user_principal_arn,
             path=path,
             user_policies=user_policies,
             attached_policies_arn=attached_policies_arn,

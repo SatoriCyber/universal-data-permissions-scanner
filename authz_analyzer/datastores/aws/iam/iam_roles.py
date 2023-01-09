@@ -4,14 +4,56 @@ from typing import Dict, List, Tuple
 from boto3 import Session
 from serde import serde, from_dict
 
-from authz_analyzer.datastores.aws.iam.policy import PolicyDocument, PolicyDocumentGetterBase
+from authz_analyzer.models.model import AuthzPathElementType
+from authz_analyzer.datastores.aws.iam.policy import PolicyDocument
+from authz_analyzer.datastores.aws.iam.policy.principal import StmtPrincipal
+from authz_analyzer.datastores.aws.permissions_resolver.identity_to_resource_nodes_base import (
+    PathRoleIdentityNodeBase,
+)
+from authz_analyzer.datastores.aws.services.service_resource_base import ServiceResourceBase
 from authz_analyzer.datastores.aws.iam.role.role_policy import RolePolicy
 from authz_analyzer.datastores.aws.utils.pagination import paginate_response_list
 
 
+@dataclass
+class IAMRoleSession(PathRoleIdentityNodeBase):
+    role: 'IAMRole'
+    session_name: str
+
+    def __repr__(self):
+        return f"{self.role.__repr__()} + Session: {self.session_name}"
+
+    def __eq__(self, other):
+        return self.role.__eq__(other.role) and self.session_name == other.session_name
+
+    def __hash__(self):
+        return hash(self.role.__hash__()) + hash(self.session_name)
+
+    # impl PathNodeBase
+    def get_path_type(self) -> AuthzPathElementType:
+        return AuthzPathElementType.ROLE_SESSION
+
+    def get_path_name(self) -> str:
+        return f"{self.role.role_name}/{self.session_name}"
+
+    def get_path_arn(self) -> str:
+        return self.role.arn
+
+    # impl IdentityNodeBase
+    def get_stmt_principal(self) -> StmtPrincipal:
+        return StmtPrincipal.load_from_iam_role_session(self.role.get_role_session_arn(self.session_name))
+
+    # impl IdentityPoliciesNodeBase
+    def get_attached_policies_arn(self) -> List[str]:
+        return self.role.get_attached_policies_arn()
+
+    def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
+        return self.role.get_inline_policies_and_names()
+
+
 @serde
 @dataclass
-class IAMRole(PolicyDocumentGetterBase):
+class IAMRole(PathRoleIdentityNodeBase, ServiceResourceBase):
     role_id: str
     role_name: str
     arn: str
@@ -20,22 +62,46 @@ class IAMRole(PolicyDocumentGetterBase):
     role_policies: List[RolePolicy]
     attached_policies_arn: List[str]
 
+    def __repr__(self):
+        return self.arn
+
     def __eq__(self, other):
         return self.role_id == other.role_id
 
     def __hash__(self):
         return hash(self.role_id)
 
-    def __repr__(self):
+    def get_role_session_arn(self, session_name) -> str:
+        role_prefix_arn = self.arn.split(":role/", 1)[0]
+        return f"{role_prefix_arn}:assumed-role/{self.role_name}/{session_name}"
+
+    # impl ServiceResourceBase
+    def get_resource_arn(self) -> str:
         return self.arn
 
-    @property
-    def inline_policy_documents_and_names(self) -> List[Tuple['PolicyDocument', str]]:
+    def get_resource_name(self) -> str:
+        return self.role_name
+
+    # impl PathNodeBase
+    def get_path_type(self) -> AuthzPathElementType:
+        return AuthzPathElementType.IAM_ROLE
+
+    def get_path_name(self) -> str:
+        return self.role_name
+
+    def get_path_arn(self) -> str:
+        return self.arn
+
+    # impl IdentityNodeBase
+    def get_stmt_principal(self) -> StmtPrincipal:
+        return StmtPrincipal.load_from_iam_role(self.arn)
+
+    # impl IdentityPoliciesNodeBase
+    def get_attached_policies_arn(self) -> List[str]:
+        return self.attached_policies_arn
+
+    def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
         return list(map(lambda x: (x.policy_document, x.policy_name), self.role_policies))
-
-    @property
-    def parent_arn(self) -> str:
-        return self.arn
 
 
 def get_iam_roles(session: Session) -> Dict[str, IAMRole]:

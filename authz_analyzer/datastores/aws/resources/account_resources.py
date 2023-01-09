@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Set, Type
 from boto3 import Session
 from serde import field, from_dict, serde, to_dict
 
+from authz_analyzer.datastores.aws.iam.iam_entities import IAMEntities
 from authz_analyzer.datastores.aws.services import (
     ServiceResourceBase,
     ServiceResourceType,
@@ -36,19 +37,24 @@ def from_dict_deserializer(
 @serde
 @dataclass
 class AwsAccountResources:
-    account_resources: Dict[ServiceResourceType, List[ServiceResourceBase]] = field(
+    account_resources: Dict[ServiceResourceType, Set[ServiceResourceBase]] = field(
         serializer=to_dict_serializer, deserializer=from_dict_deserializer
     )
 
     @classmethod
     def load(
-        cls, logger: Logger, aws_account_id: str, session: Session, service_types_to_load: Set[ServiceResourceType]
+        cls,
+        logger: Logger,
+        aws_account_id: str,
+        iam_entities: IAMEntities,
+        session: Session,
+        service_types_to_load: Set[ServiceResourceType],
     ):
         logger.info(f"Start pulling AWS account {aws_account_id} with resources {service_types_to_load}...")
-        account_resources: Dict[ServiceResourceType, List[ServiceResourceBase]] = dict()
+        account_resources: Dict[ServiceResourceType, Set[ServiceResourceBase]] = dict()
         for service_type_to_load in service_types_to_load:
             logger.info(f"Start pulling AWS account resources from type {service_type_to_load.get_service_name()}")
-            ret: List[ServiceResourceBase] = service_type_to_load.load_service_resources_from_session(logger, session)
+            ret: Set[ServiceResourceBase] = service_type_to_load.load_service_resources(logger, session, iam_entities)
             account_resources[service_type_to_load] = ret
 
         return cls(account_resources=account_resources)

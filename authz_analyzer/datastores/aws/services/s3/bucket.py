@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional, Set
 
 from boto3 import Session
 from botocore.exceptions import ClientError
@@ -10,6 +10,7 @@ from authz_analyzer.datastores.aws.iam.policy import PolicyDocument
 from authz_analyzer.datastores.aws.iam.public_block_access_config import PublicAccessBlockConfiguration
 from authz_analyzer.datastores.aws.services.s3.bucket_acl import S3BucketACL
 from authz_analyzer.datastores.aws.services import ServiceResourceBase
+from authz_analyzer.datastores.aws.permissions_resolver.identity_to_resource_line import ResourceNodeBase
 from authz_analyzer.models.model import AssetType
 
 
@@ -18,14 +19,14 @@ S3_RESOURCE_SERVICE_PREFIX = "arn:aws:s3:::"
 
 @serde
 @dataclass
-class S3Bucket(ServiceResourceBase):
+class S3Bucket(ResourceNodeBase, ServiceResourceBase):
     name: str
     acl: S3BucketACL
     public_access_block_config: Optional[PublicAccessBlockConfiguration] = field(default=None, skip_if_default=True)
     policy_document: Optional[PolicyDocument] = field(default=None, skip_if_default=True)
 
     def __repr__(self):
-        return self.name
+        return f"S3Bucket({self.name})"
 
     def __eq__(self, other):
         return self.name == other.name
@@ -39,15 +40,18 @@ class S3Bucket(ServiceResourceBase):
     def get_resource_name(self) -> str:
         return self.name
 
+    def get_resource_policy(self) -> Optional[PolicyDocument]:
+        return self.policy_document
+
     def get_asset_type(self) -> AssetType:
         return AssetType.S3_BUCKET
 
 
-def get_buckets(session: Session) -> List[ServiceResourceBase]:
+def get_buckets(session: Session) -> Set[ServiceResourceBase]:
     s3_client = session.client('s3')
     response = s3_client.list_buckets()
     buckets = response['Buckets']
-    ret: List[ServiceResourceBase] = []
+    ret: Set[ServiceResourceBase] = set()
     for bucket in buckets:
         bucket_name = bucket['Name']
         policy_document = None
@@ -74,7 +78,7 @@ def get_buckets(session: Session) -> List[ServiceResourceBase]:
             else:
                 raise error
 
-        ret.append(
+        ret.add(
             S3Bucket(
                 name=bucket_name,
                 policy_document=policy_document,
