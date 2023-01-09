@@ -1,13 +1,15 @@
-import re
 from dataclasses import dataclass
 from enum import Enum, auto
 from logging import Logger
-from typing import List, Set
+from typing import List, Set, Optional
 
 from serde import serde
 
-from authz_analyzer.datastores.aws.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
-from authz_analyzer.datastores.aws.services import ServiceActionBase, ServiceActionsResolverBase
+from authz_analyzer.datastores.aws.services import (
+    ServiceActionBase,
+    ServiceActionsResolverBase,
+    ResolvedActionsSingleStmt,
+)
 from authz_analyzer.models import PermissionLevel
 
 S3_ACTION_SERVICE_PREFIX = "s3:"
@@ -47,37 +49,43 @@ class S3Action(ServiceActionBase):
 
 
 @dataclass
+class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
+    stmt_relative_id_objects_regexes: List[str]
+    actions: Set[S3Action]
+
+    @property
+    def resolved_stmt_actions(self) -> Set[ServiceActionBase]:
+        return self.actions  # type: ignore[return-value]
+
+    def add(self, actions: Set[S3Action], stmt_relative_id_objects_regex: Optional[str]):
+        if stmt_relative_id_objects_regex is not None:
+            self.stmt_relative_id_objects_regexes.append(stmt_relative_id_objects_regex)
+        self.actions = self.actions.union(actions)
+
+    @classmethod
+    def load(cls, actions: Set[S3Action], stmt_relative_id_objects_regex: Optional[str]) -> 'ResolvedS3BucketActions':
+        stmt_relative_id_objects_regexes = []
+        if stmt_relative_id_objects_regex is not None:
+            stmt_relative_id_objects_regexes.append(stmt_relative_id_objects_regex)
+        return cls(actions=actions, stmt_relative_id_objects_regexes=stmt_relative_id_objects_regexes)
+
+
+@dataclass
 class S3ServiceActionsResolver(ServiceActionsResolverBase):
     resolved_actions: Set[S3Action]
-
-    def is_empty(self) -> bool:
-        return len(self.resolved_actions) == 0
 
     def get_resolved_actions(self) -> Set[ServiceActionBase]:
         return self.resolved_actions  # type: ignore[return-value]
 
-    @staticmethod
-    def resolve_actions(stmt_regex: str, service_actions: List[S3Action]) -> Set[S3Action]:
-        # actions are case insensitive
-        regex = re.compile(fix_stmt_regex_to_valid_regex(stmt_regex, with_case_insensitive=True))
-        service_actions_matches: List[S3Action] = [
-            s for s in service_actions if regex.match(s.get_action_name()) is not None
-        ]
-        return set(service_actions_matches)
-
     @classmethod
-    def load(
-        cls, _logger: Logger, stmt_regexes: List[str], service_actions: List[S3Action]
+    def load_from_single_stmt(
+        cls, _logger: Logger, stmt_regexes: List[str], service_actions: List[ServiceActionBase]
     ) -> 'ServiceActionsResolverBase':
-        resolved_actions: Set[S3Action] = set()
-        for stmt_regex in stmt_regexes:
-            resolved_actions = resolved_actions.union(
-                S3ServiceActionsResolver.resolve_actions(stmt_regex, service_actions)
-            )
-
-        return cls(
-            resolved_actions=resolved_actions,
+        resolved_actions = ServiceActionsResolverBase.resolve_actions_from_single_stmt_regexes(
+            stmt_regexes, service_actions
         )
+        s3_resolved_actions: Set[S3Action] = set([s for s in resolved_actions if isinstance(s, S3Action)])
+        return cls(resolved_actions=s3_resolved_actions)
 
 
 s3_actions: List[ServiceActionBase] = [

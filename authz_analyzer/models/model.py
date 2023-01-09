@@ -80,6 +80,7 @@ class AuthzPathElementType(Enum):
     SAML_SESSION = auto()  # AWS
     FEDERATED_USER = auto()  # AWS
     ALL_USERS = auto()  # AWS
+    RESOURCE_POLICY = auto()  # AWS
 
     def __str__(self) -> str:
         return self.name

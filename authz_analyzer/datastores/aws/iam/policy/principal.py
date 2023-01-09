@@ -6,13 +6,14 @@ from serde import field, serde
 
 from authz_analyzer.datastores.aws.principals.principal_type import PrincipalType
 
-regex_saml_provider = re.compile(r"^arn:aws:iam::([0-9]+):saml-provider/(.+)$")
-regex_role_name = re.compile(r"^arn:aws:iam::([0-9]+):role/(.+)$")
-regex_iam_user = re.compile(r"^arn:aws:iam::([0-9]+):user/(.+)$")
-regex_federated_user = re.compile(r"^arn:aws:iam::([0-9]+):federated-user/(.+)$")
-regex_role_session = re.compile(r"^arn:aws:sts::([0-9]+):assumed-role/(.+)/(.+)$")
-regex_account_id = re.compile(r"^([0-9]+)$")
-regex_arn_account_id = re.compile(r"^arn:aws:iam::([0-9]+):root$")
+
+regex_saml_provider = re.compile(r"arn:aws:iam::([0-9]+):saml-provider/(.+)$")
+regex_role_name = re.compile(r"arn:aws:iam::([0-9]+):role/(.+)$")
+regex_iam_user = re.compile(r"arn:aws:iam::([0-9]+):user/(.+)$")
+regex_federated_user = re.compile(r"arn:aws:iam::([0-9]+):federated-user/(.+)$")
+regex_role_session = re.compile(r"arn:aws:sts::([0-9]+):assumed-role/(.+)/(.+)$")
+regex_account_id = re.compile(r"([0-9]+)$")
+regex_arn_account_id = re.compile(r"arn:aws:iam::([0-9]+):root$")
 
 
 @serde
@@ -24,7 +25,7 @@ class StmtPrincipal:
     principal_metadata: Optional[Dict[str, str]] = field(skip=True)
 
     def __repr__(self):
-        return self.get_arn()
+        return f"StmtPrincipal({self.get_arn()})"
 
     def __eq__(self, other):
         return self.get_arn() == other.get_arn()
@@ -34,7 +35,7 @@ class StmtPrincipal:
 
     @classmethod
     def from_policy_principal_str(cls, policy_principal_str: str) -> "StmtPrincipal":
-        return StmtPrincipal.load_aws(policy_principal_str)
+        return StmtPrincipal.load_from_stmt_aws(policy_principal_str)
 
     def to_policy_principal_str(self) -> str:
         return self.policy_principal_str
@@ -56,7 +57,7 @@ class StmtPrincipal:
     def is_no_entity_principal(
         self,
     ) -> bool:
-        return (
+        is_no_entity = (
             # currently we don't support resolving format saml/web identity/canonical format
             # so, we treats it as no entity object (like aws service/federated etc..)
             self.principal_type == PrincipalType.WEB_IDENTITY_SESSION
@@ -66,6 +67,7 @@ class StmtPrincipal:
             or self.principal_type == PrincipalType.AWS_SERVICE
             or self.principal_type == PrincipalType.ALL_PRINCIPALS
         )
+        return is_no_entity
 
     def is_all_principals(self) -> bool:
         return self.principal_type == PrincipalType.ALL_PRINCIPALS
@@ -79,9 +81,10 @@ class StmtPrincipal:
         )
 
     def is_role_principal(self) -> bool:
-        return (
-            self.principal_type == PrincipalType.IAM_ROLE or self.principal_type == PrincipalType.ASSUMED_ROLE_SESSION
-        )
+        return self.principal_type == PrincipalType.IAM_ROLE
+
+    def is_role_session_principal(self) -> bool:
+        return self.principal_type == PrincipalType.ASSUMED_ROLE_SESSION
 
     def contains(self, other: 'StmtPrincipal') -> bool:
         if self.principal_type == PrincipalType.ALL_PRINCIPALS:
@@ -100,7 +103,28 @@ class StmtPrincipal:
         return False
 
     @classmethod
-    def load_all(cls) -> "StmtPrincipal":
+    def load_from_iam_user(cls, principal_arn: str) -> "StmtPrincipal":
+        ret: StmtPrincipal = StmtPrincipal.load_from_stmt_aws(principal_arn)
+        if ret.principal_type != PrincipalType.IAM_USER:
+            raise Exception(f"Failed to load StmtPrincipal iam user from arn {principal_arn}")
+        return ret
+
+    @classmethod
+    def load_from_iam_role(cls, principal_arn: str) -> "StmtPrincipal":
+        ret: StmtPrincipal = StmtPrincipal.load_from_stmt_aws(principal_arn)
+        if ret.principal_type != PrincipalType.IAM_ROLE:
+            raise Exception(f"Failed to load StmtPrincipal iam role from arn {principal_arn}")
+        return ret
+
+    @classmethod
+    def load_from_iam_role_session(cls, principal_arn: str) -> "StmtPrincipal":
+        ret: StmtPrincipal = StmtPrincipal.load_from_stmt_aws(principal_arn)
+        if ret.principal_type != PrincipalType.ASSUMED_ROLE_SESSION:
+            raise Exception(f"Failed to load StmtPrincipal iam role session from arn {principal_arn}")
+        return ret
+
+    @classmethod
+    def load_from_stmt_all(cls) -> "StmtPrincipal":
         return StmtPrincipal(
             principal_type=PrincipalType.ALL_PRINCIPALS,
             name="All principals",
@@ -109,7 +133,7 @@ class StmtPrincipal:
         )
 
     @classmethod
-    def load_canonical_user(cls, principal_str: str) -> "StmtPrincipal":
+    def load_from_stmt_canonical_user(cls, principal_str: str) -> "StmtPrincipal":
         return StmtPrincipal(
             principal_type=PrincipalType.CANONICAL_USER,
             name=principal_str,
@@ -118,7 +142,7 @@ class StmtPrincipal:
         )
 
     @classmethod
-    def load_service(cls, principal_str: str) -> "StmtPrincipal":
+    def load_from_stmt_service(cls, principal_str: str) -> "StmtPrincipal":
         return StmtPrincipal(
             principal_type=PrincipalType.AWS_SERVICE,
             name=principal_str,
@@ -127,7 +151,7 @@ class StmtPrincipal:
         )
 
     @classmethod
-    def load_federated(cls, principal_str: str) -> "StmtPrincipal":
+    def load_from_stmt_federated(cls, principal_str: str) -> "StmtPrincipal":
         result = regex_saml_provider.match(principal_str)
         if result:
             name = result.groups()[1]
@@ -147,13 +171,20 @@ class StmtPrincipal:
             )
 
     @classmethod
-    def load_aws(cls, principal_str: str) -> "StmtPrincipal":
-        if principal_str == "*":
+    def load_from_stmt_aws(cls, principal_str: str) -> "StmtPrincipal":
+        # don't change the order here. for optimization to load_from_iam_role, load_from_iam_user
+        # the function checks first the regex regex_role_name, regex_iam_user
+        # another option is to create additional functions for each types, so both load_from_iam_role, load_from_iam_user
+        # should call these functions and not the load_from_stmt_aws
+        result = regex_role_name.match(principal_str)
+        if result:
+            name = result.groups()[1]
+            metadata = {'account-id': result.groups()[0], 'role-name': name}
             return StmtPrincipal(
-                principal_type=PrincipalType.ALL_PRINCIPALS,
-                name="All principals",
+                principal_type=PrincipalType.IAM_ROLE,
+                name=name,
                 policy_principal_str=principal_str,
-                principal_metadata=None,
+                principal_metadata=metadata,
             )
 
         result = regex_iam_user.match(principal_str)
@@ -189,17 +220,6 @@ class StmtPrincipal:
                 principal_metadata=metadata,
             )
 
-        result = regex_role_name.match(principal_str)
-        if result:
-            name = result.groups()[1]
-            metadata = {'account-id': result.groups()[0], 'role-name': name}
-            return StmtPrincipal(
-                principal_type=PrincipalType.IAM_ROLE,
-                name=name,
-                policy_principal_str=principal_str,
-                principal_metadata=metadata,
-            )
-
         result = regex_role_session.match(principal_str)
         if result:
             metadata = {
@@ -207,7 +227,7 @@ class StmtPrincipal:
                 'role-name': result.groups()[1],
                 'role-session-name': result.groups()[2],
             }
-            name = f"{result.groups()[1]}/{result.groups()[2]}"
+            name = result.groups()[2]
             return StmtPrincipal(
                 principal_type=PrincipalType.ASSUMED_ROLE_SESSION,
                 name=name,
@@ -224,6 +244,14 @@ class StmtPrincipal:
                 name=name,
                 policy_principal_str=principal_str,
                 principal_metadata=metadata,
+            )
+
+        if principal_str == "*":
+            return StmtPrincipal(
+                principal_type=PrincipalType.ALL_PRINCIPALS,
+                name="All principals",
+                policy_principal_str=principal_str,
+                principal_metadata=None,
             )
 
         raise Exception(f"Invalid principal: {principal_str}")
@@ -247,7 +275,7 @@ class StmtPrincipals:
         principals: List[StmtPrincipal] = []
         if isinstance(stmt_document_principal, str):
             if stmt_document_principal == "*":
-                principals = [StmtPrincipal.load_all()]
+                principals = [StmtPrincipal.load_from_stmt_all()]
             else:
                 raise Exception(f"Invalid principal: {stmt_document_principal}")
         elif isinstance(stmt_document_principal, dict):
@@ -255,13 +283,13 @@ class StmtPrincipals:
                 values: List[str] = principal_value if type(principal_value) == list else [str(principal_value)]
                 for v in values:
                     if principal_type == "AWS":
-                        principals.append(StmtPrincipal.load_aws(v))
+                        principals.append(StmtPrincipal.load_from_stmt_aws(v))
                     elif principal_type == "CanonicalUser":
-                        principals.append(StmtPrincipal.load_canonical_user(v))
+                        principals.append(StmtPrincipal.load_from_stmt_canonical_user(v))
                     elif principal_type == "Federated":
-                        principals.append(StmtPrincipal.load_federated(v))
+                        principals.append(StmtPrincipal.load_from_stmt_federated(v))
                     elif principal_type == "Service":
-                        principals.append(StmtPrincipal.load_service(v))
+                        principals.append(StmtPrincipal.load_from_stmt_service(v))
 
             if len(principals) == 0:
                 raise Exception(f"Invalid type of principal: {stmt_document_principal}")

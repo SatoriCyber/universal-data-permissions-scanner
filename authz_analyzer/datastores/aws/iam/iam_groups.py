@@ -4,13 +4,17 @@ from typing import Dict, List, Set, Tuple
 from boto3 import Session
 from serde import from_dict, serde
 
-from authz_analyzer.datastores.aws.iam.policy import GroupPolicy, PolicyDocument, PolicyDocumentGetterBase
+from authz_analyzer.models.model import AuthzPathElementType
+from authz_analyzer.datastores.aws.iam.policy import GroupPolicy, PolicyDocument
 from authz_analyzer.datastores.aws.utils.pagination import paginate_response_list
+from authz_analyzer.datastores.aws.permissions_resolver.identity_to_resource_nodes_base import (
+    PathIdentityPoliciesNodeBase,
+)
 
 
 @serde
 @dataclass
-class IAMGroup(PolicyDocumentGetterBase):
+class IAMGroup(PathIdentityPoliciesNodeBase):
     group_name: str
     group_id: str
     arn: str
@@ -18,14 +22,6 @@ class IAMGroup(PolicyDocumentGetterBase):
     group_user_ids: Set[str]
     group_policies: List[GroupPolicy]
     attached_policies_arn: List[str]
-
-    @property
-    def inline_policy_documents_and_names(self) -> List[Tuple['PolicyDocument', str]]:
-        return list(map(lambda x: (x.policy_document, x.policy_name), self.group_policies))
-
-    @property
-    def parent_arn(self) -> str:
-        return self.arn
 
     def __eq__(self, other):
         return self.group_id == other.group_id
@@ -35,6 +31,23 @@ class IAMGroup(PolicyDocumentGetterBase):
 
     def __repr__(self):
         return self.arn
+
+    # impl PathNodeBase
+    def get_path_type(self) -> AuthzPathElementType:
+        return AuthzPathElementType.IAM_GROUP
+
+    def get_path_name(self) -> str:
+        return self.group_name
+
+    def get_path_arn(self) -> str:
+        return self.arn
+
+    # impl IdentityPoliciesNodeBase
+    def get_attached_policies_arn(self) -> List[str]:
+        return self.attached_policies_arn
+
+    def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
+        return list(map(lambda x: (x.policy_document, x.policy_name), self.group_policies))
 
 
 def get_iam_groups(session: Session) -> Dict[str, IAMGroup]:
