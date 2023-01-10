@@ -7,24 +7,24 @@ from serde.json import to_json, from_dict
 
 from authz_analyzer.writers.get_writers import get_writer
 from authz_analyzer.writers.base_writers import OutputFormat
-from authz_analyzer.datastores.aws.iam.iam_entities import IAMEntities
-from authz_analyzer.datastores.aws.iam.iam_roles import IAMRole
-from authz_analyzer.datastores.aws.aws_authz_analyzer import AwsAuthzAnalyzer
-from authz_analyzer.datastores.aws.services.s3.s3_service import S3ServiceType, S3_SERVICE_NAME
-from authz_analyzer.datastores.aws.services.assume_role.assume_role_service import (
+from aws_ptrp.iam.iam_entities import IAMEntities
+from aws_ptrp.iam.iam_roles import IAMRole
+from aws_ptrp.aws_authz_analyzer import AwsAuthzAnalyzer
+from aws_ptrp.services.s3.s3_service import S3ServiceType, S3_SERVICE_NAME
+from aws_ptrp.services.assume_role.assume_role_service import (
     AssumeRoleServiceType,
     ROLE_TRUST_SERVICE_NAME,
 )
-from authz_analyzer.datastores.aws.services.assume_role.assume_role_actions import AssumeRoleAction
-from authz_analyzer.datastores.aws.services.s3.s3_actions import S3Action
-from authz_analyzer.datastores.aws.services.s3.bucket import S3Bucket
-from authz_analyzer.datastores.aws.services import (
+from aws_ptrp.services.assume_role.assume_role_actions import AssumeRoleAction
+from aws_ptrp.services.s3.s3_actions import S3Action
+from aws_ptrp.services.s3.bucket import S3Bucket
+from aws_ptrp.services import (
     register_service_action_type_by_name,
     register_service_action_by_name,
     register_service_resource_type_by_name,
     register_service_resource_by_name,
 )
-from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
+from aws_ptrp.utils.create_session import create_session_with_assume_role
 from authz_analyzer.utils.logger import get_logger
 
 

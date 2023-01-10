@@ -2,7 +2,7 @@
 from logging import Logger
 from pathlib import Path
 
-from authz_analyzer.datastores.aws.services.s3.analyzer import S3AuthzAnalyzer
+from aws_ptrp.services.s3.analyzer import S3AuthzAnalyzer
 from authz_analyzer.datastores.bigquery.analyzer import BigQueryAuthzAnalyzer
 from authz_analyzer.datastores.postgres.analyzer import PostgresAuthzAnalyzer
 from authz_analyzer.datastores.redshift.analyzer import RedshiftAuthzAnalyzer
