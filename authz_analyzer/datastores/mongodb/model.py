@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import List
 
-from authz_analyzer.models.model import PermissionLevel
 from authz_analyzer.datastores.mongodb.service_model import RoleEntry
+from authz_analyzer.models.model import PermissionLevel
+
 
 @dataclass
 class InheritedRole:

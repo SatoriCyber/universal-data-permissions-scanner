@@ -34,23 +34,32 @@ Roles have scope:
     Collection - All collections in the database.
 Atlas also allows to limit the access to specific cluster.
 """
+from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set, Union
 
 from pymongo import MongoClient
 
-from authz_analyzer.datastores.mongodb.service import MongoDBService
-from authz_analyzer.datastores.mongodb.atlas.service import AtlasService
-from authz_analyzer.datastores.mongodb.atlas.model import Cluster, CustomRole, Organization, Project
-from authz_analyzer.datastores.mongodb.atlas.permission_resolvers import PermissionScope, resolve_organization_role, resolve_permission, resolve_project_role, resolve_database_role
 from authz_analyzer.datastores.mongodb.atlas.model import (
+    Cluster,
+    CustomRole,
+    DatabaseRole,
+    Organization,
     OrganizationRoleName,
     OrganizationTeam,
     OrganizationUser,
-    DatabaseRole,
+    Project,
 )
+from authz_analyzer.datastores.mongodb.atlas.permission_resolvers import (
+    PermissionScope,
+    resolve_database_role,
+    resolve_organization_role,
+    resolve_permission,
+    resolve_project_role,
+)
+from authz_analyzer.datastores.mongodb.atlas.service import AtlasService
+from authz_analyzer.datastores.mongodb.service import MongoDBService
 from authz_analyzer.models.model import (
     Asset,
     AssetType,
@@ -62,10 +71,9 @@ from authz_analyzer.models.model import (
     PermissionLevel,
 )
 from authz_analyzer.utils.logger import get_logger
-from authz_analyzer.writers import OutputFormat, BaseWriter
+from authz_analyzer.writers import BaseWriter, OutputFormat
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 from authz_analyzer.writers.get_writers import get_writer
-
 
 PermissionOrganizationUserMap = Dict[PermissionLevel, Set[OrganizationUser]]
 
@@ -88,8 +96,8 @@ class MongoDBAtlasAuthzAnalyzer:
     @classmethod
     def connect(
         cls,
-        atlas_user: str,
-        atlas_user_key: str,
+        public_key: str,
+        private_key: str,
         db_user: str,
         db_password: str,
         output_format: OutputFormat = OutputFormat.CSV,
@@ -103,7 +111,7 @@ class MongoDBAtlasAuthzAnalyzer:
         writer = get_writer(filename=output_path, output_format=output_format)
         if logger is None:
             logger = get_logger(False)
-        service = AtlasService.connect(atlas_user, atlas_user_key)
+        service = AtlasService.connect(public_key, private_key)
         return cls(atlas_service=service, writer=writer, logger=logger, db_user=db_user, db_password=db_password)
 
     def run(self):

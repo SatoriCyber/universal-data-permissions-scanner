@@ -7,11 +7,18 @@ from typing import Any, Dict, List, Set
 import requests
 from requests.auth import HTTPDigestAuth
 
-from authz_analyzer.datastores.mongodb.atlas.model import CustomRole, DatabaseUser, OrganizationRoleName, OrganizationTeam, OrganizationTeamId, OrganizationUser
-from authz_analyzer.datastores.mongodb.atlas.model import Cluster, Organization, Project
+from authz_analyzer.datastores.mongodb.atlas.model import (
+    Cluster,
+    CustomRole,
+    DatabaseUser,
+    Organization,
+    OrganizationRoleName,
+    OrganizationTeam,
+    OrganizationTeamId,
+    OrganizationUser,
+    Project,
+)
 from authz_analyzer.datastores.mongodb.atlas.service_model import CustomRoleEntry
-
-
 
 BASE_API = "https://cloud.mongodb.com/api/atlas/v1.0/"
 

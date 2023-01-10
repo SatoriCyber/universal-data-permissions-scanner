@@ -1,4 +1,5 @@
 from authz_analyzer.models.model import PermissionLevel
+
 BUILT_IN_ROLES_MAP = {
     "read": PermissionLevel.READ,
     "readWrite": PermissionLevel.WRITE,

@@ -1,6 +1,7 @@
 """Defines the objects returned by the MongoDB API."""
 from typing import List, TypedDict
 
+
 class ResourceEntry(TypedDict):
     """Define a MongoDB resource.
     Returned by the rolesInfo command.

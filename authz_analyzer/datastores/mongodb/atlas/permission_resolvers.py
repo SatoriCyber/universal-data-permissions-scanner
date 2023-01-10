@@ -2,6 +2,7 @@
 
 
 from enum import Enum, auto
+
 from authz_analyzer.datastores.mongodb.atlas.model import Permission
 from authz_analyzer.models.model import PermissionLevel
 

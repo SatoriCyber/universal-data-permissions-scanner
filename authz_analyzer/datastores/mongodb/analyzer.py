@@ -10,19 +10,20 @@ Roles have scope:
     Database - All databases in the cluster
     Collection - All collections in the database.
 """
+from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set, Union
 
 from pymongo import MongoClient
 
-
-from authz_analyzer.datastores.mongodb.atlas.model import (
-    OrganizationUser,
-)
+from authz_analyzer.datastores.mongodb.atlas.model import OrganizationUser
 from authz_analyzer.datastores.mongodb.model import AdminRole, AdminUser, Privilege, Role
-from authz_analyzer.datastores.mongodb.resolvers import get_permission_level, get_permission_level_cluster, get_permission_level_privilege
+from authz_analyzer.datastores.mongodb.resolvers import (
+    get_permission_level,
+    get_permission_level_cluster,
+    get_permission_level_privilege,
+)
 from authz_analyzer.datastores.mongodb.service import MongoDBService
 from authz_analyzer.datastores.mongodb.service_model import AssignedRole, UserEntry
 from authz_analyzer.models.model import (
@@ -36,10 +37,9 @@ from authz_analyzer.models.model import (
     PermissionLevel,
 )
 from authz_analyzer.utils.logger import get_logger
-from authz_analyzer.writers import OutputFormat, BaseWriter
+from authz_analyzer.writers import BaseWriter, OutputFormat
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 from authz_analyzer.writers.get_writers import get_writer
-
 
 PermissionOrganizationUserMap = Dict[PermissionLevel, Set[OrganizationUser]]
 

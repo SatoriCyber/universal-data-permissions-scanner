@@ -12,8 +12,7 @@ from authz_analyzer.datastores.mongodb.atlas.service_model import (
     OrganizationTeamEntry,
     OrganizationUserEntry,
 )
-
-from authz_analyzer.datastores.mongodb.model import Resource, InheritedRole
+from authz_analyzer.datastores.mongodb.model import InheritedRole, Resource
 
 OrganizationRoleName = str
 OrganizationTeamId = str

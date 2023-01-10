@@ -10,9 +10,9 @@ from typing import Any
 
 from pymongo import MongoClient
 from pymongo.database import Database
-from authz_analyzer.datastores.mongodb.model import Role
 
-from authz_analyzer.datastores.mongodb.service_model import UserInfoResponseEntry, RolesInfoEntry
+from authz_analyzer.datastores.mongodb.model import Role
+from authz_analyzer.datastores.mongodb.service_model import RolesInfoEntry, UserInfoResponseEntry
 
 
 @dataclass
