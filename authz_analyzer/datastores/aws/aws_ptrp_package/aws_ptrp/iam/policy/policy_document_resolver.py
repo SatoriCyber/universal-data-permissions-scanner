@@ -8,7 +8,7 @@ from aws_ptrp.iam.policy.effect import Effect
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.resources.resources_resolver import ResourcesResolver
-from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleServiceType
+from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
 from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
 from aws_ptrp.services import (
     ServiceActionsResolverBase,
@@ -39,7 +39,7 @@ def get_role_trust_resolver(
     )
     if ret_services_resources_resolver:
         ret_service_resources_resolver: Optional[ServiceResourcesResolverBase] = ret_services_resources_resolver.get(
-            AssumeRoleServiceType()
+            AssumeRoleService()
         )
         if ret_service_resources_resolver and isinstance(
             ret_service_resources_resolver, AssumeRoleServiceResourcesResolver

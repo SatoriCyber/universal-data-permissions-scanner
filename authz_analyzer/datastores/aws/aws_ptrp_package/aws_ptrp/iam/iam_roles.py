@@ -4,19 +4,20 @@ from typing import Dict, List, Tuple
 from boto3 import Session
 from serde import serde, from_dict
 
-from authz_analyzer.models.model import AuthzPathElementType
 from aws_ptrp.iam.policy import PolicyDocument
 from aws_ptrp.iam.policy.principal import StmtPrincipal
-from aws_ptrp.permissions_resolver.identity_to_resource_nodes_base import (
-    PathRoleIdentityNodeBase,
+from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
+    PathRoleNodeBase,
 )
 from aws_ptrp.services.service_resource_base import ServiceResourceBase
 from aws_ptrp.iam.role.role_policy import RolePolicy
 from aws_ptrp.utils.pagination import paginate_response_list
 
+from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
+
 
 @dataclass
-class IAMRoleSession(PathRoleIdentityNodeBase):
+class IAMRoleSession(PathRoleNodeBase):
     role: 'IAMRole'
     session_name: str
 
@@ -30,8 +31,8 @@ class IAMRoleSession(PathRoleIdentityNodeBase):
         return hash(self.role.__hash__()) + hash(self.session_name)
 
     # impl PathNodeBase
-    def get_path_type(self) -> AuthzPathElementType:
-        return AuthzPathElementType.ROLE_SESSION
+    def get_path_type(self) -> AwsPtrpPathNodeType:
+        return AwsPtrpPathNodeType.ROLE_SESSION
 
     def get_path_name(self) -> str:
         return f"{self.role.role_name}/{self.session_name}"
@@ -39,11 +40,11 @@ class IAMRoleSession(PathRoleIdentityNodeBase):
     def get_path_arn(self) -> str:
         return self.role.arn
 
-    # impl IdentityNodeBase
+    # impl PrincipalNodeBase
     def get_stmt_principal(self) -> StmtPrincipal:
         return StmtPrincipal.load_from_iam_role_session(self.role.get_role_session_arn(self.session_name))
 
-    # impl IdentityPoliciesNodeBase
+    # impl PrincipalPoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
         return self.role.get_attached_policies_arn()
 
@@ -53,7 +54,7 @@ class IAMRoleSession(PathRoleIdentityNodeBase):
 
 @serde
 @dataclass
-class IAMRole(PathRoleIdentityNodeBase, ServiceResourceBase):
+class IAMRole(PathRoleNodeBase, ServiceResourceBase):
     role_id: str
     role_name: str
     arn: str
@@ -83,8 +84,8 @@ class IAMRole(PathRoleIdentityNodeBase, ServiceResourceBase):
         return self.role_name
 
     # impl PathNodeBase
-    def get_path_type(self) -> AuthzPathElementType:
-        return AuthzPathElementType.IAM_ROLE
+    def get_path_type(self) -> AwsPtrpPathNodeType:
+        return AwsPtrpPathNodeType.IAM_ROLE
 
     def get_path_name(self) -> str:
         return self.role_name
@@ -92,11 +93,11 @@ class IAMRole(PathRoleIdentityNodeBase, ServiceResourceBase):
     def get_path_arn(self) -> str:
         return self.arn
 
-    # impl IdentityNodeBase
+    # impl PrincipalNodeBase
     def get_stmt_principal(self) -> StmtPrincipal:
         return StmtPrincipal.load_from_iam_role(self.arn)
 
-    # impl IdentityPoliciesNodeBase
+    # impl PrincipalPoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
         return self.attached_policies_arn
 

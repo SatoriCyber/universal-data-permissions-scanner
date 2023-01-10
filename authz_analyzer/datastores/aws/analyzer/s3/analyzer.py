@@ -11,20 +11,18 @@ from logging import Logger
 # "python.autoComplete.extraPaths": [
 #     "[PATH-TO-AUTHZ-ANALYZER]/authz_analyzer/datastores/aws/aws_ptrp_package/"
 # ]
-from aws_ptrp.iam.iam_entities import IAMEntities
-from aws_ptrp.aws_authz_analyzer import AwsAuthzAnalyzer
-from aws_ptrp.services.s3.s3_service import S3ServiceType
-from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleServiceType
-from aws_ptrp.utils.create_session import create_session_with_assume_role
+from aws_ptrp import AwsPtrp
+from aws_ptrp.services.s3.s3_service import S3Service
 
+from authz_analyzer.datastores.aws.analyzer.exporter import AWSAuthzAnalyzerExporter
 from authz_analyzer.utils.logger import get_logger
-from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
+from authz_analyzer.writers import OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 
 
 @dataclass
 class S3AuthzAnalyzer:
-    writer: BaseWriter
+    exporter: AWSAuthzAnalyzerExporter
     logger: Logger
     account_id: str
     account_role_name: str
@@ -42,10 +40,11 @@ class S3AuthzAnalyzer:
             logger = get_logger(False)
 
         writer = get_writer(filename=output_path, output_format=output_format)
+        aws_exporter = AWSAuthzAnalyzerExporter(writer)
 
         return cls(
             logger=logger,
-            writer=writer,
+            exporter=aws_exporter,
             account_id=account_id,
             account_role_name=account_role_name,
         )
@@ -53,11 +52,6 @@ class S3AuthzAnalyzer:
     def run(
         self,
     ):
-        self.logger.info("Starting to analyzed AWS s3 for account id: %s", self.account_id)
-        session = create_session_with_assume_role(self.account_id, self.account_role_name)
-        self.logger.info("Successfully assume the role %s for account id %s", self.account_role_name, self.account_id)
-        iam_entities = IAMEntities.load(self.logger, self.account_id, session)
-        aws_authz_analyzer = AwsAuthzAnalyzer.load(
-            self.logger, iam_entities, session, set([S3ServiceType(), AssumeRoleServiceType()])
-        )
-        aws_authz_analyzer.resolve_permissions(self.logger, self.writer.write_entry)
+        self.logger.info("Starting to analyzed AWS s3 for target account id: %s", self.account_id)
+        aws_ptrp = AwsPtrp.load_from_role(self.logger, self.account_id, self.account_role_name, set([S3Service()]))
+        aws_ptrp.resolve_permissions(self.logger, self.exporter.export_entry_from_ptrp_line)

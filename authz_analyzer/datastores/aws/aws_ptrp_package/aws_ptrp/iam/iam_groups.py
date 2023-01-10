@@ -4,17 +4,17 @@ from typing import Dict, List, Set, Tuple
 from serde import from_dict, serde
 from boto3 import Session
 
-from authz_analyzer.models.model import AuthzPathElementType
 from aws_ptrp.iam.policy import GroupPolicy, PolicyDocument
 from aws_ptrp.utils.pagination import paginate_response_list
-from aws_ptrp.permissions_resolver.identity_to_resource_nodes_base import (
-    PathIdentityPoliciesNodeBase,
+from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
+    PathPrincipalPoliciesNodeBase,
 )
+from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
 
 
 @serde
 @dataclass
-class IAMGroup(PathIdentityPoliciesNodeBase):
+class IAMGroup(PathPrincipalPoliciesNodeBase):
     group_name: str
     group_id: str
     arn: str
@@ -33,8 +33,8 @@ class IAMGroup(PathIdentityPoliciesNodeBase):
         return self.arn
 
     # impl PathNodeBase
-    def get_path_type(self) -> AuthzPathElementType:
-        return AuthzPathElementType.IAM_GROUP
+    def get_path_type(self) -> AwsPtrpPathNodeType:
+        return AwsPtrpPathNodeType.IAM_GROUP
 
     def get_path_name(self) -> str:
         return self.group_name
@@ -42,7 +42,7 @@ class IAMGroup(PathIdentityPoliciesNodeBase):
     def get_path_arn(self) -> str:
         return self.arn
 
-    # impl IdentityPoliciesNodeBase
+    # impl PrincipalPoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
         return self.attached_policies_arn
 

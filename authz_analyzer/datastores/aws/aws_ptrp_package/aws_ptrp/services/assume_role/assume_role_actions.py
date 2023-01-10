@@ -6,7 +6,7 @@ from typing import List, Set
 from serde import serde
 
 from aws_ptrp.services.service_action_base import ServiceActionBase, ServiceActionsResolverBase
-from authz_analyzer.models import PermissionLevel
+from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpActionPermissionLevel
 
 
 class AssumeRoleActionType(Enum):
@@ -22,7 +22,7 @@ class AssumeRoleActionType(Enum):
 class AssumeRoleAction(ServiceActionBase):
     name: str
     action_type: AssumeRoleActionType
-    permission_level: PermissionLevel
+    permission_level: AwsPtrpActionPermissionLevel
     is_assumed_role: bool
 
     def __repr__(self):
@@ -37,7 +37,7 @@ class AssumeRoleAction(ServiceActionBase):
     def get_action_name(self) -> str:
         return self.name
 
-    def get_action_permission_level(self) -> PermissionLevel:
+    def get_action_permission_level(self) -> AwsPtrpActionPermissionLevel:
         return self.permission_level
 
     @classmethod
@@ -66,11 +66,16 @@ class AssumeRoleServiceActionsResolver(ServiceActionsResolverBase):
 
 
 role_trust_actions: List[ServiceActionBase] = [
-    AssumeRoleAction("AssumeRole", AssumeRoleActionType.ASSUME_ROLE, PermissionLevel.FULL, True),
+    AssumeRoleAction("AssumeRole", AssumeRoleActionType.ASSUME_ROLE, AwsPtrpActionPermissionLevel.FULL, True),
     AssumeRoleAction(
-        "AssumeRoleWithWebIdentity", AssumeRoleActionType.ASSUME_ROLE_WITH_WEB_IDENTITY, PermissionLevel.FULL, True
+        "AssumeRoleWithWebIdentity",
+        AssumeRoleActionType.ASSUME_ROLE_WITH_WEB_IDENTITY,
+        AwsPtrpActionPermissionLevel.FULL,
+        True,
     ),
-    AssumeRoleAction("AssumeRoleWithSAML", AssumeRoleActionType.ASSUME_ROLE_WITH_SAML, PermissionLevel.FULL, True),
-    AssumeRoleAction("TagSession", AssumeRoleActionType.TAG_SESSION, PermissionLevel.FULL, False),
-    AssumeRoleAction("TagSession", AssumeRoleActionType.SET_SOURCE_IDENTITY, PermissionLevel.FULL, False),
+    AssumeRoleAction(
+        "AssumeRoleWithSAML", AssumeRoleActionType.ASSUME_ROLE_WITH_SAML, AwsPtrpActionPermissionLevel.FULL, True
+    ),
+    AssumeRoleAction("TagSession", AssumeRoleActionType.TAG_SESSION, AwsPtrpActionPermissionLevel.FULL, False),
+    AssumeRoleAction("TagSession", AssumeRoleActionType.SET_SOURCE_IDENTITY, AwsPtrpActionPermissionLevel.FULL, False),
 ]

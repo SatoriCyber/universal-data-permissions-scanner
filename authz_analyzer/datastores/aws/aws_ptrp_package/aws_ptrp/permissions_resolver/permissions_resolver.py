@@ -3,20 +3,16 @@ from logging import Logger
 from typing import Optional, List, Iterable, Generator, Dict, Tuple, Union
 import networkx as nx
 
-from aws_ptrp.permissions_resolver.identity_to_resource_nodes_base import (
-    IdentityNodeBase,
+from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
+    PrincipalNodeBase,
     TargetPolicyNode,
     ResourceNodeBase,
-    PathRoleIdentityNode,
-    PathRoleIdentityNodeBase,
-    PathIdentityPoliciesNode,
-    PathIdentityPoliciesNodeBase,
+    PathRoleNode,
+    PathRoleNodeBase,
+    PathPrincipalPoliciesNode,
+    PathPrincipalPoliciesNodeBase,
 )
-from authz_analyzer.models.model import (
-    AuthzPathElementType,
-)
-
-from aws_ptrp.permissions_resolver.identity_to_resource_line import IdentityToResourceLine
+from aws_ptrp.permissions_resolver.principal_to_resource_line import PrincipalToResourceLine
 from aws_ptrp.services import ServiceResourcesResolverBase, ServiceResourceType
 from aws_ptrp.actions.account_actions import AwsAccountActions
 from aws_ptrp.resources.account_resources import AwsAccountResources
@@ -33,6 +29,8 @@ from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.iam.iam_roles import IAMRole, IAMRoleSession
 from aws_ptrp.iam.iam_users import IAMUser
 
+from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
+
 
 START_NODE = "START_NODE"
 END_NODE = "END_NODE"
@@ -42,37 +40,36 @@ END_NODE = "END_NODE"
 class PermissionsResolver:
     graph: nx.DiGraph
 
-    def yield_identity_to_resource_lines(
+    def yield_principal_to_resource_lines(
         self,
-    ) -> Generator[IdentityToResourceLine, None, None,]:
+    ) -> Generator[PrincipalToResourceLine, None, None,]:
         for path in nx.all_simple_paths(self.graph, source=START_NODE, target=END_NODE):
             path = path[1:-1]  # without the START_NODE, END_NODE
             if len(path) < 3:
                 raise Exception(f"Got invalid simple path in graph, expecting at least 3 nodes: {path}")
-            if not isinstance(path[0], IdentityNodeBase):
-                raise Exception(f"Got invalid simple path in graph, first node is not impl IdentityNodeBase: {path}")
-            identity_node: IdentityNodeBase = path[0]
+            if not isinstance(path[0], PrincipalNodeBase):
+                raise Exception(f"Got invalid simple path in graph, first node is not impl PrincipalNodeBase: {path}")
+            identity_node: PrincipalNodeBase = path[0]
 
-            if isinstance(path[1], PathIdentityPoliciesNode):
-                path_identity_policies_node: Optional[PathIdentityPoliciesNode] = path[1]
+            if isinstance(path[1], PathPrincipalPoliciesNode):
+                path_identity_policies_node: Optional[PathPrincipalPoliciesNode] = path[1]
                 start_index_path_role_identity_nodes = 2
                 if len(path) < 4:
                     raise Exception(
-                        f"Got invalid simple path in graph with second node PathIdentityPoliciesNode, expecting at least 4 nodes: {path}"
+                        f"Got invalid simple path in graph with second node PathPrincipalPoliciesNode, expecting at least 4 nodes: {path}"
                     )
             else:
                 path_identity_policies_node = None
                 start_index_path_role_identity_nodes = 1
 
             all_path_role_identity_nodes_valid = all(
-                isinstance(path_element, PathRoleIdentityNode)
-                for path_element in path[start_index_path_role_identity_nodes:-2]
+                isinstance(path_element, PathRoleNode) for path_element in path[start_index_path_role_identity_nodes:-2]
             )
             if not all_path_role_identity_nodes_valid:
                 raise Exception(
-                    f"Got invalid simple path in graph, not all nodes are impl PathRoleIdentityNode: {path[start_index_path_role_identity_nodes:-2]}"
+                    f"Got invalid simple path in graph, not all nodes are impl PathRoleNode: {path[start_index_path_role_identity_nodes:-2]}"
                 )
-            path_role_identity_nodes: List[PathRoleIdentityNode] = path[start_index_path_role_identity_nodes:-2]
+            path_role_identity_nodes: List[PathRoleNode] = path[start_index_path_role_identity_nodes:-2]
 
             if not isinstance(path[-2], TargetPolicyNode):
                 raise Exception(
@@ -84,10 +81,10 @@ class PermissionsResolver:
                 raise Exception(f"Got invalid simple path in graph, last node is not impl ResourceNodeBase: {path[-1]}")
             resource_node: ResourceNodeBase = path[-1]
 
-            yield IdentityToResourceLine(
-                identity_node=identity_node,
-                path_identity_policies_node=path_identity_policies_node,
-                path_role_identity_nodes=path_role_identity_nodes,
+            yield PrincipalToResourceLine(
+                principal_node=identity_node,
+                path_principal_policies_node=path_identity_policies_node,
+                path_role_nodes=path_role_identity_nodes,
                 target_policy_node=target_policy_node,
                 resource_node=resource_node,
             )
@@ -107,7 +104,7 @@ class PermissionsResolverBuilder:
         else:
             return None
 
-    def get_path_node_roles_for_principal(self, stmt_principal: StmtPrincipal) -> Iterable[PathRoleIdentityNodeBase]:
+    def get_path_node_roles_for_principal(self, stmt_principal: StmtPrincipal) -> Iterable[PathRoleNodeBase]:
         if stmt_principal.is_all_principals():
             return self.iam_entities.iam_roles.values()
         elif stmt_principal.is_role_principal():
@@ -134,33 +131,31 @@ class PermissionsResolverBuilder:
     def _resolve_stmt_principal_to_nodes_and_connect(
         self,
         stmt_principal: StmtPrincipal,
-        node_to_connect: Union[TargetPolicyNode, PathRoleIdentityNode],
+        node_to_connect: Union[TargetPolicyNode, PathRoleNode],
     ):
         if isinstance(node_to_connect, TargetPolicyNode):
             node_to_connect_arn: str = node_to_connect.path_arn
-        elif isinstance(node_to_connect, PathRoleIdentityNode):
-            node_to_connect_arn = node_to_connect.path_role_identity_base.get_path_arn()
+        elif isinstance(node_to_connect, PathRoleNode):
+            node_to_connect_arn = node_to_connect.path_role_base.get_path_arn()
         else:
             assert False
 
-        path_roles_identity_base: Iterable[PathRoleIdentityNodeBase] = self.get_path_node_roles_for_principal(
-            stmt_principal
-        )
-        for path_role_identity_base in path_roles_identity_base:
-            if path_role_identity_base.get_path_arn() != node_to_connect_arn:
-                assert isinstance(path_role_identity_base, PathRoleIdentityNodeBase)
-                path_role_identity = PathRoleIdentityNode(path_role_identity_base=path_role_identity_base, note="")
+        path_roles_identity_base: Iterable[PathRoleNodeBase] = self.get_path_node_roles_for_principal(stmt_principal)
+        for path_role_base in path_roles_identity_base:
+            if path_role_base.get_path_arn() != node_to_connect_arn:
+                assert isinstance(path_role_base, PathRoleNodeBase)
+                path_role_identity = PathRoleNode(path_role_base=path_role_base, note="")
                 self.graph.add_edge(path_role_identity, node_to_connect)
 
         no_entity_principal: Optional[NoEntityPrincipal] = self.get_no_entity_principal_for_principal(stmt_principal)
         if no_entity_principal:
-            assert isinstance(no_entity_principal, IdentityNodeBase)
+            assert isinstance(no_entity_principal, PrincipalNodeBase)
             self.graph.add_edge(START_NODE, no_entity_principal)
             self.graph.add_edge(no_entity_principal, node_to_connect)
 
         iam_users: Iterable[IAMUser] = self.get_iam_roles_for_principal(stmt_principal)
         for iam_user in iam_users:
-            assert isinstance(iam_user, IdentityNodeBase)
+            assert isinstance(iam_user, PrincipalNodeBase)
             self.graph.add_edge(START_NODE, iam_user)
             self.graph.add_edge(iam_user, node_to_connect)
 
@@ -196,21 +191,21 @@ class PermissionsResolverBuilder:
 
     def _insert_attached_policies_and_inline_policies(
         self,
-        identity_node: Union[IdentityNodeBase, PathRoleIdentityNode, PathIdentityPoliciesNode],
+        identity_node: Union[PrincipalNodeBase, PathRoleNode, PathPrincipalPoliciesNode],
         node_arn: str,
         attached_policies_arn: List[str],
         inline_policies_and_names: List[Tuple[PolicyDocument, str]],
         identity_principal: StmtPrincipal,
     ):
         assert (
-            isinstance(identity_node, IdentityNodeBase)
-            or isinstance(identity_node, PathRoleIdentityNode)
-            or isinstance(identity_node, PathIdentityPoliciesNode)
+            isinstance(identity_node, PrincipalNodeBase)
+            or isinstance(identity_node, PathRoleNode)
+            or isinstance(identity_node, PathPrincipalPoliciesNode)
         )
         for attached_policy_arn in attached_policies_arn:
             iam_policy = self.iam_entities.iam_policies[attached_policy_arn]
             target_policy_node = TargetPolicyNode(
-                path_element_type=AuthzPathElementType.IAM_POLICY,
+                path_element_type=AwsPtrpPathNodeType.IAM_POLICY,
                 path_arn=iam_policy.policy.arn,
                 path_name=iam_policy.policy.policy_name,
                 policy_document=iam_policy.policy_document,
@@ -220,7 +215,7 @@ class PermissionsResolverBuilder:
             self._connect_target_policy_node_to_resources(identity_principal, target_policy_node)
         for inline_policy, policy_name in inline_policies_and_names:
             target_policy_node = TargetPolicyNode(
-                path_element_type=AuthzPathElementType.IAM_INLINE_POLICY,
+                path_element_type=AwsPtrpPathNodeType.IAM_INLINE_POLICY,
                 path_arn=node_arn,
                 path_name=policy_name,
                 policy_document=inline_policy,
@@ -244,8 +239,8 @@ class PermissionsResolverBuilder:
             if role_trust_service_principal_resolver is None:
                 continue
 
-            assert isinstance(iam_role, PathRoleIdentityNodeBase)
-            path_role_identity_node = PathRoleIdentityNode(path_role_identity_base=iam_role, note="")
+            assert isinstance(iam_role, PathRoleNodeBase)
+            path_role_identity_node = PathRoleNode(path_role_base=iam_role, note="")
 
             for trusted_principal in role_trust_service_principal_resolver.yield_trusted_principals(iam_role):
                 self.logger.debug(
@@ -282,7 +277,7 @@ class PermissionsResolverBuilder:
                     continue
 
                 target_policy_node = TargetPolicyNode(
-                    path_element_type=AuthzPathElementType.RESOURCE_POLICY,
+                    path_element_type=AwsPtrpPathNodeType.RESOURCE_POLICY,
                     path_arn=service_resource.get_resource_arn(),
                     path_name=service_resource.get_resource_name(),
                     policy_document=service_resource_policy,
@@ -301,7 +296,7 @@ class PermissionsResolverBuilder:
 
     def _insert_iam_users_and_iam_groups(self):
         for iam_user in self.iam_entities.iam_users.values():
-            assert isinstance(iam_user, IdentityNodeBase)
+            assert isinstance(iam_user, PrincipalNodeBase)
             self.graph.add_edge(START_NODE, iam_user)
             self._insert_attached_policies_and_inline_policies(
                 identity_node=iam_user,
@@ -316,8 +311,8 @@ class PermissionsResolverBuilder:
                 if iam_user.user_id not in iam_group.group_user_ids:
                     continue
 
-                assert isinstance(iam_group, PathIdentityPoliciesNodeBase)
-                identity_policies_node = PathIdentityPoliciesNode(path_identity_policies_base=iam_group, note="")
+                assert isinstance(iam_group, PathPrincipalPoliciesNodeBase)
+                identity_policies_node = PathPrincipalPoliciesNode(path_principal_policies_base=iam_group, note="")
                 self.graph.add_edge(iam_user, identity_policies_node)
                 self._insert_attached_policies_and_inline_policies(
                     identity_node=identity_policies_node,

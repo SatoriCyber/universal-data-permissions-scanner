@@ -5,10 +5,10 @@ from typing import List, Tuple, Optional
 from aws_ptrp.services import ServiceResourceBase
 from aws_ptrp.iam.policy.principal import StmtPrincipal
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
-from authz_analyzer.models.model import AuthzPathElementType, AuthzPathElement, AssetType
+from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType, AwsPtrpPathNode, AwsPtrpResourceType
 
 
-class IdentityPoliciesNodeBase(ABC):
+class PrincipalPoliciesNodeBase(ABC):
     @abstractmethod
     def get_attached_policies_arn(self) -> List[str]:
         pass
@@ -18,7 +18,7 @@ class IdentityPoliciesNodeBase(ABC):
         pass
 
 
-class IdentityNodeBase(IdentityPoliciesNodeBase):
+class PrincipalNodeBase(PrincipalPoliciesNodeBase):
     @abstractmethod
     def get_stmt_principal(self) -> StmtPrincipal:
         pass
@@ -32,7 +32,7 @@ class IdentityNodeBase(IdentityPoliciesNodeBase):
 
 class PathNodeBase(ABC):
     @abstractmethod
-    def get_path_type(self) -> AuthzPathElementType:
+    def get_path_type(self) -> AwsPtrpPathNodeType:
         pass
 
     @abstractmethod
@@ -44,63 +44,63 @@ class PathNodeBase(ABC):
         pass
 
 
-class PathRoleIdentityNodeBase(IdentityNodeBase, PathNodeBase):
+class PathRoleNodeBase(PrincipalNodeBase, PathNodeBase):
     pass
 
 
-class PathIdentityPoliciesNodeBase(IdentityPoliciesNodeBase, PathNodeBase):
+class PathPrincipalPoliciesNodeBase(PrincipalPoliciesNodeBase, PathNodeBase):
     pass
 
 
 @dataclass
-class PathIdentityPoliciesNode:
-    path_identity_policies_base: PathIdentityPoliciesNodeBase
+class PathPrincipalPoliciesNode:
+    path_principal_policies_base: PathPrincipalPoliciesNodeBase
     note: str
 
-    def get_authz_path_element(self) -> AuthzPathElement:
-        return AuthzPathElement(
-            id=self.path_identity_policies_base.get_path_arn(),
-            name=self.path_identity_policies_base.get_path_name(),
-            type=self.path_identity_policies_base.get_path_type(),
+    def get_ptrp_path_node(self) -> AwsPtrpPathNode:
+        return AwsPtrpPathNode(
+            arn=self.path_principal_policies_base.get_path_arn(),
+            name=self.path_principal_policies_base.get_path_name(),
+            type=self.path_principal_policies_base.get_path_type(),
             note=self.note,
         )
 
     def __repr__(self):
-        return f"PathIdentityPoliciesNode({self.path_identity_policies_base.__repr__()})"
+        return f"PathPrincipalPoliciesNode({self.path_principal_policies_base.__repr__()})"
 
     def __eq__(self, other):
-        return self.path_identity_policies_base.__eq__(other.path_identity_policies_base)
+        return self.path_principal_policies_base.__eq__(other.path_principal_policies_base)
 
     def __hash__(self):
-        return self.path_identity_policies_base.__hash__()
+        return self.path_principal_policies_base.__hash__()
 
 
 @dataclass
-class PathRoleIdentityNode:
-    path_role_identity_base: PathRoleIdentityNodeBase
+class PathRoleNode:
+    path_role_base: PathRoleNodeBase
     note: str
 
-    def get_authz_path_element(self) -> AuthzPathElement:
-        return AuthzPathElement(
-            id=self.path_role_identity_base.get_path_arn(),
-            name=self.path_role_identity_base.get_path_name(),
-            type=self.path_role_identity_base.get_path_type(),
+    def get_ptrp_path_node(self) -> AwsPtrpPathNode:
+        return AwsPtrpPathNode(
+            arn=self.path_role_base.get_path_arn(),
+            name=self.path_role_base.get_path_name(),
+            type=self.path_role_base.get_path_type(),
             note=self.note,
         )
 
     def __repr__(self):
-        return f"PathRoleIdentityNode({self.path_role_identity_base.__repr__()})"
+        return f"PathRoleNode({self.path_role_base.__repr__()})"
 
     def __eq__(self, other):
-        return self.path_role_identity_base.__eq__(other.path_role_identity_base)
+        return self.path_role_base.__eq__(other.path_role_base)
 
     def __hash__(self):
-        return self.path_role_identity_base.__hash__()
+        return self.path_role_base.__hash__()
 
 
 @dataclass
 class TargetPolicyNode:
-    path_element_type: AuthzPathElementType
+    path_element_type: AwsPtrpPathNodeType
     path_arn: str
     path_name: str
     policy_document: PolicyDocument
@@ -115,9 +115,9 @@ class TargetPolicyNode:
     def __hash__(self):
         return hash(self.path_arn) + hash(self.path_name)
 
-    def get_authz_path_element(self) -> AuthzPathElement:
-        return AuthzPathElement(
-            id=self.path_arn,
+    def get_ptrp_path_node(self) -> AwsPtrpPathNode:
+        return AwsPtrpPathNode(
+            arn=self.path_arn,
             name=self.path_name,
             type=self.path_element_type,
             note=self.note,
@@ -126,7 +126,7 @@ class TargetPolicyNode:
 
 class ResourceNodeBase(ServiceResourceBase):
     @abstractmethod
-    def get_asset_type(self) -> AssetType:
+    def get_ptrp_resource_type(self) -> AwsPtrpResourceType:
         pass
 
     @abstractmethod

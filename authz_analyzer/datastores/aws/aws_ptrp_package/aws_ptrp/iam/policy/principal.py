@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Union
 
 from serde import field, serde
 
-from aws_ptrp.principals.principal_type import PrincipalType
+from aws_ptrp.ptrp_models.ptrp_model import AwsPrincipalType
 
 
 regex_saml_provider = re.compile(r"arn:aws:iam::([0-9]+):saml-provider/(.+)$")
@@ -19,7 +19,7 @@ regex_arn_account_id = re.compile(r"arn:aws:iam::([0-9]+):root$")
 @serde
 @dataclass
 class StmtPrincipal:
-    principal_type: PrincipalType = field(skip=True)
+    principal_type: AwsPrincipalType = field(skip=True)
     policy_principal_str: str = field(skip=True)
     name: str = field(skip=True)
     principal_metadata: Optional[Dict[str, str]] = field(skip=True)
@@ -44,10 +44,10 @@ class StmtPrincipal:
         return self.name
 
     def get_arn(self) -> str:
-        if self.principal_type == PrincipalType.AWS_ACCOUNT:
+        if self.principal_type == AwsPrincipalType.AWS_ACCOUNT:
             account_id = self.principal_metadata['account-id']  # type: ignore
             return f"arn:aws:iam::{account_id}:root"
-        elif self.principal_type == PrincipalType.ASSUMED_ROLE_SESSION:
+        elif self.principal_type == AwsPrincipalType.ASSUMED_ROLE_SESSION:
             account_id = self.principal_metadata['account-id']  # type: ignore
             role_name = self.principal_metadata['role-name']  # type: ignore
             return f"arn:aws:iam::{account_id}:role/{role_name}"
@@ -60,40 +60,40 @@ class StmtPrincipal:
         is_no_entity = (
             # currently we don't support resolving format saml/web identity/canonical format
             # so, we treats it as no entity object (like aws service/federated etc..)
-            self.principal_type == PrincipalType.WEB_IDENTITY_SESSION
-            or self.principal_type == PrincipalType.SAML_SESSION
-            or self.principal_type == PrincipalType.CANONICAL_USER
+            self.principal_type == AwsPrincipalType.WEB_IDENTITY_SESSION
+            or self.principal_type == AwsPrincipalType.SAML_SESSION
+            or self.principal_type == AwsPrincipalType.CANONICAL_USER
             # real no entity principal
-            or self.principal_type == PrincipalType.AWS_SERVICE
-            or self.principal_type == PrincipalType.ALL_PRINCIPALS
+            or self.principal_type == AwsPrincipalType.AWS_SERVICE
+            or self.principal_type == AwsPrincipalType.ALL_PRINCIPALS
         )
         return is_no_entity
 
     def is_all_principals(self) -> bool:
-        return self.principal_type == PrincipalType.ALL_PRINCIPALS
+        return self.principal_type == AwsPrincipalType.ALL_PRINCIPALS
 
     def is_iam_user_principal(self) -> bool:
         return (
-            self.principal_type == PrincipalType.AWS_ACCOUNT
-            or self.principal_type == PrincipalType.IAM_USER
-            or self.principal_type == PrincipalType.CANONICAL_USER
-            or self.principal_type == PrincipalType.AWS_STS_FEDERATED_USER_SESSION
+            self.principal_type == AwsPrincipalType.AWS_ACCOUNT
+            or self.principal_type == AwsPrincipalType.IAM_USER
+            or self.principal_type == AwsPrincipalType.CANONICAL_USER
+            or self.principal_type == AwsPrincipalType.AWS_STS_FEDERATED_USER_SESSION
         )
 
     def is_role_principal(self) -> bool:
-        return self.principal_type == PrincipalType.IAM_ROLE
+        return self.principal_type == AwsPrincipalType.IAM_ROLE
 
     def is_role_session_principal(self) -> bool:
-        return self.principal_type == PrincipalType.ASSUMED_ROLE_SESSION
+        return self.principal_type == AwsPrincipalType.ASSUMED_ROLE_SESSION
 
     def contains(self, other: 'StmtPrincipal') -> bool:
-        if self.principal_type == PrincipalType.ALL_PRINCIPALS:
+        if self.principal_type == AwsPrincipalType.ALL_PRINCIPALS:
             return True
         if self.principal_type == other.principal_type:
             if self.policy_principal_str == other.policy_principal_str:
                 return True
 
-        if self.principal_type == PrincipalType.AWS_ACCOUNT:
+        if self.principal_type == AwsPrincipalType.AWS_ACCOUNT:
             self_account_id = self.principal_metadata.get('account-id', None) if self.principal_metadata else None
             other_account_id = other.principal_metadata.get('account-id', None) if other.principal_metadata else None
             both_from_same_account_id = self_account_id is not None and self_account_id == other_account_id
@@ -105,28 +105,28 @@ class StmtPrincipal:
     @classmethod
     def load_from_iam_user(cls, principal_arn: str) -> "StmtPrincipal":
         ret: StmtPrincipal = StmtPrincipal.load_from_stmt_aws(principal_arn)
-        if ret.principal_type != PrincipalType.IAM_USER:
+        if ret.principal_type != AwsPrincipalType.IAM_USER:
             raise Exception(f"Failed to load StmtPrincipal iam user from arn {principal_arn}")
         return ret
 
     @classmethod
     def load_from_iam_role(cls, principal_arn: str) -> "StmtPrincipal":
         ret: StmtPrincipal = StmtPrincipal.load_from_stmt_aws(principal_arn)
-        if ret.principal_type != PrincipalType.IAM_ROLE:
+        if ret.principal_type != AwsPrincipalType.IAM_ROLE:
             raise Exception(f"Failed to load StmtPrincipal iam role from arn {principal_arn}")
         return ret
 
     @classmethod
     def load_from_iam_role_session(cls, principal_arn: str) -> "StmtPrincipal":
         ret: StmtPrincipal = StmtPrincipal.load_from_stmt_aws(principal_arn)
-        if ret.principal_type != PrincipalType.ASSUMED_ROLE_SESSION:
+        if ret.principal_type != AwsPrincipalType.ASSUMED_ROLE_SESSION:
             raise Exception(f"Failed to load StmtPrincipal iam role session from arn {principal_arn}")
         return ret
 
     @classmethod
     def load_from_stmt_all(cls) -> "StmtPrincipal":
         return StmtPrincipal(
-            principal_type=PrincipalType.ALL_PRINCIPALS,
+            principal_type=AwsPrincipalType.ALL_PRINCIPALS,
             name="All principals",
             policy_principal_str="*",
             principal_metadata=None,
@@ -135,7 +135,7 @@ class StmtPrincipal:
     @classmethod
     def load_from_stmt_canonical_user(cls, principal_str: str) -> "StmtPrincipal":
         return StmtPrincipal(
-            principal_type=PrincipalType.CANONICAL_USER,
+            principal_type=AwsPrincipalType.CANONICAL_USER,
             name=principal_str,
             policy_principal_str=principal_str,
             principal_metadata=None,
@@ -144,7 +144,7 @@ class StmtPrincipal:
     @classmethod
     def load_from_stmt_service(cls, principal_str: str) -> "StmtPrincipal":
         return StmtPrincipal(
-            principal_type=PrincipalType.AWS_SERVICE,
+            principal_type=AwsPrincipalType.AWS_SERVICE,
             name=principal_str,
             policy_principal_str=principal_str,
             principal_metadata=None,
@@ -158,13 +158,13 @@ class StmtPrincipal:
             metadata = {'account-id': result.groups()[0], 'provider-name': name}
             return StmtPrincipal(
                 name=name,
-                principal_type=PrincipalType.SAML_SESSION,
+                principal_type=AwsPrincipalType.SAML_SESSION,
                 policy_principal_str=principal_str,
                 principal_metadata=metadata,
             )
         else:
             return StmtPrincipal(
-                principal_type=PrincipalType.WEB_IDENTITY_SESSION,
+                principal_type=AwsPrincipalType.WEB_IDENTITY_SESSION,
                 name=principal_str,
                 policy_principal_str=principal_str,
                 principal_metadata=None,
@@ -181,7 +181,7 @@ class StmtPrincipal:
             name = result.groups()[1]
             metadata = {'account-id': result.groups()[0], 'role-name': name}
             return StmtPrincipal(
-                principal_type=PrincipalType.IAM_ROLE,
+                principal_type=AwsPrincipalType.IAM_ROLE,
                 name=name,
                 policy_principal_str=principal_str,
                 principal_metadata=metadata,
@@ -192,7 +192,7 @@ class StmtPrincipal:
             name = result.groups()[1]
             metadata = {'account-id': result.groups()[0], 'user-name': name}
             return StmtPrincipal(
-                principal_type=PrincipalType.IAM_USER,
+                principal_type=AwsPrincipalType.IAM_USER,
                 name=name,
                 policy_principal_str=principal_str,
                 principal_metadata=metadata,
@@ -203,7 +203,7 @@ class StmtPrincipal:
             name = result.groups()[0]
             metadata = {'account-id': name}
             return StmtPrincipal(
-                principal_type=PrincipalType.AWS_ACCOUNT,
+                principal_type=AwsPrincipalType.AWS_ACCOUNT,
                 name=name,
                 policy_principal_str=principal_str,
                 principal_metadata=metadata,
@@ -214,7 +214,7 @@ class StmtPrincipal:
             name = result.groups()[0]
             metadata = {'account-id': name}
             return StmtPrincipal(
-                principal_type=PrincipalType.AWS_ACCOUNT,
+                principal_type=AwsPrincipalType.AWS_ACCOUNT,
                 name=name,
                 policy_principal_str=principal_str,
                 principal_metadata=metadata,
@@ -229,7 +229,7 @@ class StmtPrincipal:
             }
             name = result.groups()[2]
             return StmtPrincipal(
-                principal_type=PrincipalType.ASSUMED_ROLE_SESSION,
+                principal_type=AwsPrincipalType.ASSUMED_ROLE_SESSION,
                 name=name,
                 policy_principal_str=principal_str,
                 principal_metadata=metadata,
@@ -240,7 +240,7 @@ class StmtPrincipal:
             name = result.groups()[1]
             metadata = {'account-id': result.groups()[0], 'federated-user': name}
             return StmtPrincipal(
-                principal_type=PrincipalType.AWS_STS_FEDERATED_USER_SESSION,
+                principal_type=AwsPrincipalType.AWS_STS_FEDERATED_USER_SESSION,
                 name=name,
                 policy_principal_str=principal_str,
                 principal_metadata=metadata,
@@ -248,7 +248,7 @@ class StmtPrincipal:
 
         if principal_str == "*":
             return StmtPrincipal(
-                principal_type=PrincipalType.ALL_PRINCIPALS,
+                principal_type=AwsPrincipalType.ALL_PRINCIPALS,
                 name="All principals",
                 policy_principal_str=principal_str,
                 principal_metadata=None,

@@ -5,14 +5,14 @@ from boto3 import Session
 from serde import serde, field, from_dict
 
 from aws_ptrp.iam.policy import PolicyDocument, UserPolicy
-from aws_ptrp.permissions_resolver.identity_to_resource_line import IdentityNodeBase
+from aws_ptrp.permissions_resolver.principal_to_resource_line import PrincipalNodeBase
 from aws_ptrp.iam.policy.principal import StmtPrincipal
 from aws_ptrp.utils.pagination import paginate_response_list
 
 
 @serde
 @dataclass
-class IAMUser(IdentityNodeBase):
+class IAMUser(PrincipalNodeBase):
     user_name: str
     user_id: str
     path: str
@@ -32,11 +32,11 @@ class IAMUser(IdentityNodeBase):
     def __hash__(self):
         return hash(self.user_id)
 
-    # impl IdentityNodeBase
+    # impl PrincipalNodeBase
     def get_stmt_principal(self) -> StmtPrincipal:
         return self.identity_principal
 
-    # IdentityPoliciesNodeBase
+    # PrincipalPoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
         return self.attached_policies_arn
 

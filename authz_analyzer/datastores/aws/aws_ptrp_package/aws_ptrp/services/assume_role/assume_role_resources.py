@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Set, Generator
 from aws_ptrp.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
 from aws_ptrp.iam.iam_roles import IAMRole
 from aws_ptrp.iam.policy.principal import StmtPrincipal
-from aws_ptrp.principals.principal_type import PrincipalType
+from aws_ptrp.ptrp_models.ptrp_model import AwsPrincipalType
 from aws_ptrp.services.assume_role.assume_role_actions import (
     AssumeRoleAction,
     AssumeRoleActionType,
@@ -54,12 +54,14 @@ class AssumeRoleResolvedStmt(ResolvedResourcesSingleStmt):
         return self.resolved_iam_roles_actions  # type: ignore[return-value]
 
     @staticmethod
-    def get_relevant_assume_action_by_principal_type(principal_type: PrincipalType) -> Optional[AssumeRoleActionType]:
-        if principal_type == PrincipalType.WEB_IDENTITY_SESSION:
+    def get_relevant_assume_action_by_principal_type(
+        principal_type: AwsPrincipalType,
+    ) -> Optional[AssumeRoleActionType]:
+        if principal_type == AwsPrincipalType.WEB_IDENTITY_SESSION:
             return AssumeRoleActionType.ASSUME_ROLE_WITH_WEB_IDENTITY
-        elif principal_type == PrincipalType.SAML_SESSION:
+        elif principal_type == AwsPrincipalType.SAML_SESSION:
             return AssumeRoleActionType.ASSUME_ROLE_WITH_SAML
-        elif principal_type == PrincipalType.AWS_STS_FEDERATED_USER_SESSION:
+        elif principal_type == AwsPrincipalType.AWS_STS_FEDERATED_USER_SESSION:
             # can't assume role with federated user
             return None
         else:
