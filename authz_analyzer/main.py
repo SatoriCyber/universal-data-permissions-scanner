@@ -2,7 +2,15 @@
 from logging import Logger
 from pathlib import Path
 
-from authz_analyzer import S3AuthzAnalyzer, BigQueryAuthzAnalyzer, PostgresAuthzAnalyzer, RedshiftAuthzAnalyzer, SnowflakeAuthzAnalyzer, MongoDBAuthzAnalyzer, MongoDBAtlasAuthzAnalyzer
+from authz_analyzer import (
+    BigQueryAuthzAnalyzer,
+    MongoDBAtlasAuthzAnalyzer,
+    MongoDBAuthzAnalyzer,
+    PostgresAuthzAnalyzer,
+    RedshiftAuthzAnalyzer,
+    S3AuthzAnalyzer,
+    SnowflakeAuthzAnalyzer,
+)
 from authz_analyzer.writers import OutputFormat, get_writer
 
 
