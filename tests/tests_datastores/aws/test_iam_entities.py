@@ -4,8 +4,8 @@ import json
 import pytest
 from serde.json import to_json, from_dict
 
-from authz_analyzer.datastores.aws.iam.iam_entities import IAMEntities
-from authz_analyzer.datastores.aws.utils.create_session import create_session_with_assume_role
+from aws_ptrp.iam.iam_entities import IAMEntities
+from aws_ptrp.utils.create_session import create_session_with_assume_role
 from authz_analyzer.utils.logger import get_logger
 
 
