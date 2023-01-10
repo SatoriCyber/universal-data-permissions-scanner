@@ -10,3 +10,4 @@ from authz_analyzer.datastores.redshift.analyzer import RedshiftAuthzAnalyzer  #
 from authz_analyzer.datastores.snowflake.analyzer import SnowflakeAuthzAnalyzer  # type: ignore
 from authz_analyzer.datastores.aws.analyzer.s3.analyzer import S3AuthzAnalyzer  # type: ignore
 from authz_analyzer.datastores.mongodb.analyzer import MongoDBAuthzAnalyzer  # type: ignore
+from authz_analyzer.datastores.mongodb.atlas.analyzer import MongoDBAtlasAuthzAnalyzer  # type: ignore

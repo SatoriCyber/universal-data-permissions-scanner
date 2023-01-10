@@ -13,6 +13,8 @@ from authz_analyzer.datastores.mongodb.atlas.service_model import (
     OrganizationUserEntry,
 )
 
+from authz_analyzer.datastores.mongodb.model import Resource, InheritedRole
+
 OrganizationRoleName = str
 OrganizationTeamId = str
 
@@ -60,6 +62,16 @@ class OrganizationTeam:
         """Build a database user from the response."""
         return cls(id=entry["id"], name=entry["name"])
 
+
+@dataclass
+class OrganizationRole:
+    """Define an Atlas organization role."""
+
+    id: str
+    name: str
+
+    def __hash__(self) -> int:
+        return hash(self.id)
 
 @dataclass
 class Organization:
@@ -111,7 +123,7 @@ class Cluster:
 
 @dataclass
 class DatabaseRole:
-    """Database role, used by MongoDB and not Atlas."""
+    """Database role, Used by MongoDB."""
 
     name: str
     database_name: str
@@ -119,17 +131,6 @@ class DatabaseRole:
 
     def __hash__(self) -> int:
         return hash(self.name) + hash(self.database_name)
-
-
-@dataclass
-class OrganizationRole:
-    """Define an Atlas organization role."""
-
-    id: str
-    name: str
-
-    def __hash__(self) -> int:
-        return hash(self.id)
 
 
 
@@ -187,14 +188,6 @@ class Permission(Enum):
     OUT_TO_S3 = auto()
 
 
-@dataclass
-class Resource:
-    collection: str
-    database: str
-
-    def __hash__(self) -> int:
-        return  hash(self.collection) + hash(self.database)
-
 
 @dataclass
 class Action:
@@ -205,16 +198,6 @@ class Action:
     def __hash__(self) -> int:
         return hash(self.resource) + hash(self.permission)
 
-
-@dataclass
-class InheritedRole:
-    """Define an inherited role."""
-
-    db: str
-    role: str
-
-    def __hash__(self) -> int:
-        return hash(self.db) + hash(self.role)
 
 @dataclass
 class CustomRole:
@@ -245,6 +228,6 @@ class CustomRole:
                 custom_roles.add(CustomRole(name = entry["roleName"], action = Action(resource=resolved_resource, permission=permission), inherited_role = None))
             
         for inherited_role in entry["inheritedRoles"]:
-            custom_roles.add(CustomRole(name = entry["roleName"], action = None, inherited_role = InheritedRole(db=inherited_role["db"], role=inherited_role["role"])))
+            custom_roles.add(CustomRole(name = entry["roleName"], action = None, inherited_role = InheritedRole(database=inherited_role["db"], name=inherited_role["role"])))
 
         return custom_roles

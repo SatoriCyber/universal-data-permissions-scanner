@@ -5,6 +5,8 @@ The way the permission was granted is described in the path.
 Each writer will use the model to write the data in the format it needs.
 Each datastore needs to create the model from the data it has, each entry should be of type AuthzEntry.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import List
@@ -104,10 +106,10 @@ class AuthzPathElementType(Enum):
 class PermissionLevel(Enum):
     """Permission levels that can be granted to an asset."""
 
-    READ = auto()
-    WRITE = auto()
-    FULL = auto()
-    UNKNOWN = auto()
+    UNKNOWN = 0
+    READ = 1
+    WRITE = 2
+    FULL = 3
 
     def __str__(self) -> str:
         return self.name
@@ -117,6 +119,12 @@ class PermissionLevel(Enum):
 
     def __hash__(self) -> int:
         return hash(self.value)
+
+    def __lt__(self, other: PermissionLevel) -> bool:
+        return self.value < other.value
+    
+    def __ge__(self, other: PermissionLevel) -> bool:
+        return self.value >= other.value
 
 
 @dataclass

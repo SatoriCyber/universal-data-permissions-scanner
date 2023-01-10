@@ -12,6 +12,7 @@ from authz_analyzer.datastores.mongodb.atlas.model import Cluster, Organization,
 from authz_analyzer.datastores.mongodb.atlas.service_model import CustomRoleEntry
 
 
+
 BASE_API = "https://cloud.mongodb.com/api/atlas/v1.0/"
 
 
@@ -102,3 +103,4 @@ class AtlasService:
         """Get all custom roles for project."""
         json_response: List[CustomRoleEntry] = self._get_resource(f"groups/{project.id}/customDBRoles/roles") # type: ignore # looks like a bug in Atlas API
         return {entry["roleName"]: CustomRole.build_custom_roles_from_response(entry) for entry in json_response}
+    
