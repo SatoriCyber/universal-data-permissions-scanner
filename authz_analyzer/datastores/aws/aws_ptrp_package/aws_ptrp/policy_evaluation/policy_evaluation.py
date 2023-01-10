@@ -6,7 +6,7 @@ from aws_ptrp.actions.account_actions import AwsAccountActions
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument
 from aws_ptrp.iam.policy.policy_document_resolver import get_services_resources_resolver
-from aws_ptrp.iam.policy.principal import StmtPrincipal
+from aws_ptrp.principals import Principal
 from aws_ptrp.services import (
     ServiceResourcesResolverBase,
     ServiceResourceType,
@@ -16,7 +16,7 @@ from aws_ptrp.services import (
 @dataclass
 class PolicyEvaluation:
     logger: Logger
-    identity_principal: StmtPrincipal
+    identity_principal: Principal
     target_policy_services_resolver: Dict[ServiceResourceType, ServiceResourcesResolverBase]
     identity_policies_services_resolver: List[Dict[ServiceResourceType, ServiceResourcesResolverBase]]
     resource_policy_services_resolver: Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]
@@ -66,7 +66,7 @@ class PolicyEvaluation:
         logger: Logger,
         account_actions: AwsAccountActions,
         account_resources: AwsAccountResources,
-        identity_principal: StmtPrincipal,
+        identity_principal: Principal,
         parent_resource_arn: Optional[str],
         target_policy: PolicyDocument,
         identity_policies: List[PolicyDocument],

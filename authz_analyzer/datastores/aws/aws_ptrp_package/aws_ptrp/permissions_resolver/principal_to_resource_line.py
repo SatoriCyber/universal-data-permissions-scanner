@@ -9,7 +9,7 @@ from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
     ResourceNodeBase,
     PrincipalPoliciesNodeBase,
 )
-from aws_ptrp.iam.policy.principal import StmtPrincipal
+from aws_ptrp.principals import Principal
 
 from aws_ptrp.ptrp_models.ptrp_model import (
     AwsPrincipal,
@@ -32,7 +32,7 @@ class PrincipalToResourceLine:
         )
 
     def get_principal_to_report(self) -> AwsPrincipal:
-        identity_principal_to_report: StmtPrincipal = self.principal_node.get_stmt_principal()
+        identity_principal_to_report: Principal = self.principal_node.get_stmt_principal()
         return AwsPrincipal(
             arn=identity_principal_to_report.get_arn(),
             type=identity_principal_to_report.principal_type,
@@ -46,7 +46,7 @@ class PrincipalToResourceLine:
         path.append(self.target_policy_node.get_ptrp_path_node())
         return path
 
-    def get_principal_to_policy_evaluation(self) -> StmtPrincipal:
+    def get_principal_to_policy_evaluation(self) -> Principal:
         if self.path_role_nodes:
             return self.path_role_nodes[-1].path_role_base.get_stmt_principal()
         else:

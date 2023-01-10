@@ -19,7 +19,7 @@ from aws_ptrp.permissions_resolver.permissions_resolver import (
 from aws_ptrp.utils.create_session import create_session_with_assume_role
 from aws_ptrp.permissions_resolver.principal_to_resource_line import PrincipalToResourceLine
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
-from aws_ptrp.iam.policy.principal import StmtPrincipal
+from aws_ptrp.principals import Principal
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
 from aws_ptrp.services import (
@@ -55,7 +55,7 @@ class AwsPtrp:
 
         session: Session = create_session_with_assume_role(aws_account_id, role_name)
         logger.info("Successfully assume the role %s for account id %s", role_name, aws_account_id)
-        AwsPtrp.load(logger, session, aws_account_id, resource_service_types_to_load)
+        return cls.load(logger, session, aws_account_id, resource_service_types_to_load)
 
     @classmethod
     def load(
@@ -117,7 +117,7 @@ class AwsPtrp:
         resource: AwsPtrpResource = line.get_ptrp_resource_to_report()
         path_nodes: List[AwsPtrpPathNode] = line.get_ptrp_path_nodes_to_report()
         principal_to_report: AwsPrincipal = line.get_principal_to_report()
-        principal_to_policy_evaluation: StmtPrincipal = line.get_principal_to_policy_evaluation()
+        principal_to_policy_evaluation: Principal = line.get_principal_to_policy_evaluation()
         service_resource = line.resource_node
 
         for _service_type, service_resolver in service_resources_resolver.items():
@@ -135,7 +135,7 @@ class AwsPtrp:
 
         target_policy: PolicyDocument = line.target_policy_node.policy_document
         resource_node: ResourceNodeBase = line.resource_node
-        principal_to_policy: StmtPrincipal = line.get_principal_to_policy_evaluation()
+        principal_to_policy: Principal = line.get_principal_to_policy_evaluation()
         principal_policies_base: PrincipalPoliciesNodeBase = line.get_principal_policies_base_to_policy_evaluation()
         principal_policies: List[PolicyDocument] = list(
             map(

@@ -10,7 +10,7 @@ from aws_ptrp.services.service_action_base import (
     ServiceActionType,
     ResolvedActionsSingleStmt,
 )
-from aws_ptrp.iam.policy.principal import StmtPrincipal
+from aws_ptrp.principals import Principal
 
 
 _SERVICE_RESOURCE_TYPE_BY_NAME: Dict[str, Type['ServiceResourceType']] = dict()
@@ -51,7 +51,7 @@ class ServiceResourceBase(ABC):
 class ResolvedResourcesSingleStmt(ABC):
     @property
     @abstractmethod
-    def resolved_stmt_principals(self) -> List[StmtPrincipal]:
+    def resolved_stmt_principals(self) -> List[Principal]:
         pass
 
     @property
@@ -77,7 +77,7 @@ class ServiceResourcesResolverBase(ABC):
         logger: Logger,
         stmt_relative_id_regexes: List[str],
         service_resources: Set[ServiceResourceBase],
-        resolved_stmt_principals: List[StmtPrincipal],
+        resolved_stmt_principals: List[Principal],
         resolved_stmt_actions: Set[ServiceActionBase],
     ) -> 'ServiceResourcesResolverBase':
         pass
@@ -90,14 +90,14 @@ class ServiceResourcesResolverBase(ABC):
 
     def yield_resolved_stmt_principals(
         self,
-    ) -> Generator[StmtPrincipal, None, None]:
+    ) -> Generator[Principal, None, None]:
         for resolved_stmt in self.get_resolved_stmts():
             for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals:
                 yield resolved_stmt_principal
 
     def yield_resolved_resources(
         self,
-        principal: StmtPrincipal,
+        principal: Principal,
     ) -> Generator[ServiceResourceBase, None, None]:
         aggregate_resources: Set[ServiceResourceBase] = set()
         for resolved_stmt in self.get_resolved_stmts():
@@ -115,7 +115,7 @@ class ServiceResourcesResolverBase(ABC):
     def get_resolved_actions(
         self,
         service_resource: ServiceResourceBase,
-        principal: StmtPrincipal,
+        principal: Principal,
     ) -> Optional[Set[ServiceActionBase]]:
         aggregate_actions: Set[ServiceActionBase] = set()
         for resolved_stmt in self.get_resolved_stmts():
@@ -151,7 +151,7 @@ class ServiceResourceType(ServiceActionType):
         logger: Logger,
         stmt_relative_id_regexes: List[str],
         service_resources: Set[ServiceResourceBase],
-        resolved_stmt_principals: List[StmtPrincipal],
+        resolved_stmt_principals: List[Principal],
         resolved_stmt_actions: Set[ServiceActionBase],
     ) -> ServiceResourcesResolverBase:
         return cls.get_service_resources_resolver_type().load_from_single_stmt(

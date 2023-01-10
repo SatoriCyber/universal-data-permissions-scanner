@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List, Tuple, Optional
 
 from aws_ptrp.services import ServiceResourceBase
-from aws_ptrp.iam.policy.principal import StmtPrincipal
+from aws_ptrp.principals import Principal
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType, AwsPtrpPathNode, AwsPtrpResourceType
 
@@ -20,7 +20,7 @@ class PrincipalPoliciesNodeBase(ABC):
 
 class PrincipalNodeBase(PrincipalPoliciesNodeBase):
     @abstractmethod
-    def get_stmt_principal(self) -> StmtPrincipal:
+    def get_stmt_principal(self) -> Principal:
         pass
 
     # def get_permission_boundary(self) -> Optional[PolicyDocument]:

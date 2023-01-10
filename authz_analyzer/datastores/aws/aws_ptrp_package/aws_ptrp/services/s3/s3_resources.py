@@ -4,7 +4,7 @@ from logging import Logger
 from typing import Dict, List, Optional, Set
 
 from aws_ptrp.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
-from aws_ptrp.iam.policy.principal import StmtPrincipal
+from aws_ptrp.principals import Principal
 from aws_ptrp.services.s3.bucket import S3Bucket
 from aws_ptrp.services.s3.s3_actions import S3Action, S3ActionType, ResolvedS3BucketActions
 from aws_ptrp.services import (
@@ -18,12 +18,12 @@ from aws_ptrp.services import (
 
 @dataclass
 class S3ResolvedStmt(ResolvedResourcesSingleStmt):
-    resolved_principals: List[StmtPrincipal]
+    resolved_principals: List[Principal]
     resolved_buckets: Dict[S3Bucket, ResolvedS3BucketActions]
     # add here condition keys, tags, etc.. (single stmt scope)
 
     @property
-    def resolved_stmt_principals(self) -> List[StmtPrincipal]:
+    def resolved_stmt_principals(self) -> List[Principal]:
         return self.resolved_principals
 
     @property
@@ -47,7 +47,7 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
         stmt_relative_id_buckets_regex: str,
         stmt_relative_id_objects_regex: Optional[str],
         service_resources: List[S3Bucket],
-        _resolved_stmt_principals: List[StmtPrincipal],
+        _resolved_stmt_principals: List[Principal],
         resolved_stmt_actions_all: Set[S3Action],
         resolved_stmt_actions_bucket: Set[S3Action],
         resolved_stmt_actions_object: Set[S3Action],
@@ -89,7 +89,7 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
         _logger: Logger,
         stmt_relative_id_regexes: List[str],
         service_resources: Set[ServiceResourceBase],
-        resolved_stmt_principals: List[StmtPrincipal],
+        resolved_stmt_principals: List[Principal],
         resolved_stmt_actions: Set[ServiceActionBase],
     ) -> 'S3ServiceResourcesResolver':
         resolved_buckets: Dict[S3Bucket, ResolvedS3BucketActions] = dict()

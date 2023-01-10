@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Set, Generator
 
 from aws_ptrp.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
 from aws_ptrp.iam.iam_roles import IAMRole
-from aws_ptrp.iam.policy.principal import StmtPrincipal
+from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_models.ptrp_model import AwsPrincipalType
 from aws_ptrp.services.assume_role.assume_role_actions import (
     AssumeRoleAction,
@@ -41,12 +41,12 @@ class ResolvedAssumeRoleActions(ResolvedActionsSingleStmt):
 
 @dataclass
 class AssumeRoleResolvedStmt(ResolvedResourcesSingleStmt):
-    resolved_principals: List[StmtPrincipal]
+    resolved_principals: List[Principal]
     resolved_iam_roles_actions: Dict[IAMRole, ResolvedAssumeRoleActions]
     # add here condition keys, tags, etc.. (single stmt scope)
 
     @property
-    def resolved_stmt_principals(self) -> List[StmtPrincipal]:
+    def resolved_stmt_principals(self) -> List[Principal]:
         return self.resolved_principals
 
     @property
@@ -67,7 +67,7 @@ class AssumeRoleResolvedStmt(ResolvedResourcesSingleStmt):
         else:
             return AssumeRoleActionType.ASSUME_ROLE
 
-    def yield_trusted_principals(self, iam_role: IAMRole) -> Generator[StmtPrincipal, None, None]:
+    def yield_trusted_principals(self, iam_role: IAMRole) -> Generator[Principal, None, None]:
         for resolved_principal in self.resolved_principals:
             relevant_assume_role: Optional[
                 AssumeRoleActionType
@@ -93,7 +93,7 @@ class AssumeRoleServiceResourcesResolver(ServiceResourcesResolverBase):
     def subtract(self, other: ServiceResourcesResolverBase):
         pass
 
-    def yield_trusted_principals(self, iam_role: IAMRole) -> Generator[StmtPrincipal, None, None]:
+    def yield_trusted_principals(self, iam_role: IAMRole) -> Generator[Principal, None, None]:
         for resolved_stmt in self.resolved_stmts:
             yield from resolved_stmt.yield_trusted_principals(iam_role)
 
@@ -114,7 +114,7 @@ class AssumeRoleServiceResourcesResolver(ServiceResourcesResolverBase):
         logger: Logger,
         stmt_relative_id_regexes: List[str],
         service_resources: Set[ServiceResourceBase],
-        resolved_stmt_principals: List[StmtPrincipal],
+        resolved_stmt_principals: List[Principal],
         resolved_stmt_actions: Set[ServiceActionBase],
     ) -> ServiceResourcesResolverBase:
         resolved_iam_roles_actions: Dict[IAMRole, ResolvedAssumeRoleActions] = dict()
