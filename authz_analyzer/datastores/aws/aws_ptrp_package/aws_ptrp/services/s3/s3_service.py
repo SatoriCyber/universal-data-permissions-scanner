@@ -24,7 +24,7 @@ S3_SERVICE_NAME = "s3_service"
 
 
 @serde
-class S3ServiceType(ServiceResourceType):
+class S3Service(ServiceResourceType):
     def get_resource_service_prefix(self) -> str:
         return S3_RESOURCE_SERVICE_PREFIX
 

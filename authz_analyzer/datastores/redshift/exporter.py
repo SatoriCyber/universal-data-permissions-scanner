@@ -29,19 +29,22 @@ IDENTITY_TYPE_MODEL_TO_AuthzPathElementType = {
 }
 
 
-def _yield_row(identity: DBIdentity, permission_level: PermissionLevel, grant_name: str, relations: List[DBIdentity],
-               db_permissions: List[str]):
+def _yield_row(
+    identity: DBIdentity,
+    permission_level: PermissionLevel,
+    grant_name: str,
+    relations: List[DBIdentity],
+    db_permissions: List[str],
+):
     auth_path_element = [
         AuthzPathElement(
             id=path_identity.id_,
             name=path_identity.name,
             type=IDENTITY_TYPE_MODEL_TO_AuthzPathElementType.get(path_identity.type_),
-            db_permissions=list(),
             note="",
         )
         for path_identity in relations
     ]
-    auth_path_element[-1].db_permissions = db_permissions
     identity = Identity(id=identity.id_, name=identity.name, type=IDENTITY_TYPE_MODEL_TO_OUTPUT.get(identity.type_))
     asset = Asset(name=grant_name, type=AssetType.TABLE)
     yield AuthzEntry(
@@ -49,6 +52,7 @@ def _yield_row(identity: DBIdentity, permission_level: PermissionLevel, grant_na
         asset=asset,
         path=auth_path_element,
         permission=permission_level,
+        db_permissions=db_permissions,
     )
 
 
@@ -63,8 +67,11 @@ def _iter_role_row(
     for grants in roles_to_grants.get(granted_identity.id_, dict()).values():
         for grant in grants:
             yield from _yield_row(
-                identity=identity, permission_level=grant.permission_level, grant_name=grant.name, relations=prev_roles,
-                db_permissions=grant.db_permissions
+                identity=identity,
+                permission_level=grant.permission_level,
+                grant_name=grant.name,
+                relations=prev_roles,
+                db_permissions=grant.db_permissions,
             )
 
     for nested_granted_identity in role_to_roles.get(granted_identity, set()):
@@ -87,11 +94,14 @@ def export(model: AuthorizationModel, writer: BaseWriter):
     """
     for role, roles in model.identity_to_identities.items():
         if role.type_ == "USER":
-            for grants in model.identity_to_resource_privilege.get(role.id_, dict()).values():
+            for grants in model.principal_to_resource_privilege.get(role.id_, dict()).values():
                 for grant in grants:
                     for entry in _yield_row(
-                        identity=role, permission_level=grant.permission_level, grant_name=grant.name, relations=[role],
-                        db_permissions=grant.db_permissions
+                        identity=role,
+                        permission_level=grant.permission_level,
+                        grant_name=grant.name,
+                        relations=[role],
+                        db_permissions=grant.db_permissions,
                     ):
                         writer.write_entry(entry)
 
@@ -100,7 +110,7 @@ def export(model: AuthorizationModel, writer: BaseWriter):
                     identity=role,
                     granted_identity=granted_role,
                     prev_roles=[],
-                    roles_to_grants=model.identity_to_resource_privilege,
+                    roles_to_grants=model.principal_to_resource_privilege,
                     role_to_roles=model.identity_to_identities,
                 ):
                     writer.write_entry(entry)

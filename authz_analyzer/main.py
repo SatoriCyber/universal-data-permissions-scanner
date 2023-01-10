@@ -2,6 +2,7 @@
 from logging import Logger
 from pathlib import Path
 
+<<<<<<< Updated upstream
 from authz_analyzer import (
     BigQueryAuthzAnalyzer,
     MongoDBAtlasAuthzAnalyzer,
@@ -11,6 +12,13 @@ from authz_analyzer import (
     S3AuthzAnalyzer,
     SnowflakeAuthzAnalyzer,
 )
+=======
+from authz_analyzer.datastores.aws.analyzer.s3.analyzer import S3AuthzAnalyzer
+from authz_analyzer.datastores.bigquery.analyzer import BigQueryAuthzAnalyzer
+from authz_analyzer.datastores.postgres.analyzer import PostgresAuthzAnalyzer
+from authz_analyzer.datastores.redshift.analyzer import RedshiftAuthzAnalyzer
+from authz_analyzer.datastores.snowflake.analyzer import SnowflakeAuthzAnalyzer
+>>>>>>> Stashed changes
 from authz_analyzer.writers import OutputFormat, get_writer
 
 

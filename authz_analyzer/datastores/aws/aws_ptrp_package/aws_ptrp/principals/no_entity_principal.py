@@ -3,13 +3,13 @@ from typing import List, Tuple
 
 from aws_ptrp.iam.policy.principal import StmtPrincipal
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
-from aws_ptrp.permissions_resolver.identity_to_resource_line import (
-    IdentityNodeBase,
+from aws_ptrp.permissions_resolver.principal_to_resource_line import (
+    PrincipalNodeBase,
 )
 
 
 @dataclass
-class NoEntityPrincipal(IdentityNodeBase):
+class NoEntityPrincipal(PrincipalNodeBase):
     stmt_principal: StmtPrincipal
 
     def __repr__(self):
@@ -21,11 +21,11 @@ class NoEntityPrincipal(IdentityNodeBase):
     def __hash__(self):
         return hash(self.stmt_principal.__hash__())
 
-    # impl IdentityNodeBase
+    # impl PrincipalNodeBase
     def get_stmt_principal(self) -> StmtPrincipal:
         return self.stmt_principal
 
-    # impl IdentityPoliciesNodeBase
+    # impl PrincipalPoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
         return []
 

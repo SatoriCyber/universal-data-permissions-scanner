@@ -10,8 +10,8 @@ from aws_ptrp.iam.policy import PolicyDocument
 from aws_ptrp.iam.public_block_access_config import PublicAccessBlockConfiguration
 from aws_ptrp.services.s3.bucket_acl import S3BucketACL
 from aws_ptrp.services import ServiceResourceBase
-from aws_ptrp.permissions_resolver.identity_to_resource_line import ResourceNodeBase
-from authz_analyzer.models.model import AssetType
+from aws_ptrp.permissions_resolver.principal_to_resource_line import ResourceNodeBase
+from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpResourceType
 
 
 S3_RESOURCE_SERVICE_PREFIX = "arn:aws:s3:::"
@@ -43,8 +43,8 @@ class S3Bucket(ResourceNodeBase, ServiceResourceBase):
     def get_resource_policy(self) -> Optional[PolicyDocument]:
         return self.policy_document
 
-    def get_asset_type(self) -> AssetType:
-        return AssetType.S3_BUCKET
+    def get_ptrp_resource_type(self) -> AwsPtrpResourceType:
+        return AwsPtrpResourceType.S3_BUCKET
 
 
 def get_buckets(session: Session) -> Set[ServiceResourceBase]:

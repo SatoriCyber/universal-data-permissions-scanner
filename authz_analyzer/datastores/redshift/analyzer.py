@@ -114,7 +114,8 @@ class RedshiftAuthzAnalyzer:
         identity_to_resource_privilege = self._get_identities_privileges()
 
         return AuthorizationModel(
-            identity_to_identities=identity_to_identities, identity_to_resource_privilege=identity_to_resource_privilege
+            identity_to_identities=identity_to_identities,
+            identity_to_resource_privilege=identity_to_resource_privilege,
         )
 
     def _get_identity_identities_mapping(self):

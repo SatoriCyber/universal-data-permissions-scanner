@@ -24,7 +24,7 @@ ROLE_TRUST_RESOURCE_SERVICE_PREFIX = "arn:aws:iam::"
 
 
 @serde
-class AssumeRoleServiceType(ServiceResourceType):
+class AssumeRoleService(ServiceResourceType):
     def get_service_name(self) -> str:
         return ROLE_TRUST_SERVICE_NAME
 

@@ -20,13 +20,15 @@ class MultiJsonWriter(BaseWriter):
 
     def write_entry(self, entry: AuthzEntry):
         path: List[Dict[str, str]] = list(
-            map(lambda x: {
-                "type": str(x.type),
-                "id": x.id,
-                "name": x.name,
-                "note": x.note,
-                "db_permissions": x.db_permissions
-            }, entry.path)
+            map(
+                lambda x: {
+                    "type": str(x.type),
+                    "id": x.id,
+                    "name": x.name,
+                    "note": x.note,
+                },
+                entry.path,
+            )
         )
         identity = {"id": entry.identity.id, "type": str(entry.identity.type), "name": entry.identity.name}
         asset = {"name": entry.asset.name, "type": str(entry.asset.type)}
@@ -34,6 +36,7 @@ class MultiJsonWriter(BaseWriter):
         line = {
             "identity": identity,
             "permission": str(entry.permission),
+            "db_permissions": entry.db_permissions,
             "asset": asset,
             "granted_by": path,
         }
