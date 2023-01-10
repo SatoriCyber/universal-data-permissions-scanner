@@ -4,7 +4,7 @@ __author__ = """SatoriCyber"""
 __email__ = 'omer.shtivi@satoricyber.com'
 __version__ = '3.5.0'
 
-from authz_analyzer.datastores.aws.services.s3.analyzer import S3AuthzAnalyzer  # type: ignore
+from authz_analyzer.datastores.aws.analyzer.s3.analyzer import S3AuthzAnalyzer  # type: ignore
 from authz_analyzer.datastores.bigquery.analyzer import BigQueryAuthzAnalyzer  # type: ignore
 from authz_analyzer.datastores.mongodb.analyzer import MongoDBAuthzAnalyzer  # type: ignore
 from authz_analyzer.datastores.mongodb.atlas.analyzer import MongoDBAtlasAuthzAnalyzer  # type: ignore
