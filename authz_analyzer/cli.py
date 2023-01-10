@@ -11,7 +11,9 @@ if sys.executable != sys.argv[0]:
 
 
 from authz_analyzer.main import (  # pylint: disable=wrong-import-position
+    run_atlas,
     run_bigquery,
+    run_mongodb,
     run_postgres,
     run_s3,
     run_snowflake,
@@ -102,6 +104,43 @@ def postgres(ctx: click.Context, username: str, password: str, port: int, host: 
         dbname=dbname,
     )
 
+
+@main.command()
+@click.pass_context
+@click.option('--username', '-u', required=True, type=str, help="username")
+@click.option('--password', '-p', required=True, type=str, help="password")
+@click.option('--port', required=False, type=str, help="port", default=5432)
+@click.option('--host', '-t', required=True, type=str, help="host, FQDN or IP")
+def mongodb(ctx: click.Context, username: str, password: str, port: int, host: str):
+    """Analyzer Postgres Authorization"""
+    run_mongodb(
+        logger=ctx.obj['LOGGER'],
+        output_format=ctx.obj['FORMAT'],
+        output_path=ctx.obj['OUT'],
+        username=username,
+        password=password,
+        port=port,
+        host=host,
+    )
+
+
+@main.command()
+@click.pass_context
+@click.option('--public_key', '-p', required=True, type=str, help="Atlas API public key from access manager")
+@click.option('--private_key', '-p', required=True, type=str, help="Atlas API private key from access manager")
+@click.option('--username', '-u', required=True, type=str, help="MongoDB username the analyzer should use to connect to each cluster")
+@click.option('--password', '-p', required=True, type=str, help="MongoDB password the analyzer should use to connect to each cluster")
+def atlas(ctx: click.Context, public_key: str, private_key: str, username: str, password: str):
+    """Analyzer Postgres Authorization"""
+    run_atlas(
+        logger=ctx.obj['LOGGER'],
+        output_format=ctx.obj['FORMAT'],
+        output_path=ctx.obj['OUT'],
+        public_key=public_key,
+        private_key=private_key,
+        username=username,
+        password=password,
+    )
 
 if __name__ == "__main__":
     main(obj={})  # pylint: disable=no-value-for-parameter

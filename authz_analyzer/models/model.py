@@ -5,6 +5,8 @@ The way the permission was granted is described in the path.
 Each writer will use the model to write the data in the format it needs.
 Each datastore needs to create the model from the data it has, each entry should be of type AuthzEntry.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import List
@@ -16,6 +18,13 @@ class AssetType(Enum):
     TABLE = auto()
     VIEW = auto()
     S3_BUCKET = auto()  # AWS S3
+    COLLECTION = auto()  # MongoDB collection
+    
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name    
 
     def __str__(self) -> str:
         return self.name
@@ -61,6 +70,7 @@ class AuthzPathElementType(Enum):
     """Types of elements that can be used by datastores to grant permissions."""
 
     USER = auto()  # Used by Redshift
+    TEAM = auto() # used by Mongo
     GROUP = auto()  # Used by Redshift
     ROLE = auto()  # Used by Snowflake, and Postgres
     DATASET = auto()  # used by GCP
@@ -80,6 +90,7 @@ class AuthzPathElementType(Enum):
     SAML_SESSION = auto()  # AWS
     FEDERATED_USER = auto()  # AWS
     ALL_USERS = auto()  # AWS
+    CLUSTER = auto() # Mongo Atlas
     RESOURCE_POLICY = auto()  # AWS
 
     def __str__(self) -> str:
@@ -95,10 +106,10 @@ class AuthzPathElementType(Enum):
 class PermissionLevel(Enum):
     """Permission levels that can be granted to an asset."""
 
-    READ = auto()
-    WRITE = auto()
-    FULL = auto()
-    UNKNOWN = auto()
+    UNKNOWN = 0
+    READ = 1
+    WRITE = 2
+    FULL = 3
 
     def __str__(self) -> str:
         return self.name
@@ -108,6 +119,12 @@ class PermissionLevel(Enum):
 
     def __hash__(self) -> int:
         return hash(self.value)
+
+    def __lt__(self, other: PermissionLevel) -> bool:
+        return self.value < other.value
+    
+    def __ge__(self, other: PermissionLevel) -> bool:
+        return self.value >= other.value
 
 
 @dataclass
@@ -134,6 +151,7 @@ class Asset:
 
     name: str
     type: AssetType
+
 
 
 @dataclass

@@ -2,11 +2,15 @@
 from logging import Logger
 from pathlib import Path
 
-from aws_ptrp.services.s3.analyzer import S3AuthzAnalyzer
-from authz_analyzer.datastores.bigquery.analyzer import BigQueryAuthzAnalyzer
-from authz_analyzer.datastores.postgres.analyzer import PostgresAuthzAnalyzer
-from authz_analyzer.datastores.redshift.analyzer import RedshiftAuthzAnalyzer
-from authz_analyzer.datastores.snowflake.analyzer import SnowflakeAuthzAnalyzer
+from authz_analyzer import (
+    BigQueryAuthzAnalyzer,
+    MongoDBAtlasAuthzAnalyzer,
+    MongoDBAuthzAnalyzer,
+    PostgresAuthzAnalyzer,
+    RedshiftAuthzAnalyzer,
+    S3AuthzAnalyzer,
+    SnowflakeAuthzAnalyzer,
+)
 from authz_analyzer.writers import OutputFormat, get_writer
 
 
@@ -102,7 +106,7 @@ def run_postgres(
         output_path (str): Where to write the output
         port (int): Postgres port
     """
-    PostgresAuthzAnalyzer.connect(
+    analyzer = PostgresAuthzAnalyzer.connect(
         username=username,
         password=password,
         host=host,
@@ -112,6 +116,7 @@ def run_postgres(
         logger=logger,
         port=port,
     )
+    analyzer.run()
 
 
 def run_redshift(
@@ -136,7 +141,7 @@ def run_redshift(
         output_path (str): Where to write the output
         port (int): Redshift port
     """
-    RedshiftAuthzAnalyzer.connect(
+    analyzer = RedshiftAuthzAnalyzer.connect(
         username=username,
         password=password,
         host=host,
@@ -146,3 +151,70 @@ def run_redshift(
         logger=logger,
         port=port,
     )
+    analyzer.run()
+
+
+
+def run_mongodb(
+    logger: Logger,
+    username: str,
+    password: str,
+    host: str,
+    output_format: OutputFormat,
+    output_path: Path,
+    port: int,
+):
+    """Run MongoDB analyzer.
+
+    Args:
+        logger (Logger): Logger
+        username (str): username
+        password (str): password
+        host (str): FQDN or IP of the MongoDB DB
+        output_format (OutputFormat): Output format, CSV or JSON
+        output_path (str): Where to write the output
+        port (int): port
+    """
+    analyzer = MongoDBAuthzAnalyzer.connect(
+        username=username,
+        password=password,
+        host=host,
+        output_path=output_path,
+        output_format=output_format,
+        logger=logger,
+        port=port,
+    )
+    analyzer.run()
+
+
+def run_atlas(
+    logger: Logger,
+    public_key: str,
+    private_key: str,
+    username: str,
+    password: str,
+    output_format: OutputFormat,
+    output_path: Path,
+):
+    """Run MongoDB Atlas analyzer.
+
+    Args:
+        logger (Logger): Logger
+        public_key (str): MongoDB Atlas public key, generated through the organization access manager
+        private_key (str): MongoDB Atlas public key, generated through the organization access manager
+        username (str): MongoDB cluster username
+        password (str): MongoDB cluster password
+        output_format (OutputFormat): Output format, CSV or JSON
+        output_path (str): Where to write the output
+    """
+    analyzer = MongoDBAtlasAuthzAnalyzer.connect(
+        public_key=public_key,
+        private_key=private_key,
+        db_user=username,
+        db_password=password,
+        output_path=output_path,
+        output_format=output_format,
+        logger=logger,
+    )
+    analyzer.run()
+
