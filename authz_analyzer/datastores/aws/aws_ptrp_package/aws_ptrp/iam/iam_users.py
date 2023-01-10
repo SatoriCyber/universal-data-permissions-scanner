@@ -6,7 +6,7 @@ from serde import serde, field, from_dict
 
 from aws_ptrp.iam.policy import PolicyDocument, UserPolicy
 from aws_ptrp.permissions_resolver.principal_to_resource_line import PrincipalNodeBase
-from aws_ptrp.iam.policy.principal import StmtPrincipal
+from aws_ptrp.principals import Principal
 from aws_ptrp.utils.pagination import paginate_response_list
 
 
@@ -18,9 +18,9 @@ class IAMUser(PrincipalNodeBase):
     path: str
     user_policies: List[UserPolicy]
     attached_policies_arn: List[str]
-    identity_principal: StmtPrincipal = field(
-        deserializer=StmtPrincipal.from_policy_principal_str,
-        serializer=StmtPrincipal.to_policy_principal_str,
+    identity_principal: Principal = field(
+        deserializer=Principal.from_policy_principal_str,
+        serializer=Principal.to_policy_principal_str,
     )
 
     def __eq__(self, other):
@@ -33,7 +33,7 @@ class IAMUser(PrincipalNodeBase):
         return hash(self.user_id)
 
     # impl PrincipalNodeBase
-    def get_stmt_principal(self) -> StmtPrincipal:
+    def get_stmt_principal(self) -> Principal:
         return self.identity_principal
 
     # PrincipalPoliciesNodeBase
@@ -68,7 +68,7 @@ def get_iam_users(session: Session) -> Dict[str, IAMUser]:
             iam_client.list_attached_user_policies, 'AttachedPolicies', UserName=user_name, PathPrefix=path
         )
         attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
-        user_principal_arn = StmtPrincipal.load_from_iam_user(arn)
+        user_principal_arn = Principal.load_from_iam_user(arn)
         ret[arn] = IAMUser(
             user_name=user_name,
             user_id=user_id,

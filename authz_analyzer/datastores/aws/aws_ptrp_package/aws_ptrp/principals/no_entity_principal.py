@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Tuple
 
-from aws_ptrp.iam.policy.principal import StmtPrincipal
+from aws_ptrp.principals import Principal
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.permissions_resolver.principal_to_resource_line import (
     PrincipalNodeBase,
@@ -10,7 +10,7 @@ from aws_ptrp.permissions_resolver.principal_to_resource_line import (
 
 @dataclass
 class NoEntityPrincipal(PrincipalNodeBase):
-    stmt_principal: StmtPrincipal
+    stmt_principal: Principal
 
     def __repr__(self):
         return self.stmt_principal.__repr__()
@@ -22,7 +22,7 @@ class NoEntityPrincipal(PrincipalNodeBase):
         return hash(self.stmt_principal.__hash__())
 
     # impl PrincipalNodeBase
-    def get_stmt_principal(self) -> StmtPrincipal:
+    def get_stmt_principal(self) -> Principal:
         return self.stmt_principal
 
     # impl PrincipalPoliciesNodeBase

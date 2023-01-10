@@ -5,7 +5,7 @@ from boto3 import Session
 from serde import serde, from_dict
 
 from aws_ptrp.iam.policy import PolicyDocument
-from aws_ptrp.iam.policy.principal import StmtPrincipal
+from aws_ptrp.principals import Principal
 from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
     PathRoleNodeBase,
 )
@@ -41,8 +41,8 @@ class IAMRoleSession(PathRoleNodeBase):
         return self.role.arn
 
     # impl PrincipalNodeBase
-    def get_stmt_principal(self) -> StmtPrincipal:
-        return StmtPrincipal.load_from_iam_role_session(self.role.get_role_session_arn(self.session_name))
+    def get_stmt_principal(self) -> Principal:
+        return Principal.load_from_iam_role_session(self.role.get_role_session_arn(self.session_name))
 
     # impl PrincipalPoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
@@ -94,8 +94,8 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
         return self.arn
 
     # impl PrincipalNodeBase
-    def get_stmt_principal(self) -> StmtPrincipal:
-        return StmtPrincipal.load_from_iam_role(self.arn)
+    def get_stmt_principal(self) -> Principal:
+        return Principal.load_from_iam_role(self.arn)
 
     # impl PrincipalPoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:

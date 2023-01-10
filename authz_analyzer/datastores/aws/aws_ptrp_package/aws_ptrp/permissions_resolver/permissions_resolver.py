@@ -23,7 +23,7 @@ from aws_ptrp.iam.policy.policy_document_resolver import (
     get_resource_based_resolver,
     get_identity_based_resolver,
 )
-from aws_ptrp.iam.policy.principal import StmtPrincipal
+from aws_ptrp.principals import Principal
 from aws_ptrp.principals.no_entity_principal import NoEntityPrincipal
 from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.iam.iam_roles import IAMRole, IAMRoleSession
@@ -98,13 +98,13 @@ class PermissionsResolverBuilder:
     account_resources: AwsAccountResources
     graph: nx.DiGraph = nx.DiGraph()
 
-    def get_no_entity_principal_for_principal(self, stmt_principal: StmtPrincipal) -> Optional[NoEntityPrincipal]:
+    def get_no_entity_principal_for_principal(self, stmt_principal: Principal) -> Optional[NoEntityPrincipal]:
         if stmt_principal.is_no_entity_principal():
             return NoEntityPrincipal(stmt_principal=stmt_principal)
         else:
             return None
 
-    def get_path_node_roles_for_principal(self, stmt_principal: StmtPrincipal) -> Iterable[PathRoleNodeBase]:
+    def get_path_node_roles_for_principal(self, stmt_principal: Principal) -> Iterable[PathRoleNodeBase]:
         if stmt_principal.is_all_principals():
             return self.iam_entities.iam_roles.values()
         elif stmt_principal.is_role_principal():
@@ -116,7 +116,7 @@ class PermissionsResolverBuilder:
                 return [IAMRoleSession(role=role, session_name=stmt_principal.get_name())]
         return []
 
-    def get_iam_roles_for_principal(self, stmt_principal: StmtPrincipal) -> Iterable[IAMUser]:
+    def get_iam_roles_for_principal(self, stmt_principal: Principal) -> Iterable[IAMUser]:
         if stmt_principal.is_all_principals():
             return self.iam_entities.iam_users.values()
         elif stmt_principal.is_iam_user_principal():
@@ -130,7 +130,7 @@ class PermissionsResolverBuilder:
 
     def _resolve_stmt_principal_to_nodes_and_connect(
         self,
-        stmt_principal: StmtPrincipal,
+        stmt_principal: Principal,
         node_to_connect: Union[TargetPolicyNode, PathRoleNode],
     ):
         if isinstance(node_to_connect, TargetPolicyNode):
@@ -161,7 +161,7 @@ class PermissionsResolverBuilder:
 
     def _connect_target_policy_node_to_resources(
         self,
-        identity_principal: StmtPrincipal,
+        identity_principal: Principal,
         target_policy_node: TargetPolicyNode,
     ):
         service_resources_resolver: Optional[
@@ -195,7 +195,7 @@ class PermissionsResolverBuilder:
         node_arn: str,
         attached_policies_arn: List[str],
         inline_policies_and_names: List[Tuple[PolicyDocument, str]],
-        identity_principal: StmtPrincipal,
+        identity_principal: Principal,
     ):
         assert (
             isinstance(identity_node, PrincipalNodeBase)

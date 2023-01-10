@@ -5,7 +5,6 @@ import pytest
 
 from serde.json import to_json, from_dict
 
-from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.iam.iam_roles import IAMRole
 from aws_ptrp import AwsPtrp
 from aws_ptrp.services.s3.s3_service import S3Service, S3_SERVICE_NAME
@@ -22,7 +21,6 @@ from aws_ptrp.services import (
     register_service_resource_type_by_name,
     register_service_resource_by_name,
 )
-from aws_ptrp.utils.create_session import create_session_with_assume_role
 
 from authz_analyzer.datastores.aws.analyzer.exporter import AWSAuthzAnalyzerExporter
 from authz_analyzer.writers.get_writers import get_writer
@@ -58,9 +56,7 @@ def register_services_for_deserialize_from_file():
 def test_aws_authz_analyzer_with_s3_write_satori_dev_account():
     aws_account_id = '105246067165'
     assume_role_name = 'LalonFromStage'
-    session = create_session_with_assume_role(aws_account_id, assume_role_name)
-    iam_entities = IAMEntities.load(get_logger(False), aws_account_id, session)
-    authz_analyzer = AwsPtrp.load(get_logger(False), iam_entities, session, set([S3Service(), AssumeRoleService()]))
+    authz_analyzer = AwsPtrp.load_from_role(get_logger(False), aws_account_id, assume_role_name, set([S3Service()]))
 
     authz_analyzer_json = to_json(authz_analyzer)
     with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "w", encoding="utf-8") as outfile:

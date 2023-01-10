@@ -1,7 +1,7 @@
 from logging import Logger
 from typing import Dict, Optional, Set, List, Union
 
-from aws_ptrp.iam.policy.principal import StmtPrincipal
+from aws_ptrp.principals import Principal
 from aws_ptrp.actions.account_actions import AwsAccountActions
 from aws_ptrp.actions.actions_resolver import ActionsResolver
 from aws_ptrp.iam.policy.effect import Effect
@@ -75,7 +75,7 @@ def get_resource_based_resolver(
 def get_identity_based_resolver(
     logger: Logger,
     policy_document: PolicyDocument,
-    identity_principal: StmtPrincipal,
+    identity_principal: Principal,
     account_actions: AwsAccountActions,
     account_resources: AwsAccountResources,
 ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
@@ -98,7 +98,7 @@ def get_services_resources_resolver(
     logger: Logger,
     policy_document: PolicyDocument,
     parent_resource_arn: Optional[str],
-    identity_principal: Optional[StmtPrincipal],
+    identity_principal: Optional[Principal],
     account_actions: AwsAccountActions,
     account_resources: AwsAccountResources,
     effect: Effect,
@@ -114,7 +114,7 @@ def get_services_resources_resolver(
             continue
 
         if statement.principal:
-            statement_principals: List[StmtPrincipal] = statement.principal.principals
+            statement_principals: List[Principal] = statement.principal.principals
         elif identity_principal:
             statement_principals = [identity_principal]
         else:
