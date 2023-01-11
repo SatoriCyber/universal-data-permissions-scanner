@@ -32,6 +32,7 @@ class AtlasService:
     https://www.mongodb.com/docs/atlas/configure-api-access/#std-label-create-org-api-key
     Organization read only.
     """
+
     auth: HTTPDigestAuth
 
     @classmethod
@@ -59,7 +60,7 @@ class AtlasService:
         """
         json_response = self._get_resource("orgs")
         return {Organization.new(name=org["name"], org_id=org["id"]) for org in json_response["results"]}
-    
+
     def get_all_organization_users_for_organization(self, organization: Organization):
         """Get all organization users for organization."""
         json_response = self._get_resource(f"orgs/{organization.id}/users")
@@ -70,22 +71,21 @@ class AtlasService:
         json_response = self._get_resource(f"orgs/{organization.id}/teams")
         return {entry["id"]: OrganizationTeam.build_from_response(entry) for entry in json_response["results"]}
 
-
     def get_all_projects(self):
         """Get all projects in the organization."""
         json_response = self._get_resource("groups")
         return {Project(id=project["id"], name=project["name"]) for project in json_response["results"]}
-    
+
     def get_all_project_for_organization(self, organization: Organization):
         """Get all projects for organization."""
         json_response = self._get_resource(f"orgs/{organization.id}/groups")
         return {Project(id=project["id"], name=project["name"]) for project in json_response["results"]}
-    
+
     def get_all_organization_users_for_project(self, project: Project):
         """Get all users for project."""
         json_response = self._get_resource(f"groups/{project.id}/users")
         return {OrganizationUser.build_from_response(entry) for entry in json_response["results"]}
-    
+
     def get_teams_roles(self, project: Project):
         """Get all teams and their roles for specific project."""
         json_response = self._get_resource(f"groups/{project.id}/teams")
@@ -94,7 +94,7 @@ class AtlasService:
             results[entry["teamId"]] = entry["roleNames"]
 
         return results
-    
+
     def get_all_clusters_for_project(self, project: Project):
         """Get all clusters for project."""
         json_response = self._get_resource(f"groups/{project.id}/clusters")
@@ -105,9 +105,7 @@ class AtlasService:
         json_response = self._get_resource(f"groups/{project.id}/databaseUsers")
         return {DatabaseUser.build_from_response(entry) for entry in json_response["results"]}
 
-
     def get_custom_roles_by_project(self, project: Project) -> Dict[str, Set[CustomRole]]:
         """Get all custom roles for project."""
-        json_response: List[CustomRoleEntry] = self._get_resource(f"groups/{project.id}/customDBRoles/roles") # type: ignore # looks like a bug in Atlas API
+        json_response: List[CustomRoleEntry] = self._get_resource(f"groups/{project.id}/customDBRoles/roles")  # type: ignore # looks like a bug in Atlas API
         return {entry["roleName"]: CustomRole.build_custom_roles_from_response(entry) for entry in json_response}
-    

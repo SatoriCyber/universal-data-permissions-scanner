@@ -17,8 +17,7 @@ BUILT_IN_CLUSTER_ROLES_MAP = {
     "userAdminAnyDatabase": PermissionLevel.FULL,
     "dbAdminAnyDatabase": PermissionLevel.FULL,
     "root": PermissionLevel.FULL,
-    "__system": PermissionLevel.FULL,    
-
+    "__system": PermissionLevel.FULL,
 }
 
 PRIVILEGE_MAP = {
@@ -44,6 +43,7 @@ def get_permission_level(role: str):
 def get_permission_level_cluster(role: str):
     """Get permission level from role."""
     return BUILT_IN_CLUSTER_ROLES_MAP.get(role)
+
 
 def get_permission_level_privilege(privilege: str):
     """Get permission level from privilege."""

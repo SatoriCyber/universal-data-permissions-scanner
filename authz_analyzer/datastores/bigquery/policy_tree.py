@@ -25,7 +25,16 @@ ROLE_TO_PERMISSION = {
     "READER": PermissionLevel.READ,
 }
 
-READ_PERMISSIONS = {"bigquery.dataPolicies.maskedGet", "bigquery.tables.getData", "bigquery.jobs.get", "bigquery.models.getData", "bigquery.models.export", "bigquery.readsessions.getData", "bigquery.rowAccessPolicies.getFilteredData", "bigquery.tables.export"}
+READ_PERMISSIONS = {
+    "bigquery.dataPolicies.maskedGet",
+    "bigquery.tables.getData",
+    "bigquery.jobs.get",
+    "bigquery.models.getData",
+    "bigquery.models.export",
+    "bigquery.readsessions.getData",
+    "bigquery.rowAccessPolicies.getFilteredData",
+    "bigquery.tables.export",
+}
 WRITE_PERMISSIONS = {
     "bigquery.dataPolicies.maskedSet",
     "bigquery.tables.delete",
