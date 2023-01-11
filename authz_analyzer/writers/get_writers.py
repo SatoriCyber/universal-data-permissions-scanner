@@ -3,18 +3,18 @@ from io import TextIOWrapper
 from pathlib import Path
 from typing import TextIO, Union
 
-from authz_analyzer.writers.base_writers import OutputFormat
+from authz_analyzer.writers.base_writers import OutputFormat, BaseWriter
 from authz_analyzer.writers.csv_writer import CSVWriter
 from authz_analyzer.writers.multi_json_exporter import MultiJsonWriter
 
 
-def get_writer(filename: Union[Path, str], output_format: OutputFormat):
+def get_writer(filename: Union[Path, str], output_format: OutputFormat) -> BaseWriter:
     fh = sys.stdout if filename is None else open(filename, 'w', encoding="utf=8")
     writer = _get_writer(fh, output_format)
     return writer
 
 
-def _get_writer(fh: Union[TextIO, TextIOWrapper], output_format: OutputFormat):
+def _get_writer(fh: Union[TextIO, TextIOWrapper], output_format: OutputFormat) -> BaseWriter:
     if output_format is OutputFormat.MULTI_JSON:
         return MultiJsonWriter(fh)
     if output_format is OutputFormat.CSV:

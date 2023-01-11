@@ -65,7 +65,7 @@ def get_iam_users(session: Session) -> Dict[str, IAMUser]:
             )
 
         attached_policies = paginate_response_list(
-            iam_client.list_attached_user_policies, 'AttachedPolicies', UserName=user_name, PathPrefix=path
+            iam_client.list_attached_user_policies, 'AttachedPolicies', UserName=user_name
         )
         attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
         user_principal_arn = Principal.load_from_iam_user(arn)

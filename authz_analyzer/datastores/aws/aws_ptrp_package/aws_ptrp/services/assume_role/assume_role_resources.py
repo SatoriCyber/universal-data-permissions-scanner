@@ -79,8 +79,12 @@ class AssumeRoleResolvedStmt(ResolvedResourcesSingleStmt):
             if resolved_actions is None:
                 continue
 
-            if any(resolved_action.action_type == relevant_assume_role for resolved_action in resolved_actions.actions):
-                yield resolved_principal
+            if not any(
+                resolved_action.action_type == relevant_assume_role for resolved_action in resolved_actions.actions
+            ):
+                continue
+
+            yield resolved_principal
 
 
 @dataclass

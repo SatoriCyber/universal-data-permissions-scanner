@@ -44,10 +44,10 @@ class S3Service(ServiceResourceType):
 
     @classmethod
     def load_service_resources(
-        cls, logger: Logger, session: Session, _iam_entities: IAMEntities
+        cls, logger: Logger, session: Session, aws_account_id: str, _iam_entities: IAMEntities
     ) -> Set[ServiceResourceBase]:
         # Get the buckets to analyzed
-        buckets = get_buckets(session)
+        buckets = get_buckets(session, aws_account_id)
         logger.info(f"Got buckets to analyzed: {buckets}")
         return buckets
 

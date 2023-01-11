@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Set, Tuple, Callable
 from boto3 import Session
 from serde import serde
 
-from aws_ptrp.actions.account_actions import AwsAccountActions
+from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.policy_evaluation import PolicyEvaluation
 from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
     PrincipalPoliciesNodeBase,
@@ -40,44 +40,72 @@ from aws_ptrp.ptrp_models.ptrp_model import (
 @serde
 @dataclass
 class AwsPtrp:
-    account_actions: AwsAccountActions
-    account_resources: AwsAccountResources
+    aws_actions: AwsActions
     iam_entities: IAMEntities
+    target_account_resources: AwsAccountResources
 
     @classmethod
     def load_from_role(
         cls,
         logger: Logger,
-        aws_account_id: str,
         role_name: str,
         resource_service_types_to_load: Set[ServiceResourceType],
+        target_account_id: str,
+        additional_account_ids: Optional[Set[str]] = None,
     ):
-
-        session: Session = create_session_with_assume_role(aws_account_id, role_name)
-        logger.info("Successfully assume the role %s for account id %s", role_name, aws_account_id)
-        return cls.load(logger, session, aws_account_id, resource_service_types_to_load)
+        if additional_account_ids:
+            if target_account_id in additional_account_ids:
+                additional_account_ids.remove(target_account_id)
+            iam_entities: IAMEntities = cls._load_iam_entities_for_additional_account(
+                logger, role_name, additional_account_ids
+            )
+        else:
+            iam_entities = IAMEntities()
+        return cls._load_for_target_account(
+            logger, role_name, target_account_id, iam_entities, resource_service_types_to_load
+        )
 
     @classmethod
-    def load(
+    def _load_iam_entities_for_additional_account(
+        cls, logger: Logger, role_name: str, additional_account_ids: Set[str]
+    ) -> IAMEntities:
+        iam_entities = IAMEntities()
+        for additional_account_id in additional_account_ids:
+            session: Session = create_session_with_assume_role(additional_account_id, role_name)
+            logger.info(
+                "Successfully assume the role %s for additional account id %s", role_name, additional_account_id
+            )
+            iam_entities.update_for_account(logger, additional_account_id, session)
+        return iam_entities
+
+    @classmethod
+    def _load_for_target_account(
         cls,
         logger: Logger,
-        session: Session,
-        aws_account_id: str,
+        role_name: str,
+        target_account_id: str,
+        iam_entities: IAMEntities,
         resource_service_types_to_load: Set[ServiceResourceType],
-    ):
+    ) -> 'AwsPtrp':
+        # update the iam_entities from the target account
+        target_session: Session = create_session_with_assume_role(target_account_id, role_name)
+        logger.info("Successfully assume the role %s for target account id %s", role_name, target_account_id)
+        iam_entities.update_for_account(logger, target_account_id, target_session)
+
+        # aws actions
         resource_service_types_to_load.add(AssumeRoleService())  # out of the box resource
         action_service_types_to_load: Set[ServiceActionType] = set(
             [x for x in resource_service_types_to_load if isinstance(x, ServiceActionType)]
         )
-        iam_entities: IAMEntities = IAMEntities.load(logger, aws_account_id, session)
-        aws_account_id = iam_entities.account_id
-        account_actions = AwsAccountActions.load(logger, aws_account_id, action_service_types_to_load)
+        aws_actions = AwsActions.load(logger, action_service_types_to_load)
+
+        # target account resources
         account_resources = AwsAccountResources.load(
-            logger, aws_account_id, iam_entities, session, resource_service_types_to_load
+            logger, target_account_id, iam_entities, target_session, resource_service_types_to_load
         )
         return cls(
-            account_actions=account_actions,
-            account_resources=account_resources,
+            aws_actions=aws_actions,
+            target_account_resources=account_resources,
             iam_entities=iam_entities,
         )
 
@@ -102,7 +130,7 @@ class AwsPtrp:
                         resource=resource,
                         path_nodes=path_nodes,
                         principal=principal,
-                        action_permission_level=AwsPtrpActionPermissionLevel.WRITE,
+                        action_permission_level=permissions_level,
                         action_permissions=action_permissions,
                     )
                 )
@@ -134,7 +162,9 @@ class AwsPtrp:
     ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
 
         target_policy: PolicyDocument = line.target_policy_node.policy_document
+        is_target_policy_resource_based: bool = line.target_policy_node.is_resource_based_policy
         resource_node: ResourceNodeBase = line.resource_node
+        resource_account_id: str = line.resource_node.get_resource_account_id()
         principal_to_policy: Principal = line.get_principal_to_policy_evaluation()
         principal_policies_base: PrincipalPoliciesNodeBase = line.get_principal_policies_base_to_policy_evaluation()
         principal_policies: List[PolicyDocument] = list(
@@ -157,22 +187,24 @@ class AwsPtrp:
 
         return PolicyEvaluation.run(
             logger=logger,
-            account_actions=self.account_actions,
-            account_resources=self.account_resources,
+            aws_actions=self.aws_actions,
+            account_resources=self.target_account_resources,
             identity_principal=principal_to_policy,
             parent_resource_arn=None,
             target_policy=target_policy,
+            is_target_policy_resource_based=is_target_policy_resource_based,
             identity_policies=principal_policies,
             resource_policy=resource_node.get_resource_policy(),
+            resource_account_id=resource_account_id,
         )
 
     def resolve_permissions(self, logger: Logger, cb_line: Callable[[AwsPtrpLine], None]):
         permissions_resolver: PermissionsResolver = PermissionsResolverBuilder(
-            logger, self.iam_entities, self.account_actions, self.account_resources
+            logger, self.iam_entities, self.aws_actions, self.target_account_resources
         ).build()
 
         for line in permissions_resolver.yield_principal_to_resource_lines():  # type: PrincipalToResourceLine
-            logger.info("%s", line)
+            logger.debug("%s", line)
             service_resources_resolver: Optional[
                 Dict[ServiceResourceType, ServiceResourcesResolverBase]
             ] = self._resolve_principal_to_resource_line_permissions(logger, line)

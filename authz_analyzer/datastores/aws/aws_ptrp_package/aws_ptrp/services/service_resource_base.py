@@ -46,6 +46,10 @@ class ServiceResourceBase(ABC):
     def get_resource_name(self) -> str:
         pass
 
+    @abstractmethod
+    def get_resource_account_id(self) -> str:
+        pass
+
 
 @dataclass
 class ResolvedResourcesSingleStmt(ABC):
@@ -160,5 +164,7 @@ class ServiceResourceType(ServiceActionType):
 
     @classmethod
     @abstractmethod
-    def load_service_resources(cls, logger: Logger, session: Session, iam_entities) -> Set[ServiceResourceBase]:
+    def load_service_resources(
+        cls, logger: Logger, session: Session, aws_account_id: str, iam_entities
+    ) -> Set[ServiceResourceBase]:
         pass

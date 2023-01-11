@@ -50,11 +50,13 @@ class AwsAccountResources:
         session: Session,
         service_types_to_load: Set[ServiceResourceType],
     ):
-        logger.info(f"Start pulling AWS account {aws_account_id} with resources {service_types_to_load}...")
+        logger.info(f"Loading AWS account {aws_account_id} with resources {service_types_to_load}...")
         account_resources: Dict[ServiceResourceType, Set[ServiceResourceBase]] = dict()
         for service_type_to_load in service_types_to_load:
-            logger.info(f"Start pulling AWS account resources from type {service_type_to_load.get_service_name()}")
-            ret: Set[ServiceResourceBase] = service_type_to_load.load_service_resources(logger, session, iam_entities)
+            logger.info(f"Loading AWS account resources from type {service_type_to_load.get_service_name()}")
+            ret: Set[ServiceResourceBase] = service_type_to_load.load_service_resources(
+                logger, session, aws_account_id, iam_entities
+            )
             account_resources[service_type_to_load] = ret
 
         return cls(account_resources=account_resources)

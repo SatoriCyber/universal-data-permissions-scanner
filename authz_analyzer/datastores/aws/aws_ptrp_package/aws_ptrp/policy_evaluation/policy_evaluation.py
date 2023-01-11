@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Dict, List, Optional
 
-from aws_ptrp.actions.account_actions import AwsAccountActions
+from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument
 from aws_ptrp.iam.policy.policy_document_resolver import get_services_resources_resolver
@@ -22,7 +22,7 @@ class PolicyEvaluation:
     resource_policy_services_resolver: Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]
     # session_policies_services_resolver: List[Dict[ServiceResourceType, ServiceResourcesResolverBase]]
     # permission_boundary_policy_services_resolver: Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]
-    account_actions: AwsAccountActions
+    aws_actions: AwsActions
     account_resources: AwsAccountResources
 
     def _retain_target_policy_services_resolver(self):
@@ -64,16 +64,24 @@ class PolicyEvaluation:
     def run(
         cls,
         logger: Logger,
-        account_actions: AwsAccountActions,
+        aws_actions: AwsActions,
         account_resources: AwsAccountResources,
         identity_principal: Principal,
         parent_resource_arn: Optional[str],
         target_policy: PolicyDocument,
+        is_target_policy_resource_based: bool,
         identity_policies: List[PolicyDocument],
         resource_policy: Optional[PolicyDocument],
+        resource_account_id: str,
         # session_policies: List[PolicyDocument] = [],
         # permission_boundary_policy: Optional[PolicyDocument] = None,
     ) -> Dict[ServiceResourceType, ServiceResourcesResolverBase]:
+
+        if not is_target_policy_resource_based:
+            # in cross account, identity_principal (not the original principal!, but the last principal to be assumed in the path)
+            # can has accesses to a resource only if the target_policy is a resource based policy
+            if identity_principal.get_account_id() != resource_account_id:
+                return dict()
 
         target_policy_services_resolver: Optional[
             Dict[ServiceResourceType, ServiceResourcesResolverBase]
@@ -82,7 +90,7 @@ class PolicyEvaluation:
             policy_document=target_policy,
             parent_resource_arn=parent_resource_arn,
             identity_principal=identity_principal,
-            account_actions=account_actions,
+            aws_actions=aws_actions,
             account_resources=account_resources,
             effect=Effect.Allow,
         )
@@ -98,7 +106,7 @@ class PolicyEvaluation:
                 policy_document=identity_policy,
                 parent_resource_arn=None,
                 identity_principal=identity_principal,
-                account_actions=account_actions,
+                aws_actions=aws_actions,
                 account_resources=account_resources,
                 effect=Effect.Deny,
             )
@@ -113,7 +121,7 @@ class PolicyEvaluation:
                 policy_document=resource_policy,
                 parent_resource_arn=parent_resource_arn,
                 identity_principal=identity_principal,
-                account_actions=account_actions,
+                aws_actions=aws_actions,
                 account_resources=account_resources,
                 effect=Effect.Deny,
             )
@@ -126,7 +134,7 @@ class PolicyEvaluation:
             target_policy_services_resolver=target_policy_services_resolver,
             identity_policies_services_resolver=identity_policies_services_resolver,
             resource_policy_services_resolver=resource_policy_services_resolver,
-            account_actions=account_actions,
+            aws_actions=aws_actions,
             account_resources=account_resources,
         )
 

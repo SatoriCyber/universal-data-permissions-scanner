@@ -15,7 +15,7 @@ from authz_analyzer.main import (  # pylint: disable=wrong-import-position
     run_bigquery,
     run_mongodb,
     run_postgres,
-    run_s3,
+    run_aws_s3,
     run_snowflake,
 )
 from authz_analyzer.utils.logger import get_logger  # pylint: disable=wrong-import-position
@@ -78,10 +78,25 @@ def bigquery(ctx: click.Context, project: str, key_file: Optional[str] = None):
 
 @main.command()
 @click.pass_context
-@click.option('--account-id', required=True, type=str, help="AWS account to analyzed")
+@click.option('--target-account-id', required=True, type=str, help="AWS account to analyzed")
+@click.option(
+    '--additional-account-id',
+    required=False,
+    default=None,
+    multiple=True,
+    type=str,
+    help="Additional AWS accounts to resolved",
+)
 @click.option('--account-role-name', required=True, type=str, help="The role to assume in the AWS account")
-def s3(ctx: click.Context, account_id, account_role_name):
-    run_s3(ctx.obj['LOGGER'], ctx.obj['FORMAT'], ctx.obj['OUT'], account_id, account_role_name)
+def aws_s3(ctx: click.Context, target_account_id, additional_account_id, account_role_name):
+    run_aws_s3(
+        ctx.obj['LOGGER'],
+        ctx.obj['FORMAT'],
+        ctx.obj['OUT'],
+        target_account_id,
+        set(additional_account_id),
+        account_role_name,
+    )
 
 
 @main.command()
@@ -128,8 +143,20 @@ def mongodb(ctx: click.Context, username: str, password: str, port: int, host: s
 @click.pass_context
 @click.option('--public_key', '-p', required=True, type=str, help="Atlas API public key from access manager")
 @click.option('--private_key', '-p', required=True, type=str, help="Atlas API private key from access manager")
-@click.option('--username', '-u', required=True, type=str, help="MongoDB username the analyzer should use to connect to each cluster")
-@click.option('--password', '-p', required=True, type=str, help="MongoDB password the analyzer should use to connect to each cluster")
+@click.option(
+    '--username',
+    '-u',
+    required=True,
+    type=str,
+    help="MongoDB username the analyzer should use to connect to each cluster",
+)
+@click.option(
+    '--password',
+    '-p',
+    required=True,
+    type=str,
+    help="MongoDB password the analyzer should use to connect to each cluster",
+)
 def atlas(ctx: click.Context, public_key: str, private_key: str, username: str, password: str):
     """Analyzer Postgres Authorization"""
     run_atlas(
@@ -141,6 +168,7 @@ def atlas(ctx: click.Context, public_key: str, private_key: str, username: str, 
         username=username,
         password=password,
     )
+
 
 if __name__ == "__main__":
     main(obj={})  # pylint: disable=no-value-for-parameter

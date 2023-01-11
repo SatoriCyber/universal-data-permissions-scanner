@@ -2,7 +2,7 @@ from logging import Logger
 from typing import Dict, Optional, Set, List, Union
 
 from aws_ptrp.principals import Principal
-from aws_ptrp.actions.account_actions import AwsAccountActions
+from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.actions.actions_resolver import ActionsResolver
 from aws_ptrp.iam.policy.effect import Effect
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
@@ -22,7 +22,7 @@ def get_role_trust_resolver(
     logger: Logger,
     role_trust_policy: PolicyDocument,
     iam_role_arn: str,
-    account_actions: AwsAccountActions,
+    aws_actions: AwsActions,
     account_resources: AwsAccountResources,
 ) -> Optional[AssumeRoleServiceResourcesResolver]:
 
@@ -33,7 +33,7 @@ def get_role_trust_resolver(
         policy_document=role_trust_policy,
         parent_resource_arn=iam_role_arn,
         identity_principal=None,
-        account_actions=account_actions,
+        aws_actions=aws_actions,
         account_resources=account_resources,
         effect=Effect.Allow,
     )
@@ -52,7 +52,7 @@ def get_resource_based_resolver(
     logger: Logger,
     policy_document: PolicyDocument,
     service_resource_type: ServiceResourceType,
-    account_actions: AwsAccountActions,
+    aws_actions: AwsActions,
     account_resources: AwsAccountResources,
 ) -> Optional[ServiceResourcesResolverBase]:
 
@@ -63,7 +63,7 @@ def get_resource_based_resolver(
         policy_document=policy_document,
         parent_resource_arn=None,  # no need parent_resource the policy should includes the resources for each stmt
         identity_principal=None,
-        account_actions=account_actions,
+        aws_actions=aws_actions,
         account_resources=account_resources,
         effect=Effect.Allow,
     )
@@ -76,7 +76,7 @@ def get_identity_based_resolver(
     logger: Logger,
     policy_document: PolicyDocument,
     identity_principal: Principal,
-    account_actions: AwsAccountActions,
+    aws_actions: AwsActions,
     account_resources: AwsAccountResources,
 ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
 
@@ -87,7 +87,7 @@ def get_identity_based_resolver(
         policy_document=policy_document,
         parent_resource_arn=None,  # no need parent_resource the policy should includes the resources for each stmt
         identity_principal=identity_principal,
-        account_actions=account_actions,
+        aws_actions=aws_actions,
         account_resources=account_resources,
         effect=Effect.Allow,
     )
@@ -99,7 +99,7 @@ def get_services_resources_resolver(
     policy_document: PolicyDocument,
     parent_resource_arn: Optional[str],
     identity_principal: Optional[Principal],
-    account_actions: AwsAccountActions,
+    aws_actions: AwsActions,
     account_resources: AwsAccountResources,
     effect: Effect,
 ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
@@ -133,7 +133,7 @@ def get_services_resources_resolver(
 
         single_stmt_service_actions_resolvers: Optional[
             Dict[ServiceActionType, ServiceActionsResolverBase]
-        ] = ActionsResolver.resolve_stmt_action_regexes(logger, statement.action, account_actions)
+        ] = ActionsResolver.resolve_stmt_action_regexes(logger, statement.action, aws_actions)
 
         if single_stmt_service_actions_resolvers:
             logger.debug(

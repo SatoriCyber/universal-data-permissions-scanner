@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from logging import Logger
 from pathlib import Path
 from typing import Dict
@@ -17,11 +17,10 @@ from aws_ptrp.iam.iam_users import IAMUser, get_iam_users
 @serde
 @dataclass
 class IAMEntities:
-    account_id: str
-    iam_users: Dict[str, IAMUser]  # key is user arn
-    iam_groups: Dict[str, IAMGroup]  # key is group arn
-    iam_roles: Dict[str, IAMRole]  # key is role arn
-    iam_policies: Dict[str, IAMPolicy]  # key is policy arn
+    iam_users: Dict[str, IAMUser] = field(default_factory=dict)  # key is user arn
+    iam_groups: Dict[str, IAMGroup] = field(default_factory=dict)  # key is group arn
+    iam_roles: Dict[str, IAMRole] = field(default_factory=dict)  # key is role arn
+    iam_policies: Dict[str, IAMPolicy] = field(default_factory=dict)  # key is policy arn
 
     @classmethod
     def load_from_json_file(cls, _logger: Logger, file_path: Path) -> 'IAMEntities':
@@ -31,8 +30,13 @@ class IAMEntities:
             return analyzed_ctx_loaded
 
     @classmethod
-    def load(cls, logger: Logger, aws_account_id: str, session: Session):
-        logger.info(f"Start pulling IAM entities from aws account: {aws_account_id}...")
+    def load_for_account(cls, logger: Logger, account_id: str, session: Session) -> 'IAMEntities':
+        iam_entities = cls()
+        iam_entities.update_for_account(logger, account_id, session)
+        return iam_entities
+
+    def update_for_account(self, logger: Logger, account_id: str, session: Session):
+        logger.info(f"Start pulling IAM entities from aws account: {account_id}...")
         # Get the iam users
         iam_users = get_iam_users(session)
         logger.info(f"Got iam_users: {iam_users.values()}")
@@ -48,10 +52,8 @@ class IAMEntities:
         # Get the iam policies
         iam_policies = get_iam_policies(session)
         logger.info(f"Got iam_policies: {iam_policies.values()}")
-        return cls(
-            account_id=aws_account_id,
-            iam_users=iam_users,
-            iam_groups=iam_groups,
-            iam_roles=iam_roles,
-            iam_policies=iam_policies,
-        )
+
+        self.iam_users.update(iam_users)
+        self.iam_groups.update(iam_groups)
+        self.iam_roles.update(iam_roles)
+        self.iam_policies.update(iam_policies)

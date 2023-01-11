@@ -43,14 +43,15 @@ class Principal:
     def get_name(self) -> str:
         return self.name
 
+    def get_account_id(self) -> Optional[str]:
+        if self.principal_metadata:
+            return self.principal_metadata.get("account-id")
+        return None
+
     def get_arn(self) -> str:
         if self.principal_type == AwsPrincipalType.AWS_ACCOUNT:
             account_id = self.principal_metadata['account-id']  # type: ignore
             return f"arn:aws:iam::{account_id}:root"
-        elif self.principal_type == AwsPrincipalType.ASSUMED_ROLE_SESSION:
-            account_id = self.principal_metadata['account-id']  # type: ignore
-            role_name = self.principal_metadata['role-name']  # type: ignore
-            return f"arn:aws:iam::{account_id}:role/{role_name}"
         else:
             return self.policy_principal_str
 

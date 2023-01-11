@@ -104,13 +104,14 @@ class TargetPolicyNode:
     path_arn: str
     path_name: str
     policy_document: PolicyDocument
+    is_resource_based_policy: bool
     note: str
 
     def __repr__(self):
         return f"TargetPolicyNode(Arn: {self.path_arn}, Name: {self.path_name})"
 
     def __eq__(self, other):
-        return self.path_arn == other.path_arn and self.path_name and other.path_name
+        return self.path_arn == other.path_arn and self.path_name == other.path_name
 
     def __hash__(self):
         return hash(self.path_arn) + hash(self.path_name)
