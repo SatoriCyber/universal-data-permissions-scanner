@@ -43,6 +43,11 @@ class Principal:
     def get_name(self) -> str:
         return self.name
 
+    def get_role_name(self) -> Optional[str]:
+        if self.principal_metadata:
+            return self.principal_metadata.get("role-name")
+        return None
+
     def get_account_id(self) -> Optional[str]:
         if self.principal_metadata:
             return self.principal_metadata.get("account-id")

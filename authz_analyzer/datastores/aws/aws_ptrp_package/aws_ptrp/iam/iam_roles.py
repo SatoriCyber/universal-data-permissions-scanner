@@ -6,7 +6,7 @@ from serde import serde, from_dict
 
 from aws_ptrp.iam.policy import PolicyDocument
 from aws_ptrp.principals import Principal
-from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
     PathRoleNodeBase,
 )
 from aws_ptrp.services.service_resource_base import ServiceResourceBase

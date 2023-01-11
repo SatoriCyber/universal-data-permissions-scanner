@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, List
 
-from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
     PrincipalNodeBase,
     PathPrincipalPoliciesNode,
     PathRoleNode,
@@ -19,7 +19,7 @@ from aws_ptrp.ptrp_models.ptrp_model import (
 
 
 @dataclass
-class PrincipalToResourceLine:
+class PtrpAllowedLine:
     principal_node: PrincipalNodeBase
     path_principal_policies_node: Optional[PathPrincipalPoliciesNode]
     path_role_nodes: List[PathRoleNode]

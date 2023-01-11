@@ -6,7 +6,7 @@ from boto3 import Session
 
 from aws_ptrp.iam.policy import GroupPolicy, PolicyDocument
 from aws_ptrp.utils.pagination import paginate_response_list
-from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
     PathPrincipalPoliciesNodeBase,
 )
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType

@@ -7,17 +7,17 @@ from serde import serde
 
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.policy_evaluation import PolicyEvaluation
-from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
     PrincipalPoliciesNodeBase,
     ResourceNodeBase,
 )
 from aws_ptrp.iam.iam_entities import IAMEntities
-from aws_ptrp.permissions_resolver.permissions_resolver import (
-    PermissionsResolverBuilder,
-    PermissionsResolver,
+from aws_ptrp.ptrp_allowed_lines.allowed_lines_resolver import (
+    PtrpAllowedLinesBuilder,
+    PtrpAllowedLines,
 )
 from aws_ptrp.utils.create_session import create_session_with_assume_role
-from aws_ptrp.permissions_resolver.principal_to_resource_line import PrincipalToResourceLine
+from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.principals import Principal
 from aws_ptrp.resources.account_resources import AwsAccountResources
@@ -139,7 +139,7 @@ class AwsPtrp:
         self,
         _logger: Logger,
         cb_line: Callable[[AwsPtrpLine], None],
-        line: PrincipalToResourceLine,
+        line: PtrpAllowedLine,
         service_resources_resolver: Dict[ServiceResourceType, ServiceResourcesResolverBase],
     ):
         resource: AwsPtrpResource = line.get_ptrp_resource_to_report()
@@ -158,7 +158,7 @@ class AwsPtrp:
     def _resolve_principal_to_resource_line_permissions(
         self,
         logger: Logger,
-        line: PrincipalToResourceLine,
+        line: PtrpAllowedLine,
     ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
 
         target_policy: PolicyDocument = line.target_policy_node.policy_document
@@ -199,12 +199,12 @@ class AwsPtrp:
         )
 
     def resolve_permissions(self, logger: Logger, cb_line: Callable[[AwsPtrpLine], None]):
-        permissions_resolver: PermissionsResolver = PermissionsResolverBuilder(
+        allowed_lines_resolver: PtrpAllowedLines = PtrpAllowedLinesBuilder(
             logger, self.iam_entities, self.aws_actions, self.target_account_resources
         ).build()
 
-        for line in permissions_resolver.yield_principal_to_resource_lines():  # type: PrincipalToResourceLine
-            logger.debug("%s", line)
+        for line in allowed_lines_resolver.yield_principal_to_resource_lines():  # type: PtrpAllowedLine
+            logger.info("%s", line)
             service_resources_resolver: Optional[
                 Dict[ServiceResourceType, ServiceResourcesResolverBase]
             ] = self._resolve_principal_to_resource_line_permissions(logger, line)
