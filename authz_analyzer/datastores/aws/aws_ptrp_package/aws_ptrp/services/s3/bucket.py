@@ -10,7 +10,7 @@ from aws_ptrp.iam.policy import PolicyDocument
 from aws_ptrp.iam.public_block_access_config import PublicAccessBlockConfiguration
 from aws_ptrp.services.s3.bucket_acl import S3BucketACL
 from aws_ptrp.services import ServiceResourceBase
-from aws_ptrp.permissions_resolver.principal_to_resource_line import ResourceNodeBase
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import ResourceNodeBase
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpResourceType
 
 

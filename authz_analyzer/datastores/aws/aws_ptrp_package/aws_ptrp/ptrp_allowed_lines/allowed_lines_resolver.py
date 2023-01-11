@@ -3,7 +3,7 @@ from logging import Logger
 from typing import Optional, List, Iterable, Generator, Dict, Tuple, Union
 import networkx as nx
 
-from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
     PrincipalNodeBase,
     TargetPolicyNode,
     ResourceNodeBase,
@@ -12,7 +12,7 @@ from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
     PathPrincipalPoliciesNode,
     PathPrincipalPoliciesNodeBase,
 )
-from aws_ptrp.permissions_resolver.principal_to_resource_line import PrincipalToResourceLine
+from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
 from aws_ptrp.services import ServiceResourcesResolverBase, ServiceResourceType
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.resources.account_resources import AwsAccountResources
@@ -37,12 +37,12 @@ END_NODE = "END_NODE"
 
 
 @dataclass
-class PermissionsResolver:
+class PtrpAllowedLines:
     graph: nx.DiGraph
 
     def yield_principal_to_resource_lines(
         self,
-    ) -> Generator[PrincipalToResourceLine, None, None,]:
+    ) -> Generator[PtrpAllowedLine, None, None,]:
         for path in nx.all_simple_paths(self.graph, source=START_NODE, target=END_NODE):
             path = path[1:-1]  # without the START_NODE, END_NODE
             if len(path) < 3:
@@ -81,7 +81,7 @@ class PermissionsResolver:
                 raise Exception(f"Got invalid simple path in graph, last node is not impl ResourceNodeBase: {path[-1]}")
             resource_node: ResourceNodeBase = path[-1]
 
-            yield PrincipalToResourceLine(
+            yield PtrpAllowedLine(
                 principal_node=identity_node,
                 path_principal_policies_node=path_identity_policies_node,
                 path_role_nodes=path_role_identity_nodes,
@@ -91,7 +91,7 @@ class PermissionsResolver:
 
 
 @dataclass
-class PermissionsResolverBuilder:
+class PtrpAllowedLinesBuilder:
     logger: Logger
     iam_entities: IAMEntities
     aws_actions: AwsActions
@@ -119,7 +119,7 @@ class PermissionsResolverBuilder:
             # role_arn (includes also path) arn:aws:iam::982269985744:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_AdministratorAccess_3924a5ba0a9f57fd
             # the role path is missing (/aws-reserved/sso.amazonaws.com/eu-west-2/)
             role_session_account_id = stmt_principal.get_account_id()
-            role_session_role_name = stmt_principal.get_name()
+            role_session_role_name = stmt_principal.get_role_name()
             for iam_role in self.iam_entities.iam_roles.values():
                 if iam_role.role_name == role_session_role_name and role_session_account_id == iam_role.aws_account_id:
                     role_session = IAMRoleSession(role=iam_role, role_session_principal=stmt_principal)
@@ -340,7 +340,7 @@ class PermissionsResolverBuilder:
                     identity_principal_for_resolver=iam_user.identity_principal,
                 )
 
-    def build(self) -> 'PermissionsResolver':
+    def build(self) -> 'PtrpAllowedLines':
         self.logger.info("Building the Permissions resolver graph")
         self.graph.add_node(START_NODE)
         self.graph.add_node(END_NODE)
@@ -353,4 +353,4 @@ class PermissionsResolverBuilder:
 
         self.logger.info("Finish to build the iam graph: %s", self.graph)
 
-        return PermissionsResolver(graph=self.graph)
+        return PtrpAllowedLines(graph=self.graph)

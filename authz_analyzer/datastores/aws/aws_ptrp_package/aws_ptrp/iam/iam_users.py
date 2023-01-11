@@ -5,7 +5,7 @@ from boto3 import Session
 from serde import serde, field, from_dict
 
 from aws_ptrp.iam.policy import PolicyDocument, UserPolicy
-from aws_ptrp.permissions_resolver.principal_to_resource_line import PrincipalNodeBase
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PrincipalNodeBase
 from aws_ptrp.principals import Principal
 from aws_ptrp.utils.pagination import paginate_response_list
 
