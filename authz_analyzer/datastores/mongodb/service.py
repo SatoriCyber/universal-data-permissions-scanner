@@ -4,7 +4,6 @@ To make shortcuts for repeated logic, use the client directly for all others.
 """
 
 
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -22,9 +21,9 @@ class MongoDBService:
     def iter_database_connections(self):
         """Iterate over all database connections."""
         for database in self.client.list_databases():
-            database_connection: Database[Any] =  self.client[database['name']]
+            database_connection: Database[Any] = self.client[database['name']]
             name: str = database["name"]
-            yield (name,database_connection)
+            yield (name, database_connection)
 
     @staticmethod
     def get_users(database_connection: Database[Any]):

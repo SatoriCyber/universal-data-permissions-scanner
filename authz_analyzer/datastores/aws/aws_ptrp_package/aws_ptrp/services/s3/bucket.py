@@ -22,6 +22,7 @@ S3_RESOURCE_SERVICE_PREFIX = "arn:aws:s3:::"
 class S3Bucket(ResourceNodeBase, ServiceResourceBase):
     name: str
     acl: S3BucketACL
+    aws_account_id: str
     public_access_block_config: Optional[PublicAccessBlockConfiguration] = field(default=None, skip_if_default=True)
     policy_document: Optional[PolicyDocument] = field(default=None, skip_if_default=True)
 
@@ -33,6 +34,9 @@ class S3Bucket(ResourceNodeBase, ServiceResourceBase):
 
     def __hash__(self):
         return hash(self.name)
+
+    def get_resource_account_id(self) -> str:
+        return self.aws_account_id
 
     def get_resource_arn(self) -> str:
         return f"{S3_RESOURCE_SERVICE_PREFIX}{self.get_resource_name()}"
@@ -47,7 +51,7 @@ class S3Bucket(ResourceNodeBase, ServiceResourceBase):
         return AwsPtrpResourceType.S3_BUCKET
 
 
-def get_buckets(session: Session) -> Set[ServiceResourceBase]:
+def get_buckets(session: Session, aws_account_id: str) -> Set[ServiceResourceBase]:
     s3_client = session.client('s3')
     response = s3_client.list_buckets()
     buckets = response['Buckets']
@@ -80,6 +84,7 @@ def get_buckets(session: Session) -> Set[ServiceResourceBase]:
 
         ret.add(
             S3Bucket(
+                aws_account_id=aws_account_id,
                 name=bucket_name,
                 policy_document=policy_document,
                 acl=acl,

@@ -72,6 +72,7 @@ class OrganizationRole:
     def __hash__(self) -> int:
         return hash(self.id)
 
+
 @dataclass
 class Organization:
     """MongoDB organization."""
@@ -119,7 +120,6 @@ class Cluster:
         return Cluster(id=response["id"], connection_string=connection_string, name=response["name"])
 
 
-
 @dataclass
 class DatabaseRole:
     """Database role, Used by MongoDB."""
@@ -130,7 +130,6 @@ class DatabaseRole:
 
     def __hash__(self) -> int:
         return hash(self.name) + hash(self.database_name)
-
 
 
 class DatabaseUserScopeType(Enum):
@@ -174,8 +173,8 @@ class DatabaseUser:
 class Permission(Enum):
     """Permission allowed by a role."""
 
-    FIND = auto() 
-    INSERT = auto() 
+    FIND = auto()
+    INSERT = auto()
     REMOVE = auto()
     UPDATE = auto()
     DROP_COLLECTION = auto()
@@ -187,10 +186,10 @@ class Permission(Enum):
     OUT_TO_S3 = auto()
 
 
-
 @dataclass
 class Action:
     """List of resources and the permission granted on them"""
+
     resource: Resource
     permission: Permission
 
@@ -206,27 +205,38 @@ class CustomRole:
     action: Optional[Action]
     inherited_role: Optional[InheritedRole]
 
-
     def __hash__(self) -> int:
         return hash(self.name)
 
     @staticmethod
     def build_custom_roles_from_response(entry: CustomRoleEntry) -> Set[CustomRole]:
         """Build set of custom roles from the response.
-        
+
         Instead of having a single custom roles with all the action and inherited roles, we split them into multiple custom roles.
         """
         custom_roles: Set[CustomRole] = set()
         for action in entry["actions"]:
             try:
                 permission = Permission[action["action"]]
-            except KeyError: # ignore actions that doesn't access data, we don't need them
+            except KeyError:  # ignore actions that doesn't access data, we don't need them
                 continue
             for resource in action["resources"]:
                 resolved_resource = Resource(collection=resource["collection"], database=resource["db"])
-                custom_roles.add(CustomRole(name = entry["roleName"], action = Action(resource=resolved_resource, permission=permission), inherited_role = None))
-            
+                custom_roles.add(
+                    CustomRole(
+                        name=entry["roleName"],
+                        action=Action(resource=resolved_resource, permission=permission),
+                        inherited_role=None,
+                    )
+                )
+
         for inherited_role in entry["inheritedRoles"]:
-            custom_roles.add(CustomRole(name = entry["roleName"], action = None, inherited_role = InheritedRole(database=inherited_role["db"], name=inherited_role["role"])))
+            custom_roles.add(
+                CustomRole(
+                    name=entry["roleName"],
+                    action=None,
+                    inherited_role=InheritedRole(database=inherited_role["db"], name=inherited_role["role"]),
+                )
+            )
 
         return custom_roles

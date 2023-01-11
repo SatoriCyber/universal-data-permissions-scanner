@@ -1,7 +1,7 @@
 from logging import Logger
 from typing import Dict, List, Optional, Set, Union
 
-from aws_ptrp.actions.account_actions import AwsAccountActions
+from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.services import (
     ServiceActionBase,
     ServiceActionsResolverBase,
@@ -43,19 +43,19 @@ class ActionsResolver:
         cls,
         logger: Logger,
         stmt_action_regexes: Union[str, List[str]],
-        account_actions: AwsAccountActions,
+        aws_actions: AwsActions,
     ) -> Optional[Dict[ServiceActionType, ServiceActionsResolverBase]]:
         services_action_resolver: Dict[ServiceActionType, ServiceActionsResolverBase] = dict()
 
         if isinstance(stmt_action_regexes, str):
             stmt_action_regexes = [stmt_action_regexes]
 
-        service_types_to_resolve: Set[ServiceActionType] = set(account_actions.account_actions.keys())
+        service_types_to_resolve: Set[ServiceActionType] = set(aws_actions.aws_actions.keys())
         ret: Dict[ServiceActionType, List[str]] = ActionsResolver._get_stmt_action_regexes_per_service_type(
             logger, stmt_action_regexes, service_types_to_resolve
         )
         for service_type, service_regexes in ret.items():
-            service_actions: Optional[List[ServiceActionBase]] = account_actions.account_actions.get(service_type)
+            service_actions: Optional[List[ServiceActionBase]] = aws_actions.aws_actions.get(service_type)
             if service_actions:
                 service_action_resolver: ServiceActionsResolverBase = (
                     service_type.load_resolver_service_actions_from_single_stmt(

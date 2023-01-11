@@ -19,30 +19,30 @@ from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
 @dataclass
 class IAMRoleSession(PathRoleNodeBase):
     role: 'IAMRole'
-    session_name: str
+    role_session_principal: Principal
 
     def __repr__(self):
-        return f"{self.role.__repr__()} + Session: {self.session_name}"
+        return self.get_path_arn()
 
     def __eq__(self, other):
-        return self.role.__eq__(other.role) and self.session_name == other.session_name
+        return self.get_path_arn() == other.get_path_arn()
 
     def __hash__(self):
-        return hash(self.role.__hash__()) + hash(self.session_name)
+        return hash(self.get_path_arn())
 
     # impl PathNodeBase
     def get_path_type(self) -> AwsPtrpPathNodeType:
         return AwsPtrpPathNodeType.ROLE_SESSION
 
     def get_path_name(self) -> str:
-        return f"{self.role.role_name}/{self.session_name}"
+        return self.get_stmt_principal().get_name()
 
     def get_path_arn(self) -> str:
-        return self.role.arn
+        return self.get_stmt_principal().get_arn()
 
     # impl PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:
-        return Principal.load_from_iam_role_session(self.role.get_role_session_arn(self.session_name))
+        return self.role_session_principal
 
     # impl PrincipalPoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
@@ -57,6 +57,7 @@ class IAMRoleSession(PathRoleNodeBase):
 class IAMRole(PathRoleNodeBase, ServiceResourceBase):
     role_id: str
     role_name: str
+    aws_account_id: str
     arn: str
     path: str
     assume_role_policy_document: PolicyDocument
@@ -72,16 +73,15 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
     def __hash__(self):
         return hash(self.role_id)
 
-    def get_role_session_arn(self, session_name) -> str:
-        role_prefix_arn = self.arn.split(":role/", 1)[0]
-        return f"{role_prefix_arn}:assumed-role/{self.role_name}/{session_name}"
-
     # impl ServiceResourceBase
     def get_resource_arn(self) -> str:
         return self.arn
 
     def get_resource_name(self) -> str:
         return self.role_name
+
+    def get_resource_account_id(self) -> str:
+        return self.aws_account_id
 
     # impl PathNodeBase
     def get_path_type(self) -> AwsPtrpPathNodeType:
@@ -113,7 +113,7 @@ def get_iam_roles(session: Session) -> Dict[str, IAMRole]:
     for role in roles:
         role_name = role['RoleName']
         role_id = role['RoleId']
-        arn = role['Arn']
+        arn: str = role['Arn']
         path = role['Path']
         assume_role_policy_document_response = role['AssumeRolePolicyDocument']
         if assume_role_policy_document_response:
@@ -131,12 +131,16 @@ def get_iam_roles(session: Session) -> Dict[str, IAMRole]:
                 )
 
             attached_policies = paginate_response_list(
-                iam_client.list_attached_role_policies, 'AttachedPolicies', RoleName=role_name, PathPrefix=path
+                iam_client.list_attached_role_policies, 'AttachedPolicies', RoleName=role_name
             )
-            attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
 
+            attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
+            aws_account_id_start_index = arn.find(":iam::")
+            aws_account_id_end_index = arn.find(":role/")
+            aws_account_id = arn[aws_account_id_start_index + 6 : aws_account_id_end_index]
             ret[arn] = IAMRole(
                 role_name=role_name,
+                aws_account_id=aws_account_id,
                 role_id=role_id,
                 arn=arn,
                 path=path,

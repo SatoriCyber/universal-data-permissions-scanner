@@ -29,10 +29,10 @@ from authz_analyzer.utils.logger import get_logger
 
 
 AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(
-    os.path.dirname(__file__), 'satori_dev_account_authz_analyzer.json'
+    os.path.dirname(__file__), 'satori_dev_account_ptrp.json'
 )
 AWS_AUTHZ_ANALYZER_SATORI_DEV_RESULT_JSON_FILE = pathlib.Path().joinpath(
-    os.path.dirname(__file__), 'satori_dev_account_authz_analyzer_result.json'
+    os.path.dirname(__file__), 'satori_dev_account_ptrp_result.json'
 )
 
 
@@ -53,42 +53,45 @@ def register_services_for_deserialize_from_file():
     not os.environ.get("AUTHZ_SATORI_DEV_ACCOUNT_TEST"),
     reason="not really a test, just pull latest satori dev account config and write it to file",
 )
-def test_aws_authz_analyzer_with_s3_write_satori_dev_account():
-    aws_account_id = '105246067165'
-    assume_role_name = 'LalonFromStage'
-    authz_analyzer = AwsPtrp.load_from_role(get_logger(False), aws_account_id, assume_role_name, set([S3Service()]))
+def test_aws_ptrp_with_s3_write_satori_dev_account():
+    target_account_id = '105246067165'
+    additional_account_ids = set(['982269985744'])
+    assume_role_name = 'SatoriScanner'
+    ptrp = AwsPtrp.load_from_role(
+        get_logger(False), assume_role_name, set([S3Service()]), target_account_id, additional_account_ids
+    )
 
-    authz_analyzer_json = to_json(authz_analyzer)
+    ptrp_json = to_json(ptrp)
     with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "w", encoding="utf-8") as outfile:
-        outfile.write(authz_analyzer_json)
+        outfile.write(ptrp_json)
 
 
 @pytest.mark.skipif(
     not os.environ.get("AUTHZ_SATORI_DEV_ACCOUNT_TEST"),
     reason="not really a test, just pull latest satori dev account config and write it to file",
 )
-def test_aws_authz_analyzer_load_satori_dev_json_file(
+def test_aws_ptrp_load_satori_dev_json_file(
     # pylint: disable=unused-argument,redefined-outer-name
     register_services_for_deserialize_from_file,
 ):
     with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "r", encoding="utf-8") as file:
-        authz_analyzer_json_from_file = json.load(file)
-        authz_analyzer = from_dict(AwsPtrp, authz_analyzer_json_from_file)
-        authz_analyzer_json_from_serde = json.loads(to_json(authz_analyzer))
+        ptrp_json_from_file = json.load(file)
+        ptrp = from_dict(AwsPtrp, ptrp_json_from_file)
+        ptrp_json_from_serde = json.loads(to_json(ptrp))
 
-        assert authz_analyzer_json_from_file == authz_analyzer_json_from_serde
+        assert ptrp_json_from_file == ptrp_json_from_serde
 
 
 @pytest.mark.skipif(
     not os.environ.get("AUTHZ_SATORI_DEV_ACCOUNT_TEST"),
     reason="not really a test, just pull latest satori dev account config and write it to file",
 )
-def test_aws_authz_analyzer_resolve_permissions_satori_dev_json_file(
+def test_aws_ptrp_resolve_permissions_satori_dev_json_file(
     register_services_for_deserialize_from_file,
 ):  # pylint: disable=unused-argument,redefined-outer-name
     with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "r", encoding="utf-8") as file:
-        authz_analyzer_json_from_file = json.load(file)
-        authz_analyzer: AwsPtrp = from_dict(AwsPtrp, authz_analyzer_json_from_file)
+        ptrp_json_from_file = json.load(file)
+        ptrp: AwsPtrp = from_dict(AwsPtrp, ptrp_json_from_file)
         writer = get_writer(AWS_AUTHZ_ANALYZER_SATORI_DEV_RESULT_JSON_FILE, OutputFormat.MULTI_JSON)
         exporter = AWSAuthzAnalyzerExporter(writer)
-        authz_analyzer.resolve_permissions(get_logger(False), exporter.export_entry_from_ptrp_line)
+        ptrp.resolve_permissions(get_logger(False), exporter.export_entry_from_ptrp_line)

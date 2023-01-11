@@ -14,7 +14,7 @@ from aws_ptrp.permissions_resolver.principal_to_resource_nodes_base import (
 )
 from aws_ptrp.permissions_resolver.principal_to_resource_line import PrincipalToResourceLine
 from aws_ptrp.services import ServiceResourcesResolverBase, ServiceResourceType
-from aws_ptrp.actions.account_actions import AwsAccountActions
+from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
@@ -94,7 +94,7 @@ class PermissionsResolver:
 class PermissionsResolverBuilder:
     logger: Logger
     iam_entities: IAMEntities
-    account_actions: AwsAccountActions
+    aws_actions: AwsActions
     account_resources: AwsAccountResources
     graph: nx.DiGraph = nx.DiGraph()
 
@@ -111,9 +111,19 @@ class PermissionsResolverBuilder:
             trusted_role: Optional[IAMRole] = self.iam_entities.iam_roles.get(stmt_principal.get_arn())
             return [trusted_role] if trusted_role else []
         elif stmt_principal.is_role_session_principal():
-            role: Optional[IAMRole] = self.iam_entities.iam_roles.get(stmt_principal.get_arn())
-            if role:
-                return [IAMRoleSession(role=role, session_name=stmt_principal.get_name())]
+            # for role session, we can't use the principal arn to lookup the iam_role
+            # because, we don't have all the information we need to create the iam_role arn from the arn of the role session
+            # needs to go over all the iam_roles and compare the aws account id + role name
+            # Example
+            # role session arn: arn:aws:sts::982269985744:assumed-role/AWSReservedSSO_AdministratorAccess_3924a5ba0a9f57fd/alon@satoricyber.com
+            # role_arn (includes also path) arn:aws:iam::982269985744:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_AdministratorAccess_3924a5ba0a9f57fd
+            # the role path is missing (/aws-reserved/sso.amazonaws.com/eu-west-2/)
+            role_session_account_id = stmt_principal.get_account_id()
+            role_session_role_name = stmt_principal.get_name()
+            for iam_role in self.iam_entities.iam_roles.values():
+                if iam_role.role_name == role_session_role_name and role_session_account_id == iam_role.aws_account_id:
+                    role_session = IAMRoleSession(role=iam_role, role_session_principal=stmt_principal)
+                    return [role_session]
         return []
 
     def get_iam_roles_for_principal(self, stmt_principal: Principal) -> Iterable[IAMUser]:
@@ -144,8 +154,12 @@ class PermissionsResolverBuilder:
         for path_role_base in path_roles_identity_base:
             if path_role_base.get_path_arn() != node_to_connect_arn:
                 assert isinstance(path_role_base, PathRoleNodeBase)
-                path_role_identity = PathRoleNode(path_role_base=path_role_base, note="")
-                self.graph.add_edge(path_role_identity, node_to_connect)
+                path_role_node = PathRoleNode(path_role_base=path_role_base, note="")
+                self.graph.add_edge(path_role_node, node_to_connect)
+                if isinstance(path_role_base, IAMRoleSession):
+                    # need to connect the role session node to its matched iam role
+                    path_iam_role_node = PathRoleNode(path_role_base=path_role_base.role, note="")
+                    self.graph.add_edge(path_iam_role_node, path_role_node)
 
         no_entity_principal: Optional[NoEntityPrincipal] = self.get_no_entity_principal_for_principal(stmt_principal)
         if no_entity_principal:
@@ -170,9 +184,10 @@ class PermissionsResolverBuilder:
             logger=self.logger,
             policy_document=target_policy_node.policy_document,
             identity_principal=identity_principal,
-            account_actions=self.account_actions,
+            aws_actions=self.aws_actions,
             account_resources=self.account_resources,
         )
+
         if service_resources_resolver is None:
             return
 
@@ -191,17 +206,20 @@ class PermissionsResolverBuilder:
 
     def _insert_attached_policies_and_inline_policies(
         self,
-        identity_node: Union[PrincipalNodeBase, PathRoleNode, PathPrincipalPoliciesNode],
-        node_arn: str,
+        node_connect_to_target: Union[PrincipalNodeBase, PathRoleNode, PathPrincipalPoliciesNode],
         attached_policies_arn: List[str],
         inline_policies_and_names: List[Tuple[PolicyDocument, str]],
-        identity_principal: Principal,
+        identity_principal_for_resolver: Principal,
     ):
-        assert (
-            isinstance(identity_node, PrincipalNodeBase)
-            or isinstance(identity_node, PathRoleNode)
-            or isinstance(identity_node, PathPrincipalPoliciesNode)
-        )
+        if isinstance(node_connect_to_target, PrincipalNodeBase):
+            arn_for_inline: str = node_connect_to_target.get_stmt_principal().get_arn()
+        elif isinstance(node_connect_to_target, PathRoleNode):
+            arn_for_inline = node_connect_to_target.path_role_base.get_path_arn()
+        elif isinstance(node_connect_to_target, PathPrincipalPoliciesNode):
+            arn_for_inline = node_connect_to_target.path_principal_policies_base.get_path_arn()
+        else:
+            assert False
+
         for attached_policy_arn in attached_policies_arn:
             iam_policy = self.iam_entities.iam_policies[attached_policy_arn]
             target_policy_node = TargetPolicyNode(
@@ -209,20 +227,22 @@ class PermissionsResolverBuilder:
                 path_arn=iam_policy.policy.arn,
                 path_name=iam_policy.policy.policy_name,
                 policy_document=iam_policy.policy_document,
+                is_resource_based_policy=False,
                 note="",
             )
-            self.graph.add_edge(identity_node, target_policy_node)
-            self._connect_target_policy_node_to_resources(identity_principal, target_policy_node)
+            self.graph.add_edge(node_connect_to_target, target_policy_node)
+            self._connect_target_policy_node_to_resources(identity_principal_for_resolver, target_policy_node)
         for inline_policy, policy_name in inline_policies_and_names:
             target_policy_node = TargetPolicyNode(
                 path_element_type=AwsPtrpPathNodeType.IAM_INLINE_POLICY,
-                path_arn=node_arn,
+                path_arn=arn_for_inline,
                 path_name=policy_name,
                 policy_document=inline_policy,
+                is_resource_based_policy=False,
                 note="",
             )
-            self.graph.add_edge(identity_node, target_policy_node)
-            self._connect_target_policy_node_to_resources(identity_principal, target_policy_node)
+            self.graph.add_edge(node_connect_to_target, target_policy_node)
+            self._connect_target_policy_node_to_resources(identity_principal_for_resolver, target_policy_node)
 
     def _insert_iam_roles_and_trusted_entities(self):
         for iam_role in self.iam_entities.iam_roles.values():
@@ -233,26 +253,25 @@ class PermissionsResolverBuilder:
                 logger=self.logger,
                 role_trust_policy=iam_role.assume_role_policy_document,
                 iam_role_arn=iam_role.arn,
-                account_actions=self.account_actions,
+                aws_actions=self.aws_actions,
                 account_resources=self.account_resources,
             )
+
             if role_trust_service_principal_resolver is None:
                 continue
 
             assert isinstance(iam_role, PathRoleNodeBase)
-            path_role_identity_node = PathRoleNode(path_role_base=iam_role, note="")
-
+            path_role_node = PathRoleNode(path_role_base=iam_role, note="")
             for trusted_principal in role_trust_service_principal_resolver.yield_trusted_principals(iam_role):
                 self.logger.debug(
                     "Got role name %s with resolved trusted principal %s", iam_role.role_name, trusted_principal
                 )
-                self._resolve_stmt_principal_to_nodes_and_connect(trusted_principal, path_role_identity_node)
+                self._resolve_stmt_principal_to_nodes_and_connect(trusted_principal, path_role_node)
                 self._insert_attached_policies_and_inline_policies(
-                    identity_node=path_role_identity_node,
-                    node_arn=iam_role.arn,
+                    node_connect_to_target=path_role_node,
                     attached_policies_arn=iam_role.get_attached_policies_arn(),
                     inline_policies_and_names=iam_role.get_inline_policies_and_names(),
-                    identity_principal=trusted_principal,
+                    identity_principal_for_resolver=trusted_principal,
                 )
 
     def _insert_resource_based_policies(self):
@@ -270,7 +289,7 @@ class PermissionsResolverBuilder:
                     logger=self.logger,
                     policy_document=service_resource_policy,
                     service_resource_type=service_resources_type,
-                    account_actions=self.account_actions,
+                    aws_actions=self.aws_actions,
                     account_resources=self.account_resources,
                 )
                 if service_resources_resolver is None:
@@ -281,6 +300,7 @@ class PermissionsResolverBuilder:
                     path_arn=service_resource.get_resource_arn(),
                     path_name=service_resource.get_resource_name(),
                     policy_document=service_resource_policy,
+                    is_resource_based_policy=True,
                     note="",
                 )
                 self.graph.add_edge(target_policy_node, service_resource)
@@ -299,11 +319,10 @@ class PermissionsResolverBuilder:
             assert isinstance(iam_user, PrincipalNodeBase)
             self.graph.add_edge(START_NODE, iam_user)
             self._insert_attached_policies_and_inline_policies(
-                identity_node=iam_user,
-                node_arn=iam_user.get_stmt_principal().get_arn(),
+                node_connect_to_target=iam_user,
                 attached_policies_arn=iam_user.get_attached_policies_arn(),
                 inline_policies_and_names=iam_user.get_inline_policies_and_names(),
-                identity_principal=iam_user.identity_principal,
+                identity_principal_for_resolver=iam_user.identity_principal,
             )
 
             for iam_group in self.iam_entities.iam_groups.values():
@@ -315,11 +334,10 @@ class PermissionsResolverBuilder:
                 identity_policies_node = PathPrincipalPoliciesNode(path_principal_policies_base=iam_group, note="")
                 self.graph.add_edge(iam_user, identity_policies_node)
                 self._insert_attached_policies_and_inline_policies(
-                    identity_node=identity_policies_node,
-                    node_arn=iam_group.arn,
+                    node_connect_to_target=identity_policies_node,
                     attached_policies_arn=iam_group.get_attached_policies_arn(),
                     inline_policies_and_names=iam_group.get_inline_policies_and_names(),
-                    identity_principal=iam_user.identity_principal,
+                    identity_principal_for_resolver=iam_user.identity_principal,
                 )
 
     def build(self) -> 'PermissionsResolver':

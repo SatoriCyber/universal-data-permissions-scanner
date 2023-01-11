@@ -48,6 +48,6 @@ class AssumeRoleService(ServiceResourceType):
 
     @classmethod
     def load_service_resources(
-        cls, logger: Logger, session: Session, iam_entities: IAMEntities
+        cls, logger: Logger, session: Session, _aws_account_id: str, iam_entities: IAMEntities
     ) -> Set[ServiceResourceBase]:
         return set([x for x in iam_entities.iam_roles.values()])

@@ -50,7 +50,6 @@ ACTION_MAPPING = {
     Permission.SQL_GET_SCHEMA: PermissionLevel.READ,
     Permission.SQL_SET_SCHEMA: PermissionLevel.WRITE,
     Permission.OUT_TO_S3: PermissionLevel.READ,
-
 }
 
 
@@ -58,13 +57,16 @@ def resolve_organization_role(role: str):
     """Resolve the permission level for a given organization role."""
     return BUILT_IN_ROLE_MAPPING_ORGANIZATION.get(role)
 
+
 def resolve_project_role(role: str):
     """Resolve the permission level for a given project role."""
     return BUILT_IN_ROLE_MAPPING_PROJECT.get(role)
 
+
 def resolve_database_role(role: str):
     """Resolve the permission level and scope for a given database role."""
     return BUILT_IN_ROLE_MAPPING_DATABASE.get(role)
+
 
 def resolve_permission(permission: Permission):
     """Resolve MongoDB permission to permission level."""

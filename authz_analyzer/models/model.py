@@ -19,12 +19,6 @@ class AssetType(Enum):
     VIEW = auto()
     S3_BUCKET = auto()  # AWS S3
     COLLECTION = auto()  # MongoDB collection
-    
-    def __str__(self) -> str:
-        return self.name
-
-    def __repr__(self) -> str:
-        return self.name    
 
     def __str__(self) -> str:
         return self.name
@@ -70,7 +64,7 @@ class AuthzPathElementType(Enum):
     """Types of elements that can be used by datastores to grant permissions."""
 
     USER = auto()  # Used by Redshift
-    TEAM = auto() # used by Mongo
+    TEAM = auto()  # used by Mongo
     GROUP = auto()  # Used by Redshift
     ROLE = auto()  # Used by Snowflake, and Postgres
     DATASET = auto()  # used by GCP
@@ -90,7 +84,7 @@ class AuthzPathElementType(Enum):
     SAML_SESSION = auto()  # AWS
     FEDERATED_USER = auto()  # AWS
     ALL_USERS = auto()  # AWS
-    CLUSTER = auto() # Mongo Atlas
+    CLUSTER = auto()  # Mongo Atlas
     RESOURCE_POLICY = auto()  # AWS
 
     def __str__(self) -> str:
@@ -122,7 +116,7 @@ class PermissionLevel(Enum):
 
     def __lt__(self, other: PermissionLevel) -> bool:
         return self.value < other.value
-    
+
     def __ge__(self, other: PermissionLevel) -> bool:
         return self.value >= other.value
 
@@ -150,7 +144,6 @@ class Asset:
 
     name: str
     type: AssetType
-
 
 
 @dataclass

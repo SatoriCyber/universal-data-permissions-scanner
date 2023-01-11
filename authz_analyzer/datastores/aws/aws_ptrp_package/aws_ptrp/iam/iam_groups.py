@@ -78,7 +78,7 @@ def get_iam_groups(session: Session) -> Dict[str, IAMGroup]:
             )
 
         attached_policies = paginate_response_list(
-            iam_client.list_attached_group_policies, 'AttachedPolicies', GroupName=group_name, PathPrefix=path
+            iam_client.list_attached_group_policies, 'AttachedPolicies', GroupName=group_name
         )
         attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
 
