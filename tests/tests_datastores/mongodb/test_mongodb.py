@@ -57,10 +57,10 @@ class MongoDBServiceMocked:
         return self
 
     def _side_effect_get_users(self, database_mock_called: MagicMock):
-        return self._database_to_users_mapping[database_mock_called.name]
+        return self._database_to_users_mapping[database_mock_called.name]  # type: ignore
 
     def _side_effect_get_roles(self, database_mock_called: MagicMock):
-        return self._database_to_roles_mapping[database_mock_called.name]
+        return self._database_to_roles_mapping[database_mock_called.name]  # type: ignore
 
     def get_service(self) -> MongoDBService:
         return self._mocked_service

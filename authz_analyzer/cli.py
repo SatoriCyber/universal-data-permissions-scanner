@@ -12,10 +12,10 @@ if sys.executable != sys.argv[0]:
 
 from authz_analyzer.main import (  # pylint: disable=wrong-import-position
     run_atlas,
+    run_aws_s3,
     run_bigquery,
     run_mongodb,
     run_postgres,
-    run_aws_s3,
     run_snowflake,
 )
 from authz_analyzer.utils.logger import get_logger  # pylint: disable=wrong-import-position
@@ -141,8 +141,8 @@ def mongodb(ctx: click.Context, username: str, password: str, port: int, host: s
 
 @main.command()
 @click.pass_context
-@click.option('--public_key', '-p', required=True, type=str, help="Atlas API public key from access manager")
-@click.option('--private_key', '-p', required=True, type=str, help="Atlas API private key from access manager")
+@click.option('--public_key', '-pk', required=True, type=str, help="Atlas API public key from access manager")
+@click.option('--private_key', '-k', required=True, type=str, help="Atlas API private key from access manager")
 @click.option(
     '--username',
     '-u',
@@ -157,7 +157,11 @@ def mongodb(ctx: click.Context, username: str, password: str, port: int, host: s
     type=str,
     help="MongoDB password the analyzer should use to connect to each cluster",
 )
-def atlas(ctx: click.Context, public_key: str, private_key: str, username: str, password: str):
+@click.option('--project', 'j', required=True, type=str, help="Atlas project name")
+@click.option('--cluster', 'c', required=True, type=str, help="Atlas cluster name")
+def atlas(
+    ctx: click.Context, public_key: str, private_key: str, username: str, password: str, project: str, cluster: str
+):
     """Analyzer Postgres Authorization"""
     run_atlas(
         logger=ctx.obj['LOGGER'],
@@ -167,6 +171,8 @@ def atlas(ctx: click.Context, public_key: str, private_key: str, username: str, 
         private_key=private_key,
         username=username,
         password=password,
+        project_name=project,
+        cluster_name=cluster,
     )
 
 

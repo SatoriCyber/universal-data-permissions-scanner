@@ -103,3 +103,18 @@ class CustomRoleEntry(TypedDict):
     roleName: str
     actions: List[ActionEntry]
     inheritedRoles: List[InheritedRoleEntry]
+
+
+class ProjectInfo(TypedDict):
+    """A project info entry."""
+
+    id: str
+    name: str
+    orgId: str
+
+
+class OrganizationEntry(TypedDict):
+    """An organization entry."""
+
+    id: str
+    name: str
