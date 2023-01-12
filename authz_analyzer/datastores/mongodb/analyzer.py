@@ -25,7 +25,7 @@ from authz_analyzer.datastores.mongodb.resolvers import (
     get_permission_level_privilege,
 )
 from authz_analyzer.datastores.mongodb.service import MongoDBService
-from authz_analyzer.datastores.mongodb.service_model import AssignedRole, UserEntry
+from authz_analyzer.datastores.mongodb.service_model import UserEntry
 from authz_analyzer.models.model import (
     Asset,
     AssetType,
@@ -89,15 +89,20 @@ class MongoDBAuthzAnalyzer:
         try:
             client = MongoDBService(
                 MongoClient(
+            client = MongoDBService(
+                MongoClient(
                     host,
                     username=username,
                     password=password,
-                    tlsAllowInvalidCertificates=True,
-                    tls=True,
+                    # tlsAllowInvalidCertificates=True,
+                    # tls=True,
                     **kwargs,
                 )
             )
+                )
+            )
         except Exception as err:
+            raise ConnectionError(f"Could not connect to {host} with the provided credentials") from err
             raise ConnectionError(f"Could not connect to {host} with the provided credentials") from err
         if logger is None:
             logger = get_logger(False)
@@ -127,15 +132,15 @@ class MongoDBAuthzAnalyzer:
         custom_roles = self.client.get_custom_roles(admin_db)
         fileted_admin_users: Set[AdminUser] = set()
         for user in admin_users:
-            for role in user['roles']:
-                relevant_admin_user = MongoDBAuthzAnalyzer._get_admin_user_by_permission(user, role)
-                if relevant_admin_user is not None:
-                    fileted_admin_users.add(relevant_admin_user)
-        collection = admin_db.list_collection_names()
+            relevant_admin_user = MongoDBAuthzAnalyzer._get_relevant_admin_user(user, custom_roles)
+            if relevant_admin_user is not None:
+                fileted_admin_users.add(relevant_admin_user)
+
+        collections = admin_db.list_collection_names()
         self._report_users(
             database_name="admin",
             users=admin_users,
-            collections=collection,
+            collections=collections,
             admin_users=fileted_admin_users,
             custom_roles=custom_roles,
         )
@@ -143,13 +148,65 @@ class MongoDBAuthzAnalyzer:
         return fileted_admin_users
 
     @staticmethod
-    def _get_admin_user_by_permission(user: UserEntry, role: AssignedRole) -> Optional[AdminUser]:
-        permission_level = get_permission_level_cluster(role['role'])
-        if permission_level is not None:
-            return AdminUser(
-                id=user["user"], name=user["user"], role=AdminRole(name=role['role'], permission_level=permission_level)
+    def _get_relevant_admin_user(user: UserEntry, custom_roles: Dict[str, Role]) -> Optional[AdminUser]:
+        """If None, the user is not relevant to us."""
+        roles: Set[AdminRole] = set()
+        for role in user["roles"]:
+            permission_level = get_permission_level_cluster(role['role'])
+            custom_role = custom_roles.get(role['role'])
+            role_path_element = AuthzPathElement(
+                id=role['role'], name=role['role'], type=AuthzPathElementType.ROLE, note=""
             )
+            if permission_level is not None:
+                role_path_element.note = MongoDBAuthzAnalyzer._generate_note_user(
+                    user["user"], role["role"], permission_level, "all databases"
+                )
+                roles.add(AdminRole(permission_level=permission_level, name=role['role'], path=[role_path_element]))
+            elif custom_role is not None:
+                role_path_element.note = MongoDBAuthzAnalyzer._generate_note_user(user["user"], role["role"])
+                for admin_role in MongoDBAuthzAnalyzer._iter_admin_custom_role(
+                    custom_roles, custom_role, path=[role_path_element]
+                ):
+                    roles.add(admin_role)
+        if len(roles) != 0:
+            return AdminUser(name=user["user"], roles=roles, id=user["user"])
         return None
+
+    @staticmethod
+    def _iter_admin_custom_role(custom_roles: Dict[str, Role], role: Role, path: List[AuthzPathElement]):
+        """Looks on the role permissions, if it permits access on all databases it will yield the role.
+        if not will look in inherited roles, if they are built in roles which provides access to all databases it will yield the role.
+        if the inherited role is a custom role, it will do a recursive.
+
+        Args:
+            custom_roles (Dict[str, Role]): role name to custom role map
+            role (Role): custom role
+
+        Returns:
+            None: None
+
+        Yields:
+            AdminRole: a single admin role
+        """
+        for priv in role.privileges:
+            permission_level = MongoDBAuthzAnalyzer._get_highest_permission(privilege=priv, collection='')
+            if permission_level is not None:
+                path[-1].note += f" which grants permission {permission_level} on all databases"
+                yield AdminRole(permission_level=permission_level, name=role.name, path=path)
+        for inherited_role in role.inherited_roles:
+            permission_level = get_permission_level_cluster(inherited_role.name)
+            custom_role = custom_roles.get(inherited_role.name)
+            role_path_element = AuthzPathElement(
+                id=inherited_role.name, name=inherited_role.name, type=AuthzPathElementType.ROLE, note=""
+            )
+            if permission_level is not None:  # built-in role
+                role_path_element.note = f"role {role.name} inherits role {inherited_role.name} which grants permission {permission_level} on all databases"
+                path.append(role_path_element)
+                yield AdminRole(permission_level=permission_level, name=role.name, path=path)
+            if custom_role is not None:
+                role_path_element.note = f"role {role.name} inherits role {inherited_role.name}"
+                path.append(role_path_element)
+                MongoDBAuthzAnalyzer._iter_admin_custom_role(custom_roles, custom_role, path=path)
 
     def _report_users(
         self,
@@ -162,28 +219,36 @@ class MongoDBAuthzAnalyzer:
         for collection in collections:
             asset = Asset(type=AssetType.COLLECTION, name=database_name + "." + collection)
             for user in users:
-                self._report_user(user=user, asset=asset, custom_roles=custom_roles, collection=collection)
+                self._report_user(
+                    user=user,
+                    asset=asset,
+                    custom_roles=custom_roles,
+                    database_name=database_name,
+                    collection=collection,
+                )
             for admin_user in admin_users:
                 self._report_admin_user(user=admin_user, asset=asset)
 
-    def _report_user(self, user: UserEntry, asset: Asset, custom_roles: Dict[str, Role], collection: str):
+    def _report_user(
+        self, user: UserEntry, asset: Asset, custom_roles: Dict[str, Role], database_name: str, collection: str
+    ):
         for role in user['roles']:
             custom_role = custom_roles.get(role['role'])
             if custom_role is not None:
                 # Handle custom roles privileges
                 self._handle_custom_role_privileges(
-                    custom_role, user=user, asset=asset, collection=collection, custom_roles=custom_roles, path=[]
+                    custom_role,
+                    user=user,
+                    asset=asset,
+                    database_name=database_name,
+                    collection=collection,
+                    custom_roles=custom_roles,
+                    path=[],
                 )
             permission = get_permission_level(role['role'])
             if permission is not None:
-                path = [
-                    AuthzPathElement(
-                        type=AuthzPathElementType.ROLE,
-                        name=role['role'],
-                        id=role['role'],
-                        note=f"{user['user']} has {role['role']} role which gives {permission} permission on {collection}",
-                    )
-                ]
+                note = MongoDBAuthzAnalyzer._generate_note_user(user["user"], role["role"], permission, collection)
+                path = [AuthzPathElement(type=AuthzPathElementType.ROLE, name=role['role'], id=role['role'], note=note)]
                 self._write_entry(
                     user_id=user["user"], username=user["user"], asset=asset, permission=permission, path=path
                 )
@@ -193,6 +258,7 @@ class MongoDBAuthzAnalyzer:
         custom_role: Role,
         user: UserEntry,
         asset: Asset,
+        database_name: str,
         collection: str,
         custom_roles: Dict[str, Role],
         path: List[AuthzPathElement],
@@ -217,19 +283,26 @@ class MongoDBAuthzAnalyzer:
                     path.pop()
             else:
                 self._handle_custom_role_privileges(
-                    role, user=user, asset=asset, collection=collection, custom_roles=custom_roles, path=path
+                    role,
+                    user=user,
+                    asset=asset,
+                    database_name=database_name,
+                    collection=collection,
+                    custom_roles=custom_roles,
+                    path=path,
                 )
 
         for privilege in custom_role.privileges:
-            highest_permission_level = MongoDBAuthzAnalyzer._get_highest_permission(privilege, collection)
-            if highest_permission_level is not None:
-                self._write_entry(
-                    user_id=user["user"],
-                    username=user["user"],
-                    asset=asset,
-                    permission=highest_permission_level,
-                    path=path,
-                )
+            if privilege.resource.database == database_name:  # Apply to all databases
+                highest_permission_level = MongoDBAuthzAnalyzer._get_highest_permission(privilege, collection)
+                if highest_permission_level is not None:
+                    self._write_entry(
+                        user_id=user["user"],
+                        username=user["user"],
+                        asset=asset,
+                        permission=highest_permission_level,
+                        path=path,
+                    )
         path.pop()
 
     @staticmethod
@@ -244,17 +317,10 @@ class MongoDBAuthzAnalyzer:
         return highest_permission_level
 
     def _report_admin_user(self, user: AdminUser, asset: Asset):
-        authz_path = [
-            AuthzPathElement(
-                id=user.role.name,
-                type=AuthzPathElementType.ROLE,
-                name=user.role.name,
-                note=f"{user.name} has role {user.role.name} which grants {user.role.permission_level} permission",
+        for role in user.roles:
+            self._write_entry(
+                user_id=user.id, username=user.name, asset=asset, permission=role.permission_level, path=role.path
             )
-        ]
-        self._write_entry(
-            user_id=user.id, username=user.name, asset=asset, permission=user.role.permission_level, path=authz_path
-        )
 
     def _write_entry(
         self, user_id: str, username: str, asset: Asset, permission: PermissionLevel, path: List[AuthzPathElement]
@@ -268,3 +334,12 @@ class MongoDBAuthzAnalyzer:
                 path=path,
             )
         )
+
+    @staticmethod
+    def _generate_note_user(
+        user: str, role: str, permission_level: Optional[PermissionLevel] = None, resource: Optional[str] = None
+    ):
+        note = f"user {user} has role {role}"
+        if resource is not None and permission_level is not None:
+            note += f" which grants permission {permission_level} on {resource}"
+        return note

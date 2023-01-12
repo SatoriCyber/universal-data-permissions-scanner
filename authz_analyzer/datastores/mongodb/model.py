@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Set
 
 from authz_analyzer.datastores.mongodb.service_model import RoleEntry
-from authz_analyzer.models.model import PermissionLevel
+from authz_analyzer.models.model import AuthzPathElement, PermissionLevel
 
 
 @dataclass
@@ -68,6 +68,11 @@ class AdminRole:
 
     name: str
     permission_level: PermissionLevel
+    path: List[AuthzPathElement]
+
+    def __hash__(self) -> int:
+        return hash(self.name)
+
 
 
 @dataclass
@@ -76,7 +81,7 @@ class AdminUser:
 
     id: str
     name: str
-    role: AdminRole
+    roles: Set[AdminRole]
 
     def __hash__(self) -> int:
         return hash(self.id)

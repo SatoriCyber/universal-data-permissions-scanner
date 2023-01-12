@@ -38,7 +38,7 @@ USER_ONE_SUPER: List[Tuple[str, bool, Optional[str], bool]] = [("user_1", True, 
 
 def test_user_role_no_role_grants():
     """Test user with role, but role don't have permissions"""
-    mocked_writer = MockWriter.get()
+    mocked_writer = MockWriter.new()
     with PostgresMockCursor(USER_ONE_ROLE_ONE, NO_ROLES_GRANTS, ALL_TABLES) as mocked_connector:
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_not_called()
@@ -46,7 +46,7 @@ def test_user_role_no_role_grants():
 
 def test_user_role_with_grant():
     """Test user with role and grant"""
-    mocked_writer = MockWriter.get()
+    mocked_writer = MockWriter.new()
     with PostgresMockCursor(USER_ONE_ROLE_ONE, ROLE_ONE_GRANT_TABLE_ONE, ALL_TABLES) as mocked_connector:
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
@@ -61,7 +61,7 @@ def test_user_role_with_grant():
 
 def test_user_role_to_role_grant():
     """Test user with role1, role1 mapped to role2 which doesn't have grants"""
-    mocked_writer = MockWriter.get()
+    mocked_writer = MockWriter.new()
     with PostgresMockCursor(USER_ONE_ROLE_ONE_ROLE_2, NO_ROLES_GRANTS, ALL_TABLES) as mocked_connector:
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_not_called()
@@ -69,7 +69,7 @@ def test_user_role_to_role_grant():
 
 def test_user_role_to_role_with_grant():
     """Test user with role1, role1 mapped to role2, role_2 has grant"""
-    mocked_writer = MockWriter.get()
+    mocked_writer = MockWriter.new()
     with PostgresMockCursor(USER_ONE_ROLE_ONE_ROLE_2, ROLE_TWO_GRANT_TABLE_ONE, ALL_TABLES) as mocked_connector:
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
@@ -87,7 +87,7 @@ def test_user_role_to_role_with_grant():
 
 def test_user_three_roles_with_grant():
     """Test user with role1, role1 mapped to role2, role_2 maps to role_3, role_3 has grant"""
-    mocked_writer = MockWriter.get()
+    mocked_writer = MockWriter.new()
     with PostgresMockCursor(USER_ONE_ROLE_ONE_ROLE_2, ROLE_TWO_GRANT_TABLE_ONE, ALL_TABLES) as mocked_connector:
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
@@ -105,7 +105,7 @@ def test_user_three_roles_with_grant():
 
 def test_user_role_with_direct_grant():
     """Test user with direct access to table"""
-    mocked_writer = MockWriter.get()
+    mocked_writer = MockWriter.new()
     with PostgresMockCursor(THREE_ROLES_GRANTS, ROLE_THREE_GRANT_TABLE_ONE, ALL_TABLES) as mocked_connector:
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
@@ -124,7 +124,7 @@ def test_user_role_with_direct_grant():
 
 def test_super_user_grant():
     """Test user with direct access to table"""
-    mocked_writer = MockWriter.get()
+    mocked_writer = MockWriter.new()
     with PostgresMockCursor(USER_ONE_SUPER, NO_ROLES_GRANTS, ALL_TABLES) as mocked_connector:
         _call_analyzer(mocked_connector, mocked_writer)
     mocked_writer.assert_write_entry_called_once_with(
