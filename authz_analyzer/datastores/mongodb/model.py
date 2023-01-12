@@ -74,7 +74,6 @@ class AdminRole:
         return hash(self.name)
 
 
-
 @dataclass
 class AdminUser:
     """Define a MongoDB admin user with a single role."""
