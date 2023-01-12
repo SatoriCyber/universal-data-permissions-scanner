@@ -277,7 +277,7 @@ class MongoDBAtlasAuthzAnalyzer:
         asset: Asset,
         role: DatabaseRole,
         db: str,
-        project_custom_roles: dict[Any, Set[CustomRole]],
+        project_custom_roles: Dict[Any, Set[CustomRole]],
     ):
         role_map = resolve_database_role(role.name)
 
