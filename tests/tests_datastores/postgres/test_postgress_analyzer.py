@@ -55,6 +55,7 @@ def test_user_role_with_grant():
             path=[AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note="")],
             permission=PermissionLevel.READ,
             asset=Asset(name="db1.schema1.table1", type=AssetType.TABLE),
+            db_permissions=["role_1"],
         )
     )
 
@@ -81,30 +82,13 @@ def test_user_role_to_role_with_grant():
             ],
             permission=PermissionLevel.READ,
             asset=Asset(name="db1.schema1.table1", type=AssetType.TABLE),
-        )
-    )
-
-
-def test_user_three_roles_with_grant():
-    """Test user with role1, role1 mapped to role2, role_2 maps to role_3, role_3 has grant"""
-    mocked_writer = MockWriter.new()
-    with PostgresMockCursor(USER_ONE_ROLE_ONE_ROLE_2, ROLE_TWO_GRANT_TABLE_ONE, ALL_TABLES) as mocked_connector:
-        _call_analyzer(mocked_connector, mocked_writer)
-    mocked_writer.assert_write_entry_called_once_with(
-        AuthzEntry(
-            identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
-            path=[
-                AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note=""),
-                AuthzPathElement(id="role_2", name="role_2", type=AuthzPathElementType.ROLE, note=""),
-            ],
-            permission=PermissionLevel.READ,
-            asset=Asset(name="db1.schema1.table1", type=AssetType.TABLE),
+            db_permissions=["role_2"],
         )
     )
 
 
 def test_user_role_with_direct_grant():
-    """Test user with direct access to table"""
+    """Test user with role1, role1 mapped to role2, role_2 maps to role_3, role_3 has grant"""
     mocked_writer = MockWriter.new()
     with PostgresMockCursor(THREE_ROLES_GRANTS, ROLE_THREE_GRANT_TABLE_ONE, ALL_TABLES) as mocked_connector:
         _call_analyzer(mocked_connector, mocked_writer)
@@ -118,12 +102,13 @@ def test_user_role_with_direct_grant():
             ],
             permission=PermissionLevel.READ,
             asset=Asset(name="db1.schema1.table1", type=AssetType.TABLE),
+            db_permissions=["role_3"],
         )
     )
 
 
 def test_super_user_grant():
-    """Test user with direct access to table"""
+    """Test user with super access role"""
     mocked_writer = MockWriter.new()
     with PostgresMockCursor(USER_ONE_SUPER, NO_ROLES_GRANTS, ALL_TABLES) as mocked_connector:
         _call_analyzer(mocked_connector, mocked_writer)
@@ -135,6 +120,7 @@ def test_super_user_grant():
             ],
             permission=PermissionLevel.FULL,
             asset=Asset(name="db1.schema1.table3", type=AssetType.TABLE),
+            db_permissions=["super_user"],
         )
     )
 

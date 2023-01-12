@@ -28,6 +28,7 @@ def _yield_row(user: User, permission_level: PermissionLevel, grant_name: str, r
         asset=asset,
         path=auth_path_element,
         permission=permission_level,
+        db_permissions=[roles[-1].name],
     )
 
 

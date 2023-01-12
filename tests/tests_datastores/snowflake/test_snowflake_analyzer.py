@@ -33,6 +33,7 @@ def test_user_role_with_grant():
             path=[AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note="")],
             permission=PermissionLevel.READ,
             asset=Asset(name="db1.schema1.table1", type=ASSET_TYPE),
+            db_permissions=["role_1"],
         )
     )
 
@@ -59,6 +60,7 @@ def test_user_role_to_role_with_grant():
             ],
             permission=PermissionLevel.READ,
             asset=Asset(name="db1.schema1.table1", type=ASSET_TYPE),
+            db_permissions=["role_2"],
         )
     )
 

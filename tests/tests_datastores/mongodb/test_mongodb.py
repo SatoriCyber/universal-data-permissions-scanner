@@ -82,6 +82,7 @@ def generate_authz_entry_admin_by_collection(
                     note=f"user admin has role {role_name} which grants permission {permission_level} on {note_on}",
                 )
             ],
+            db_permissions=[role_name],
         )
     )
 
@@ -89,7 +90,7 @@ def generate_authz_entry_admin_by_collection(
 @pytest.mark.parametrize(
     "users,custom_roles,expected_writes",
     [
-        ( # Test 1: user admin has role clusterManager
+        (  # Test 1: user admin has role clusterManager
             [
                 UserEntry(
                     userId=b"admin.admin", user="admin", db="admin", roles=[AssignedRole(role="clusterManager", db="")]
@@ -98,7 +99,7 @@ def generate_authz_entry_admin_by_collection(
             {},
             [],
         ),
-        ( # Test 2: user admin has role root
+        (  # Test 2: user admin has role root
             [UserEntry(userId=b"admin.admin", user="admin", db="admin", roles=[AssignedRole(role="root", db="")])],
             {},
             [
@@ -113,7 +114,7 @@ def generate_authz_entry_admin_by_collection(
                 ),
             ],
         ),
-        ( # Test 3: user admin has role read
+        (  # Test 3: user admin has role read
             [UserEntry(userId=b"admin.admin", user="admin", db="admin", roles=[AssignedRole(role="read", db="admin")])],
             {},
             [
@@ -128,7 +129,7 @@ def generate_authz_entry_admin_by_collection(
                 ),
             ],
         ),
-        ( # Test 4: user admin has custom role
+        (  # Test 4: user admin has custom role
             [
                 UserEntry(
                     userId=b"admin.admin", user="admin", db="admin", roles=[AssignedRole(role="grant_role", db="admin")]

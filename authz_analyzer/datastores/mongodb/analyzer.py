@@ -89,8 +89,6 @@ class MongoDBAuthzAnalyzer:
         try:
             client = MongoDBService(
                 MongoClient(
-            client = MongoDBService(
-                MongoClient(
                     host,
                     username=username,
                     password=password,
@@ -99,10 +97,7 @@ class MongoDBAuthzAnalyzer:
                     **kwargs,
                 )
             )
-                )
-            )
         except Exception as err:
-            raise ConnectionError(f"Could not connect to {host} with the provided credentials") from err
             raise ConnectionError(f"Could not connect to {host} with the provided credentials") from err
         if logger is None:
             logger = get_logger(False)
@@ -250,7 +245,12 @@ class MongoDBAuthzAnalyzer:
                 note = MongoDBAuthzAnalyzer._generate_note_user(user["user"], role["role"], permission, collection)
                 path = [AuthzPathElement(type=AuthzPathElementType.ROLE, name=role['role'], id=role['role'], note=note)]
                 self._write_entry(
-                    user_id=user["user"], username=user["user"], asset=asset, permission=permission, path=path
+                    user_id=user["user"],
+                    username=user["user"],
+                    asset=asset,
+                    permission=permission,
+                    path=path,
+                    original_role=role['role'],
                 )
 
     def _handle_custom_role_privileges(
@@ -278,7 +278,12 @@ class MongoDBAuthzAnalyzer:
                         )
                     )
                     self._write_entry(
-                        user_id=user["user"], username=user["user"], asset=asset, permission=permission, path=path
+                        user_id=user["user"],
+                        username=user["user"],
+                        asset=asset,
+                        permission=permission,
+                        path=path,
+                        original_role=custom_role.name,
                     )
                     path.pop()
             else:
@@ -302,6 +307,7 @@ class MongoDBAuthzAnalyzer:
                         asset=asset,
                         permission=highest_permission_level,
                         path=path,
+                        original_role=custom_role.name,
                     )
         path.pop()
 
@@ -319,20 +325,36 @@ class MongoDBAuthzAnalyzer:
     def _report_admin_user(self, user: AdminUser, asset: Asset):
         for role in user.roles:
             self._write_entry(
-                user_id=user.id, username=user.name, asset=asset, permission=role.permission_level, path=role.path
+                user_id=user.id,
+                username=user.name,
+                asset=asset,
+                permission=role.permission_level,
+                path=role.path,
+                original_role=role.name,
             )
 
     def _write_entry(
-        self, user_id: str, username: str, asset: Asset, permission: PermissionLevel, path: List[AuthzPathElement]
+        self,
+        user_id: str,
+        username: str,
+        asset: Asset,
+        permission: PermissionLevel,
+        path: List[AuthzPathElement],
+        original_role: str,
     ):
+        """Writes the entry to the writer.
+
+        Args:
+            user_id (str): User ID
+            username (str): Name of the user
+            asset (Asset): The asset as required by the base writer, usually a collection
+            permission (PermissionLevel): Permission level, enum
+            path (List[AuthzPathElement]): Path from identity to asset
+            original_role (str): Original role name, the role which grants the permission to the asset
+        """
         identity = Identity(id=user_id, type=IdentityType.USER, name=username)
         self.writer.write_entry(
-            AuthzEntry(
-                identity=identity,
-                asset=asset,
-                permission=permission,
-                path=path,
-            )
+            AuthzEntry(identity=identity, asset=asset, permission=permission, path=path, db_permissions=[original_role])
         )
 
     @staticmethod
