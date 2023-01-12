@@ -9,7 +9,7 @@ class MockWriter:
     mocked_writer: MagicMock
 
     @classmethod
-    def get(cls):
+    def new(cls):
         mocked_writer = MagicMock(name="MockWriter")
         mocked_writer.write_entry = MagicMock("MockWriteEntry")
         return cls(mocked_writer)
@@ -19,3 +19,6 @@ class MockWriter:
 
     def assert_write_entry_not_called(self):
         self.mocked_writer.write_entry.assert_not_called()  # type: ignore
+
+    def get(self):
+        return self.mocked_writer
