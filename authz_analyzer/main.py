@@ -1,7 +1,7 @@
 """Main module."""
-from typing import Set, Optional
 from logging import Logger
 from pathlib import Path
+from typing import Optional, Set
 
 from authz_analyzer import (
     BigQueryAuthzAnalyzer,
@@ -195,6 +195,8 @@ def run_atlas(
     private_key: str,
     username: str,
     password: str,
+    project_name: str,
+    cluster_name: str,
     output_format: OutputFormat,
     output_path: Path,
 ):
@@ -214,6 +216,8 @@ def run_atlas(
         private_key=private_key,
         db_user=username,
         db_password=password,
+        project_name=project_name,
+        cluster_name=cluster_name,
         output_path=output_path,
         output_format=output_format,
         logger=logger,

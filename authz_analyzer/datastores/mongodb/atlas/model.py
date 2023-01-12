@@ -77,14 +77,14 @@ class OrganizationRole:
 class Organization:
     """MongoDB organization."""
 
-    name: str
     id: str
+    name: str
     users: Set[OrganizationUser]
     teams: Dict[OrganizationTeamId, OrganizationTeam]
 
     @classmethod
-    def new(cls, name: str, org_id: str):
-        return cls(name, org_id, set(), {})
+    def new(cls, org_id: str, name: str):
+        return cls(org_id, name, set(), {})
 
     def __hash__(self) -> int:
         return hash(self.id)

@@ -93,6 +93,8 @@ class MongoDBAtlasAuthzAnalyzer:
     db_password: str
     writer: BaseWriter
     logger: Logger
+    project_name: str
+    cluster_name: str
 
     @classmethod
     def connect(
@@ -101,6 +103,8 @@ class MongoDBAtlasAuthzAnalyzer:
         private_key: str,
         db_user: str,
         db_password: str,
+        project_name: str,
+        cluster_name: str,
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
         logger: Optional[Logger] = None,
@@ -113,45 +117,56 @@ class MongoDBAtlasAuthzAnalyzer:
         if logger is None:
             logger = get_logger(False)
         service = AtlasService.connect(public_key, private_key)
-        return cls(atlas_service=service, writer=writer, logger=logger, db_user=db_user, db_password=db_password)
+        return cls(
+            atlas_service=service,
+            writer=writer,
+            logger=logger,
+            db_user=db_user,
+            db_password=db_password,
+            project_name=project_name,
+            cluster_name=cluster_name,
+        )
 
     def run(self):
         """Analyze authorization for a user and resource."""
-        organizations = self.atlas_service.get_all_organizations()
-        for organization in organizations:
-            organization.users = self.atlas_service.get_all_organization_users_for_organization(organization)
-            organization.teams = self.atlas_service.get_teams_for_organization(organization)
-            self._handle_organization(organization)
+        project_info = self.atlas_service.get_project_info_by_project_name(self.project_name)
+        organization_info = self.atlas_service.get_organization_info_by_id(project_info["orgId"])
 
-    def _handle_organization(self, organization: Organization):
-        for project in self.atlas_service.get_all_project_for_organization(organization):
-            self._handle_project(organization, project)
+        organization = Organization.new(project_info["orgId"], organization_info["name"])
+        organization.users = self.atlas_service.get_all_organization_users_for_organization(organization)
+        organization.teams = self.atlas_service.get_teams_for_organization(organization)
+
+        project = Project(name=self.project_name, id=project_info["id"])
+
+        self._handle_project(organization, project)
 
     def _handle_project(
         self,
         organization: Organization,
         project: Project,
     ):
-        for cluster in self.atlas_service.get_all_clusters_for_project(project):
-            mongo_client = MongoDBService(
-                MongoClient(
-                    cluster.connection_string,
-                    username=self.db_user,
-                    password=self.db_password,
-                    tlsAllowInvalidCertificates=True,
-                    tls=True,
-                )
+        cluster_info = self.atlas_service.get_cluster_info_by_name(project.id, self.cluster_name)
+        connection_string = cluster_info["connectionStrings"]["standardSrv"].split(',')[0]
+        cluster = Cluster(name=cluster_info["name"], id=cluster_info["id"], connection_string=connection_string)
+        mongo_client = MongoDBService(
+            MongoClient(
+                cluster.connection_string,
+                username=self.db_user,
+                password=self.db_password,
+                tlsAllowInvalidCertificates=True,
+                tls=True,
             )
-            for db_name, db_connection in mongo_client.iter_database_connections():
-                for collection in db_connection.list_collection_names():
-                    asset = Asset(name=db_name + "." + collection, type=AssetType.COLLECTION)
-                    self._report_organization_users(
-                        asset=asset, organization=organization, project=project, cluster=cluster, db=db_name
-                    )
-                    self._report_project_users(
-                        project, asset, db=db_name, organization_teams=organization.teams, cluster=cluster
-                    )
-                    self._report_db_users(asset=asset, db=db_name, project=project, cluster=cluster)
+        )
+        for db_name, db_connection in mongo_client.iter_database_connections():
+            for collection in db_connection.list_collection_names():
+                asset = Asset(name=db_name + "." + collection, type=AssetType.COLLECTION)
+                self._report_organization_users(
+                    asset=asset, organization=organization, project=project, cluster=cluster, db=db_name
+                )
+                self._report_project_users(
+                    project, asset, db=db_name, organization_teams=organization.teams, cluster=cluster
+                )
+                self._report_db_users(asset=asset, db=db_name, project=project, cluster=cluster)
 
     def _report_organization_users(
         self, asset: Asset, organization: Organization, project: Project, cluster: Cluster, db: str

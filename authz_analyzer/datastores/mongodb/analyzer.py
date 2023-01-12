@@ -92,8 +92,8 @@ class MongoDBAuthzAnalyzer:
                     host,
                     username=username,
                     password=password,
-                    # tlsAllowInvalidCertificates=True,
-                    # tls=True,
+                    tlsAllowInvalidCertificates=True,
+                    tls=True,
                     **kwargs,
                 )
             )

@@ -2,7 +2,7 @@
 Handle all the communication with MongoDB Atlas.
 """
 from dataclasses import dataclass
-from typing import Any, Dict, List, Set
+from typing import Dict, List, Set
 
 import requests
 from requests.auth import HTTPDigestAuth
@@ -18,7 +18,12 @@ from authz_analyzer.datastores.mongodb.atlas.model import (
     OrganizationUser,
     Project,
 )
-from authz_analyzer.datastores.mongodb.atlas.service_model import CustomRoleEntry
+from authz_analyzer.datastores.mongodb.atlas.service_model import (
+    ClusterEntry,
+    CustomRoleEntry,
+    OrganizationEntry,
+    ProjectInfo,
+)
 
 BASE_API = "https://cloud.mongodb.com/api/atlas/v1.0/"
 
@@ -46,20 +51,16 @@ class AtlasService:
         analyzer._get_resource("")
         return analyzer
 
-    def _get_resource(self, extend_uri: str) -> Dict[str, Any]:
+    def _get_resource(self, extend_uri: str):
         """Get resource from MongoDB Atlas REST API."""
         response = requests.get(BASE_API + extend_uri, auth=self.auth, timeout=10)
         response.raise_for_status()
         return response.json()
 
-    def get_all_organizations(self):
-        """Return all organizations that the API key has access to.
-
-        Returns:
-            Set[Organization]: Set of organizations.
-        """
-        json_response = self._get_resource("orgs")
-        return {Organization.new(name=org["name"], org_id=org["id"]) for org in json_response["results"]}
+    def get_organization_info_by_id(self, organization_id: str):
+        """Get organization info by id."""
+        json_response: OrganizationEntry = self._get_resource(f"orgs/{organization_id}")
+        return json_response
 
     def get_all_organization_users_for_organization(self, organization: Organization):
         """Get all organization users for organization."""
@@ -107,5 +108,15 @@ class AtlasService:
 
     def get_custom_roles_by_project(self, project: Project) -> Dict[str, Set[CustomRole]]:
         """Get all custom roles for project."""
-        json_response: List[CustomRoleEntry] = self._get_resource(f"groups/{project.id}/customDBRoles/roles")  # type: ignore # looks like a bug in Atlas API
+        json_response: List[CustomRoleEntry] = self._get_resource(f"groups/{project.id}/customDBRoles/roles")
         return {entry["roleName"]: CustomRole.build_custom_roles_from_response(entry) for entry in json_response}
+
+    def get_project_info_by_project_name(self, project_id: str):
+        """Get project info by project name."""
+        json_response: ProjectInfo = self._get_resource(f"groups/byName/{project_id}")
+        return json_response
+
+    def get_cluster_info_by_name(self, project_id: str, cluster_name: str):
+        """Get cluster info by cluster name."""
+        json_response: ClusterEntry = self._get_resource(f"groups/{project_id}/clusters/{cluster_name}")
+        return json_response
