@@ -17,7 +17,7 @@ USER_TYPE = IdentityType.USER
 ASSET_TYPE = AssetType.TABLE
 
 
-def _yield_row(user: User, permission_level: PermissionLevel, grant_name: str, roles: List[DBRole]):
+def _yield_row(user: User, permission_level: PermissionLevel, grant_name: List[str], roles: List[DBRole]):
     auth_path_element = [
         AuthzPathElement(id=role.name, name=role.name, type=AuthzPathElementType.ROLE, note="") for role in roles
     ]
