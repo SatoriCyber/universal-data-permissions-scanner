@@ -11,12 +11,12 @@ class PostgresMockCursor:
     all_tables: List[Tuple[str, str, str]]
 
     def get(self):
-        Postgres_mock = MagicMock(name="PostgresConnectionMock")
+        postgres_mock = MagicMock(name="PostgresConnectionMock")
         fetchall = MagicMock(name="PostgresFetchAllMock", side_effect=[self.roles, self.role_grants, self.all_tables])
 
-        Postgres_mock.fetchall = fetchall
+        postgres_mock.fetchall = fetchall
 
-        return Postgres_mock
+        return postgres_mock
 
     def __enter__(self):
         self.cursor = self.get()
