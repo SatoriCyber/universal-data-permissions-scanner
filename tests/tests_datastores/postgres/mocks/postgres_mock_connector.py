@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 class PostgresMockCursor:
     roles: List[Tuple[str, bool, Optional[str], bool]]
     role_grants: List[Tuple[str, str, str, str, str, str]]
-    all_tables: List[Tuple[str]]
+    all_tables: List[Tuple[str, str, str]]
 
     def get(self):
         Postgres_mock = MagicMock(name="PostgresConnectionMock")
