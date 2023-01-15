@@ -67,7 +67,7 @@ class MongoDBServiceMocked:
 
 
 def generate_authz_entry_admin_by_collection(
-    role_name: str, permission_level: PermissionLevel, collection_name: str, note_on: str
+    role_name: str, permission_level: PermissionLevel, collection_name: List[str], note_on: str
 ):
     return call(
         AuthzEntry(
@@ -99,18 +99,18 @@ def generate_authz_entry_admin_by_collection(
             {},
             [],
         ),
-        (  # Test 2: user admin has role root
+        (  # Test 2: Cluster admin role
             [UserEntry(userId=b"admin.admin", user="admin", db="admin", roles=[AssignedRole(role="root", db="")])],
             {},
             [
                 generate_authz_entry_admin_by_collection(
-                    "root", PermissionLevel.FULL, "admin.system.roles", "all databases"
+                    "root", PermissionLevel.FULL, ["admin", "system.roles"], "all databases"
                 ),
                 generate_authz_entry_admin_by_collection(
-                    "root", PermissionLevel.FULL, "admin.system.users", "all databases"
+                    "root", PermissionLevel.FULL, ["admin", "system.users"], "all databases"
                 ),
                 generate_authz_entry_admin_by_collection(
-                    "root", PermissionLevel.FULL, "admin.system.version", "all databases"
+                    "root", PermissionLevel.FULL, ["admin", "system.version"], "all databases"
                 ),
             ],
         ),
@@ -119,13 +119,13 @@ def generate_authz_entry_admin_by_collection(
             {},
             [
                 generate_authz_entry_admin_by_collection(
-                    "read", PermissionLevel.READ, "admin.system.roles", "system.roles"
+                    "read", PermissionLevel.READ, ["admin", "system.roles"], "admin.system.roles"
                 ),
                 generate_authz_entry_admin_by_collection(
-                    "read", PermissionLevel.READ, "admin.system.users", "system.users"
+                    "read", PermissionLevel.READ, ["admin", "system.users"], "admin.system.users"
                 ),
                 generate_authz_entry_admin_by_collection(
-                    "read", PermissionLevel.READ, "admin.system.version", "system.version"
+                    "read", PermissionLevel.READ, ["admin", "system.version"], "admin.system.version"
                 ),
             ],
         ),
@@ -145,13 +145,13 @@ def generate_authz_entry_admin_by_collection(
             },
             [
                 generate_authz_entry_admin_by_collection(
-                    "grant_role", PermissionLevel.FULL, "admin.system.roles", "all databases"
+                    "grant_role", PermissionLevel.FULL, ["admin", "system.roles"], "all databases"
                 ),
                 generate_authz_entry_admin_by_collection(
-                    "grant_role", PermissionLevel.FULL, "admin.system.users", "all databases"
+                    "grant_role", PermissionLevel.FULL, ["admin", "system.users"], "all databases"
                 ),
                 generate_authz_entry_admin_by_collection(
-                    "grant_role", PermissionLevel.FULL, "admin.system.version", "all databases"
+                    "grant_role", PermissionLevel.FULL, ["admin", "system.version"], "all databases"
                 ),
             ],
         ),

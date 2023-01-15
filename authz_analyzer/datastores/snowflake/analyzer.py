@@ -132,16 +132,14 @@ class SnowflakeAuthzAnalyzer:
 
     @staticmethod
     def _add_role_to_resources(
-        role_name: str, table_name: str, raw_level: str, role_to_resources: Dict[str, Set[ResourceGrant]]
+        role_name: str, table_name: List[str], raw_level: str, role_to_resources: Dict[str, Set[ResourceGrant]]
     ):
         level = PERMISSION_LEVEL_MAP[raw_level]
         role_grants = role_to_resources.setdefault(role_name, set())
         role_grants.add(ResourceGrant(table_name, level))
 
-    def _get_role_to_roles_and_role_to_resources(self):
-        rows: List[Tuple[str, str, str, Optional[str], str]] = self._get_rows(
-            file_name_command=Path("grants_roles.sql")
-        )
+    def _get_role_to_roles_and_role_to_resources(self) -> Tuple[Dict[str, Set[DBRole]], Dict[str, Set[ResourceGrant]]]:
+        rows = self._get_rows(file_name_command=Path("grants_roles.sql"))
         role_to_roles: Dict[str, Set[DBRole]] = {}
         role_to_resources: Dict[str, Set[ResourceGrant]] = {}
 
@@ -149,14 +147,19 @@ class SnowflakeAuthzAnalyzer:
             name: str = row[0]
             role: str = row[1]
             privilege: str = row[2]
-            table_name: str = row[3]
-            granted_on: str = row[4]
+            db: str = row[3]
+            schema: str = row[4]
+            table: str = row[5]
+            granted_on: str = row[6]
 
             if privilege == "USAGE" and granted_on == "ROLE":
                 SnowflakeAuthzAnalyzer._add_role_to_roles(role, name, role_to_roles)
-            elif table_name is not None and granted_on in ("TABLE", "VIEW", "MATERIALIZED VIEW"):
+            elif table is not None and granted_on in ("TABLE", "VIEW", "MATERIALIZED VIEW"):
                 SnowflakeAuthzAnalyzer._add_role_to_resources(
-                    role_name=role, raw_level=privilege, table_name=table_name, role_to_resources=role_to_resources
+                    role_name=role,
+                    raw_level=privilege,
+                    table_name=[db, schema, table],
+                    role_to_resources=role_to_resources,
                 )
         return role_to_roles, role_to_resources
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Set
+from typing import Dict, List, Set
 
 from authz_analyzer.models import PermissionLevel
 
@@ -32,13 +32,13 @@ Username = User
 
 @dataclass
 class ResourceGrant:
-    """Define a resource, e.g. a table, and the permission level."""
+    """Define a resource, e.g. a db.schema.table, and the permission level."""
 
-    name: str
+    name: List[str]
     permission_level: PermissionLevel
 
     def __hash__(self) -> int:
-        return hash(self.name)
+        return hash(str(self.name))
 
 
 @dataclass

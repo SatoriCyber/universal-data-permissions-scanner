@@ -159,7 +159,7 @@ class MongoDBAtlasAuthzAnalyzer:
         )
         for db_name, db_connection in mongo_client.iter_database_connections():
             for collection in db_connection.list_collection_names():
-                asset = Asset(name=db_name + "." + collection, type=AssetType.COLLECTION)
+                asset = Asset(name=[db_name, collection], type=AssetType.COLLECTION)
                 self._report_organization_users(
                     asset=asset, organization=organization, project=project, cluster=cluster, db=db_name
                 )
@@ -199,11 +199,12 @@ class MongoDBAtlasAuthzAnalyzer:
             for role in user.roles:
                 permission_level = resolve_organization_role(role)
                 if permission_level is not None:
+                    collection_name = ".".join(asset.name)
                     role_entry = AuthzPathElement(
                         id=role,
                         name=role,
                         type=AuthzPathElementType.ROLE,
-                        note=f"{user.username} has {role} role which grants {permission_level} access on {asset.name}",
+                        note=f"{user.username} has {role} role which grants {permission_level} access on {collection_name}",
                     )
                     path.insert(0, role_entry)
                     entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
@@ -263,11 +264,12 @@ class MongoDBAtlasAuthzAnalyzer:
     ):
         permission_level = resolve_project_role(role)
         if permission_level is not None:
+            collection_name = ".".join(asset.name)
             role_entry = AuthzPathElement(
                 id=role,
                 name=role,
                 type=AuthzPathElementType.ROLE,
-                note=f"User {identity.name} has {role} role which grants {permission_level} access on {asset.name}",
+                note=f"User {identity.name} has {role} role which grants {permission_level} access on {collection_name}",
             )
             path.insert(0, role_entry)
             entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
@@ -314,7 +316,7 @@ class MongoDBAtlasAuthzAnalyzer:
             elif scope == PermissionScope.COLLECTION:
                 if role.collection is None:  # In this case the role applies to all collections in the database
                     self.writer.write_entry(entry)
-                elif role.collection == asset.name:
+                elif role.collection == asset.name[1]:
                     self.writer.write_entry(entry)
         else:
             custom_roles = project_custom_roles.get(role.name, set())
@@ -323,12 +325,13 @@ class MongoDBAtlasAuthzAnalyzer:
                     role_map = resolve_database_role(custom_role.inherited_role.name)
                     if role_map is not None:
                         permission_level, scope = role_map
+                        collection_name = ".".join(asset.name)
                         path = [
                             AuthzPathElement(
                                 id=custom_role.name,
                                 name=custom_role.name,
                                 type=AuthzPathElementType.ROLE,
-                                note=f"DB user {identity.name} has {custom_role.name} role which grants {permission_level} access on {asset.name}",
+                                note=f"DB user {identity.name} has {custom_role.name} role which grants {permission_level} access on {collection_name}",
                             )
                         ]
                         entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
@@ -339,12 +342,13 @@ class MongoDBAtlasAuthzAnalyzer:
                 if custom_role.action is not None:
                     permission_level = resolve_permission(custom_role.action.permission)
                     if permission_level is not None:
+                        collection_name = ".".join(asset.name)
                         path = [
                             AuthzPathElement(
                                 id=custom_role.name,
                                 name=custom_role.name,
                                 type=AuthzPathElementType.ROLE,
-                                note=f"DB user {identity.name} has {custom_role.name} role which grants {permission_level} access on {asset.name}",
+                                note=f"DB user {identity.name} has {custom_role.name} role which grants {permission_level} access on {collection_name}",
                             )
                         ]
                         entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
@@ -354,5 +358,5 @@ class MongoDBAtlasAuthzAnalyzer:
                         ):
                             if custom_role.action.resource.collection == '':
                                 self.writer.write_entry(entry)
-                            elif custom_role.action.resource.collection == asset.name:
+                            elif custom_role.action.resource.collection == asset.name[1]:
                                 self.writer.write_entry(entry)

@@ -137,9 +137,14 @@ class BigQueryAuthzAnalyzer:
                 fq_table_id = f"{table.project}.{table.dataset_id}.{table.table_id}"  # type: ignore
                 table_iam = self.service.get_table_policy(table.reference)
                 name: str = table.table_id  # type: ignore
-                table_node = TableIamPolicyNode(fq_table_id, name, table_iam, self._resolve_custom_role_to_permissions)
+                table_node = TableIamPolicyNode(
+                    table_id=fq_table_id,
+                    name=name,
+                    policy=table_iam,
+                    resolve_permission_callback=self._resolve_custom_role_to_permissions,
+                )
                 table_node.set_parent(dataset_node)
-                self._calc(Asset(fq_table_id, type=AssetType.TABLE), table_node, [])
+                self._calc(Asset([name], type=AssetType.TABLE), table_node, [])
         self.writer.close()
 
     def _calc(

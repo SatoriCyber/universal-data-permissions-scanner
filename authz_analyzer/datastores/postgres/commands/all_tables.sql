@@ -1,6 +1,7 @@
 with all_db as (
     SELECT
-        CONCAT(table_schema, '.', table_name) as schema_table_name
+        table_schema,
+        table_name
     FROM
         information_schema.tables
     ORDER BY
@@ -14,7 +15,9 @@ current_db as (
         current_database()
 )
 SELECT
-    CONCAT(schema_table_name, '.', db) as table_name
+    current_db.db,
+    all_db.table_schema,
+    all_db.table_name
 from
     all_db,
     current_db
