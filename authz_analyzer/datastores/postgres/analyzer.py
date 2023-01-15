@@ -155,11 +155,13 @@ class PostgresAuthzAnalyzer:
             for row in rows:
                 _grantor = row[0]
                 role = row[1]
-                table_name = row[2]
-                level = PERMISSION_LEVEL_MAP.get(row[3], PermissionLevel.UNKNOWN)
+                db: str = row[2]  # type: ignore
+                schema: str = row[3]  # type: ignore
+                table: str = row[4]  # type: ignore
+                level = PERMISSION_LEVEL_MAP.get(row[5], PermissionLevel.UNKNOWN)
 
                 role_grants = results.setdefault(role, set())
-                role_grants.add(ResourceGrant(table_name, level))
+                role_grants.add(ResourceGrant([db, schema, table], level))
 
         return results
 
@@ -169,8 +171,12 @@ class PostgresAuthzAnalyzer:
         all_tables: Set[ResourceGrant] = set()
         for pg_cursor in self.cursors:
             rows = PostgresAuthzAnalyzer._get_rows(pg_cursor, command)
-            for table_name in rows:
-                all_tables.add(ResourceGrant(table_name[0], PermissionLevel.FULL))
+
+            for row in rows:
+                db: str = row[0]  # type: ignore
+                schema = row[1]  # type: ignore
+                table = row[2]  # type: ignore
+                all_tables.add(ResourceGrant([db, schema, table], PermissionLevel.FULL))
         role_to_grants["super_user"] = all_tables
 
     @staticmethod

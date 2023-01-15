@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 @dataclass
 class SnowflakeMockCursor:
     user_grants: List[Tuple[str, str, str]]
-    role_grants: List[Tuple[str, str, str, str, str]]
+    role_grants: List[Tuple[str, str, str, str, str, str, str]]
 
     def get(self):
         snowflake_mock = MagicMock(name="SnowflakeConnectionMock")

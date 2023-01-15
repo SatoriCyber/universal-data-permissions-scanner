@@ -139,10 +139,11 @@ class AuthzPathElement:
 @dataclass
 class Asset:
     """Datastore asset.
-    For example, a table, or a view.
+    name: The id of the asset encoded in a list, for example ['db', 'schema', 'table'].
+    type: The type of the asset, for example TABLE or VIEW.
     """
 
-    name: str
+    name: List[str]
     type: AssetType
 
 

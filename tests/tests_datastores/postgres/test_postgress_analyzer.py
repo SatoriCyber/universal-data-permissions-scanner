@@ -15,12 +15,18 @@ from authz_analyzer.models.model import (
 from tests.tests_datastores.postgres.mocks.postgres_mock_connector import PostgresMockCursor
 from tests.mocks.mock_writers import MockWriter
 
-ALL_TABLES = [("db1.schema1.table3",)]
+ALL_TABLES = [
+    (
+        "db1",
+        "schema1",
+        "table3",
+    )
+]
 USER_ONE_ROLE_ONE: List[Tuple[str, bool, Optional[str], bool]] = [("user_1", False, "role_1", True)]
-USER_ONE_DIRECT_ACCESS = [("grantor", "user_1", "db1.schema1.table1", "SELECT")]
-NO_ROLES_GRANTS = [("", "", "", "")]
-ROLE_ONE_GRANT_TABLE_ONE = [("grantor", "role_1", "db1.schema1.table1", "SELECT")]
-ROLE_TWO_GRANT_TABLE_ONE = [("grantor", "role_2", "db1.schema1.table1", "SELECT")]
+USER_ONE_DIRECT_ACCESS = [("grantor", "user_1", "db1", "schema1", "table1", "SELECT")]
+NO_ROLES_GRANTS = [("", "", "", "", "", "")]
+ROLE_ONE_GRANT_TABLE_ONE = [("grantor", "role_1", "db1", "schema1", "table1", "SELECT")]
+ROLE_TWO_GRANT_TABLE_ONE = [("grantor", "role_2", "db1", "schema1", "table1", "SELECT")]
 USER_ONE_ROLE_ONE_ROLE_2: List[Tuple[str, bool, Optional[str], bool]] = [
     ("user_1", False, "role_1", True),
     ("role_1", False, "role_2", False),
@@ -31,7 +37,7 @@ THREE_ROLES_GRANTS: List[Tuple[str, bool, Optional[str], bool]] = [
     ("role_1", False, "role_2", False),
     ("role_2", False, "role_3", False),
 ]
-ROLE_THREE_GRANT_TABLE_ONE = [("grantor", "role_3", "db1.schema1.table1", "SELECT")]
+ROLE_THREE_GRANT_TABLE_ONE = [("grantor", "role_3", "db1", "schema1", "table1", "SELECT")]
 
 USER_ONE_SUPER: List[Tuple[str, bool, Optional[str], bool]] = [("user_1", True, None, True)]
 
@@ -54,7 +60,7 @@ def test_user_role_with_grant():
             identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
             path=[AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note="")],
             permission=PermissionLevel.READ,
-            asset=Asset(name="db1.schema1.table1", type=AssetType.TABLE),
+            asset=Asset(name=["db1", "schema1", "table1"], type=AssetType.TABLE),
             db_permissions=["role_1"],
         )
     )
@@ -81,7 +87,7 @@ def test_user_role_to_role_with_grant():
                 AuthzPathElement(id="role_2", name="role_2", type=AuthzPathElementType.ROLE, note=""),
             ],
             permission=PermissionLevel.READ,
-            asset=Asset(name="db1.schema1.table1", type=AssetType.TABLE),
+            asset=Asset(name=["db1", "schema1", "table1"], type=AssetType.TABLE),
             db_permissions=["role_2"],
         )
     )
@@ -101,7 +107,7 @@ def test_user_role_with_direct_grant():
                 AuthzPathElement(id="role_3", name="role_3", type=AuthzPathElementType.ROLE, note=""),
             ],
             permission=PermissionLevel.READ,
-            asset=Asset(name="db1.schema1.table1", type=AssetType.TABLE),
+            asset=Asset(name=["db1", "schema1", "table1"], type=AssetType.TABLE),
             db_permissions=["role_3"],
         )
     )
@@ -119,7 +125,7 @@ def test_super_user_grant():
                 AuthzPathElement(id="super_user", name="super_user", type=AuthzPathElementType.ROLE, note=""),
             ],
             permission=PermissionLevel.FULL,
-            asset=Asset(name="db1.schema1.table3", type=AssetType.TABLE),
+            asset=Asset(name=["db1", "schema1", "table3"], type=AssetType.TABLE),
             db_permissions=["super_user"],
         )
     )

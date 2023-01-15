@@ -212,7 +212,7 @@ class MongoDBAuthzAnalyzer:
         custom_roles: Dict[str, Role],
     ):
         for collection in collections:
-            asset = Asset(type=AssetType.COLLECTION, name=database_name + "." + collection)
+            asset = Asset(type=AssetType.COLLECTION, name=[database_name, collection])
             for user in users:
                 self._report_user(
                     user=user,
@@ -242,7 +242,9 @@ class MongoDBAuthzAnalyzer:
                 )
             permission = get_permission_level(role['role'])
             if permission is not None:
-                note = MongoDBAuthzAnalyzer._generate_note_user(user["user"], role["role"], permission, collection)
+                note = MongoDBAuthzAnalyzer._generate_note_user(
+                    user["user"], role["role"], permission, database_name + "." + collection
+                )
                 path = [AuthzPathElement(type=AuthzPathElementType.ROLE, name=role['role'], id=role['role'], note=note)]
                 self._write_entry(
                     user_id=user["user"],

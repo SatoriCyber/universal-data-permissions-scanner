@@ -14,7 +14,7 @@ from authz_analyzer.models.model import (
 from authz_analyzer.writers import BaseWriter
 
 
-def _yield_row(role_name: str, permission_level: PermissionLevel, grant_name: str, roles: List[DBRole]):
+def _yield_row(role_name: str, permission_level: PermissionLevel, grant_name: List[str], roles: List[DBRole]):
     auth_path_element = [
         AuthzPathElement(id=role.name, name=role.name, type=AuthzPathElementType.ROLE, note="") for role in roles
     ]
