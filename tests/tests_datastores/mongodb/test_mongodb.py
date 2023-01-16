@@ -12,7 +12,6 @@ from authz_analyzer import MongoDBAuthzAnalyzer
 from authz_analyzer.datastores.mongodb.service_model import UserEntry, AssignedRole
 from authz_analyzer.datastores.mongodb.service import MongoDBService
 from authz_analyzer.datastores.mongodb.model import Role, Privilege, Resource
-from tests.mocks.mock_writers import MockWriter
 from authz_analyzer.models.model import (
     AuthzEntry,
     Asset,
@@ -23,6 +22,8 @@ from authz_analyzer.models.model import (
     PermissionLevel,
     AuthzPathElement,
 )
+
+from tests.mocks.mock_writers import MockWriter
 
 
 @dataclass

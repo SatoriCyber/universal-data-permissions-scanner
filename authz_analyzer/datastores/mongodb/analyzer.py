@@ -252,7 +252,6 @@ class MongoDBAuthzAnalyzer:
                     asset=asset,
                     permission=permission,
                     path=path,
-                    original_role=role['role'],
                 )
 
     def _handle_custom_role_privileges(
@@ -285,7 +284,6 @@ class MongoDBAuthzAnalyzer:
                         asset=asset,
                         permission=permission,
                         path=path,
-                        original_role=custom_role.name,
                     )
                     path.pop()
             else:
@@ -302,6 +300,7 @@ class MongoDBAuthzAnalyzer:
         for privilege in custom_role.privileges:
             if privilege.resource.database == database_name:  # Apply to all databases
                 highest_permission_level = MongoDBAuthzAnalyzer._get_highest_permission(privilege, collection)
+                path[-1].db_permissions = privilege.actions
                 if highest_permission_level is not None:
                     self._write_entry(
                         user_id=user["user"],
@@ -309,7 +308,6 @@ class MongoDBAuthzAnalyzer:
                         asset=asset,
                         permission=highest_permission_level,
                         path=path,
-                        original_role=custom_role.name,
                     )
         path.pop()
 
@@ -332,7 +330,6 @@ class MongoDBAuthzAnalyzer:
                 asset=asset,
                 permission=role.permission_level,
                 path=role.path,
-                original_role=role.name,
             )
 
     def _write_entry(
@@ -342,7 +339,6 @@ class MongoDBAuthzAnalyzer:
         asset: Asset,
         permission: PermissionLevel,
         path: List[AuthzPathElement],
-        original_role: str,
     ):
         """Writes the entry to the writer.
 
