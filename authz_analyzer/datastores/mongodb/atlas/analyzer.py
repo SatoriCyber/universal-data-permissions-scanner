@@ -37,11 +37,12 @@ Atlas also allows to limit the access to specific cluster.
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set, Union
 
 from pymongo import MongoClient
 
 from authz_analyzer.datastores.mongodb.atlas.model import (
+    Action,
     Cluster,
     CustomRole,
     DatabaseRole,
@@ -294,7 +295,7 @@ class MongoDBAtlasAuthzAnalyzer:
         asset: Asset,
         role: DatabaseRole,
         db: str,
-        project_custom_roles: Dict[Any, Set[CustomRole]],
+        project_custom_roles: Dict[str, CustomRole],
     ):
         role_map = resolve_database_role(role.name)
 
@@ -319,10 +320,10 @@ class MongoDBAtlasAuthzAnalyzer:
                 elif role.collection == asset.name[1]:
                     self.writer.write_entry(entry)
         else:
-            custom_roles = project_custom_roles.get(role.name, set())
-            for custom_role in custom_roles:
-                if custom_role.inherited_role is not None:
-                    role_map = resolve_database_role(custom_role.inherited_role.name)
+            custom_role = project_custom_roles.get(role.name)
+            if custom_role is not None:
+                for inherited_role in custom_role.inherited_roles:
+                    role_map = resolve_database_role(inherited_role.name)
                     if role_map is not None:
                         permission_level, scope = role_map
                         collection_name = ".".join(asset.name)
@@ -337,26 +338,33 @@ class MongoDBAtlasAuthzAnalyzer:
                         entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
                         if scope == PermissionScope.PROJECT:
                             self.writer.write_entry(entry)
-                        elif scope == PermissionScope.DATABASE and custom_role.inherited_role.database == db:
+                        elif scope == PermissionScope.DATABASE and inherited_role.database == db:
                             self.writer.write_entry(entry)
-                if custom_role.action is not None:
-                    permission_level = resolve_permission(custom_role.action.permission)
-                    if permission_level is not None:
-                        collection_name = ".".join(asset.name)
-                        path = [
-                            AuthzPathElement(
-                                id=custom_role.name,
-                                name=custom_role.name,
-                                type=AuthzPathElementType.ROLE,
-                                note=f"DB user {identity.name} has {custom_role.name} role which grants {permission_level} access on {collection_name}",
-                            )
-                        ]
-                        entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
-                        if (
-                            custom_role.action.resource.database is not None
-                            and custom_role.action.resource.database == db
-                        ):
-                            if custom_role.action.resource.collection == '':
-                                self.writer.write_entry(entry)
-                            elif custom_role.action.resource.collection == asset.name[1]:
-                                self.writer.write_entry(entry)
+                collection_name = ".".join(asset.name)
+                permission_level = MongoDBAtlasAuthzAnalyzer._get_highest_permission(
+                    custom_role.actions, collection_name
+                )
+                if permission_level is not None:
+                    role_db_permissions = [str(action.permission) for action in custom_role.actions]
+                    path = [
+                        AuthzPathElement(
+                            id=custom_role.name,
+                            name=custom_role.name,
+                            type=AuthzPathElementType.ROLE,
+                            note=f"DB user {identity.name} has {custom_role.name} role which grants {permission_level} access on {collection_name}",
+                            db_permissions=role_db_permissions,
+                        )
+                    ]
+                    entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
+                    self.writer.write_entry(entry)
+
+    @staticmethod
+    def _get_highest_permission(actions: Set[Action], collection: str):
+        highest_permission_level: Optional[PermissionLevel] = None
+        for action in actions:
+            if action.resource.collection in ("", collection):
+                permission = resolve_permission(action.permission)
+                if permission is not None:
+                    if highest_permission_level is None or permission > highest_permission_level:  # type: ignore
+                        highest_permission_level = permission
+        return highest_permission_level

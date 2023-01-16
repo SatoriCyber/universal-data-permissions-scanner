@@ -73,12 +73,21 @@ IDENTITY_TYPE_MAP = {
 
 
 @dataclass
+class CustomPermission:
+    """Defines a GCP permission, which is a combination of a role and a permission level."""
+
+    db_permissions: List[str]
+    permission: PermissionLevel
+
+
+@dataclass
 class Member:
     """Defines a GCP member, which is a combination of a role and an identity."""
 
     role: str
     name: str
     type: IdentityType
+    db_permissions: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -152,7 +161,14 @@ class PolicyNode:
         """Defines the parent of the node, for example a dataset is the parent of a table."""
         self.parent = parent
 
-    def add_member(self, member: str, permission: PermissionLevel, role: str, member_type: str):
+    def add_member(
+        self,
+        member: str,
+        permission: PermissionLevel,
+        role: str,
+        member_type: str,
+        db_permissions: Optional[List[str]] = None,
+    ):
         """Add a member of the node, for example user X have access to project Y with role Z.
 
         Args:
@@ -161,7 +177,11 @@ class PolicyNode:
             role (str): The role that granted the permission.
             member_type (str): Type of the member, for example user, group, service account.
         """
-        parsed_member = Member(role=role, name=member, type=IDENTITY_TYPE_MAP[member_type])
+        if db_permissions is None:
+            db_permissions = []
+        parsed_member = Member(
+            role=role, name=member, type=IDENTITY_TYPE_MAP[member_type], db_permissions=db_permissions
+        )
         self.permissions[permission].append(parsed_member)
 
     def get_members(self, permission: PermissionLevel):
@@ -205,7 +225,7 @@ class IamPolicyNode(PolicyNode):
         name: str,
         policy_type: str,
         policy: Policy,
-        resolve_permission_callback: Callable[[str], Optional[PermissionLevel]],
+        resolve_permission_callback: Callable[[str], Optional[CustomPermission]],
     ):
         """Represents a GCP IAM policy node, Project, Folder, Organization, etc.
 
@@ -219,10 +239,14 @@ class IamPolicyNode(PolicyNode):
         super().__init__(policy_id, name, policy_type)
         binding: GcpBinding
         for binding in policy.bindings:  # type: ignore
+            db_permissions: List[str] = []
             role = binding.role
             permission = ROLE_TO_PERMISSION.get(role)
             if permission is None:
-                permission = resolve_permission_callback(role)
+                custom_permission = resolve_permission_callback(role)
+                if custom_permission is not None:
+                    permission = custom_permission.permission
+                    db_permissions = custom_permission.db_permissions
             if permission is None:
                 continue  # Role doesn't have permission to big query
             member: str
@@ -230,7 +254,7 @@ class IamPolicyNode(PolicyNode):
                 if member.startswith("deleted:"):
                     continue
                 member_type, member_name = member.split(":")
-                super().add_member(member_name, permission, role, member_type)
+                super().add_member(member_name, permission, role, member_type, db_permissions)
 
 
 class TableIamPolicyNode(PolicyNode):
@@ -241,7 +265,7 @@ class TableIamPolicyNode(PolicyNode):
         table_id: str,
         name: str,
         policy: Policy,
-        resolve_permission_callback: Callable[[str], Optional[PermissionLevel]],
+        resolve_permission_callback: Callable[[str], Optional[CustomPermission]],
     ):
         """Represents a table IAM policy.
 
@@ -249,24 +273,30 @@ class TableIamPolicyNode(PolicyNode):
             table_id (str): The ID of the table
             name (str): table name
             policy (Policy): BigQuery table IAM policy object as presented by the GCP
-            resolve_permission_callback (Callable[[str], Optional[PermissionLevel]]): Resolve permission level from role, when BigQuery is configured with custom roles.
+            resolve_permission_callback (Callable[[str], Optional[CustomPermission]]): Resolve permission level from role, when BigQuery is configured with custom roles.
         """
         super().__init__(table_id, name, "TABLE")
         binding: GcpBindingDict
         for binding in policy.bindings:  # type: ignore
+            db_permissions = []
             role = binding["role"]
-            permission = ROLE_TO_PERMISSION.get(role, resolve_permission_callback(role))
+            permission = ROLE_TO_PERMISSION.get(role)
+            if permission is None:
+                custom_permission = resolve_permission_callback(role)
+                if custom_permission is not None:
+                    permission = custom_permission.permission
+                    db_permissions = custom_permission.db_permissions
             if permission is None:
                 continue  # Role doesn't have permission to big query
             for member in binding["members"]:
                 member_type, member_name = member.split(":")
-                super().add_member(member_name, permission, role, member_type)
+                super().add_member(member_name, permission, role, member_type, db_permissions)
 
 
 class DatasetPolicyNode(PolicyNode):
     """Represents a BigQuery dataset policy node."""
 
-    def __init__(self, dataset: Dataset, resolve_permission_callback: Callable[[str], Optional[PermissionLevel]]):
+    def __init__(self, dataset: Dataset, resolve_permission_callback: Callable[[str], Optional[CustomPermission]]):
         """Represent a BigQuery dataset policy node.
 
         Args:
@@ -280,6 +310,7 @@ class DatasetPolicyNode(PolicyNode):
         super().__init__(dataset_id, name, "DATASET")  # type: ignore
 
         for entry in dataset.access_entries:
+            db_permissions = []
             if entry.entity_type == "specialGroup" and entry.entity_id in [  # type: ignore
                 "projectReaders",
                 "projectWriters",
@@ -291,7 +322,10 @@ class DatasetPolicyNode(PolicyNode):
             role: str = entry.role  # type: ignore
             permission = ROLE_TO_PERMISSION.get(role)
             if permission is None:
-                permission = resolve_permission_callback(role)
+                custom_permission = resolve_permission_callback(role)
+                if custom_permission is not None:
+                    permission = custom_permission.permission
+                    db_permissions = custom_permission.db_permissions
             if permission is None:
                 continue  # Role doesn't have permission to big query
-            super().add_member(entry.entity_id, permission, entry.role, entry.entity_type)  # type: ignore
+            super().add_member(entry.entity_id, permission, entry.role, entry.entity_type, db_permissions)  # type: ignore

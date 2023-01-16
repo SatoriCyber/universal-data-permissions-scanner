@@ -6,8 +6,7 @@ from google.cloud import bigquery, resourcemanager_v3  # type: ignore
 from google.cloud.resourcemanager_v3.types import Project
 from google.iam.v1 import iam_policy_pb2  # type: ignore
 
-from authz_analyzer.datastores.bigquery.policy_tree import IamPolicyNode
-from authz_analyzer.models.model import PermissionLevel
+from authz_analyzer.datastores.bigquery.policy_tree import CustomPermission, IamPolicyNode
 
 
 @dataclass
@@ -117,7 +116,7 @@ class BigQueryService:
         """
         return self.bq_client.get_iam_policy(table_fqn)  # type: ignore
 
-    def lookup_ref(self, ref_id: str, resolve_permission_callback: Callable[[str], Optional[PermissionLevel]]):
+    def lookup_ref(self, ref_id: str, resolve_permission_callback: Callable[[str], Optional[CustomPermission]]):
         """_summary_
 
         Args:
@@ -147,7 +146,7 @@ class BigQueryService:
             request = self.iam_client.roles().get(name=role)
         return request.execute()["includedPermissions"]  # type: ignore
 
-    def lookup_project(self, resolve_permission_callback: Callable[[str], Optional[PermissionLevel]]):
+    def lookup_project(self, resolve_permission_callback: Callable[[str], Optional[CustomPermission]]):
         """Read project folder and org info
 
         Returns:
