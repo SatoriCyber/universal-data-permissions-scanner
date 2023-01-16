@@ -159,12 +159,14 @@ class RedshiftAuthzAnalyzer:
             for row in rows:
                 _grantor = row[0]
                 identity = row[1]
-                table_name = row[2]
-                db_permission = row[3]
+                schema_name = row[2]
+                table_name = row[3]
+                db_permission = row[4]
                 level = PERMISSION_LEVEL_MAP.get(db_permission, PermissionLevel.UNKNOWN)
 
                 identity_grants_to_table = results.setdefault(identity, dict())
-                full_table_name = db_name + "." + table_name
+                asset_path = [db_name, schema_name, table_name]
+                full_table_name = ".".join(asset_path)
                 resource_permissions = identity_grants_to_table.setdefault(full_table_name, set())
                 updated: bool = False
                 # create resource permission level
@@ -174,7 +176,7 @@ class RedshiftAuthzAnalyzer:
                         resource_permission.db_permissions.append(db_permission)
                 # otherwise, update existing permission level
                 if not updated:
-                    resource_permissions.add(ResourcePermission(full_table_name, level, [db_permission]))
+                    resource_permissions.add(ResourcePermission(asset_path, level, [db_permission]))
 
         return results
 

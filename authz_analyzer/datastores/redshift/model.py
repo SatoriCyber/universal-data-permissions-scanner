@@ -52,14 +52,16 @@ PERMISSION_LEVEL_MAP = {
 
 @dataclass
 class ResourcePermission:
-    """Define a resource, e.g. a table, and the permission level."""
+    """Define a resource, e.g. a table, the permission level and the DB permissions.
+    The list is db.schema.table.
+    """
 
-    name: str
+    name: List[str]
     permission_level: PermissionLevel
     db_permissions: List[str]
 
     def __hash__(self) -> int:
-        return hash(self.name)
+        return hash(str(self.name))
 
 
 @dataclass
