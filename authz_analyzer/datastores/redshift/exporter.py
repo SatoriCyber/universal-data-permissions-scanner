@@ -32,7 +32,7 @@ IDENTITY_TYPE_MODEL_TO_AuthzPathElementType = {
 def _yield_row(
     identity: DBIdentity,
     permission_level: PermissionLevel,
-    grant_name: str,
+    grant_name: List[str],
     relations: List[DBIdentity],
     db_permissions: List[str],
 ):
@@ -94,7 +94,7 @@ def export(model: AuthorizationModel, writer: BaseWriter):
     """
     for role, roles in model.identity_to_identities.items():
         if role.type_ == "USER":
-            for grants in model.principal_to_resource_privilege.get(role.id_, dict()).values():
+            for grants in model.identity_to_resource_privilege.get(role.id_, dict()).values():
                 for grant in grants:
                     for entry in _yield_row(
                         identity=role,
@@ -110,7 +110,7 @@ def export(model: AuthorizationModel, writer: BaseWriter):
                     identity=role,
                     granted_identity=granted_role,
                     prev_roles=[],
-                    roles_to_grants=model.principal_to_resource_privilege,
+                    roles_to_grants=model.identity_to_resource_privilege,
                     role_to_roles=model.identity_to_identities,
                 ):
                     writer.write_entry(entry)
