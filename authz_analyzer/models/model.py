@@ -17,6 +17,7 @@ class AssetType(Enum):
 
     TABLE = auto()
     VIEW = auto()
+    MATERIALIZED_VIEW = auto()
     S3_BUCKET = auto()  # AWS S3
     COLLECTION = auto()  # MongoDB collection
 
@@ -131,6 +132,7 @@ class AuthzPathElement:
     name: str
     type: AuthzPathElementType
     note: str
+    db_permissions: List[str] = field(default_factory=list)
 
     def __repr__(self):
         return f"{self.type} {self.id} {self.name} {self.note}"
@@ -168,7 +170,6 @@ class AuthzEntry:
     path: List[AuthzPathElement]
     identity: Identity
     permission: PermissionLevel
-    db_permissions: List[str] = field(default_factory=list)
 
     def __repr__(self):
         return f"{self.identity} {self.permission} {self.asset} {self.path}"

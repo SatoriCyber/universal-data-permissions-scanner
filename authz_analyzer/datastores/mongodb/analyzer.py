@@ -356,7 +356,7 @@ class MongoDBAuthzAnalyzer:
         """
         identity = Identity(id=user_id, type=IdentityType.USER, name=username)
         self.writer.write_entry(
-            AuthzEntry(identity=identity, asset=asset, permission=permission, path=path, db_permissions=[original_role])
+            AuthzEntry(identity=identity, asset=asset, permission=permission, path=path)
         )
 
     @staticmethod

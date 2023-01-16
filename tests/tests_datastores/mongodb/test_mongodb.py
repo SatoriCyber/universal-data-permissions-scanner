@@ -82,7 +82,7 @@ def generate_authz_entry_admin_by_collection(
                     note=f"user admin has role {role_name} which grants permission {permission_level} on {note_on}",
                 )
             ],
-            db_permissions=[role_name],
+            # db_permissions=[role_name],
         )
     )
 
