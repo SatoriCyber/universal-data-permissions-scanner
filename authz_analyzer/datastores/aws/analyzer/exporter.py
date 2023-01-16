@@ -27,7 +27,7 @@ class AWSPtrpModelConvertor:
 
     def _get_asset(self) -> Asset:
         if self.line.resource.type == AwsPtrpResourceType.S3_BUCKET:
-            return Asset(name=self.line.resource.name, type=AssetType.S3_BUCKET)
+            return Asset(name=[self.line.resource.name], type=AssetType.S3_BUCKET)
         else:
             raise Exception(f"unable to convert from {self.line.resource.type} to AssetType")
 
@@ -118,12 +118,13 @@ class AWSPtrpModelConvertor:
     @classmethod
     def to_auth_entry(cls, line: AwsPtrpLine) -> Optional[AuthzEntry]:
         convertor: AWSPtrpModelConvertor = cls(line)
+        path = convertor._get_path()
+        path[-1].db_permissions = convertor._get_permissions()
         return AuthzEntry(
             asset=convertor._get_asset(),
-            path=convertor._get_path(),
+            path=path,
             identity=convertor._get_identity(),
             permission=convertor._get_permission_level(),
-            db_permissions=convertor._get_permissions(),
         )
 
 
