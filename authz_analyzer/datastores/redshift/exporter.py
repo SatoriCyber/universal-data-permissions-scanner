@@ -52,7 +52,6 @@ def _yield_row(
         asset=asset,
         path=auth_path_element,
         permission=permission_level,
-        db_permissions=db_permissions,
     )
 
 
