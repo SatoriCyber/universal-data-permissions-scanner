@@ -185,6 +185,9 @@ class Permission(Enum):
     SQL_SET_SCHEMA = auto()
     OUT_TO_S3 = auto()
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @dataclass
 class Action:
@@ -202,19 +205,16 @@ class CustomRole:
     """Define a custom role."""
 
     name: str
-    action: Optional[Action]
-    inherited_role: Optional[InheritedRole]
+    actions: Set[Action]
+    inherited_roles: Set[InheritedRole]
 
     def __hash__(self) -> int:
         return hash(self.name)
 
-    @staticmethod
-    def build_custom_roles_from_response(entry: CustomRoleEntry) -> Set[CustomRole]:
-        """Build set of custom roles from the response.
-
-        Instead of having a single custom roles with all the action and inherited roles, we split them into multiple custom roles.
-        """
-        custom_roles: Set[CustomRole] = set()
+    @classmethod
+    def build_custom_role_from_response(cls, entry: CustomRoleEntry) -> CustomRole:
+        """Build set of custom roles from the response."""
+        custom_role = cls(name=entry["roleName"], actions=set(), inherited_roles=set())
         for action in entry["actions"]:
             try:
                 permission = Permission[action["action"]]
@@ -222,21 +222,8 @@ class CustomRole:
                 continue
             for resource in action["resources"]:
                 resolved_resource = Resource(collection=resource["collection"], database=resource["db"])
-                custom_roles.add(
-                    CustomRole(
-                        name=entry["roleName"],
-                        action=Action(resource=resolved_resource, permission=permission),
-                        inherited_role=None,
-                    )
-                )
-
+                custom_role.actions.add(Action(resource=resolved_resource, permission=permission))
         for inherited_role in entry["inheritedRoles"]:
-            custom_roles.add(
-                CustomRole(
-                    name=entry["roleName"],
-                    action=None,
-                    inherited_role=InheritedRole(database=inherited_role["db"], name=inherited_role["role"]),
-                )
-            )
+            InheritedRole(database=inherited_role["db"], name=inherited_role["role"])
 
-        return custom_roles
+        return custom_role

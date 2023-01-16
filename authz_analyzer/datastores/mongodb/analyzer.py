@@ -351,9 +351,7 @@ class MongoDBAuthzAnalyzer:
             original_role (str): Original role name, the role which grants the permission to the asset
         """
         identity = Identity(id=user_id, type=IdentityType.USER, name=username)
-        self.writer.write_entry(
-            AuthzEntry(identity=identity, asset=asset, permission=permission, path=path)
-        )
+        self.writer.write_entry(AuthzEntry(identity=identity, asset=asset, permission=permission, path=path))
 
     @staticmethod
     def _generate_note_user(

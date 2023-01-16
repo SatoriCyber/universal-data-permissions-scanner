@@ -64,6 +64,7 @@ from authz_analyzer.datastores.bigquery.policy_tree import (
     GRANTED_BY_TO_PATHZ_ELEMENT,
     READ_PERMISSIONS,
     WRITE_PERMISSIONS,
+    CustomPermission,
     DatasetPolicyNode,
     Member,
     PolicyNode,
@@ -122,7 +123,7 @@ class BigQueryAuthzAnalyzer:
             big_query_service = BigQueryService.load(project_id, **kwargs)
         return cls(logger, big_query_service, writer=writer)
 
-    def run(self):
+    def run(self) -> None:
         """Read all tables in all datasets and calculate authz paths"""
         self.logger.info("Starting BigQuery authorization analysis for project %s", self.service.project_id)
         project_node = self.service.lookup_project(self._resolve_custom_role_to_permissions)
@@ -182,7 +183,7 @@ class BigQueryAuthzAnalyzer:
                     self.logger.error("Unable to find ref_node for member %s", member)
                     continue
                 note = f"{node.type} references {ref_node.type.lower()} {ref_node.name} with permission {permission}"
-                self._add_to_path(path, node, note)
+                self._add_to_path(path, node, note, member.db_permissions)
                 self._calc(fq_table_id, ref_node, path, permissions=[permission])
                 path.pop()
 
@@ -195,20 +196,28 @@ class BigQueryAuthzAnalyzer:
         self, fq_table_id: Asset, node: PolicyNode, path: List[AuthzPathElement], permissions: List[PermissionLevel]
     ):
         note = f"{node.type} is included in {node.parent.type.lower()} {node.parent.name}"  # type: ignore
-        self._add_to_path(path, node, note)
+        self._add_to_path(path, node, note, [])
         self._calc(fq_table_id, node.parent, path, permissions)  # type: ignore
         path.pop()
 
-    def _add_to_path(self, path: List[AuthzPathElement], node: PolicyNode, note: str):
+    def _add_to_path(
+        self, path: List[AuthzPathElement], node: PolicyNode, note: str, db_permissions: Optional[List[str]]
+    ):
+        if db_permissions is None:
+            db_permissions = []
         self.logger.debug("Adding %s %s to path", node.type, node.name)
         authz_type = GRANTED_BY_TO_PATHZ_ELEMENT[node.type]
-        path.append(AuthzPathElement(node.id, node.name, authz_type, note))
+        path.append(AuthzPathElement(node.id, node.name, authz_type, note, db_permissions=db_permissions))
 
     def _add_role_to_path(self, path: List[AuthzPathElement], member: Member):
         self.logger.debug("Adding role %s to path", member.role)
         path.append(
             AuthzPathElement(
-                member.role, member.role, AuthzPathElementType.ROLE, f"Role {member.role} is granted to {member.name}"
+                member.role,
+                member.role,
+                AuthzPathElementType.ROLE,
+                f"Role {member.role} is granted to {member.name}",
+                db_permissions=member.db_permissions,
             )
         )
 
@@ -221,7 +230,7 @@ class BigQueryAuthzAnalyzer:
         path: List[AuthzPathElement],
     ):
         note = f"{member.name} has role {member.role}"
-        self._add_to_path(path, node, note)
+        self._add_to_path(path, node, note, [])
         self._add_role_to_path(path, member)
         reversed_path = list(reversed(path))
 
@@ -231,15 +240,20 @@ class BigQueryAuthzAnalyzer:
         path.pop()
         path.pop()
 
-    def _resolve_custom_role_to_permissions(self, role: str) -> Optional[PermissionLevel]:
+    def _resolve_custom_role_to_permissions(self, role: str) -> Optional[CustomPermission]:
         """
         Resolve role to the highest permission level it has, or None if it has no permissions to bigquery
         """
         row_permissions = self.service.get_permissions_by_role(role)
-        permission_level: Optional[PermissionLevel] = None
+        db_permissions: List[str] = []
+        highest_permission: Optional[PermissionLevel] = None
         for row_permission in row_permissions:
             if row_permission in WRITE_PERMISSIONS:
-                return PermissionLevel.WRITE
+                highest_permission = PermissionLevel.WRITE
+                db_permissions.append(row_permission)
             if row_permission in READ_PERMISSIONS:
-                permission_level = PermissionLevel.READ
-        return permission_level
+                highest_permission = PermissionLevel.READ
+                db_permissions.append(row_permission)
+        if highest_permission is None:
+            return None
+        return CustomPermission(db_permissions, highest_permission)

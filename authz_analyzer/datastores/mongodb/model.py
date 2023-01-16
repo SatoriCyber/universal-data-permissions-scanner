@@ -25,6 +25,9 @@ class Resource:
     database: str
     collection: str
 
+    def __hash__(self) -> int:
+        return hash(self.database) + hash(self.collection)
+
 
 @dataclass
 class Privilege:
@@ -32,6 +35,9 @@ class Privilege:
 
     resource: Resource
     actions: List[str]
+
+    def __hash__(self) -> int:
+        return hash(self.resource) + hash(tuple(self.actions))
 
 
 @dataclass

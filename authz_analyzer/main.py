@@ -189,7 +189,7 @@ def run_mongodb(
     analyzer.run()
 
 
-def run_atlas(
+def run_mongodb_atlas(
     logger: Logger,
     public_key: str,
     private_key: str,

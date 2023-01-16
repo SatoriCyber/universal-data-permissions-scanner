@@ -106,10 +106,10 @@ class AtlasService:
         json_response = self._get_resource(f"groups/{project.id}/databaseUsers")
         return {DatabaseUser.build_from_response(entry) for entry in json_response["results"]}
 
-    def get_custom_roles_by_project(self, project: Project) -> Dict[str, Set[CustomRole]]:
+    def get_custom_roles_by_project(self, project: Project) -> Dict[str, CustomRole]:
         """Get all custom roles for project."""
         json_response: List[CustomRoleEntry] = self._get_resource(f"groups/{project.id}/customDBRoles/roles")
-        return {entry["roleName"]: CustomRole.build_custom_roles_from_response(entry) for entry in json_response}
+        return {entry["roleName"]: CustomRole.build_custom_role_from_response(entry) for entry in json_response}
 
     def get_project_info_by_project_name(self, project_id: str):
         """Get project info by project name."""

@@ -11,10 +11,10 @@ if sys.executable != sys.argv[0]:
 
 
 from authz_analyzer.main import (  # pylint: disable=wrong-import-position
-    run_atlas,
     run_aws_s3,
     run_bigquery,
     run_mongodb,
+    run_mongodb_atlas,
     run_postgres,
     run_snowflake,
 )
@@ -163,7 +163,7 @@ def atlas(
     ctx: click.Context, public_key: str, private_key: str, username: str, password: str, project: str, cluster: str
 ):
     """Analyzer Postgres Authorization"""
-    run_atlas(
+    run_mongodb_atlas(
         logger=ctx.obj['LOGGER'],
         output_format=ctx.obj['FORMAT'],
         output_path=ctx.obj['OUT'],
