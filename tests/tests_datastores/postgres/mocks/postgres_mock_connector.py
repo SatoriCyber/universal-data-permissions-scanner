@@ -8,15 +8,15 @@ from unittest.mock import MagicMock
 class PostgresMockCursor:
     roles: List[Tuple[str, bool, Optional[str], bool]]
     role_grants: List[Tuple[str, str, str, str, str, str]]
-    all_tables: List[Tuple[str]]
+    all_tables: List[Tuple[str, str, str]]
 
     def get(self):
-        Postgres_mock = MagicMock(name="PostgresConnectionMock")
+        postgres_mock = MagicMock(name="PostgresConnectionMock")
         fetchall = MagicMock(name="PostgresFetchAllMock", side_effect=[self.roles, self.role_grants, self.all_tables])
 
-        Postgres_mock.fetchall = fetchall
+        postgres_mock.fetchall = fetchall
 
-        return Postgres_mock
+        return postgres_mock
 
     def __enter__(self):
         self.cursor = self.get()

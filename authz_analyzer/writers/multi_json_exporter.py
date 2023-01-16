@@ -6,7 +6,7 @@ https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-json#loading_s
  """
 
 import json
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from authz_analyzer.models.model import AuthzEntry
 from authz_analyzer.writers.base_writers import BaseWriter
@@ -15,16 +15,17 @@ from authz_analyzer.writers.base_writers import BaseWriter
 class MultiJsonWriter(BaseWriter):
     """Writer for multi-json.
     Each entry is a valid json, example:
-    {"identity": {"id": "USER_1", "type": "USER", "name": "USER_1"}, "permission": "Read", "asset": {"name": "db.schema.table", "type": "table"}, "granted_by": [{"type": "ROLE", "id": "super-user", "name": "super-user", "note": "USER_1 has a super-user ROLE"}]}
+    {"identity": {"id": "USER_1", "type": "USER", "name": "USER_1"}, "permission": "Read", "asset": {"name": "db.schema.table", "type": "table"}, "granted_by": [{"type": "ROLE", "id": "super-user", "name": "super-user", "db_permissions": ["SELECT"], "note": "USER_1 has a super-user ROLE"}]}
     """
 
     def write_entry(self, entry: AuthzEntry):
-        path: List[Dict[str, str]] = list(
+        path: List[Dict[str, Union[str, List[str]]]] = list(
             map(
                 lambda x: {
                     "type": str(x.type),
                     "id": x.id,
                     "name": x.name,
+                    "db_permissions": x.db_permissions,
                     "note": x.note,
                 },
                 entry.path,
@@ -36,7 +37,6 @@ class MultiJsonWriter(BaseWriter):
         line = {
             "identity": identity,
             "permission": str(entry.permission),
-            "db_permissions": entry.db_permissions,
             "asset": asset,
             "granted_by": path,
         }

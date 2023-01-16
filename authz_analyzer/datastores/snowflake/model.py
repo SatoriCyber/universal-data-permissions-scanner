@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Dict, List, Set
 
 from authz_analyzer.models import PermissionLevel
@@ -15,6 +16,26 @@ PERMISSION_LEVEL_MAP = {
     "REBUILD": PermissionLevel.WRITE,
     "OWNERSHIP": PermissionLevel.FULL,
 }
+
+
+class GrantedOn(Enum):
+    """Define the type of object a grant is granted on."""
+
+    TABLE = "TABLE"
+    VIEW = "VIEW"
+    MATERIALIZED_VIEW = "MATERIALIZED VIEW"
+    ROLE = "ROLE"
+    OTHER = "OTHER"
+
+    def __str__(self) -> str:
+        return self.value
+
+    @classmethod
+    def from_str(cls, value: str) -> GrantedOn:
+        try:
+            return cls(value)
+        except ValueError:
+            return cls.OTHER
 
 
 @dataclass
@@ -32,10 +53,14 @@ Username = User
 
 @dataclass
 class ResourceGrant:
-    """Define a resource, e.g. a db.schema.table, and the permission level."""
+    """Define a resource, e.g. a db.schema.table db permission, and the permission level.
+    The db_permission represents the db permission, e.g. SELECT, INSERT, etc.
+    """
 
     name: List[str]
     permission_level: PermissionLevel
+    db_permission: str
+    granted_on: GrantedOn
 
     def __hash__(self) -> int:
         return hash(str(self.name))

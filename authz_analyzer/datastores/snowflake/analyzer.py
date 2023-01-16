@@ -33,6 +33,7 @@ from authz_analyzer.datastores.snowflake.model import (
     PERMISSION_LEVEL_MAP,
     AuthorizationModel,
     DBRole,
+    GrantedOn,
     ResourceGrant,
     User,
 )
@@ -132,11 +133,15 @@ class SnowflakeAuthzAnalyzer:
 
     @staticmethod
     def _add_role_to_resources(
-        role_name: str, table_name: List[str], raw_level: str, role_to_resources: Dict[str, Set[ResourceGrant]]
+        role_name: str,
+        table_name: List[str],
+        database_level: str,
+        role_to_resources: Dict[str, Set[ResourceGrant]],
+        granted_on: GrantedOn,
     ):
-        level = PERMISSION_LEVEL_MAP[raw_level]
+        level = PERMISSION_LEVEL_MAP[database_level]
         role_grants = role_to_resources.setdefault(role_name, set())
-        role_grants.add(ResourceGrant(table_name, level))
+        role_grants.add(ResourceGrant(table_name, level, database_level, granted_on=granted_on))
 
     def _get_role_to_roles_and_role_to_resources(self) -> Tuple[Dict[str, Set[DBRole]], Dict[str, Set[ResourceGrant]]]:
         rows = self._get_rows(file_name_command=Path("grants_roles.sql"))
@@ -150,16 +155,17 @@ class SnowflakeAuthzAnalyzer:
             db: str = row[3]
             schema: str = row[4]
             table: str = row[5]
-            granted_on: str = row[6]
+            granted_on = GrantedOn.from_str(row[6])
 
-            if privilege == "USAGE" and granted_on == "ROLE":
+            if privilege == "USAGE" and granted_on == GrantedOn.ROLE:
                 SnowflakeAuthzAnalyzer._add_role_to_roles(role, name, role_to_roles)
-            elif table is not None and granted_on in ("TABLE", "VIEW", "MATERIALIZED VIEW"):
+            elif table is not None and granted_on in (GrantedOn.TABLE, GrantedOn.VIEW, GrantedOn.MATERIALIZED_VIEW):
                 SnowflakeAuthzAnalyzer._add_role_to_resources(
                     role_name=role,
-                    raw_level=privilege,
+                    database_level=privilege,
                     table_name=[db, schema, table],
                     role_to_resources=role_to_resources,
+                    granted_on=granted_on,
                 )
         return role_to_roles, role_to_resources
 

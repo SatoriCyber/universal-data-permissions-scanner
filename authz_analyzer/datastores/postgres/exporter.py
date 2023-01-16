@@ -1,7 +1,6 @@
 from typing import Dict, Generator, List, Set
 
 from authz_analyzer.datastores.postgres.model import AuthorizationModel, DBRole, ResourceGrant
-from authz_analyzer.models import PermissionLevel
 from authz_analyzer.models.model import (
     Asset,
     AssetType,
@@ -14,18 +13,18 @@ from authz_analyzer.models.model import (
 from authz_analyzer.writers import BaseWriter
 
 
-def _yield_row(role_name: str, permission_level: PermissionLevel, grant_name: List[str], roles: List[DBRole]):
+def _yield_row(role_name: str, grant: ResourceGrant, roles: List[DBRole]):
     auth_path_element = [
         AuthzPathElement(id=role.name, name=role.name, type=AuthzPathElementType.ROLE, note="") for role in roles
     ]
+    auth_path_element[-1].db_permissions = [grant.db_permission]
     identity = Identity(id=role_name, name=role_name, type=IdentityType.ROLE_LOGIN)
-    asset = Asset(name=grant_name, type=AssetType.TABLE)
+    asset = Asset(name=grant.name, type=AssetType.TABLE)
     yield AuthzEntry(
         identity=identity,
         asset=asset,
         path=auth_path_element,
-        permission=permission_level,
-        db_permissions=[roles[-1].name],
+        permission=grant.permission_level,
     )
 
 
@@ -39,9 +38,7 @@ def _iter_role_row(
     grants = roles_to_grants.get(role.name, set())
     prev_roles.append(role)
     for grant in grants:
-        yield from _yield_row(
-            role_name=base_role_name, permission_level=grant.permission_level, grant_name=grant.name, roles=prev_roles
-        )
+        yield from _yield_row(role_name=base_role_name, grant=grant, roles=prev_roles)
 
     for granted_role in role_to_roles.get(role, set()):
         yield from _iter_role_row(
@@ -64,9 +61,7 @@ def export(model: AuthorizationModel, writer: BaseWriter):
     for role, roles in model.role_to_roles.items():
         if role.can_login is True:
             for grant in model.role_to_grants.get(role.name, set()):
-                for entry in _yield_row(
-                    role_name=role.name, permission_level=grant.permission_level, grant_name=grant.name, roles=[role]
-                ):
+                for entry in _yield_row(role_name=role.name, grant=grant, roles=[role]):
                     writer.write_entry(entry)
 
             for granted_role in roles:

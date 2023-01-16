@@ -27,6 +27,7 @@ class ResourceGrant:
 
     name: List[str]
     permission_level: PermissionLevel
+    db_permission: str
 
     def __hash__(self) -> int:
         return hash(str(self.name))
