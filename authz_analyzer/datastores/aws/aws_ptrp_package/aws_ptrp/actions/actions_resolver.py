@@ -2,11 +2,7 @@ from logging import Logger
 from typing import Dict, List, Optional, Set, Union
 
 from aws_ptrp.actions.aws_actions import AwsActions
-from aws_ptrp.services import (
-    ServiceActionBase,
-    ServiceActionsResolverBase,
-    ServiceActionType,
-)
+from aws_ptrp.services import ServiceActionBase, ServiceActionsResolverBase, ServiceActionType
 
 
 class ActionsResolver:

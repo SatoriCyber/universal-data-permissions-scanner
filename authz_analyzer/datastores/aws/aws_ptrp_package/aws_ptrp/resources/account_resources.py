@@ -2,9 +2,6 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Any, Dict, List, Optional, Set, Type
 
-from boto3 import Session
-from serde import field, from_dict, serde, to_dict
-
 from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.services import (
     ServiceResourceBase,
@@ -12,6 +9,8 @@ from aws_ptrp.services import (
     get_service_resource_by_name,
     get_service_resource_type_by_name,
 )
+from boto3 import Session
+from serde import field, from_dict, serde, to_dict
 
 
 def to_dict_serializer(account_resources: Dict[ServiceResourceType, List[ServiceResourceBase]]) -> Dict[str, List[Any]]:
@@ -52,11 +51,26 @@ class AwsAccountResources:
     ):
         logger.info(f"Loading AWS account {aws_account_id} with resources {service_types_to_load}...")
         account_resources: Dict[ServiceResourceType, Set[ServiceResourceBase]] = dict()
+        # load resources from the boto3 session
         for service_type_to_load in service_types_to_load:
-            logger.info(f"Loading AWS account resources from type {service_type_to_load.get_service_name()}")
-            ret: Set[ServiceResourceBase] = service_type_to_load.load_service_resources(
-                logger, session, aws_account_id, iam_entities
+            logger.info(
+                f"Loading AWS account resources (from boto3 session) for type {service_type_to_load.get_service_name()}"
             )
-            account_resources[service_type_to_load] = ret
+            ret_from_session: Optional[
+                Set[ServiceResourceBase]
+            ] = service_type_to_load.load_service_resources_from_session(logger, session, aws_account_id)
+            if ret_from_session:
+                account_resources[service_type_to_load] = ret_from_session
+
+        # handle loading of resources from iam entities/other resources which loaded from the session
+        for service_type_to_load in service_types_to_load:
+            logger.info(
+                f"Loading AWS account resources (from iam_entities/other loaded resources from session) for type {service_type_to_load.get_service_name()}"
+            )
+            ret: Optional[Set[ServiceResourceBase]] = service_type_to_load.load_service_resources(
+                logger, account_resources, iam_entities
+            )
+            if ret:
+                account_resources[service_type_to_load] = ret
 
         return cls(account_resources=account_resources)

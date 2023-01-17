@@ -1,19 +1,19 @@
 from typing import List, Optional, Tuple
 from unittest.mock import MagicMock
+
 from authz_analyzer import PostgresAuthzAnalyzer
 from authz_analyzer.models.model import (
+    Asset,
+    AssetType,
     AuthzEntry,
     AuthzPathElement,
-    PermissionLevel,
-    Identity,
-    Asset,
     AuthzPathElementType,
+    Identity,
     IdentityType,
-    AssetType,
+    PermissionLevel,
 )
-
-from tests.tests_datastores.postgres.mocks.postgres_mock_connector import PostgresMockCursor
 from tests.mocks.mock_writers import MockWriter
+from tests.tests_datastores.postgres.mocks.postgres_mock_connector import PostgresMockCursor
 
 ALL_TABLES = [
     (

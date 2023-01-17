@@ -2,14 +2,13 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Any, Dict, List, Optional, Set, Type
 
-from serde import field, from_dict, serde, to_dict
-
 from aws_ptrp.services import (
     ServiceActionBase,
     ServiceActionType,
-    get_service_action_type_by_name,
     get_service_action_by_name,
+    get_service_action_type_by_name,
 )
+from serde import field, from_dict, serde, to_dict
 
 
 def to_dict_serializer(aws_actions: Dict[ServiceActionType, List[ServiceActionBase]]) -> Dict[str, List[Any]]:

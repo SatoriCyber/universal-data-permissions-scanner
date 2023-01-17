@@ -1,24 +1,25 @@
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import List, Optional
 
 from aws_ptrp.ptrp_models import (
-    AwsPtrpLine,
-    AwsPtrpResourceType,
     AwsPrincipalType,
     AwsPtrpActionPermissionLevel,
+    AwsPtrpLine,
     AwsPtrpPathNodeType,
+    AwsPtrpResourceType,
 )
-from authz_analyzer.writers import BaseWriter
+
 from authz_analyzer.models.model import (
-    AuthzEntry,
     Asset,
     AssetType,
+    AuthzEntry,
+    AuthzPathElement,
+    AuthzPathElementType,
     Identity,
     IdentityType,
     PermissionLevel,
-    AuthzPathElement,
-    AuthzPathElementType,
 )
+from authz_analyzer.writers import BaseWriter
 
 
 @dataclass

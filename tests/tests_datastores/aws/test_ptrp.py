@@ -1,32 +1,30 @@
-import pathlib
 import json
 import os
+import pathlib
+
 import pytest
-
-from serde.json import to_json, from_dict
-
-from aws_ptrp.iam.iam_roles import IAMRole
 from aws_ptrp import AwsPtrp
-from aws_ptrp.services.s3.s3_service import S3Service, S3_SERVICE_NAME
-from aws_ptrp.services.assume_role.assume_role_service import (
-    AssumeRoleService,
-    ROLE_TRUST_SERVICE_NAME,
+from aws_ptrp.iam.iam_roles import IAMRole
+from aws_ptrp.services import (
+    register_service_action_by_name,
+    register_service_action_type_by_name,
+    register_service_resource_by_name,
+    register_service_resource_type_by_name,
 )
 from aws_ptrp.services.assume_role.assume_role_actions import AssumeRoleAction
-from aws_ptrp.services.s3.s3_actions import S3Action
+from aws_ptrp.services.assume_role.assume_role_service import ROLE_TRUST_SERVICE_NAME, AssumeRoleService
+from aws_ptrp.services.federated_user.federated_user_actions import FederatedUserAction
+from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserPrincipal
+from aws_ptrp.services.federated_user.federated_user_service import FEDERATED_USER_SERVICE_NAME, FederatedUserService
 from aws_ptrp.services.s3.bucket import S3Bucket
-from aws_ptrp.services import (
-    register_service_action_type_by_name,
-    register_service_action_by_name,
-    register_service_resource_type_by_name,
-    register_service_resource_by_name,
-)
+from aws_ptrp.services.s3.s3_actions import S3Action
+from aws_ptrp.services.s3.s3_service import S3_SERVICE_NAME, S3Service
+from serde.json import from_dict, to_json
 
 from authz_analyzer.datastores.aws.analyzer.exporter import AWSAuthzAnalyzerExporter
-from authz_analyzer.writers.get_writers import get_writer
-from authz_analyzer.writers.base_writers import OutputFormat
 from authz_analyzer.utils.logger import get_logger
-
+from authz_analyzer.writers.base_writers import OutputFormat
+from authz_analyzer.writers.get_writers import get_writer
 
 AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(
     os.path.dirname(__file__), 'satori_dev_account_ptrp.json'
@@ -43,10 +41,14 @@ def register_services_for_deserialize_from_file():
     register_service_resource_by_name(S3_SERVICE_NAME, S3Bucket)
     register_service_action_by_name(ROLE_TRUST_SERVICE_NAME, AssumeRoleAction)
     register_service_resource_by_name(ROLE_TRUST_SERVICE_NAME, IAMRole)
+    register_service_action_by_name(FEDERATED_USER_SERVICE_NAME, FederatedUserAction)
+    register_service_resource_by_name(FEDERATED_USER_SERVICE_NAME, FederatedUserPrincipal)
     register_service_action_type_by_name(S3_SERVICE_NAME, S3Service)
     register_service_resource_type_by_name(S3_SERVICE_NAME, S3Service)
     register_service_action_type_by_name(ROLE_TRUST_SERVICE_NAME, AssumeRoleService)
     register_service_resource_type_by_name(ROLE_TRUST_SERVICE_NAME, AssumeRoleService)
+    register_service_action_type_by_name(FEDERATED_USER_SERVICE_NAME, FederatedUserService)
+    register_service_resource_type_by_name(FEDERATED_USER_SERVICE_NAME, FederatedUserService)
 
 
 @pytest.mark.skipif(
@@ -78,7 +80,6 @@ def test_aws_ptrp_load_satori_dev_json_file(
         ptrp_json_from_file = json.load(file)
         ptrp = from_dict(AwsPtrp, ptrp_json_from_file)
         ptrp_json_from_serde = json.loads(to_json(ptrp))
-
         assert ptrp_json_from_file == ptrp_json_from_serde
 
 

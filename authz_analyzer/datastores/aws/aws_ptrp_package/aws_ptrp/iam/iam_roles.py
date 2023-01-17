@@ -1,24 +1,20 @@
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
-from boto3 import Session
-from serde import serde, from_dict
-
 from aws_ptrp.iam.policy import PolicyDocument
-from aws_ptrp.principals import Principal
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
-    PathRoleNodeBase,
-)
-from aws_ptrp.services.service_resource_base import ServiceResourceBase
 from aws_ptrp.iam.role.role_policy import RolePolicy
-from aws_ptrp.utils.pagination import paginate_response_list
-
+from aws_ptrp.principals import Principal
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PathRoleNodeBase
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
+from aws_ptrp.services.service_resource_base import ServiceResourceBase
+from aws_ptrp.utils.pagination import paginate_response_list
+from boto3 import Session
+from serde import from_dict, serde
 
 
 @dataclass
-class IAMRoleSession(PathRoleNodeBase):
-    role: 'IAMRole'
+class RoleSession(PathRoleNodeBase):
+    iam_role: 'IAMRole'
     role_session_principal: Principal
 
     def __repr__(self):
@@ -44,12 +40,12 @@ class IAMRoleSession(PathRoleNodeBase):
     def get_stmt_principal(self) -> Principal:
         return self.role_session_principal
 
-    # impl PrincipalPoliciesNodeBase
+    # impl PoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
-        return self.role.get_attached_policies_arn()
+        return self.iam_role.get_attached_policies_arn()
 
     def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
-        return self.role.get_inline_policies_and_names()
+        return self.iam_role.get_inline_policies_and_names()
 
 
 @serde
@@ -83,6 +79,13 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
     def get_resource_account_id(self) -> str:
         return self.aws_account_id
 
+    # # impl PrincipalAndPoliciesNodeBase
+    # def get_permission_boundary(self) -> Optional[PolicyDocument]:
+    #     return None
+
+    # def get_session_policies(self) -> List[PolicyDocument]:
+    #     return []
+
     # impl PathNodeBase
     def get_path_type(self) -> AwsPtrpPathNodeType:
         return AwsPtrpPathNodeType.IAM_ROLE
@@ -97,7 +100,7 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
     def get_stmt_principal(self) -> Principal:
         return Principal.load_from_iam_role(self.arn)
 
-    # impl PrincipalPoliciesNodeBase
+    # impl PoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
         return self.attached_policies_arn
 

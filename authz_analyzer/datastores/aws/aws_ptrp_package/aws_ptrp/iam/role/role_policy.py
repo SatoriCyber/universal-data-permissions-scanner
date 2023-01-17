@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from serde import serde
 
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
+from serde import serde
 
 
 @serde(rename_all="pascalcase")

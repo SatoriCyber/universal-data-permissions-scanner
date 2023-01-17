@@ -5,15 +5,15 @@ from typing import Dict, List, Optional, Set
 
 from aws_ptrp.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
 from aws_ptrp.principals import Principal
-from aws_ptrp.services.s3.bucket import S3Bucket
-from aws_ptrp.services.s3.s3_actions import S3Action, S3ActionType, ResolvedS3BucketActions
 from aws_ptrp.services import (
+    ResolvedActionsSingleStmt,
+    ResolvedResourcesSingleStmt,
     ServiceActionBase,
     ServiceResourceBase,
-    ResolvedResourcesSingleStmt,
-    ResolvedActionsSingleStmt,
     ServiceResourcesResolverBase,
 )
+from aws_ptrp.services.s3.bucket import S3Bucket
+from aws_ptrp.services.s3.s3_actions import ResolvedS3BucketActions, S3Action, S3ActionType
 
 
 @dataclass

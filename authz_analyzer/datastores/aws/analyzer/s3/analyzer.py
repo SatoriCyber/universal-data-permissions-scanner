@@ -2,10 +2,9 @@
 
 """
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Optional, Union, Set
 from logging import Logger
-
+from pathlib import Path
+from typing import Optional, Set, Union
 
 # (vs-code) For python auto-complete please add this to your workspace setting.json file
 # "python.autoComplete.extraPaths": [
@@ -16,7 +15,7 @@ from aws_ptrp.services.s3.s3_service import S3Service
 
 from authz_analyzer.datastores.aws.analyzer.exporter import AWSAuthzAnalyzerExporter
 from authz_analyzer.utils.logger import get_logger
-from authz_analyzer.writers import OutputFormat, get_writer, BaseWriter
+from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 
 

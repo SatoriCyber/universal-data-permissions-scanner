@@ -1,13 +1,13 @@
+import json
 import os
 import pathlib
-import json
-import pytest
-from serde.json import to_json, from_dict
 
+import pytest
 from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.utils.create_session import create_session_with_assume_role
-from authz_analyzer.utils.logger import get_logger
+from serde.json import from_dict, to_json
 
+from authz_analyzer.utils.logger import get_logger
 
 IAM_ENTITIES_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(
     os.path.dirname(__file__), 'satori_dev_account_iam_entities.json'

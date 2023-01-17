@@ -2,17 +2,15 @@ import json
 from dataclasses import dataclass
 from typing import Optional, Set
 
+from aws_ptrp.iam.policy import PolicyDocument
+from aws_ptrp.iam.public_block_access_config import PublicAccessBlockConfiguration
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import ResourceNodeBase
+from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpResourceType
+from aws_ptrp.services import ServiceResourceBase
+from aws_ptrp.services.s3.bucket_acl import S3BucketACL
 from boto3 import Session
 from botocore.exceptions import ClientError
 from serde import field, from_dict, serde
-
-from aws_ptrp.iam.policy import PolicyDocument
-from aws_ptrp.iam.public_block_access_config import PublicAccessBlockConfiguration
-from aws_ptrp.services.s3.bucket_acl import S3BucketACL
-from aws_ptrp.services import ServiceResourceBase
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import ResourceNodeBase
-from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpResourceType
-
 
 S3_RESOURCE_SERVICE_PREFIX = "arn:aws:s3:::"
 

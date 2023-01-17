@@ -1,20 +1,20 @@
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
-from boto3 import Session
-from serde import serde, field, from_dict
-
 from aws_ptrp.iam.policy import PolicyDocument, UserPolicy
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PrincipalNodeBase
 from aws_ptrp.principals import Principal
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PrincipalAndPoliciesNodeBase
 from aws_ptrp.utils.pagination import paginate_response_list
+from boto3 import Session
+from serde import field, from_dict, serde
 
 
 @serde
 @dataclass
-class IAMUser(PrincipalNodeBase):
+class IAMUser(PrincipalAndPoliciesNodeBase):
     user_name: str
     user_id: str
+    aws_account_id: str
     path: str
     user_policies: List[UserPolicy]
     attached_policies_arn: List[str]
@@ -32,11 +32,18 @@ class IAMUser(PrincipalNodeBase):
     def __hash__(self):
         return hash(self.user_id)
 
+    # # impl PrincipalAndPoliciesNodeBase
+    # def get_permission_boundary(self) -> Optional[PolicyDocument]:
+    #     return None
+
+    # def get_session_policies(self) -> List[PolicyDocument]:
+    #     return []
+
     # impl PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:
         return self.identity_principal
 
-    # PrincipalPoliciesNodeBase
+    # PoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
         return self.attached_policies_arn
 
@@ -69,9 +76,13 @@ def get_iam_users(session: Session) -> Dict[str, IAMUser]:
         )
         attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
         user_principal_arn = Principal.load_from_iam_user(arn)
+        aws_account_id_start_index = arn.find(":iam::")
+        aws_account_id_end_index = arn.find(":user/")
+        aws_account_id = arn[aws_account_id_start_index + 6 : aws_account_id_end_index]
         ret[arn] = IAMUser(
             user_name=user_name,
             user_id=user_id,
+            aws_account_id=aws_account_id,
             identity_principal=user_principal_arn,
             path=path,
             user_policies=user_policies,

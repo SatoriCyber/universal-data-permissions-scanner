@@ -2,27 +2,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
-
 from unittest.mock import MagicMock, call
-import pytest
 
+import pytest
 from pymongo.database import Database
 
 from authz_analyzer import MongoDBAuthzAnalyzer
-from authz_analyzer.datastores.mongodb.service_model import UserEntry, AssignedRole
+from authz_analyzer.datastores.mongodb.model import Privilege, Resource, Role
 from authz_analyzer.datastores.mongodb.service import MongoDBService
-from authz_analyzer.datastores.mongodb.model import Role, Privilege, Resource
+from authz_analyzer.datastores.mongodb.service_model import AssignedRole, UserEntry
 from authz_analyzer.models.model import (
-    AuthzEntry,
     Asset,
     AssetType,
+    AuthzEntry,
+    AuthzPathElement,
     AuthzPathElementType,
     Identity,
     IdentityType,
     PermissionLevel,
-    AuthzPathElement,
 )
-
 from tests.mocks.mock_writers import MockWriter
 
 

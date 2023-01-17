@@ -1,21 +1,23 @@
 from logging import Logger
-from typing import Dict, Optional, Set, List, Union
+from typing import Dict, List, Optional, Set, Union
 
-from aws_ptrp.principals import Principal
-from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.actions.actions_resolver import ActionsResolver
+from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.policy.effect import Effect
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
+from aws_ptrp.principals import Principal
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.resources.resources_resolver import ResourcesResolver
-from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
-from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
 from aws_ptrp.services import (
     ServiceActionsResolverBase,
-    ServiceResourcesResolverBase,
     ServiceActionType,
+    ServiceResourcesResolverBase,
     ServiceResourceType,
 )
+from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
+from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
+from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserServiceResourcesResolver
+from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
 
 
 def get_role_trust_resolver(
@@ -43,6 +45,34 @@ def get_role_trust_resolver(
         )
         if ret_service_resources_resolver and isinstance(
             ret_service_resources_resolver, AssumeRoleServiceResourcesResolver
+        ):
+            return ret_service_resources_resolver
+    return None
+
+
+def get_federated_user_resolver(
+    logger: Logger,
+    policy_document: PolicyDocument,
+    iam_user_principal: Principal,
+    aws_actions: AwsActions,
+    account_resources: AwsAccountResources,
+) -> Optional[FederatedUserServiceResourcesResolver]:
+
+    ret_services_resources_resolver: Optional[
+        Dict[ServiceResourceType, ServiceResourcesResolverBase]
+    ] = get_identity_based_resolver(
+        logger=logger,
+        policy_document=policy_document,
+        identity_principal=iam_user_principal,
+        aws_actions=aws_actions,
+        account_resources=account_resources,
+    )
+    if ret_services_resources_resolver:
+        ret_service_resources_resolver: Optional[ServiceResourcesResolverBase] = ret_services_resources_resolver.get(
+            FederatedUserService()
+        )
+        if ret_service_resources_resolver and isinstance(
+            ret_service_resources_resolver, FederatedUserServiceResourcesResolver
         ):
             return ret_service_resources_resolver
     return None

@@ -1,17 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List, Optional, Set, Type, Generator
-from serde import serde
-from boto3 import Session
+from typing import Dict, Generator, List, Optional, Set, Type
 
-from aws_ptrp.services.service_action_base import (
-    ServiceActionBase,
-    ServiceActionType,
-    ResolvedActionsSingleStmt,
-)
 from aws_ptrp.principals import Principal
-
+from aws_ptrp.services.service_action_base import ResolvedActionsSingleStmt, ServiceActionBase, ServiceActionType
+from boto3 import Session
+from serde import serde
 
 _SERVICE_RESOURCE_TYPE_BY_NAME: Dict[str, Type['ServiceResourceType']] = dict()
 
@@ -106,7 +101,7 @@ class ServiceResourcesResolverBase(ABC):
         aggregate_resources: Set[ServiceResourceBase] = set()
         for resolved_stmt in self.get_resolved_stmts():
             if not any(
-                principal.contains(resolved_stmt_principal)
+                resolved_stmt_principal.contains(principal)
                 for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals
             ):
                 continue
@@ -116,7 +111,7 @@ class ServiceResourcesResolverBase(ABC):
         for resource in aggregate_resources:
             yield resource
 
-    def get_resolved_actions(
+    def get_resolved_actions_per_resource_and_principal(
         self,
         service_resource: ServiceResourceBase,
         principal: Principal,
@@ -124,7 +119,7 @@ class ServiceResourcesResolverBase(ABC):
         aggregate_actions: Set[ServiceActionBase] = set()
         for resolved_stmt in self.get_resolved_stmts():
             if not any(
-                principal.contains(resolved_stmt_principal)
+                resolved_stmt_principal.contains(principal)
                 for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals
             ):
                 continue
@@ -163,8 +158,16 @@ class ServiceResourceType(ServiceActionType):
         )
 
     @classmethod
-    @abstractmethod
+    def load_service_resources_from_session(
+        cls, _logger: Logger, _session: Session, _aws_account_id: str
+    ) -> Optional[Set[ServiceResourceBase]]:
+        return None
+
+    @classmethod
     def load_service_resources(
-        cls, logger: Logger, session: Session, aws_account_id: str, iam_entities
-    ) -> Set[ServiceResourceBase]:
-        pass
+        cls,
+        _logger: Logger,
+        _resources_loaded_from_session: Dict['ServiceResourceType', Set[ServiceResourceBase]],
+        _iam_entities,
+    ) -> Optional[Set[ServiceResourceBase]]:
+        return None

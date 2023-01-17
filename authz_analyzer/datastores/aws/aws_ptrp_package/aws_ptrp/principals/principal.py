@@ -2,15 +2,13 @@ import re
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-from serde import field, serde
-
 from aws_ptrp.ptrp_models.ptrp_model import AwsPrincipalType
-
+from serde import field, serde
 
 regex_saml_provider = re.compile(r"arn:aws:iam::([0-9]+):saml-provider/(.+)$")
 regex_role_name = re.compile(r"arn:aws:iam::([0-9]+):role/(.+)$")
 regex_iam_user = re.compile(r"arn:aws:iam::([0-9]+):user/(.+)$")
-regex_federated_user = re.compile(r"arn:aws:iam::([0-9]+):federated-user/(.+)$")
+regex_federated_user = re.compile(r"arn:aws:sts::([0-9]+):federated-user/(.+)$")
 regex_role_session = re.compile(r"arn:aws:sts::([0-9]+):assumed-role/(.+)/(.+)$")
 regex_account_id = re.compile(r"([0-9]+)$")
 regex_arn_account_id = re.compile(r"arn:aws:iam::([0-9]+):root$")
@@ -79,31 +77,43 @@ class Principal:
         return self.principal_type == AwsPrincipalType.ALL_PRINCIPALS
 
     def is_iam_user_principal(self) -> bool:
+        return self.principal_type == AwsPrincipalType.IAM_USER
+
+    def is_iam_user_account(self) -> bool:
         return (
             self.principal_type == AwsPrincipalType.AWS_ACCOUNT
-            or self.principal_type == AwsPrincipalType.IAM_USER
             or self.principal_type == AwsPrincipalType.CANONICAL_USER
-            or self.principal_type == AwsPrincipalType.AWS_STS_FEDERATED_USER_SESSION
         )
 
-    def is_role_principal(self) -> bool:
+    def is_federated_user_principal(self) -> bool:
+        return self.principal_type == AwsPrincipalType.AWS_STS_FEDERATED_USER_SESSION
+
+    def is_iam_role_principal(self) -> bool:
         return self.principal_type == AwsPrincipalType.IAM_ROLE
 
     def is_role_session_principal(self) -> bool:
         return self.principal_type == AwsPrincipalType.ASSUMED_ROLE_SESSION
 
     def contains(self, other: 'Principal') -> bool:
-        if self.principal_type == AwsPrincipalType.ALL_PRINCIPALS:
+        if other.principal_type == AwsPrincipalType.ALL_PRINCIPALS:
+            # any user/ anonymous user is contained by any type of self.principal
             return True
+
         if self.principal_type == other.principal_type:
             if self.policy_principal_str == other.policy_principal_str:
                 return True
 
-        if self.principal_type == AwsPrincipalType.AWS_ACCOUNT:
-            self_account_id = self.principal_metadata.get('account-id', None) if self.principal_metadata else None
-            other_account_id = other.principal_metadata.get('account-id', None) if other.principal_metadata else None
-            both_from_same_account_id = self_account_id is not None and self_account_id == other_account_id
-            if both_from_same_account_id:
+        if self.principal_type == AwsPrincipalType.ALL_PRINCIPALS:
+            return True
+
+        self_account_id = self.get_account_id()
+        other_account_id = other.get_account_id()
+
+        if self.is_iam_role_principal() and other.is_role_session_principal():
+            return self.get_role_name() == other.get_role_name() and self_account_id == other_account_id
+
+        if self.is_iam_user_account():
+            if self_account_id == other_account_id:
                 return True
 
         return False

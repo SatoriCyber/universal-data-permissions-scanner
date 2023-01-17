@@ -1,14 +1,13 @@
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, Optional, Set, Type, List
 from logging import Logger
-from serde import serde
+from typing import Dict, List, Optional, Set, Type
 
 from aws_ptrp.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
-from aws_ptrp.services.service_base import ServiceType
-
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpActionPermissionLevel
+from aws_ptrp.services.service_base import ServiceType
+from serde import serde
 
 _SERVICE_ACTION_TYPE_BY_NAME: Dict[str, Type['ServiceActionType']] = dict()
 
