@@ -45,6 +45,7 @@ def _yield_row(
         )
         for path_identity in relations
     ]
+    auth_path_element[-1].db_permissions = db_permissions
     identity = Identity(id=identity.id_, name=identity.name, type=IDENTITY_TYPE_MODEL_TO_OUTPUT.get(identity.type_))
     asset = Asset(name=grant_name, type=AssetType.TABLE)
     yield AuthzEntry(
