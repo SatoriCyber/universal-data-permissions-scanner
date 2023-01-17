@@ -1,8 +1,7 @@
 from logging import Logger
-from typing import List, Set, Type
+from typing import List, Set, Type, Dict, Optional
 
 from serde import serde
-from boto3 import Session
 
 from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.services.assume_role.assume_role_actions import (
@@ -48,6 +47,9 @@ class AssumeRoleService(ServiceResourceType):
 
     @classmethod
     def load_service_resources(
-        cls, logger: Logger, session: Session, _aws_account_id: str, iam_entities: IAMEntities
-    ) -> Set[ServiceResourceBase]:
+        cls,
+        _logger: Logger,
+        _resources_loaded_from_session: Dict['ServiceResourceType', Set[ServiceResourceBase]],
+        iam_entities: IAMEntities,
+    ) -> Optional[Set[ServiceResourceBase]]:
         return set([x for x in iam_entities.iam_roles.values()])

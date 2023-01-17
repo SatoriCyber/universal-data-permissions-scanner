@@ -8,7 +8,7 @@ from serde import serde
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.policy_evaluation import PolicyEvaluation
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
-    PrincipalPoliciesNodeBase,
+    PoliciesNodeBase,
     ResourceNodeBase,
 )
 from aws_ptrp.iam.iam_entities import IAMEntities
@@ -22,6 +22,7 @@ from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.principals import Principal
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
+from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
 from aws_ptrp.services import (
     ServiceActionType,
     ServiceActionBase,
@@ -94,6 +95,7 @@ class AwsPtrp:
 
         # aws actions
         resource_service_types_to_load.add(AssumeRoleService())  # out of the box resource
+        resource_service_types_to_load.add(FederatedUserService())  # out of the box resource
         action_service_types_to_load: Set[ServiceActionType] = set(
             [x for x in resource_service_types_to_load if isinstance(x, ServiceActionType)]
         )
@@ -149,7 +151,9 @@ class AwsPtrp:
         service_resource = line.resource_node
 
         for _service_type, service_resolver in service_resources_resolver.items():
-            actions: Optional[Set[ServiceActionBase]] = service_resolver.get_resolved_actions(
+            actions: Optional[
+                Set[ServiceActionBase]
+            ] = service_resolver.get_resolved_actions_per_resource_and_principal(
                 service_resource, principal_to_policy_evaluation
             )
             if actions:
@@ -166,24 +170,29 @@ class AwsPtrp:
         resource_node: ResourceNodeBase = line.resource_node
         resource_account_id: str = line.resource_node.get_resource_account_id()
         principal_to_policy: Principal = line.get_principal_to_policy_evaluation()
-        principal_policies_base: PrincipalPoliciesNodeBase = line.get_principal_policies_base_to_policy_evaluation()
-        principal_policies: List[PolicyDocument] = list(
-            map(
-                lambda arn: self.iam_entities.iam_policies[arn].policy_document,
-                principal_policies_base.get_attached_policies_arn(),
-            )
-        )
-        inline_policies_and_names: List[
-            Tuple[PolicyDocument, str]
-        ] = principal_policies_base.get_inline_policies_and_names()
-        principal_policies.extend(
-            list(
-                map(
-                    lambda policy_and_name: policy_and_name[0],
-                    inline_policies_and_names,
+        # Extract all principal policies (inline & attached)
+        principal_policies: List[PolicyDocument] = []
+        principal_policies_bases: List[PoliciesNodeBase] = line.get_principal_policies_base_to_policy_evaluation()
+        for principal_policies_base in principal_policies_bases:
+            principal_policies.extend(
+                list(
+                    map(
+                        lambda arn: self.iam_entities.iam_policies[arn].policy_document,
+                        principal_policies_base.get_attached_policies_arn(),
+                    )
                 )
             )
-        )
+            inline_policies_and_names: List[
+                Tuple[PolicyDocument, str]
+            ] = principal_policies_base.get_inline_policies_and_names()
+            principal_policies.extend(
+                list(
+                    map(
+                        lambda policy_and_name: policy_and_name[0],
+                        inline_policies_and_names,
+                    )
+                )
+            )
 
         return PolicyEvaluation.run(
             logger=logger,

@@ -1,13 +1,14 @@
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
-    PrincipalNodeBase,
-    PathPrincipalPoliciesNode,
+    PrincipalAndPoliciesNodeBase,
+    PathUserGroupNode,
+    PathFederatedPrincipalNode,
+    PathPolicyNode,
     PathRoleNode,
-    TargetPolicyNode,
     ResourceNodeBase,
-    PrincipalPoliciesNodeBase,
+    PoliciesNodeBase,
 )
 from aws_ptrp.principals import Principal
 
@@ -20,10 +21,11 @@ from aws_ptrp.ptrp_models.ptrp_model import (
 
 @dataclass
 class PtrpAllowedLine:
-    principal_node: PrincipalNodeBase
-    path_principal_policies_node: Optional[PathPrincipalPoliciesNode]
+    principal_node: PrincipalAndPoliciesNodeBase
+    path_user_group_node: Optional[PathUserGroupNode]
+    path_federated_nodes: Optional[Tuple[PathPolicyNode, PathFederatedPrincipalNode]]
     path_role_nodes: List[PathRoleNode]
-    target_policy_node: TargetPolicyNode
+    target_policy_node: PathPolicyNode
     resource_node: ResourceNodeBase
 
     def get_ptrp_resource_to_report(self) -> AwsPtrpResource:
@@ -32,30 +34,41 @@ class PtrpAllowedLine:
         )
 
     def get_principal_to_report(self) -> AwsPrincipal:
-        identity_principal_to_report: Principal = self.principal_node.get_stmt_principal()
+        principal_to_report: Principal = self.principal_node.get_stmt_principal()
         return AwsPrincipal(
-            arn=identity_principal_to_report.get_arn(),
-            type=identity_principal_to_report.principal_type,
-            name=identity_principal_to_report.get_name(),
+            arn=principal_to_report.get_arn(),
+            type=principal_to_report.principal_type,
+            name=principal_to_report.get_name(),
         )
 
     def get_ptrp_path_nodes_to_report(self) -> List[AwsPtrpPathNode]:
-        path: List[AwsPtrpPathNode] = [path_node.get_ptrp_path_node() for path_node in self.path_role_nodes]
-        if self.path_principal_policies_node:
-            path.insert(0, self.path_principal_policies_node.get_ptrp_path_node())
+        path: List[AwsPtrpPathNode] = []
+        if self.path_user_group_node:
+            path.append(self.path_user_group_node.get_ptrp_path_node())
+
+        if self.path_federated_nodes:
+            path.append(self.path_federated_nodes[0].get_ptrp_path_node())
+            path.append(self.path_federated_nodes[1].get_ptrp_path_node())
+
+        for path_role_node in self.path_role_nodes:
+            path.append(path_role_node.get_ptrp_path_node())
+
         path.append(self.target_policy_node.get_ptrp_path_node())
         return path
 
     def get_principal_to_policy_evaluation(self) -> Principal:
         if self.path_role_nodes:
-            return self.path_role_nodes[-1].path_role_base.get_stmt_principal()
+            return self.path_role_nodes[-1].base.get_stmt_principal()
+        elif self.path_federated_nodes:
+            return self.path_federated_nodes[1].get_stmt_principal()
         else:
             return self.principal_node.get_stmt_principal()
 
-    def get_principal_policies_base_to_policy_evaluation(self) -> PrincipalPoliciesNodeBase:
+    def get_principal_policies_base_to_policy_evaluation(self) -> List[PoliciesNodeBase]:
         if self.path_role_nodes:
-            return self.path_role_nodes[-1].path_role_base
-        elif self.path_principal_policies_node:
-            return self.path_principal_policies_node.path_principal_policies_base
+            return [self.path_role_nodes[-1].base]
         else:
-            return self.principal_node
+            ret: List[PoliciesNodeBase] = [self.principal_node]
+            if self.path_user_group_node:
+                ret.append(self.path_user_group_node.base)
+            return ret

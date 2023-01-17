@@ -52,11 +52,26 @@ class AwsAccountResources:
     ):
         logger.info(f"Loading AWS account {aws_account_id} with resources {service_types_to_load}...")
         account_resources: Dict[ServiceResourceType, Set[ServiceResourceBase]] = dict()
+        # load resources from the boto3 session
         for service_type_to_load in service_types_to_load:
-            logger.info(f"Loading AWS account resources from type {service_type_to_load.get_service_name()}")
-            ret: Set[ServiceResourceBase] = service_type_to_load.load_service_resources(
-                logger, session, aws_account_id, iam_entities
+            logger.info(
+                f"Loading AWS account resources (from boto3 session) for type {service_type_to_load.get_service_name()}"
             )
-            account_resources[service_type_to_load] = ret
+            ret_from_session: Optional[
+                Set[ServiceResourceBase]
+            ] = service_type_to_load.load_service_resources_from_session(logger, session, aws_account_id)
+            if ret_from_session:
+                account_resources[service_type_to_load] = ret_from_session
+
+        # handle loading of resources from iam entities/other resources which loaded from the session
+        for service_type_to_load in service_types_to_load:
+            logger.info(
+                f"Loading AWS account resources (from iam_entities/other loaded resources from session) for type {service_type_to_load.get_service_name()}"
+            )
+            ret: Optional[Set[ServiceResourceBase]] = service_type_to_load.load_service_resources(
+                logger, account_resources, iam_entities
+            )
+            if ret:
+                account_resources[service_type_to_load] = ret
 
         return cls(account_resources=account_resources)

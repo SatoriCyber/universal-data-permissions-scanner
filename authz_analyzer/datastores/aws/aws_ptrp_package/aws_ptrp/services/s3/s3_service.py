@@ -1,10 +1,9 @@
 from logging import Logger
-from typing import List, Set, Type
+from typing import List, Set, Type, Optional
 
 from boto3 import Session
 from serde import serde
 
-from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.services.s3.bucket import S3_RESOURCE_SERVICE_PREFIX, get_buckets
 from aws_ptrp.services.s3.s3_actions import (
     S3_ACTION_SERVICE_PREFIX,
@@ -43,9 +42,9 @@ class S3Service(ServiceResourceType):
         return S3ServiceActionsResolver
 
     @classmethod
-    def load_service_resources(
-        cls, logger: Logger, session: Session, aws_account_id: str, _iam_entities: IAMEntities
-    ) -> Set[ServiceResourceBase]:
+    def load_service_resources_from_session(
+        cls, logger: Logger, session: Session, aws_account_id: str
+    ) -> Optional[Set[ServiceResourceBase]]:
         # Get the buckets to analyzed
         buckets = get_buckets(session, aws_account_id)
         logger.info(f"Got buckets to analyzed: {buckets}")

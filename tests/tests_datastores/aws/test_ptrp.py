@@ -12,6 +12,12 @@ from aws_ptrp.services.assume_role.assume_role_service import (
     AssumeRoleService,
     ROLE_TRUST_SERVICE_NAME,
 )
+from aws_ptrp.services.federated_user.federated_user_service import (
+    FederatedUserService,
+    FEDERATED_USER_SERVICE_NAME,
+)
+from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserPrincipal
+from aws_ptrp.services.federated_user.federated_user_actions import FederatedUserAction
 from aws_ptrp.services.assume_role.assume_role_actions import AssumeRoleAction
 from aws_ptrp.services.s3.s3_actions import S3Action
 from aws_ptrp.services.s3.bucket import S3Bucket
@@ -43,10 +49,14 @@ def register_services_for_deserialize_from_file():
     register_service_resource_by_name(S3_SERVICE_NAME, S3Bucket)
     register_service_action_by_name(ROLE_TRUST_SERVICE_NAME, AssumeRoleAction)
     register_service_resource_by_name(ROLE_TRUST_SERVICE_NAME, IAMRole)
+    register_service_action_by_name(FEDERATED_USER_SERVICE_NAME, FederatedUserAction)
+    register_service_resource_by_name(FEDERATED_USER_SERVICE_NAME, FederatedUserPrincipal)
     register_service_action_type_by_name(S3_SERVICE_NAME, S3Service)
     register_service_resource_type_by_name(S3_SERVICE_NAME, S3Service)
     register_service_action_type_by_name(ROLE_TRUST_SERVICE_NAME, AssumeRoleService)
     register_service_resource_type_by_name(ROLE_TRUST_SERVICE_NAME, AssumeRoleService)
+    register_service_action_type_by_name(FEDERATED_USER_SERVICE_NAME, FederatedUserService)
+    register_service_resource_type_by_name(FEDERATED_USER_SERVICE_NAME, FederatedUserService)
 
 
 @pytest.mark.skipif(
@@ -78,7 +88,6 @@ def test_aws_ptrp_load_satori_dev_json_file(
         ptrp_json_from_file = json.load(file)
         ptrp = from_dict(AwsPtrp, ptrp_json_from_file)
         ptrp_json_from_serde = json.loads(to_json(ptrp))
-
         assert ptrp_json_from_file == ptrp_json_from_serde
 
 

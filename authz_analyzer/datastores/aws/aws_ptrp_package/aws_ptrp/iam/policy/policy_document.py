@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Union, Dict, Generator
 from serde import field, serde
 
 from aws_ptrp.iam.policy.effect import Effect
@@ -72,3 +72,9 @@ class Statement:
 @dataclass
 class PolicyDocument:
     statement: List[Statement]
+
+    def yield_stmt_principals(self, effect: Effect) -> Generator[Principal, None, None]:
+        for stmt in self.statement:
+            if stmt.principal and stmt.effect == effect:
+                for principal in stmt.principal.principals:
+                    yield principal
