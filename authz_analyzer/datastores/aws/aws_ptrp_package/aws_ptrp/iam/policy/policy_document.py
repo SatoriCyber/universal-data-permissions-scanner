@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from typing import List, Optional, Union, Dict, Generator
-from serde import field, serde
+from typing import Dict, Generator, List, Optional, Union
 
 from aws_ptrp.iam.policy.effect import Effect
 from aws_ptrp.principals.principal import Principal
+from serde import field, serde
 
 
 @serde

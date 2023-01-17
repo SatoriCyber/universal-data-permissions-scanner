@@ -1,16 +1,11 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 from logging import Logger
-from typing import List, Set, Optional
+from typing import List, Optional, Set
 
-from serde import serde
-
-from aws_ptrp.services import (
-    ServiceActionBase,
-    ServiceActionsResolverBase,
-    ResolvedActionsSingleStmt,
-)
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpActionPermissionLevel
+from aws_ptrp.services import ResolvedActionsSingleStmt, ServiceActionBase, ServiceActionsResolverBase
+from serde import serde
 
 S3_ACTION_SERVICE_PREFIX = "s3:"
 

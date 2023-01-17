@@ -1,22 +1,17 @@
 from dataclasses import dataclass
-from typing import Optional, List, Tuple
+from typing import List, Optional, Tuple
 
+from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
-    PrincipalAndPoliciesNodeBase,
-    PathUserGroupNode,
     PathFederatedPrincipalNode,
     PathPolicyNode,
     PathRoleNode,
-    ResourceNodeBase,
+    PathUserGroupNode,
     PoliciesNodeBase,
+    PrincipalAndPoliciesNodeBase,
+    ResourceNodeBase,
 )
-from aws_ptrp.principals import Principal
-
-from aws_ptrp.ptrp_models.ptrp_model import (
-    AwsPrincipal,
-    AwsPtrpResource,
-    AwsPtrpPathNode,
-)
+from aws_ptrp.ptrp_models.ptrp_model import AwsPrincipal, AwsPtrpPathNode, AwsPtrpResource
 
 
 @dataclass

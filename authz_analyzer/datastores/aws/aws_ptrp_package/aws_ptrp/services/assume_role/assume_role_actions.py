@@ -3,10 +3,9 @@ from enum import Enum, auto
 from logging import Logger
 from typing import List, Set
 
-from serde import serde
-
-from aws_ptrp.services.service_action_base import ServiceActionBase, ServiceActionsResolverBase
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpActionPermissionLevel
+from aws_ptrp.services.service_action_base import ServiceActionBase, ServiceActionsResolverBase
+from serde import serde
 
 
 class AssumeRoleActionType(Enum):

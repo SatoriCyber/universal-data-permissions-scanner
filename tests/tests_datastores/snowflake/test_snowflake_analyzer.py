@@ -1,17 +1,18 @@
 from unittest.mock import MagicMock
+
 from authz_analyzer import SnowflakeAuthzAnalyzer
-from authz_analyzer.datastores.snowflake.exporter import USER_TYPE, ASSET_TYPE
+from authz_analyzer.datastores.snowflake.exporter import ASSET_TYPE, USER_TYPE
 from authz_analyzer.models.model import (
+    Asset,
     AuthzEntry,
     AuthzPathElement,
-    PermissionLevel,
-    Identity,
-    Asset,
     AuthzPathElementType,
+    Identity,
+    PermissionLevel,
 )
-from tests.tests_datastores.snowflake.mocks.snowflake_mock_connector import SnowflakeMockCursor
-from tests.tests_datastores.snowflake.mocks import grants
 from tests.mocks.mock_writers import MockWriter
+from tests.tests_datastores.snowflake.mocks import grants
+from tests.tests_datastores.snowflake.mocks.snowflake_mock_connector import SnowflakeMockCursor
 
 
 def test_user_role_no_role_grants():

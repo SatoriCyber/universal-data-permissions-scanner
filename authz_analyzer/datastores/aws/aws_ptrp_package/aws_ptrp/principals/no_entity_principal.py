@@ -1,11 +1,9 @@
 from dataclasses import dataclass
 from typing import List, Tuple
 
-from aws_ptrp.principals import Principal
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
-from aws_ptrp.ptrp_allowed_lines.allowed_line import (
-    PrincipalAndPoliciesNodeBase,
-)
+from aws_ptrp.principals import Principal
+from aws_ptrp.ptrp_allowed_lines.allowed_line import PrincipalAndPoliciesNodeBase
 
 
 @dataclass

@@ -4,14 +4,12 @@ from logging import Logger
 from pathlib import Path
 from typing import Dict
 
-from serde import serde, from_dict
-from boto3 import Session
-
-
 from aws_ptrp.iam.iam_groups import IAMGroup, get_iam_groups
 from aws_ptrp.iam.iam_policies import IAMPolicy, get_iam_policies
 from aws_ptrp.iam.iam_roles import IAMRole, get_iam_roles
 from aws_ptrp.iam.iam_users import IAMUser, get_iam_users
+from boto3 import Session
+from serde import from_dict, serde
 
 
 @serde

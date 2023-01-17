@@ -1,23 +1,20 @@
 import re
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List, Optional, Set, Generator
+from typing import Dict, Generator, List, Optional, Set
 
-from aws_ptrp.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
 from aws_ptrp.iam.iam_roles import IAMRole
+from aws_ptrp.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
 from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_models.ptrp_model import AwsPrincipalType
-from aws_ptrp.services.assume_role.assume_role_actions import (
-    AssumeRoleAction,
-    AssumeRoleActionType,
-)
 from aws_ptrp.services import (
-    ServiceActionBase,
-    ServiceResourceBase,
     ResolvedActionsSingleStmt,
     ResolvedResourcesSingleStmt,
+    ServiceActionBase,
+    ServiceResourceBase,
     ServiceResourcesResolverBase,
 )
+from aws_ptrp.services.assume_role.assume_role_actions import AssumeRoleAction, AssumeRoleActionType
 
 
 @dataclass

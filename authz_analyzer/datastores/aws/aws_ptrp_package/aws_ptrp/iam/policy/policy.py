@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
-from serde import serde, field
+
+from serde import field, serde
 
 
 @serde(rename_all="pascalcase")

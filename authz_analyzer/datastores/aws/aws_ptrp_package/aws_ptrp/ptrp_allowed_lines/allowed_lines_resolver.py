@@ -1,42 +1,40 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Optional, List, Iterable, Generator, Dict, Tuple, Union, Set
-import networkx as nx
+from typing import Dict, Generator, Iterable, List, Optional, Set, Tuple, Union
 
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
-    PrincipalNodeBase,
-    ResourceNodeBase,
-    PathNodeBase,
-    PathRoleNode,
-    PathRoleNodeBase,
-    PathUserGroupNode,
-    PathFederatedPrincipalNode,
-    PathPolicyNode,
-    PathFederatedPrincipalNodeBase,
-    PathUserGroupNodeBase,
-    PrincipalAndPoliciesNodeBase,
-)
-from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
-from aws_ptrp.services import ServiceResourcesResolverBase, ServiceResourceType, ServiceResourceBase
+import networkx as nx
 from aws_ptrp.actions.aws_actions import AwsActions
-from aws_ptrp.resources.account_resources import AwsAccountResources
-from aws_ptrp.iam.policy.policy_document import PolicyDocument
-from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
-from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserPrincipal
-from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
-from aws_ptrp.iam.policy.policy_document_resolver import (
-    get_role_trust_resolver,
-    get_resource_based_resolver,
-    get_identity_based_resolver,
-)
-from aws_ptrp.principals import Principal
-from aws_ptrp.principals.no_entity_principal import NoEntityPrincipal
 from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.iam.iam_roles import IAMRole, RoleSession
 from aws_ptrp.iam.iam_users import IAMUser
-
+from aws_ptrp.iam.policy.policy_document import PolicyDocument
+from aws_ptrp.iam.policy.policy_document_resolver import (
+    get_identity_based_resolver,
+    get_resource_based_resolver,
+    get_role_trust_resolver,
+)
+from aws_ptrp.principals import Principal
+from aws_ptrp.principals.no_entity_principal import NoEntityPrincipal
+from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
+    PathFederatedPrincipalNode,
+    PathFederatedPrincipalNodeBase,
+    PathNodeBase,
+    PathPolicyNode,
+    PathRoleNode,
+    PathRoleNodeBase,
+    PathUserGroupNode,
+    PathUserGroupNodeBase,
+    PrincipalAndPoliciesNodeBase,
+    PrincipalNodeBase,
+    ResourceNodeBase,
+)
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
-
+from aws_ptrp.resources.account_resources import AwsAccountResources
+from aws_ptrp.services import ServiceResourceBase, ServiceResourcesResolverBase, ServiceResourceType
+from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
+from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserPrincipal
+from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
 
 START_NODE = "START_NODE"
 END_NODE = "END_NODE"

@@ -1,23 +1,23 @@
 from logging import Logger
-from typing import Dict, Optional, Set, List, Union
+from typing import Dict, List, Optional, Set, Union
 
-from aws_ptrp.principals import Principal
-from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.actions.actions_resolver import ActionsResolver
+from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.policy.effect import Effect
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
+from aws_ptrp.principals import Principal
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.resources.resources_resolver import ResourcesResolver
-from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
-from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
-from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
-from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserServiceResourcesResolver
 from aws_ptrp.services import (
     ServiceActionsResolverBase,
-    ServiceResourcesResolverBase,
     ServiceActionType,
+    ServiceResourcesResolverBase,
     ServiceResourceType,
 )
+from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
+from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
+from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserServiceResourcesResolver
+from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
 
 
 def get_role_trust_resolver(

@@ -1,15 +1,12 @@
 from dataclasses import dataclass
 from typing import Dict, List, Set, Tuple
 
-from serde import from_dict, serde
-from boto3 import Session
-
 from aws_ptrp.iam.policy import GroupPolicy, PolicyDocument
-from aws_ptrp.utils.pagination import paginate_response_list
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
-    PathUserGroupNodeBase,
-)
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PathUserGroupNodeBase
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
+from aws_ptrp.utils.pagination import paginate_response_list
+from boto3 import Session
+from serde import from_dict, serde
 
 
 @serde

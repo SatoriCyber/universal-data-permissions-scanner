@@ -1,19 +1,15 @@
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
-from boto3 import Session
-from serde import serde, from_dict
-
 from aws_ptrp.iam.policy import PolicyDocument
-from aws_ptrp.principals import Principal
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
-    PathRoleNodeBase,
-)
-from aws_ptrp.services.service_resource_base import ServiceResourceBase
 from aws_ptrp.iam.role.role_policy import RolePolicy
-from aws_ptrp.utils.pagination import paginate_response_list
-
+from aws_ptrp.principals import Principal
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PathRoleNodeBase
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
+from aws_ptrp.services.service_resource_base import ServiceResourceBase
+from aws_ptrp.utils.pagination import paginate_response_list
+from boto3 import Session
+from serde import from_dict, serde
 
 
 @dataclass

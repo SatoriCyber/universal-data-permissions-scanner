@@ -1,21 +1,17 @@
 from logging import Logger
-from typing import List, Set, Type, Dict, Optional
-
-from serde import serde
+from typing import Dict, List, Optional, Set, Type
 
 from aws_ptrp.iam.iam_entities import IAMEntities
-from aws_ptrp.services.assume_role.assume_role_actions import (
-    AssumeRoleAction,
-    AssumeRoleServiceActionsResolver,
-)
-from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
 from aws_ptrp.services import (
     ServiceActionBase,
     ServiceActionsResolverBase,
     ServiceResourceBase,
-    ServiceResourceType,
     ServiceResourcesResolverBase,
+    ServiceResourceType,
 )
+from aws_ptrp.services.assume_role.assume_role_actions import AssumeRoleAction, AssumeRoleServiceActionsResolver
+from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
+from serde import serde
 
 ROLE_TRUST_SERVICE_NAME = "role_trust_service"
 ROLE_TRUST_ACTION_SERVICE_PREFIX = "sts:"

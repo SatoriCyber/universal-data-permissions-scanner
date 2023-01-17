@@ -1,5 +1,6 @@
 from unittest import mock
 from unittest.mock import MagicMock
+
 from authz_analyzer.models.model import (
     Asset,
     AssetType,

@@ -1,21 +1,21 @@
 import re
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List, Set, Generator, Optional
-from serde import serde, field
+from typing import Dict, Generator, List, Optional, Set
 
 from aws_ptrp.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
-from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PathFederatedPrincipalNodeBase
 from aws_ptrp.principals import Principal
-from aws_ptrp.services.federated_user.federated_user_actions import FederatedUserAction
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PathFederatedPrincipalNodeBase
+from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
 from aws_ptrp.services import (
-    ServiceActionBase,
-    ServiceResourceBase,
     ResolvedActionsSingleStmt,
     ResolvedResourcesSingleStmt,
+    ServiceActionBase,
+    ServiceResourceBase,
     ServiceResourcesResolverBase,
 )
+from aws_ptrp.services.federated_user.federated_user_actions import FederatedUserAction
+from serde import field, serde
 
 
 @serde

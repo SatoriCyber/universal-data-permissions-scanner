@@ -1,17 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List, Optional, Set, Type, Generator
-from serde import serde
-from boto3 import Session
+from typing import Dict, Generator, List, Optional, Set, Type
 
-from aws_ptrp.services.service_action_base import (
-    ServiceActionBase,
-    ServiceActionType,
-    ResolvedActionsSingleStmt,
-)
 from aws_ptrp.principals import Principal
-
+from aws_ptrp.services.service_action_base import ResolvedActionsSingleStmt, ServiceActionBase, ServiceActionType
+from boto3 import Session
+from serde import serde
 
 _SERVICE_RESOURCE_TYPE_BY_NAME: Dict[str, Type['ServiceResourceType']] = dict()
 

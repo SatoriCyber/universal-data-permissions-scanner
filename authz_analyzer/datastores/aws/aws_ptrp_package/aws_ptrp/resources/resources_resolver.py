@@ -6,9 +6,9 @@ from aws_ptrp.principals import Principal
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services import (
     ServiceActionsResolverBase,
-    ServiceResourcesResolverBase,
     ServiceActionType,
     ServiceResourceBase,
+    ServiceResourcesResolverBase,
     ServiceResourceType,
 )
 

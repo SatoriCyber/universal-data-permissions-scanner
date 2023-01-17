@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
-from aws_ptrp.services import ServiceResourceBase
-from aws_ptrp.principals import Principal
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
-from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType, AwsPtrpPathNode, AwsPtrpResourceType
+from aws_ptrp.principals import Principal
+from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNode, AwsPtrpPathNodeType, AwsPtrpResourceType
+from aws_ptrp.services import ServiceResourceBase
 
 
 class PathNodeBase(ABC):

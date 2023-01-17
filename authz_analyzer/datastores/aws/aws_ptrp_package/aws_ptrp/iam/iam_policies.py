@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 from typing import Dict
 
-from boto3 import Session
-from serde import serde, from_dict
-
 from aws_ptrp.iam.policy import Policy, PolicyDocument
 from aws_ptrp.utils.pagination import paginate_response_list
+from boto3 import Session
+from serde import from_dict, serde
 
 
 @serde

@@ -2,10 +2,8 @@ import re
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-from serde import field, serde
-
 from aws_ptrp.ptrp_models.ptrp_model import AwsPrincipalType
-
+from serde import field, serde
 
 regex_saml_provider = re.compile(r"arn:aws:iam::([0-9]+):saml-provider/(.+)$")
 regex_role_name = re.compile(r"arn:aws:iam::([0-9]+):role/(.+)$")

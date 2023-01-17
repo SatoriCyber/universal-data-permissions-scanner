@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 
 # !Temporary solution!
 # Until we will create a dedicated repo for the aws_ptrp_package (we don't want to put this package as sibling to authz_analyzer package)

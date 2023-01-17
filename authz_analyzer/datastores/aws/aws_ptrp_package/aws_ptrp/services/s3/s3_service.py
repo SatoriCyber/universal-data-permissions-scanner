@@ -1,23 +1,18 @@
 from logging import Logger
-from typing import List, Set, Type, Optional
+from typing import List, Optional, Set, Type
 
-from boto3 import Session
-from serde import serde
-
-from aws_ptrp.services.s3.bucket import S3_RESOURCE_SERVICE_PREFIX, get_buckets
-from aws_ptrp.services.s3.s3_actions import (
-    S3_ACTION_SERVICE_PREFIX,
-    S3Action,
-    S3ServiceActionsResolver,
-)
-from aws_ptrp.services.s3.s3_resources import S3ServiceResourcesResolver
 from aws_ptrp.services import (
     ServiceActionBase,
     ServiceActionsResolverBase,
     ServiceResourceBase,
-    ServiceResourceType,
     ServiceResourcesResolverBase,
+    ServiceResourceType,
 )
+from aws_ptrp.services.s3.bucket import S3_RESOURCE_SERVICE_PREFIX, get_buckets
+from aws_ptrp.services.s3.s3_actions import S3_ACTION_SERVICE_PREFIX, S3Action, S3ServiceActionsResolver
+from aws_ptrp.services.s3.s3_resources import S3ServiceResourcesResolver
+from boto3 import Session
+from serde import serde
 
 S3_SERVICE_NAME = "s3_service"
 

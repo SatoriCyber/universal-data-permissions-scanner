@@ -2,9 +2,6 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Any, Dict, List, Optional, Set, Type
 
-from boto3 import Session
-from serde import field, from_dict, serde, to_dict
-
 from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.services import (
     ServiceResourceBase,
@@ -12,6 +9,8 @@ from aws_ptrp.services import (
     get_service_resource_by_name,
     get_service_resource_type_by_name,
 )
+from boto3 import Session
+from serde import field, from_dict, serde, to_dict
 
 
 def to_dict_serializer(account_resources: Dict[ServiceResourceType, List[ServiceResourceBase]]) -> Dict[str, List[Any]]:

@@ -1,12 +1,12 @@
 from .ptrp_model import (
-    AwsPtrpLine,
     AwsPrincipal,
     AwsPrincipalType,
     AwsPtrpActionPermissionLevel,
-    AwsPtrpResource,
-    AwsPtrpResourceType,
+    AwsPtrpLine,
     AwsPtrpPathNode,
     AwsPtrpPathNodeType,
+    AwsPtrpResource,
+    AwsPtrpResourceType,
 )
 
 __all__ = [

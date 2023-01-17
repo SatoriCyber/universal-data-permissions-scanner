@@ -1,25 +1,25 @@
 from logging import Logger
-from typing import List, Set, Type, Optional, Dict
-from serde import serde
+from typing import Dict, List, Optional, Set, Type
 
-from aws_ptrp.services.federated_user.federated_user_actions import (
-    FederatedUserAction,
-    FederatedUserServiceActionsResolver,
-)
-from aws_ptrp.iam.policy.policy_document import PolicyDocument, Effect
-from aws_ptrp.services.federated_user.federated_user_resources import (
-    FederatedUserServiceResourcesResolver,
-    FederatedUserPrincipal,
-)
-from aws_ptrp.services.s3.s3_service import S3Service
-from aws_ptrp.services.s3.s3_resources import S3Bucket
+from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument
 from aws_ptrp.services import (
     ServiceActionBase,
     ServiceActionsResolverBase,
     ServiceResourceBase,
-    ServiceResourceType,
     ServiceResourcesResolverBase,
+    ServiceResourceType,
 )
+from aws_ptrp.services.federated_user.federated_user_actions import (
+    FederatedUserAction,
+    FederatedUserServiceActionsResolver,
+)
+from aws_ptrp.services.federated_user.federated_user_resources import (
+    FederatedUserPrincipal,
+    FederatedUserServiceResourcesResolver,
+)
+from aws_ptrp.services.s3.s3_resources import S3Bucket
+from aws_ptrp.services.s3.s3_service import S3Service
+from serde import serde
 
 FEDERATED_USER_SERVICE_NAME = "federated_user_service"
 FEDERATED_USER_ACTION_SERVICE_PREFIX = "sts:"

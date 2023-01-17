@@ -1,41 +1,29 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List, Optional, Set, Tuple, Callable
-
-from boto3 import Session
-from serde import serde
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from aws_ptrp.actions.aws_actions import AwsActions
-from aws_ptrp.policy_evaluation import PolicyEvaluation
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
-    PoliciesNodeBase,
-    ResourceNodeBase,
-)
 from aws_ptrp.iam.iam_entities import IAMEntities
-from aws_ptrp.ptrp_allowed_lines.allowed_lines_resolver import (
-    PtrpAllowedLinesBuilder,
-    PtrpAllowedLines,
-)
-from aws_ptrp.utils.create_session import create_session_with_assume_role
-from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
+from aws_ptrp.policy_evaluation import PolicyEvaluation
 from aws_ptrp.principals import Principal
-from aws_ptrp.resources.account_resources import AwsAccountResources
-from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
-from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
-from aws_ptrp.services import (
-    ServiceActionType,
-    ServiceActionBase,
-    ServiceResourcesResolverBase,
-    ServiceResourceType,
-)
+from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PoliciesNodeBase, ResourceNodeBase
+from aws_ptrp.ptrp_allowed_lines.allowed_lines_resolver import PtrpAllowedLines, PtrpAllowedLinesBuilder
 from aws_ptrp.ptrp_models.ptrp_model import (
-    AwsPtrpPathNode,
-    AwsPtrpResource,
     AwsPrincipal,
     AwsPtrpActionPermissionLevel,
     AwsPtrpLine,
+    AwsPtrpPathNode,
+    AwsPtrpResource,
 )
+from aws_ptrp.resources.account_resources import AwsAccountResources
+from aws_ptrp.services import ServiceActionBase, ServiceActionType, ServiceResourcesResolverBase, ServiceResourceType
+from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
+from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
+from aws_ptrp.utils.create_session import create_session_with_assume_role
+from boto3 import Session
+from serde import serde
 
 
 @serde

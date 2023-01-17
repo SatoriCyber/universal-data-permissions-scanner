@@ -1,13 +1,12 @@
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
-from boto3 import Session
-from serde import serde, field, from_dict
-
 from aws_ptrp.iam.policy import PolicyDocument, UserPolicy
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PrincipalAndPoliciesNodeBase
 from aws_ptrp.principals import Principal
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PrincipalAndPoliciesNodeBase
 from aws_ptrp.utils.pagination import paginate_response_list
+from boto3 import Session
+from serde import field, from_dict, serde
 
 
 @serde
