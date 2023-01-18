@@ -82,10 +82,10 @@ class PathUserGroupNode(PathUserGroupNodeBase):
         return f"PathUserGroupNode({self.base.__repr__()})"
 
     def __eq__(self, other):
-        return self.base.__eq__(other.base)
+        return self.base == other.base
 
     def __hash__(self):
-        return self.base.__hash__()
+        return hash(self.base)
 
     # PoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
@@ -122,10 +122,10 @@ class PathRoleNode(PathRoleNodeBase):
         return f"PathRoleNode({self.base.__repr__()})"
 
     def __eq__(self, other):
-        return self.base.__eq__(other.base)
+        return self.base == other.base
 
     def __hash__(self):
-        return self.base.__hash__()
+        return hash(self.base)
 
     # PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:
@@ -166,10 +166,10 @@ class PathFederatedPrincipalNode(PathFederatedPrincipalNodeBase):
         return f"PathFederatedPrincipalNode({self.base.__repr__()})"
 
     def __eq__(self, other):
-        return self.base.__eq__(other.base)
+        return self.base == other.base
 
     def __hash__(self):
-        return self.base.__hash__()
+        return hash(self.base)
 
     # PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:
@@ -247,7 +247,7 @@ class ResourceNode:
         return f"ResourceNode({self.base.__repr__()})"
 
     def __eq__(self, other):
-        return self.base.__eq__(other.base)
+        return self.base == other.base
 
     def __hash__(self):
-        return self.base.__hash__()
+        return hash(self.base)

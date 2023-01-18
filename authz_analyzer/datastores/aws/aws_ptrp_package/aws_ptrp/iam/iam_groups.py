@@ -71,7 +71,7 @@ def get_iam_groups(session: Session) -> Dict[str, IAMGroup]:
             group_policies.append(
                 from_dict(
                     GroupPolicy, iam_client.get_group_policy(GroupName=group_name, PolicyName=group_policy_response)
-                )
+                )  # type: ignore
             )
 
         attached_policies = paginate_response_list(

@@ -28,7 +28,7 @@ def from_dict_deserializer(
             value: List[ServiceResourceBase] = [
                 from_dict(service_resource, service_resource_base_dict)
                 for service_resource_base_dict in service_resources_base
-            ]
+            ]  # type: ignore
             account_resources[service_type()] = value
     return account_resources
 

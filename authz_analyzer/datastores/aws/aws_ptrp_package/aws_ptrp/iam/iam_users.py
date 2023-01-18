@@ -68,7 +68,7 @@ def get_iam_users(session: Session) -> Dict[str, IAMUser]:
         user_policies: List[UserPolicy] = []
         for user_policy_response in user_policies_response:
             user_policies.append(
-                from_dict(UserPolicy, iam_client.get_user_policy(UserName=user_name, PolicyName=user_policy_response))
+                from_dict(UserPolicy, iam_client.get_user_policy(UserName=user_name, PolicyName=user_policy_response))  # type: ignore
             )
 
         attached_policies = paginate_response_list(

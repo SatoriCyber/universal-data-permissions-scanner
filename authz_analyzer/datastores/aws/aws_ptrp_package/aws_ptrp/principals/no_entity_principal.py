@@ -14,7 +14,7 @@ class NoEntityPrincipal(PrincipalAndPoliciesNodeBase):
         return self.stmt_principal.__repr__()
 
     def __eq__(self, other):
-        return self.stmt_principal.__eq__(other.stmt_principal)
+        return self.stmt_principal == other.stmt_principal
 
     def __hash__(self):
         return hash(self.stmt_principal.__hash__())
