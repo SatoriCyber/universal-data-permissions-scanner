@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Dict, Generator, List, Optional, Set, Type
 
+from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.principals import Principal
 from aws_ptrp.services.service_action_base import ResolvedActionsSingleStmt, ServiceActionBase, ServiceActionType
 from boto3 import Session
@@ -42,6 +43,10 @@ class ServiceResourceBase(ABC):
         pass
 
     @abstractmethod
+    def get_resource_policy(self) -> Optional[PolicyDocument]:
+        pass
+
+    @abstractmethod
     def get_resource_account_id(self) -> str:
         pass
 
@@ -58,6 +63,15 @@ class ResolvedResourcesSingleStmt(ABC):
     def resolved_stmt_resources(self) -> Dict[ServiceResourceBase, ResolvedActionsSingleStmt]:
         pass
 
+    def retain_resolved_stmt_resources(self):
+        # get all service resources with empty resolved stmt actions
+        service_resources_to_delete = [
+            x[0] for x in self.resolved_stmt_resources.items() if not x[1].resolved_stmt_actions
+        ]
+        # delete all these keys from the resolved_stmt_resources
+        for service_resource_to_delete in service_resources_to_delete:
+            del self.resolved_stmt_resources[service_resource_to_delete]
+
 
 @dataclass
 class ServiceResourcesResolverBase(ABC):
@@ -65,9 +79,56 @@ class ServiceResourcesResolverBase(ABC):
     def get_resolved_stmts(self) -> List[ResolvedResourcesSingleStmt]:
         pass
 
-    @abstractmethod
-    def subtract(self, other: 'ServiceResourcesResolverBase'):
-        pass
+    def retain_resolved_stmts(self):
+        # get all list indexes to delete (single stmt with empty resolved actions)
+        stmt_indexes_to_delete = []
+        curr_index = 0
+        resolved_stmts: List[ResolvedResourcesSingleStmt] = self.get_resolved_stmts()
+        for resolved_stmt in resolved_stmts:
+            if not resolved_stmt.resolved_stmt_resources:
+                stmt_indexes_to_delete.append(curr_index)
+            curr_index = curr_index + 1
+
+        element_deleted = 0
+        for stmt_index_to_delete in stmt_indexes_to_delete:
+            del resolved_stmts[stmt_index_to_delete - element_deleted]
+            element_deleted = element_deleted + 1
+
+    def subtract(self, principal: Principal, other: 'ServiceResourcesResolverBase'):
+        '''subtract resolved actions from 'self' statements with 'other' statement.
+        For each statement in self & other which contains the principal, subtract the resolved actions for each resolved resource
+        '''
+        for resolved_stmt in self.get_resolved_stmts():
+            if not any(
+                resolved_stmt_principal.contains(principal)
+                for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals
+            ):
+                continue
+            # self stmt relevant to this principal
+            for other_resolved_stmt in other.get_resolved_stmts():
+                if not any(
+                    other_resolved_stmt_principal.contains(principal)
+                    for other_resolved_stmt_principal in other_resolved_stmt.resolved_stmt_principals
+                ):
+                    continue
+                # other stmt relevant to this principal
+                # Need to check matches on the resolved resources in these statements
+                for service_resource, resolved_action_single_stmt in resolved_stmt.resolved_stmt_resources.items():
+                    other_resolved_action_single_stmt: Optional[
+                        ResolvedActionsSingleStmt
+                    ] = other_resolved_stmt.resolved_stmt_resources.get(service_resource)
+
+                    if not other_resolved_action_single_stmt:
+                        continue
+                    # found same resolved resource, both in 'self' stmt & 'other stmt
+                    # subtract the resolved action
+                    resolved_action_single_stmt.subtract(other_resolved_action_single_stmt)
+
+            # remove all resolved resources which left with no resolved actions (after the subtraction)
+            resolved_stmt.retain_resolved_stmt_resources()
+
+        # remove all resolved stmts which left with no resolved resources (after the subtraction)
+        self.retain_resolved_stmts()
 
     @classmethod
     @abstractmethod

@@ -25,6 +25,10 @@ class ResolvedAssumeRoleActions(ResolvedActionsSingleStmt):
     def resolved_stmt_actions(self) -> Set[ServiceActionBase]:
         return self.actions  # type: ignore[return-value]
 
+    def subtract(self, other: 'ResolvedActionsSingleStmt'):
+        if isinstance(other, ResolvedAssumeRoleActions):
+            self.actions = self.actions.difference(other.actions)
+
     def add(self, actions: Set[AssumeRoleAction]):
         self.actions = self.actions.union(actions)
 
@@ -90,9 +94,6 @@ class AssumeRoleServiceResourcesResolver(ServiceResourcesResolverBase):
 
     def get_resolved_stmts(self) -> List[ResolvedResourcesSingleStmt]:
         return self.resolved_stmts  # type: ignore[return-value]
-
-    def subtract(self, other: ServiceResourcesResolverBase):
-        pass
 
     def yield_trusted_principals(self, iam_role: IAMRole) -> Generator[Principal, None, None]:
         for resolved_stmt in self.resolved_stmts:

@@ -33,6 +33,7 @@ class S3Bucket(ResourceNodeBase, ServiceResourceBase):
     def __hash__(self):
         return hash(self.name)
 
+    # impl ServiceResourceBase
     def get_resource_account_id(self) -> str:
         return self.aws_account_id
 
@@ -45,6 +46,7 @@ class S3Bucket(ResourceNodeBase, ServiceResourceBase):
     def get_resource_policy(self) -> Optional[PolicyDocument]:
         return self.policy_document
 
+    # impl ResourceNodeBase
     def get_ptrp_resource_type(self) -> AwsPtrpResourceType:
         return AwsPtrpResourceType.S3_BUCKET
 

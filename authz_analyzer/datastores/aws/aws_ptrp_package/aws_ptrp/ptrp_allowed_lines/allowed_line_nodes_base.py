@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNode, AwsPtrpPathNodeType, AwsPtrpResourceType
-from aws_ptrp.services import ServiceResourceBase
+from aws_ptrp.services import ServiceResourceBase, ServiceResourceType
 
 
 class PathNodeBase(ABC):
@@ -236,6 +236,18 @@ class ResourceNodeBase(ServiceResourceBase):
     def get_ptrp_resource_type(self) -> AwsPtrpResourceType:
         pass
 
-    @abstractmethod
-    def get_resource_policy(self) -> Optional[PolicyDocument]:
-        pass
+
+@dataclass
+class ResourceNode:
+    base: ResourceNodeBase
+    service_resource_type: ServiceResourceType
+    note: str
+
+    def __repr__(self):
+        return f"ResourceNode({self.base.__repr__()})"
+
+    def __eq__(self, other):
+        return self.base.__eq__(other.base)
+
+    def __hash__(self):
+        return self.base.__hash__()
