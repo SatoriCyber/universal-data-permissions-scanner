@@ -16,8 +16,6 @@ from aws_ptrp.services import (
 )
 from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
 from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
-from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserServiceResourcesResolver
-from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
 
 
 def get_role_trust_resolver(
@@ -45,34 +43,6 @@ def get_role_trust_resolver(
         )
         if ret_service_resources_resolver and isinstance(
             ret_service_resources_resolver, AssumeRoleServiceResourcesResolver
-        ):
-            return ret_service_resources_resolver
-    return None
-
-
-def get_federated_user_resolver(
-    logger: Logger,
-    policy_document: PolicyDocument,
-    iam_user_principal: Principal,
-    aws_actions: AwsActions,
-    account_resources: AwsAccountResources,
-) -> Optional[FederatedUserServiceResourcesResolver]:
-
-    ret_services_resources_resolver: Optional[
-        Dict[ServiceResourceType, ServiceResourcesResolverBase]
-    ] = get_identity_based_resolver(
-        logger=logger,
-        policy_document=policy_document,
-        identity_principal=iam_user_principal,
-        aws_actions=aws_actions,
-        account_resources=account_resources,
-    )
-    if ret_services_resources_resolver:
-        ret_service_resources_resolver: Optional[ServiceResourcesResolverBase] = ret_services_resources_resolver.get(
-            FederatedUserService()
-        )
-        if ret_service_resources_resolver and isinstance(
-            ret_service_resources_resolver, FederatedUserServiceResourcesResolver
         ):
             return ret_service_resources_resolver
     return None
@@ -132,6 +102,7 @@ def get_services_resources_resolver(
     aws_actions: AwsActions,
     account_resources: AwsAccountResources,
     effect: Effect,
+    allowed_service_action_types: Optional[Set[ServiceActionType]] = None,
 ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
 
     all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase] = dict()
@@ -163,7 +134,9 @@ def get_services_resources_resolver(
 
         single_stmt_service_actions_resolvers: Optional[
             Dict[ServiceActionType, ServiceActionsResolverBase]
-        ] = ActionsResolver.resolve_stmt_action_regexes(logger, statement.action, aws_actions)
+        ] = ActionsResolver.resolve_stmt_action_regexes(
+            logger, statement.action, aws_actions, allowed_service_action_types
+        )
 
         if single_stmt_service_actions_resolvers:
             logger.debug(

@@ -50,6 +50,10 @@ class ResolvedActionsSingleStmt(ABC):
     def resolved_stmt_actions(self) -> Set[ServiceActionBase]:
         pass
 
+    @abstractmethod
+    def subtract(self, other: 'ResolvedActionsSingleStmt'):
+        pass
+
 
 @dataclass
 class ServiceActionsResolverBase(ABC):

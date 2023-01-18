@@ -40,6 +40,7 @@ class ActionsResolver:
         logger: Logger,
         stmt_action_regexes: Union[str, List[str]],
         aws_actions: AwsActions,
+        allowed_service_action_types: Optional[Set[ServiceActionType]] = None,
     ) -> Optional[Dict[ServiceActionType, ServiceActionsResolverBase]]:
         services_action_resolver: Dict[ServiceActionType, ServiceActionsResolverBase] = dict()
 
@@ -47,6 +48,8 @@ class ActionsResolver:
             stmt_action_regexes = [stmt_action_regexes]
 
         service_types_to_resolve: Set[ServiceActionType] = set(aws_actions.aws_actions.keys())
+        if allowed_service_action_types:
+            service_types_to_resolve.intersection(allowed_service_action_types)
         ret: Dict[ServiceActionType, List[str]] = ActionsResolver._get_stmt_action_regexes_per_service_type(
             logger, stmt_action_regexes, service_types_to_resolve
         )

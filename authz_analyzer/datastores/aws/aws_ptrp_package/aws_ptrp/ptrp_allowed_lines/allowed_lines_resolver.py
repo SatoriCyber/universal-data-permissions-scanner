@@ -27,6 +27,7 @@ from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
     PathUserGroupNodeBase,
     PrincipalAndPoliciesNodeBase,
     PrincipalNodeBase,
+    ResourceNode,
     ResourceNodeBase,
 )
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
@@ -94,11 +95,11 @@ class PtrpAllowedLines:
                 )
             target_policy_node: PathPolicyNode = graph_path[-2]
 
-            if not isinstance(graph_path[-1], ResourceNodeBase):
+            if not isinstance(graph_path[-1], ResourceNode):
                 raise Exception(
-                    f"Got invalid simple path in graph, last node is not impl ResourceNodeBase: {graph_path[-1]}"
+                    f"Got invalid simple path in graph, last node is not impl ResourceNode: {graph_path[-1]}"
                 )
-            resource_node: ResourceNodeBase = graph_path[-1]
+            resource_node: ResourceNode = graph_path[-1]
 
             yield PtrpAllowedLine(
                 principal_node=principal_node,
@@ -250,16 +251,17 @@ class PtrpAllowedLinesBuilder:
         self,
         identity_principal: Principal,
         path_policy_node: PathPolicyNode,
-        service_type: ServiceResourceType,
+        service_resource_type: ServiceResourceType,
         service_resource: ServiceResourceBase,
     ):
 
         if isinstance(service_resource, ResourceNodeBase):
-            self.graph.add_edge(path_policy_node, service_resource)
+            resource_node = ResourceNode(base=service_resource, service_resource_type=service_resource_type, note="")
+            self.graph.add_edge(path_policy_node, resource_node)
         elif (
             (identity_principal.is_iam_user_principal() or identity_principal.is_iam_user_account())
             and path_policy_node.is_resource_based_policy is False
-            and isinstance(service_type, FederatedUserService)
+            and isinstance(service_resource_type, FederatedUserService)
             and isinstance(service_resource, FederatedUserPrincipal)
         ):
             # special handling for federated user
@@ -303,7 +305,7 @@ class PtrpAllowedLinesBuilder:
                 self._connect_path_policy_node_with_resolved_service_resource(
                     identity_principal=identity_principal_for_resolver,
                     path_policy_node=path_policy_node,
-                    service_type=service_type,
+                    service_resource_type=service_type,
                     service_resource=service_resource,
                 )
         for inline_policy, policy_name in inline_policies_and_names:
@@ -325,7 +327,7 @@ class PtrpAllowedLinesBuilder:
                 self._connect_path_policy_node_with_resolved_service_resource(
                     identity_principal=identity_principal_for_resolver,
                     path_policy_node=path_policy_node,
-                    service_type=service_type,
+                    service_resource_type=service_type,
                     service_resource=service_resource,
                 )
 
@@ -365,17 +367,20 @@ class PtrpAllowedLinesBuilder:
                         identity_principal_for_resolver=resolved_principal_node.get_stmt_principal(),
                     )
 
-    def _insert_resource_based_policies(self):
+    def _insert_resources(self):
         for service_resources_type, service_resources in self.account_resources.account_resources.items():
-            for service_resource in service_resources:  # type: ResourceNodeBase
+            for service_resource in service_resources:
                 if not isinstance(service_resource, ResourceNodeBase):
                     continue
+                resource_node = ResourceNode(
+                    base=service_resource, service_resource_type=service_resources_type, note=""
+                )
+                self.graph.add_edge(resource_node, END_NODE)
 
                 service_resource_policy: Optional[PolicyDocument] = service_resource.get_resource_policy()
                 if service_resource_policy is None:
                     continue
 
-                self.graph.add_edge(service_resource, END_NODE)
                 service_resources_resolver: Optional[ServiceResourcesResolverBase] = get_resource_based_resolver(
                     logger=self.logger,
                     policy_document=service_resource_policy,
@@ -394,7 +399,7 @@ class PtrpAllowedLinesBuilder:
                     is_resource_based_policy=True,
                     note="",
                 )
-                self.graph.add_edge(target_policy_node, service_resource)
+                self.graph.add_edge(target_policy_node, resource_node)
 
                 for stmt_principal in service_resources_resolver.yield_resolved_stmt_principals():
                     self.logger.debug(
@@ -439,7 +444,7 @@ class PtrpAllowedLinesBuilder:
         self.graph.add_node(START_NODE)
         self.graph.add_node(END_NODE)
 
-        self._insert_resource_based_policies()
+        self._insert_resources()
 
         self._insert_iam_roles_and_trusted_entities()
 

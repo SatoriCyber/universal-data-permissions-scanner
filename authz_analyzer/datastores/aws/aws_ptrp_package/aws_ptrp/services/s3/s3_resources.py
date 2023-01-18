@@ -38,9 +38,6 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
     def get_resolved_stmts(self) -> List[ResolvedResourcesSingleStmt]:
         return self.resolved_stmts  # type: ignore[return-value]
 
-    def subtract(self, other: ServiceResourcesResolverBase):
-        pass
-
     @staticmethod
     def update_resolved_bucket_from_single_regex(
         resolved_buckets: Dict[S3Bucket, ResolvedS3BucketActions],

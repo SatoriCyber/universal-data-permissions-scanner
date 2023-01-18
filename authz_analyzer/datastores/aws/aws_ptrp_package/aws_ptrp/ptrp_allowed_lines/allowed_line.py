@@ -9,7 +9,7 @@ from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
     PathUserGroupNode,
     PoliciesNodeBase,
     PrincipalAndPoliciesNodeBase,
-    ResourceNodeBase,
+    ResourceNode,
 )
 from aws_ptrp.ptrp_models.ptrp_model import AwsPrincipal, AwsPtrpPathNode, AwsPtrpResource
 
@@ -21,11 +21,11 @@ class PtrpAllowedLine:
     path_federated_nodes: Optional[Tuple[PathPolicyNode, PathFederatedPrincipalNode]]
     path_role_nodes: List[PathRoleNode]
     target_policy_node: PathPolicyNode
-    resource_node: ResourceNodeBase
+    resource_node: ResourceNode
 
     def get_ptrp_resource_to_report(self) -> AwsPtrpResource:
         return AwsPtrpResource(
-            name=self.resource_node.get_resource_name(), type=self.resource_node.get_ptrp_resource_type()
+            name=self.resource_node.base.get_resource_name(), type=self.resource_node.base.get_ptrp_resource_type()
         )
 
     def get_principal_to_report(self) -> AwsPrincipal:

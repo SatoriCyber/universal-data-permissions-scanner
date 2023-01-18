@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Dict, Generator, List, Optional, Set
 
+from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
 from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PathFederatedPrincipalNodeBase
@@ -42,6 +43,9 @@ class FederatedUserPrincipal(PathFederatedPrincipalNodeBase, ServiceResourceBase
     def get_resource_name(self) -> str:
         return self.federated_principal.get_name()
 
+    def get_resource_policy(self) -> Optional[PolicyDocument]:
+        return None
+
     def get_resource_account_id(self) -> str:
         assert self.federated_principal.is_federated_user_principal()
         account_id: Optional[str] = self.federated_principal.get_account_id()
@@ -71,6 +75,10 @@ class ResolvedFederatedUserActions(ResolvedActionsSingleStmt):
     @property
     def resolved_stmt_actions(self) -> Set[ServiceActionBase]:
         return self.actions  # type: ignore[return-value]
+
+    def subtract(self, other: 'ResolvedActionsSingleStmt'):
+        if isinstance(other, ResolvedFederatedUserActions):
+            self.actions = self.actions.difference(other.actions)
 
     def add(self, actions: Set[FederatedUserAction]):
         self.actions = self.actions.union(actions)
@@ -104,9 +112,6 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
 
     def get_resolved_stmts(self) -> List[ResolvedResourcesSingleStmt]:
         return self.resolved_stmts  # type: ignore[return-value]
-
-    def subtract(self, other: ServiceResourcesResolverBase):
-        pass
 
     @staticmethod
     def _yield_resolve_resources_from_stmt_relative_id_regex(

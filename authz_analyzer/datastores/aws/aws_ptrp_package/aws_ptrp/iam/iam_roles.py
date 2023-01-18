@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from aws_ptrp.iam.policy import PolicyDocument
 from aws_ptrp.iam.role.role_policy import RolePolicy
@@ -75,6 +75,9 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
 
     def get_resource_name(self) -> str:
         return self.role_name
+
+    def get_resource_policy(self) -> Optional[PolicyDocument]:
+        return self.assume_role_policy_document
 
     def get_resource_account_id(self) -> str:
         return self.aws_account_id
