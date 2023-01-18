@@ -25,7 +25,7 @@ def from_dict_deserializer(
         if service_type and service_action:
             value: List[ServiceActionBase] = [
                 from_dict(service_action, service_action_base_dict) for service_action_base_dict in service_actions_base
-            ]
+            ]  # type: ignore
             aws_actions[service_type()] = value
 
     return aws_actions

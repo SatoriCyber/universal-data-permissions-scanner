@@ -58,24 +58,24 @@ def get_buckets(session: Session, aws_account_id: str) -> Set[ServiceResourceBas
     ret: Set[ServiceResourceBase] = set()
     for bucket in buckets:
         bucket_name = bucket['Name']
-        policy_document = None
+        policy_document: Optional[PolicyDocument] = None
         try:
             policy_document = from_dict(
                 PolicyDocument, json.loads(s3_client.get_bucket_policy(Bucket=bucket_name)['Policy'])
-            )
+            )  # type: ignore
         except ClientError as error:
             if error.response['Error']['Code'] == 'NoSuchBucketPolicy':
                 pass
             else:
                 raise error
 
-        acl = from_dict(S3BucketACL, s3_client.get_bucket_acl(Bucket=bucket_name))
-        public_access_block = None
+        acl: S3BucketACL = from_dict(S3BucketACL, s3_client.get_bucket_acl(Bucket=bucket_name))  # type: ignore
+        public_access_block: Optional[PublicAccessBlockConfiguration] = None
         try:
             public_access_block = from_dict(
                 PublicAccessBlockConfiguration,
                 s3_client.get_public_access_block(Bucket=bucket_name)['PublicAccessBlockConfiguration'],
-            )
+            )  # type: ignore
         except ClientError as error:
             if error.response['Error']['Code'] == 'NoSuchPublicAccessBlockConfiguration':
                 pass

@@ -204,7 +204,7 @@ class AwsPtrp:
             logger, self.iam_entities, self.aws_actions, self.target_account_resources
         ).build()
 
-        for line in allowed_lines_resolver.yield_principal_to_resource_lines():  # type: PtrpAllowedLine
+        for line in allowed_lines_resolver.yield_principal_to_resource_lines():
             logger.info("%s", line)
             service_resources_resolver: Optional[
                 Dict[ServiceResourceType, ServiceResourcesResolverBase]

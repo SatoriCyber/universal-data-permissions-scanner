@@ -24,7 +24,7 @@ class IAMEntities:
     def load_from_json_file(cls, _logger: Logger, file_path: Path) -> 'IAMEntities':
         with open(file_path, "r", encoding="utf-8") as file:
             analyzed_ctx_json = json.load(file)
-            analyzed_ctx_loaded: 'IAMEntities' = from_dict(IAMEntities, analyzed_ctx_json)
+            analyzed_ctx_loaded: 'IAMEntities' = from_dict(IAMEntities, analyzed_ctx_json)  # type: ignore
             return analyzed_ctx_loaded
 
     @classmethod
