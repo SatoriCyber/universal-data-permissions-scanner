@@ -9,7 +9,7 @@ from authz_analyzer import (
     MongoDBAuthzAnalyzer,
     PostgresAuthzAnalyzer,
     RedshiftAuthzAnalyzer,
-    S3AuthzAnalyzer,
+    AWSAuthzAnalyzer,
     SnowflakeAuthzAnalyzer,
 )
 from authz_analyzer.writers import OutputFormat, get_writer
@@ -60,7 +60,7 @@ def run_aws_s3(
     account_role_name: str,
 ):
     writer = get_writer(filename, output_format)
-    analyzer = S3AuthzAnalyzer.connect(
+    analyzer = AWSAuthzAnalyzer.connect(
         target_account_id=target_account_id,
         additional_account_ids=additional_account_ids,
         account_role_name=account_role_name,
@@ -68,7 +68,7 @@ def run_aws_s3(
         output_format=output_format,
         logger=logger,
     )
-    analyzer.run()
+    analyzer.run_s3()
     writer.close()
 
 

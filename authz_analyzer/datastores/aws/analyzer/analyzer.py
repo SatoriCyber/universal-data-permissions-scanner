@@ -1,6 +1,3 @@
-"""Analyze authorization for S3.
-
-"""
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
@@ -11,6 +8,7 @@ from typing import Optional, Set, Union
 #     "[PATH-TO-AUTHZ-ANALYZER]/authz_analyzer/datastores/aws/aws_ptrp_package/"
 # ]
 from aws_ptrp import AwsPtrp
+from aws_ptrp.services import ServiceResourceType
 from aws_ptrp.services.s3.s3_service import S3Service
 
 from authz_analyzer.datastores.aws.analyzer.exporter import AWSAuthzAnalyzerExporter
@@ -20,7 +18,7 @@ from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 
 
 @dataclass
-class S3AuthzAnalyzer:
+class AWSAuthzAnalyzer:
     exporter: AWSAuthzAnalyzerExporter
     logger: Logger
     target_account_id: str
@@ -50,15 +48,24 @@ class S3AuthzAnalyzer:
             account_role_name=account_role_name,
         )
 
-    def run(
+    def run_s3(self):
+        self._run(set([S3Service()]))
+
+    def _run(
         self,
+        resource_service_types: Set[ServiceResourceType],
     ):
         self.logger.info(
-            "Starting to analyzed AWS s3 for target account id: %s, additional accounts: %s",
+            "Starting to analyzed AWS for %s, target account id: %s, additional accounts: %s",
+            resource_service_types,
             self.target_account_id,
             self.additional_account_ids,
         )
         aws_ptrp = AwsPtrp.load_from_role(
-            self.logger, self.account_role_name, set([S3Service()]), self.target_account_id, self.additional_account_ids
+            self.logger,
+            self.account_role_name,
+            resource_service_types,
+            self.target_account_id,
+            self.additional_account_ids,
         )
         aws_ptrp.resolve_permissions(self.logger, self.exporter.export_entry_from_ptrp_line)
