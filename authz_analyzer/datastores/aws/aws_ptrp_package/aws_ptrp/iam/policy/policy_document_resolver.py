@@ -22,25 +22,27 @@ def get_role_trust_resolver(
     logger: Logger,
     role_trust_policy: PolicyDocument,
     iam_role_arn: str,
+    effect: Effect,
     aws_actions: AwsActions,
     account_resources: AwsAccountResources,
 ) -> Optional[AssumeRoleServiceResourcesResolver]:
 
-    ret_services_resources_resolver: Optional[
-        Dict[ServiceResourceType, ServiceResourcesResolverBase]
-    ] = get_services_resources_resolver(
+    all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase] = {}
+    _services_resolver_for_policy_document(
         logger=logger,
+        all_stmts_service_resources_resolvers=all_stmts_service_resources_resolvers,
         policy_document=role_trust_policy,
         parent_resource_arn=iam_role_arn,
         identity_principal=None,
         aws_actions=aws_actions,
         account_resources=account_resources,
-        effect=Effect.Allow,
+        effect=effect,
+        allowed_service_action_types=set([AssumeRoleService()]),
     )
-    if ret_services_resources_resolver:
-        ret_service_resources_resolver: Optional[ServiceResourcesResolverBase] = ret_services_resources_resolver.get(
-            AssumeRoleService()
-        )
+    if all_stmts_service_resources_resolvers:
+        ret_service_resources_resolver: Optional[
+            ServiceResourcesResolverBase
+        ] = all_stmts_service_resources_resolvers.get(AssumeRoleService())
         if ret_service_resources_resolver and isinstance(
             ret_service_resources_resolver, AssumeRoleServiceResourcesResolver
         ):
@@ -52,50 +54,61 @@ def get_resource_based_resolver(
     logger: Logger,
     policy_document: PolicyDocument,
     service_resource_type: ServiceResourceType,
+    resource_arn: str,
+    effect: Effect,
     aws_actions: AwsActions,
     account_resources: AwsAccountResources,
 ) -> Optional[ServiceResourcesResolverBase]:
 
-    ret_services_resources_resolver: Optional[
-        Dict[ServiceResourceType, ServiceResourcesResolverBase]
-    ] = get_services_resources_resolver(
+    all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase] = {}
+    _services_resolver_for_policy_document(
         logger=logger,
+        all_stmts_service_resources_resolvers=all_stmts_service_resources_resolvers,
         policy_document=policy_document,
-        parent_resource_arn=None,  # no need parent_resource the policy should includes the resources for each stmt
+        parent_resource_arn=resource_arn,
         identity_principal=None,
         aws_actions=aws_actions,
         account_resources=account_resources,
-        effect=Effect.Allow,
+        effect=effect,
+        allowed_service_action_types=set([service_resource_type]),
     )
-    if ret_services_resources_resolver:
-        return ret_services_resources_resolver.get(service_resource_type)
+    if all_stmts_service_resources_resolvers:
+        return all_stmts_service_resources_resolvers.get(service_resource_type)
     return None
 
 
 def get_identity_based_resolver(
     logger: Logger,
-    policy_document: PolicyDocument,
+    policy_documents: List[PolicyDocument],
     identity_principal: Principal,
+    effect: Effect,
     aws_actions: AwsActions,
     account_resources: AwsAccountResources,
+    allowed_service_action_types: Optional[Set[ServiceActionType]] = None,
 ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
 
-    ret_services_resources_resolver: Optional[
-        Dict[ServiceResourceType, ServiceResourcesResolverBase]
-    ] = get_services_resources_resolver(
-        logger=logger,
-        policy_document=policy_document,
-        parent_resource_arn=None,  # no need parent_resource the policy should includes the resources for each stmt
-        identity_principal=identity_principal,
-        aws_actions=aws_actions,
-        account_resources=account_resources,
-        effect=Effect.Allow,
-    )
-    return ret_services_resources_resolver
+    all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase] = {}
+    for policy_document in policy_documents:
+        _services_resolver_for_policy_document(
+            logger=logger,
+            all_stmts_service_resources_resolvers=all_stmts_service_resources_resolvers,
+            policy_document=policy_document,
+            parent_resource_arn=None,  # no need parent_resource the policy should includes the resources for each stmt
+            identity_principal=identity_principal,
+            aws_actions=aws_actions,
+            account_resources=account_resources,
+            effect=effect,
+            allowed_service_action_types=allowed_service_action_types,
+        )
+    if all_stmts_service_resources_resolvers:
+        return all_stmts_service_resources_resolvers
+    else:
+        return None
 
 
-def get_services_resources_resolver(
+def _services_resolver_for_policy_document(
     logger: Logger,
+    all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase],
     policy_document: PolicyDocument,
     parent_resource_arn: Optional[str],
     identity_principal: Optional[Principal],
@@ -103,9 +116,8 @@ def get_services_resources_resolver(
     account_resources: AwsAccountResources,
     effect: Effect,
     allowed_service_action_types: Optional[Set[ServiceActionType]] = None,
-) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
+):
 
-    all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase] = dict()
     for statement in policy_document.statement:
         if statement.action is None:
             # missing action or resource on this stmt, noting to resolve
@@ -129,7 +141,7 @@ def get_services_resources_resolver(
             statement_resource = parent_resource_arn
         else:
             raise Exception(
-                "Invalid resource input, both statement.resource & outer param parent_resource_arn are None"
+                f"Invalid resource input, both statement.resource & outer param parent_resource_arn are None - {statement}"
             )
 
         single_stmt_service_actions_resolvers: Optional[
@@ -168,8 +180,3 @@ def get_services_resources_resolver(
                 for service_type, single_stmt_service_resolver in single_stmt_service_resources_resolvers.items():
                     if all_stmts_service_resources_resolvers.get(service_type) is None:
                         all_stmts_service_resources_resolvers[service_type] = single_stmt_service_resolver
-
-    if all_stmts_service_resources_resolvers:
-        return all_stmts_service_resources_resolvers
-    else:
-        return None

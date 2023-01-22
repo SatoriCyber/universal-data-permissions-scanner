@@ -53,6 +53,10 @@ class FederatedUserPrincipal(PathFederatedPrincipalNodeBase, ServiceResourceBase
         assert account_id is not None
         return account_id
 
+    # impl PathFederatedPrincipalNodeBase
+    def get_service_resource(self) -> ServiceResourceBase:
+        return self
+
     # impl PathNodeBase
     def get_path_type(self) -> AwsPtrpPathNodeType:
         return AwsPtrpPathNodeType.FEDERATED_USER
@@ -113,6 +117,19 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
     def get_resolved_stmts(self) -> List[ResolvedResourcesSingleStmt]:
         return self.resolved_stmts  # type: ignore[return-value]
 
+    def is_principal_allowed_to_assume_federated_user(
+        self, federated_user: FederatedUserPrincipal, principal: Principal
+    ) -> bool:
+        resolved_actions: Optional[Set[ServiceActionBase]] = self.get_resolved_actions_per_resource_and_principal(
+            federated_user, principal
+        )
+        if not resolved_actions:
+            return False
+        for resolved_action in resolved_actions:
+            if isinstance(resolved_action, FederatedUserAction) and resolved_action.is_get_federated_token_action():
+                return True
+        return False
+
     @staticmethod
     def _yield_resolve_resources_from_stmt_relative_id_regex(
         stmt_relative_id_regex: str,
@@ -129,7 +146,7 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
     @classmethod
     def load_from_single_stmt(
         cls,
-        logger: Logger,
+        _logger: Logger,
         stmt_relative_id_regexes: List[str],
         service_resources: Set[ServiceResourceBase],
         resolved_stmt_principals: List[Principal],

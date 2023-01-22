@@ -36,6 +36,10 @@ class RoleSession(PathRoleNodeBase):
     def get_path_arn(self) -> str:
         return self.get_stmt_principal().get_arn()
 
+    # impl PathRoleNodeBase
+    def get_service_resource(self) -> ServiceResourceBase:
+        return self.iam_role
+
     # impl PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:
         return self.role_session_principal
@@ -98,6 +102,10 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
 
     def get_path_arn(self) -> str:
         return self.arn
+
+    # impl PathRoleNodeBase
+    def get_service_resource(self) -> ServiceResourceBase:
+        return self
 
     # impl PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:

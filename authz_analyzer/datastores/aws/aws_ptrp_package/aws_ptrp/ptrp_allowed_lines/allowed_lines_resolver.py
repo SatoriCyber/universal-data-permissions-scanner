@@ -7,7 +7,7 @@ from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.iam.iam_roles import IAMRole, RoleSession
 from aws_ptrp.iam.iam_users import IAMUser
-from aws_ptrp.iam.policy.policy_document import PolicyDocument
+from aws_ptrp.iam.policy.policy_document import PolicyDocument, Effect
 from aws_ptrp.iam.policy.policy_document_resolver import (
     get_identity_based_resolver,
     get_resource_based_resolver,
@@ -229,8 +229,9 @@ class PtrpAllowedLinesBuilder:
             Dict[ServiceResourceType, ServiceResourcesResolverBase]
         ] = get_identity_based_resolver(
             logger=self.logger,
-            policy_document=policy_document,
+            policy_documents=[policy_document],
             identity_principal=identity_principal,
+            effect=Effect.Allow,
             aws_actions=self.aws_actions,
             account_resources=self.account_resources,
         )
@@ -340,6 +341,7 @@ class PtrpAllowedLinesBuilder:
                 logger=self.logger,
                 role_trust_policy=iam_role.assume_role_policy_document,
                 iam_role_arn=iam_role.arn,
+                effect=Effect.Allow,
                 aws_actions=self.aws_actions,
                 account_resources=self.account_resources,
             )
@@ -359,6 +361,7 @@ class PtrpAllowedLinesBuilder:
                 )
                 for resolved_principal_node in self._yield_resolved_principal_nodes(trusted_principal_to_resolve):
                     assert isinstance(resolved_principal_node, PrincipalNodeBase)
+
                     self.graph.add_edge(resolved_principal_node, path_role_node)
                     self._insert_attached_policies_and_inline_policies(
                         node_connect_to_target=path_role_node,
@@ -385,6 +388,8 @@ class PtrpAllowedLinesBuilder:
                     logger=self.logger,
                     policy_document=service_resource_policy,
                     service_resource_type=service_resources_type,
+                    resource_arn=service_resource.get_resource_arn(),
+                    effect=Effect.Allow,
                     aws_actions=self.aws_actions,
                     account_resources=self.account_resources,
                 )

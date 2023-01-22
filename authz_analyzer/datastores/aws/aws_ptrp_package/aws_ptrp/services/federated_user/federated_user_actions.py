@@ -28,6 +28,9 @@ class FederatedUserAction(ServiceActionBase):
     def get_action_permission_level(self) -> AwsPtrpActionPermissionLevel:
         return self.permission_level
 
+    def is_get_federated_token_action(self) -> bool:
+        return self.get_action_name() == "GetFederationToken"
+
     @classmethod
     def load_federated_user_actions(cls, _logger: Logger) -> List[ServiceActionBase]:
         return federated_user_actions

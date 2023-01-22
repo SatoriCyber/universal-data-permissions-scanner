@@ -48,11 +48,15 @@ class PrincipalAndPoliciesNodeBase(PrincipalNodeBase, PoliciesNodeBase):
 
 
 class PathRoleNodeBase(PrincipalAndPoliciesNodeBase, PathNodeBase):
-    pass
+    @abstractmethod
+    def get_service_resource(self) -> ServiceResourceBase:
+        pass
 
 
 class PathFederatedPrincipalNodeBase(PrincipalNodeBase, PathNodeBase):
-    pass
+    @abstractmethod
+    def get_service_resource(self) -> ServiceResourceBase:
+        pass
 
 
 class PathPolicyNodeBase(PathNodeBase):
@@ -127,6 +131,10 @@ class PathRoleNode(PathRoleNodeBase):
     def __hash__(self):
         return hash(self.base)
 
+    # PathRoleNodeBase
+    def get_service_resource(self) -> ServiceResourceBase:
+        return self.base.get_service_resource()
+
     # PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:
         return self.base.get_stmt_principal()
@@ -170,6 +178,10 @@ class PathFederatedPrincipalNode(PathFederatedPrincipalNodeBase):
 
     def __hash__(self):
         return hash(self.base)
+
+    # PathFederatedPrincipalNodeBase
+    def get_service_resource(self) -> ServiceResourceBase:
+        return self.base.get_service_resource()
 
     # PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:

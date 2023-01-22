@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable, List, Optional, Set
 
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.iam_entities import IAMEntities
@@ -8,7 +8,9 @@ from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.policy_evaluation import PolicyEvaluation
 from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PoliciesNodeBase, ResourceNode
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
+    ResourceNode,
+)
 from aws_ptrp.ptrp_allowed_lines.allowed_lines_resolver import PtrpAllowedLines, PtrpAllowedLinesBuilder
 from aws_ptrp.ptrp_models.ptrp_model import (
     AwsPrincipal,
@@ -136,68 +138,75 @@ class AwsPtrp:
         _logger: Logger,
         cb_line: Callable[[AwsPtrpLine], None],
         line: PtrpAllowedLine,
-        service_resources_resolver: Dict[ServiceResourceType, ServiceResourcesResolverBase],
+        service_resources_resolver: ServiceResourcesResolverBase,
     ):
         resource: AwsPtrpResource = line.get_ptrp_resource_to_report()
         path_nodes: List[AwsPtrpPathNode] = line.get_ptrp_path_nodes_to_report()
         principal_to_report: AwsPrincipal = line.get_principal_to_report()
-        principal_to_policy_evaluation: Principal = line.get_principal_to_policy_evaluation()
+        principal_to_policy_evaluation: Principal = line.get_principal_makes_the_request_to_resource()
         service_resource: ServiceResourceBase = line.resource_node.base
 
-        for _service_type, service_resolver in service_resources_resolver.items():
-            actions: Optional[
-                Set[ServiceActionBase]
-            ] = service_resolver.get_resolved_actions_per_resource_and_principal(
-                service_resource, principal_to_policy_evaluation
-            )
-            if actions:
-                self._cb_line_for_permissions_level(actions, principal_to_report, resource, path_nodes, cb_line)
+        resolved_actions: Optional[
+            Set[ServiceActionBase]
+        ] = service_resources_resolver.get_resolved_actions_per_resource_and_principal(
+            service_resource, principal_to_policy_evaluation
+        )
+        if resolved_actions:
+            self._cb_line_for_permissions_level(resolved_actions, principal_to_report, resource, path_nodes, cb_line)
 
     def _resolve_principal_to_resource_line_permissions(
         self,
         logger: Logger,
         line: PtrpAllowedLine,
-    ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
+    ) -> Optional[ServiceResourcesResolverBase]:
 
-        target_policy: PolicyDocument = line.target_policy_node.policy_document
-        is_target_policy_resource_based: bool = line.target_policy_node.is_resource_based_policy
         resource_node: ResourceNode = line.resource_node
-        principal_to_policy: Principal = line.get_principal_to_policy_evaluation()
-        # Extract all principal policies (inline & attached)
-        principal_policies: List[PolicyDocument] = []
-        principal_policies_bases: List[PoliciesNodeBase] = line.get_principal_policies_base_to_policy_evaluation()
-        for principal_policies_base in principal_policies_bases:
-            principal_policies.extend(
-                list(
-                    map(
-                        lambda arn: self.iam_entities.iam_policies[arn].policy_document,
-                        principal_policies_base.get_attached_policies_arn(),
-                    )
-                )
-            )
-            inline_policies_and_names: List[
-                Tuple[PolicyDocument, str]
-            ] = principal_policies_base.get_inline_policies_and_names()
-            principal_policies.extend(
-                list(
-                    map(
-                        lambda policy_and_name: policy_and_name[0],
-                        inline_policies_and_names,
-                    )
-                )
-            )
-
-        return PolicyEvaluation.run(
-            logger=logger,
-            aws_actions=self.aws_actions,
-            account_resources=self.target_account_resources,
-            identity_principal=principal_to_policy,
-            target_policy=target_policy,
-            is_target_policy_resource_based=is_target_policy_resource_based,
-            service_resource=resource_node.base,
-            service_resource_type=resource_node.service_resource_type,
-            identity_policies=principal_policies,
+        is_target_policy_resource_based: bool = line.target_policy_node.is_resource_based_policy
+        principal_to_policy: Principal = line.get_principal_makes_the_request_to_resource()
+        principal_policies: List[PolicyDocument] = PtrpAllowedLine.get_principal_policies(
+            line.get_principal_policies_bases(), self.iam_entities.iam_policies
         )
+
+        if (
+            line.is_assuming_roles_allowed(
+                logger, self.aws_actions, self.target_account_resources, self.iam_entities.iam_policies
+            )
+            is False
+        ):
+            logger.info("line %s has roles nodes that are not allowed to be assumed", line)
+            return None
+
+        if (
+            line.is_assuming_federated_user_allowed(
+                logger, self.aws_actions, self.target_account_resources, self.iam_entities.iam_policies
+            )
+            is False
+        ):
+            logger.info("line %s has federated nodes that are not allowed to be assumed", line)
+            return None
+
+        if is_target_policy_resource_based:
+            return PolicyEvaluation.run_target_policy_resource_based(
+                logger=logger,
+                aws_actions=self.aws_actions,
+                account_resources=self.target_account_resources,
+                identity_principal=principal_to_policy,
+                target_service_resource=resource_node.base,
+                service_resource_type=resource_node.service_resource_type,
+                identity_policies=principal_policies,
+            )
+        else:
+            target_identity_policy: PolicyDocument = line.target_policy_node.policy_document
+            return PolicyEvaluation.run_target_policies_identity_based(
+                logger=logger,
+                aws_actions=self.aws_actions,
+                account_resources=self.target_account_resources,
+                identity_principal=principal_to_policy,
+                target_identity_policies=[target_identity_policy],
+                service_resource=resource_node.base,
+                service_resource_type=resource_node.service_resource_type,
+                identity_policies=principal_policies,
+            )
 
     def resolve_permissions(self, logger: Logger, cb_line: Callable[[AwsPtrpLine], None]):
         allowed_lines_resolver: PtrpAllowedLines = PtrpAllowedLinesBuilder(
@@ -207,7 +216,7 @@ class AwsPtrp:
         for line in allowed_lines_resolver.yield_principal_to_resource_lines():
             logger.info("%s", line)
             service_resources_resolver: Optional[
-                Dict[ServiceResourceType, ServiceResourcesResolverBase]
+                ServiceResourcesResolverBase
             ] = self._resolve_principal_to_resource_line_permissions(logger, line)
             if not service_resources_resolver:
                 continue
