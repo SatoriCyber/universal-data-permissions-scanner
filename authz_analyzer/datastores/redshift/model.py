@@ -6,7 +6,7 @@ from typing import Dict, List, Set
 
 from authz_analyzer.models import PermissionLevel
 
-IdentityId = id
+IdentityId = int
 
 
 class IdentityType(Enum):

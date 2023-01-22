@@ -12,9 +12,9 @@ The database will not let you set up circular membership loops.
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-import redshift_connector
+import redshift_connector #type: ignore
 
 from authz_analyzer.datastores.redshift import exporter
 from authz_analyzer.datastores.redshift.model import (
@@ -145,7 +145,7 @@ class RedshiftAuthzAnalyzer:
                     id_=granted_identity_id, name=granted_identity_name, type_=granted_identity_type, relations=set()
                 )
                 identity_grants.add(granted_identity)
-            if identity.type_ == IdentityType.USER.name:
+            if identity.type_ is IdentityType.USER:
                 identity_grants.add(DBIdentity.new(id_=0, name="public", type_=IdentityType.GROUP, relations=set()))
 
         return results
@@ -181,6 +181,6 @@ class RedshiftAuthzAnalyzer:
         return results
 
     @staticmethod
-    def _get_rows(redshift_cursor: redshift_connector.Cursor, command: str):
-        redshift_cursor.execute(command)
-        return redshift_cursor.fetchall()
+    def _get_rows(redshift_cursor: redshift_connector.Cursor, command: str) -> Tuple[Any, ...]:
+        redshift_cursor.execute(command) #type: ignore
+        return redshift_cursor.fetchall() #type: ignore
