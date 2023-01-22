@@ -4,12 +4,12 @@ from pathlib import Path
 from typing import Optional, Set
 
 from authz_analyzer import (
+    AWSAuthzAnalyzer,
     BigQueryAuthzAnalyzer,
     MongoDBAtlasAuthzAnalyzer,
     MongoDBAuthzAnalyzer,
     PostgresAuthzAnalyzer,
     RedshiftAuthzAnalyzer,
-    AWSAuthzAnalyzer,
     SnowflakeAuthzAnalyzer,
 )
 from authz_analyzer.writers import OutputFormat, get_writer

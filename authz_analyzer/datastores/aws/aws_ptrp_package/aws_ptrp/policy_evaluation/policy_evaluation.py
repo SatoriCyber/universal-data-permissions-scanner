@@ -4,13 +4,10 @@ from typing import Dict, Generator, List, Optional, Set
 
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument
-from aws_ptrp.iam.policy.policy_document_resolver import (
-    get_identity_based_resolver,
-    get_resource_based_resolver,
-)
+from aws_ptrp.iam.policy.policy_document_resolver import get_identity_based_resolver, get_resource_based_resolver
 from aws_ptrp.principals import Principal
 from aws_ptrp.resources.account_resources import AwsAccountResources
-from aws_ptrp.services import ServiceActionType, ServiceResourcesResolverBase, ServiceResourceType, ServiceResourceBase
+from aws_ptrp.services import ServiceActionType, ServiceResourceBase, ServiceResourcesResolverBase, ServiceResourceType
 
 
 @dataclass

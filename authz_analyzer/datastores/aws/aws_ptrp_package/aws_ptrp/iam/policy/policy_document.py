@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Generator, List, Optional, Union, Any
+from typing import Any, Dict, Generator, List, Optional, Union
 
 from aws_ptrp.iam.policy.effect import Effect
 from aws_ptrp.principals.principal import Principal

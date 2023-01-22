@@ -7,7 +7,7 @@ from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.iam.iam_roles import IAMRole, RoleSession
 from aws_ptrp.iam.iam_users import IAMUser
-from aws_ptrp.iam.policy.policy_document import PolicyDocument, Effect
+from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument
 from aws_ptrp.iam.policy.policy_document_resolver import (
     get_identity_based_resolver,
     get_resource_based_resolver,

@@ -1,37 +1,34 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Generator, List, Optional, Tuple, Dict
+from typing import Dict, Generator, List, Optional, Tuple
 
+from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.iam_entities import IAMRole
-from aws_ptrp.principals import Principal
-from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.iam.iam_policies import IAMPolicy
+from aws_ptrp.iam.policy.policy_document import PolicyDocument
+from aws_ptrp.policy_evaluation import PolicyEvaluation
+from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
-    ResourceNode,
-    PrincipalAndPoliciesNodeBase,
-    PathRoleNode,
-    PathPolicyNode,
-    PathUserGroupNode,
-    PoliciesNodeBase,
     PathFederatedPrincipalNode,
     PathFederatedPrincipalNodeBase,
+    PathPolicyNode,
+    PathRoleNode,
+    PathUserGroupNode,
+    PoliciesNodeBase,
+    PrincipalAndPoliciesNodeBase,
     PrincipalNodeBase,
-)
-from aws_ptrp.actions.aws_actions import AwsActions
-from aws_ptrp.resources.account_resources import AwsAccountResources
-from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
-from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
-from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
-from aws_ptrp.services.federated_user.federated_user_resources import (
-    FederatedUserServiceResourcesResolver,
-    FederatedUserPrincipal,
-)
-from aws_ptrp.policy_evaluation import PolicyEvaluation
-from aws_ptrp.services import (
-    ServiceResourceBase,
-    ServiceResourcesResolverBase,
+    ResourceNode,
 )
 from aws_ptrp.ptrp_models.ptrp_model import AwsPrincipal, AwsPtrpPathNode, AwsPtrpResource
+from aws_ptrp.resources.account_resources import AwsAccountResources
+from aws_ptrp.services import ServiceResourceBase, ServiceResourcesResolverBase
+from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
+from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
+from aws_ptrp.services.federated_user.federated_user_resources import (
+    FederatedUserPrincipal,
+    FederatedUserServiceResourcesResolver,
+)
+from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
 
 
 @dataclass

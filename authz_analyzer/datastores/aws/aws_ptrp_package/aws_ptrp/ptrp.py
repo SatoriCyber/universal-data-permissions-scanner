@@ -8,9 +8,7 @@ from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.policy_evaluation import PolicyEvaluation
 from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
-    ResourceNode,
-)
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import ResourceNode
 from aws_ptrp.ptrp_allowed_lines.allowed_lines_resolver import PtrpAllowedLines, PtrpAllowedLinesBuilder
 from aws_ptrp.ptrp_models.ptrp_model import (
     AwsPrincipal,
