@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, Generator, List, Optional, Set, Tuple
+from typing import Dict, Generator, List, Optional, Set
 
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument
-from aws_ptrp.iam.policy.policy_document_resolver import get_services_resources_resolver
+from aws_ptrp.iam.policy.policy_document_resolver import get_identity_based_resolver, get_resource_based_resolver
 from aws_ptrp.principals import Principal
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services import ServiceActionType, ServiceResourceBase, ServiceResourcesResolverBase, ServiceResourceType
@@ -15,137 +15,252 @@ class PolicyEvaluation:
     logger: Logger
     identity_principal: Principal
     service_resource_type: ServiceResourceType
-    service_resource: ServiceResourceBase
-    target_policy_services_resolver: Dict[ServiceResourceType, ServiceResourcesResolverBase]
-    identity_policies_services_resolver: List[Dict[ServiceResourceType, ServiceResourcesResolverBase]]
-    resource_policy_services_resolver: Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]
-    # session_policies_services_resolver: List[Dict[ServiceResourceType, ServiceResourcesResolverBase]]
-    # permission_boundary_policy_services_resolver: Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]
+    target_policies_service_resolver: ServiceResourcesResolverBase
+    identity_policies_service_resolver: Optional[ServiceResourcesResolverBase]
+    resource_policy_service_resolver: Optional[ServiceResourcesResolverBase]
+    # session_policies_service_resolver: List[ServiceResourcesResolverBase]
+    # permission_boundary_policy_service_resolver: Optional[Dict[ServiceResourcesResolverBase]]
     aws_actions: AwsActions
     account_resources: AwsAccountResources
 
-    def _retain_target_policy_services_resolver(self):
-        service_resource_types_to_delete = [
-            x[0] for x in self.target_policy_services_resolver.items() if x[1].is_empty()
-        ]
-        for service_resource_type_to_delete in service_resource_types_to_delete:
-            del self.target_policy_services_resolver[service_resource_type_to_delete]
-
     def _yield_services_resolves(
         self,
-    ) -> Generator[Tuple[ServiceResourcesResolverBase, ServiceResourcesResolverBase], None, None]:
-        for target_service_resource_type, target_service_resolver in self.target_policy_services_resolver.items():
-            for identity_policies_service_resolver in self.identity_policies_services_resolver:
-                service_resources_resolver = identity_policies_service_resolver.get(target_service_resource_type)
-                if service_resources_resolver is None:
-                    continue
-                yield target_service_resolver, service_resources_resolver
+    ) -> Generator[ServiceResourcesResolverBase, None, None]:
+        if self.identity_policies_service_resolver:
+            yield self.identity_policies_service_resolver
 
-            if self.resource_policy_services_resolver:
-                resource_policy_service_resolver = self.resource_policy_services_resolver.get(
-                    target_service_resource_type
-                )
-                if resource_policy_service_resolver is None:
-                    continue
-                yield target_service_resolver, resource_policy_service_resolver
+        if self.resource_policy_service_resolver:
+            yield self.resource_policy_service_resolver
 
     def _apply_explicit_deny(self):
         # subtract the explicit denies from the relevant policies
-        for target_service_resolver, other_service_resolver in self._yield_services_resolves():
-            target_service_resolver.subtract(self.identity_principal, other_service_resolver)
-
-        self._retain_target_policy_services_resolver()
+        for service_resolver_to_subtract in self._yield_services_resolves():
+            self.target_policies_service_resolver.subtract(self.identity_principal, service_resolver_to_subtract)
 
     def _apply_policy_evaluation(self):
         self._apply_explicit_deny()
 
-    @classmethod
-    def run(
-        cls,
-        logger: Logger,
-        aws_actions: AwsActions,
-        account_resources: AwsAccountResources,
-        identity_principal: Principal,
-        target_policy: PolicyDocument,
-        is_target_policy_resource_based: bool,
-        service_resource_type: ServiceResourceType,
-        service_resource: ServiceResourceBase,
-        identity_policies: List[PolicyDocument],
-        # session_policies: List[PolicyDocument] = [],
-        # permission_boundary_policy: Optional[PolicyDocument] = None,
-    ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
-
-        allowed_service_action_types: Set[ServiceActionType] = set([service_resource_type])
-        if not is_target_policy_resource_based:
-            # in cross account, identity_principal (not the original principal!, but the last principal to be assumed in the path)
-            # can has accesses to a resource only if the target_policy is a resource based policy
-            if identity_principal.get_account_id() != service_resource.get_resource_account_id():
-                return None
-
-        target_policy_services_resolver: Optional[
-            Dict[ServiceResourceType, ServiceResourcesResolverBase]
-        ] = get_services_resources_resolver(
-            logger=logger,
-            policy_document=target_policy,
-            parent_resource_arn=service_resource.get_resource_arn(),
-            identity_principal=identity_principal,
-            aws_actions=aws_actions,
-            account_resources=account_resources,
-            effect=Effect.Allow,
-            allowed_service_action_types=allowed_service_action_types,
-        )
-        if not target_policy_services_resolver:
+    def _run_policy_evaluation(self) -> Optional[ServiceResourcesResolverBase]:
+        self._apply_policy_evaluation()
+        if self.target_policies_service_resolver and self.target_policies_service_resolver.is_empty() is False:
+            return self.target_policies_service_resolver
+        else:
             return None
 
-        identity_policies_services_resolver: List[Dict[ServiceResourceType, ServiceResourcesResolverBase]] = []
-        for identity_policy in identity_policies:
-            identity_policy_services_resolver: Optional[
-                Dict[ServiceResourceType, ServiceResourcesResolverBase]
-            ] = get_services_resources_resolver(
-                logger=logger,
-                policy_document=identity_policy,
-                parent_resource_arn=None,
-                identity_principal=identity_principal,
-                aws_actions=aws_actions,
-                account_resources=account_resources,
-                effect=Effect.Deny,
-                allowed_service_action_types=allowed_service_action_types,
-            )
-            if identity_policy_services_resolver:
-                identity_policies_services_resolver.append(identity_policy_services_resolver)
-
-        resource_policy: Optional[PolicyDocument] = service_resource.get_resource_policy()
-        if resource_policy:
-            resource_policy_services_resolver: Optional[
-                Dict[ServiceResourceType, ServiceResourcesResolverBase]
-            ] = get_services_resources_resolver(
-                logger=logger,
-                policy_document=resource_policy,
-                parent_resource_arn=service_resource.get_resource_arn(),
-                identity_principal=identity_principal,
-                aws_actions=aws_actions,
-                account_resources=account_resources,
-                effect=Effect.Deny,
-                allowed_service_action_types=allowed_service_action_types,
-            )
-        else:
-            resource_policy_services_resolver = None
+    @classmethod
+    def _load(
+        cls,
+        logger: Logger,
+        identity_principal: Principal,
+        target_policies_service_resolver: ServiceResourcesResolverBase,
+        resource_policy: Optional[PolicyDocument],
+        resource_arn: str,
+        service_resource_type: ServiceResourceType,
+        aws_actions: AwsActions,
+        account_resources: AwsAccountResources,
+        identity_policies: List[PolicyDocument],
+    ) -> 'PolicyEvaluation':
+        identity_policies_service_resolver = cls._get_identity_policies_service_resolver(
+            logger=logger,
+            aws_actions=aws_actions,
+            account_resources=account_resources,
+            identity_principal=identity_principal,
+            service_resource_type=service_resource_type,
+            identity_policies=identity_policies,
+            effect=Effect.Deny,
+        )
+        resource_policy_service_resolver = cls._get_resource_policy_service_resolver(
+            logger=logger,
+            aws_actions=aws_actions,
+            account_resources=account_resources,
+            service_resource_type=service_resource_type,
+            resource_policy=resource_policy,
+            resource_arn=resource_arn,
+            effect=Effect.Deny,
+        )
 
         policy_evaluation = cls(
             logger=logger,
             identity_principal=identity_principal,
             service_resource_type=service_resource_type,
-            service_resource=service_resource,
-            target_policy_services_resolver=target_policy_services_resolver,
-            identity_policies_services_resolver=identity_policies_services_resolver,
-            resource_policy_services_resolver=resource_policy_services_resolver,
+            target_policies_service_resolver=target_policies_service_resolver,
+            identity_policies_service_resolver=identity_policies_service_resolver,
+            resource_policy_service_resolver=resource_policy_service_resolver,
             aws_actions=aws_actions,
             account_resources=account_resources,
         )
+        return policy_evaluation
 
-        policy_evaluation._apply_policy_evaluation()
+    @classmethod
+    def _get_identity_policies_service_resolver(
+        cls,
+        logger: Logger,
+        aws_actions: AwsActions,
+        account_resources: AwsAccountResources,
+        identity_principal: Principal,
+        service_resource_type: ServiceResourceType,
+        identity_policies: List[PolicyDocument],
+        effect: Effect,
+    ) -> Optional[ServiceResourcesResolverBase]:
 
-        if policy_evaluation.target_policy_services_resolver:
-            return policy_evaluation.target_policy_services_resolver
+        allowed_service_action_types: Set[ServiceActionType] = set([service_resource_type])
+        identity_policies_services_resolver: Optional[
+            Dict[ServiceResourceType, ServiceResourcesResolverBase]
+        ] = get_identity_based_resolver(
+            logger=logger,
+            policy_documents=identity_policies,
+            identity_principal=identity_principal,
+            aws_actions=aws_actions,
+            account_resources=account_resources,
+            effect=effect,
+            allowed_service_action_types=allowed_service_action_types,
+        )
+
+        if identity_policies_services_resolver:
+            identity_policies_service_resolver: Optional[
+                ServiceResourcesResolverBase
+            ] = identity_policies_services_resolver.get(service_resource_type)
         else:
+            identity_policies_service_resolver = None
+
+        return identity_policies_service_resolver
+
+    @classmethod
+    def _get_resource_policy_service_resolver(
+        cls,
+        logger: Logger,
+        aws_actions: AwsActions,
+        account_resources: AwsAccountResources,
+        service_resource_type: ServiceResourceType,
+        resource_policy: Optional[PolicyDocument],
+        resource_arn: str,
+        effect: Effect,
+    ) -> Optional[ServiceResourcesResolverBase]:
+        if resource_policy:
+            resource_policy_service_resolver: Optional[ServiceResourcesResolverBase] = get_resource_based_resolver(
+                logger=logger,
+                policy_document=resource_policy,
+                service_resource_type=service_resource_type,
+                resource_arn=resource_arn,
+                aws_actions=aws_actions,
+                account_resources=account_resources,
+                effect=effect,
+            )
+        else:
+            resource_policy_service_resolver = None
+        return resource_policy_service_resolver
+
+    @classmethod
+    def run_target_policies_identity_based(
+        cls,
+        logger: Logger,
+        aws_actions: AwsActions,
+        account_resources: AwsAccountResources,
+        identity_principal: Principal,
+        target_identity_policies: List[PolicyDocument],
+        service_resource_type: ServiceResourceType,
+        service_resource: ServiceResourceBase,
+        identity_policies: List[PolicyDocument],
+        # session_policies: List[PolicyDocument] = [],
+        # permission_boundary_policy: Optional[PolicyDocument] = None,
+        during_cross_account_checking_flow: bool = False,
+    ) -> Optional[ServiceResourcesResolverBase]:
+        # in cross account, identity_principal (not the original principal!, but the last principal to be assumed in the path)
+        # can has accesses to a resource only if the target_policy is a resource based policy
+        if during_cross_account_checking_flow is False:
+            if identity_principal.get_account_id() != service_resource.get_resource_account_id():
+                return None
+
+        target_policies_service_resolver = cls._get_identity_policies_service_resolver(
+            logger,
+            aws_actions,
+            account_resources,
+            identity_principal,
+            service_resource_type,
+            target_identity_policies,
+            Effect.Allow,
+        )
+        if not target_policies_service_resolver:
             return None
+
+        policy_evaluation = cls._load(
+            logger=logger,
+            identity_principal=identity_principal,
+            target_policies_service_resolver=target_policies_service_resolver,
+            resource_policy=service_resource.get_resource_policy(),
+            resource_arn=service_resource.get_resource_arn(),
+            service_resource_type=service_resource_type,
+            aws_actions=aws_actions,
+            account_resources=account_resources,
+            identity_policies=identity_policies,
+        )
+        return policy_evaluation._run_policy_evaluation()
+
+    @classmethod
+    def run_target_policy_resource_based(
+        cls,
+        logger: Logger,
+        aws_actions: AwsActions,
+        account_resources: AwsAccountResources,
+        identity_principal: Principal,
+        target_service_resource: ServiceResourceBase,
+        service_resource_type: ServiceResourceType,
+        identity_policies: List[PolicyDocument],
+        # session_policies: List[PolicyDocument] = [],
+        # permission_boundary_policy: Optional[PolicyDocument] = None,
+    ) -> Optional[ServiceResourcesResolverBase]:
+
+        resource_policy: Optional[PolicyDocument] = target_service_resource.get_resource_policy()
+        if resource_policy is None:
+            return None
+
+        target_policy_service_resolver: Optional[
+            ServiceResourcesResolverBase
+        ] = cls._get_resource_policy_service_resolver(
+            logger=logger,
+            resource_policy=resource_policy,
+            resource_arn=target_service_resource.get_resource_arn(),
+            service_resource_type=service_resource_type,
+            aws_actions=aws_actions,
+            account_resources=account_resources,
+            effect=Effect.Allow,
+        )
+        if not target_policy_service_resolver:
+            return None
+
+        policy_evaluation = cls._load(
+            logger=logger,
+            identity_principal=identity_principal,
+            target_policies_service_resolver=target_policy_service_resolver,
+            service_resource_type=service_resource_type,
+            resource_policy=resource_policy,
+            resource_arn=target_service_resource.get_resource_arn(),
+            aws_actions=aws_actions,
+            account_resources=account_resources,
+            identity_policies=identity_policies,
+        )
+        ret = policy_evaluation._run_policy_evaluation()
+        if ret is None:
+            return None
+
+        identity_principal_account_id: Optional[str] = identity_principal.get_account_id()
+        # for cross-account access, need to check that the identity in the trusted account has explicit allow to the resource in the trusting account
+        if identity_principal_account_id is None:
+            # identity is like AWS_SERVICE, no actual trusted account, just return the ret
+            return ret
+        if identity_principal_account_id == target_service_resource.get_resource_account_id():
+            # not cross-account access
+            return ret
+
+        # cross-account access checking
+        return cls.run_target_policies_identity_based(
+            logger=logger,
+            aws_actions=aws_actions,
+            account_resources=account_resources,
+            identity_principal=identity_principal,
+            target_identity_policies=identity_policies,
+            service_resource_type=service_resource_type,
+            service_resource=target_service_resource,
+            identity_policies=identity_policies,
+            during_cross_account_checking_flow=True,
+        )

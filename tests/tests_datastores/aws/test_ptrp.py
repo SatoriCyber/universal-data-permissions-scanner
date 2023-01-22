@@ -92,7 +92,7 @@ def test_aws_ptrp_resolve_permissions_satori_dev_json_file(
 ):  # pylint: disable=unused-argument,redefined-outer-name
     with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "r", encoding="utf-8") as file:
         ptrp_json_from_file = json.load(file)
-        ptrp: AwsPtrp = from_dict(AwsPtrp, ptrp_json_from_file)
+        ptrp: AwsPtrp = from_dict(AwsPtrp, ptrp_json_from_file)  # type: ignore
         writer = get_writer(AWS_AUTHZ_ANALYZER_SATORI_DEV_RESULT_JSON_FILE, OutputFormat.MULTI_JSON)
         exporter = AWSAuthzAnalyzerExporter(writer)
         ptrp.resolve_permissions(get_logger(False), exporter.export_entry_from_ptrp_line)

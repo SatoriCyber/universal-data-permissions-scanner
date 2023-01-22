@@ -99,6 +99,12 @@ class AssumeRoleServiceResourcesResolver(ServiceResourcesResolverBase):
         for resolved_stmt in self.resolved_stmts:
             yield from resolved_stmt.yield_trusted_principals(iam_role)
 
+    def is_trusted_principal(self, iam_role: IAMRole, principal: Principal) -> bool:
+        for trusted_principal in self.yield_trusted_principals(iam_role):
+            if trusted_principal == principal:
+                return True
+        return False
+
     @staticmethod
     def _yield_resolve_resources_from_stmt_relative_id_regex(
         stmt_relative_id_regex: str,

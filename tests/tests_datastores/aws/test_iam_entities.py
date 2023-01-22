@@ -35,7 +35,7 @@ def test_iam_entities_write_satori_dev_account():
 def test_iam_entities_load_satori_dev_json_file():
     with open(IAM_ENTITIES_SATORI_DEV_JSON_FILE, "r", encoding="utf-8") as file:
         iam_entities_json_from_file = json.load(file)
-        iam_entities = from_dict(IAMEntities, iam_entities_json_from_file)
+        iam_entities = from_dict(IAMEntities, iam_entities_json_from_file)  # type: ignore
         iam_entities_json_from_serde = json.loads(to_json(iam_entities))
 
         assert iam_entities_json_from_file == iam_entities_json_from_serde

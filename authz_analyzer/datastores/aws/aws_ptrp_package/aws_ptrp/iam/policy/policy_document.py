@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Generator, List, Optional, Union
+from typing import Any, Dict, Generator, List, Optional, Union
 
 from aws_ptrp.iam.policy.effect import Effect
 from aws_ptrp.principals.principal import Principal
@@ -12,7 +12,7 @@ class StmtPrincipals:
     stmt_document_principal: Union[str, Dict[str, Union[str, List[str]]]]
     principals: List[Principal] = field(skip=True)
 
-    def to_stmt_document_principal(self) -> Union[str, Dict[str, Union[str, List[str]]]]:
+    def to_stmt_document_principal(self) -> Union[Optional[Any], str, Dict[str, Union[str, List[str]]]]:
         if self is None:
             return None
         return self.stmt_document_principal
@@ -29,7 +29,7 @@ class StmtPrincipals:
                 raise Exception(f"Invalid principal: {stmt_document_principal}")
         elif isinstance(stmt_document_principal, dict):
             for principal_type, principal_value in stmt_document_principal.items():
-                values: List[str] = principal_value if type(principal_value) == list else [str(principal_value)]
+                values: List[str] = principal_value if isinstance(principal_value, list) else [str(principal_value)]
                 for v in values:
                     if principal_type == "AWS":
                         principals.append(Principal.load_from_stmt_aws(v))
