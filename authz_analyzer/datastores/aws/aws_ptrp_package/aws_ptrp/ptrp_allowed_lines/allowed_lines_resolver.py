@@ -68,9 +68,18 @@ class PtrpAllowedLines:
             if isinstance(graph_path[start_index_path_role_identity_nodes], PathPolicyNode) and isinstance(
                 graph_path[start_index_path_role_identity_nodes + 1], PathFederatedPrincipalNode
             ):
+                path_federated_policy_node: PathPolicyNode = graph_path[start_index_path_role_identity_nodes]
+                path_federated_principal_node: PathFederatedPrincipalNode = graph_path[
+                    start_index_path_role_identity_nodes + 1
+                ]
+
+                # add the iam user for the federated principal (to be use later by the principal contains function)
+                path_federated_principal_node.get_stmt_principal().set_iam_user_originated_for_principal_federated(
+                    principal_node.get_stmt_principal().get_arn()
+                )
                 path_federated_nodes: Optional[Tuple[PathPolicyNode, PathFederatedPrincipalNode]] = (
-                    graph_path[start_index_path_role_identity_nodes],
-                    graph_path[start_index_path_role_identity_nodes + 1],
+                    path_federated_policy_node,
+                    path_federated_principal_node,
                 )
                 start_index_path_role_identity_nodes = start_index_path_role_identity_nodes + 2
             else:
@@ -157,12 +166,7 @@ class PtrpAllowedLinesBuilder:
             if all_federated_users:
                 return [x for x in all_federated_users if isinstance(x, PathFederatedPrincipalNodeBase)]
         # No need to check is_iam_user_principal, is_iam_user_account.
-        # if stmt principal is federated user, and on the resource based policy includes allow to IAM user/ IAM account
-        # then the result is deny.
-        # check the table of (Principal making the request) here
-        # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html
-        # In addition, calling this function from the iam_role trusted policy is not relevant.
-        # federated user are not allow to assume role
+        # Not relevant for the allow action, because we already report this in the 'original' allowed line of the IAM user/ IAM account to the resource based policy
         elif stmt_principal.is_federated_user_principal():
             return [FederatedUserPrincipal(federated_principal=stmt_principal)]
         return []
