@@ -26,17 +26,21 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import snowflake.connector
-from snowflake.connector.cursor import SnowflakeCursor
 
 from authz_analyzer.datastores.snowflake import exporter
 from authz_analyzer.datastores.snowflake.model import (
     PERMISSION_LEVEL_MAP,
     AuthorizationModel,
+    DataShare,
+    DataShareKind,
+    DataSharePrivilege,
     DBRole,
     GrantedOn,
+    PermissionType,
     ResourceGrant,
     User,
 )
+from authz_analyzer.datastores.snowflake.service import SnowflakeService
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
@@ -48,7 +52,7 @@ COMMANDS_DIR = Path(__file__).parent / "commands"
 class SnowflakeAuthzAnalyzer:
     """Analyze authorization for Snowflake."""
 
-    cursor: SnowflakeCursor
+    service: SnowflakeService
     writer: BaseWriter
     logger: Logger
 
@@ -91,7 +95,8 @@ class SnowflakeAuthzAnalyzer:
             **snowflake_connection_kwargs,
         )
         cursor = connector.cursor()
-        return cls(cursor=cursor, logger=logger, writer=writer)
+        service = SnowflakeService(cursor)
+        return cls(service=service, logger=logger, writer=writer)
 
     def run(
         self,
@@ -104,8 +109,8 @@ class SnowflakeAuthzAnalyzer:
         self.logger.info("Finished analyzing")
         self.writer.close()
 
-    def _get_users_to_role_mapping(self):
-        rows: List[Tuple[str, str, Optional[str]]] = self._get_rows(file_name_command=Path("user_grants.sql"))
+    def _get_users_to_role_mapping(self) -> Dict[User, Set[DBRole]]:
+        rows: List[Tuple[str, str, Optional[str]]] = self.service.get_rows(file_name_command=Path("user_grants.sql"))  # type: ignore
 
         results: Dict[User, Set[DBRole]] = {}
 
@@ -135,7 +140,7 @@ class SnowflakeAuthzAnalyzer:
     def _add_role_to_resources(
         role_name: str,
         table_name: List[str],
-        database_level: str,
+        database_level: PermissionType,
         role_to_resources: Dict[str, Set[ResourceGrant]],
         granted_on: GrantedOn,
     ):
@@ -144,20 +149,24 @@ class SnowflakeAuthzAnalyzer:
         role_grants.add(ResourceGrant(table_name, level, database_level, granted_on=granted_on))
 
     def _get_role_to_roles_and_role_to_resources(self) -> Tuple[Dict[str, Set[DBRole]], Dict[str, Set[ResourceGrant]]]:
-        rows = self._get_rows(file_name_command=Path("grants_roles.sql"))
+        rows = self.service.get_rows(file_name_command=Path("grants_roles.sql"))
         role_to_roles: Dict[str, Set[DBRole]] = {}
         role_to_resources: Dict[str, Set[ResourceGrant]] = {}
 
         for row in rows:
             name: str = row[0]
             role: str = row[1]
-            privilege: str = row[2]
+            try:
+                privilege = PermissionType(row[2])
+            except ValueError:
+                self.logger.info("Privilege doesn't grant permission to data, skipping privilege %s", row[2])
+                continue
             db: str = row[3]
             schema: str = row[4]
             table: str = row[5]
             granted_on = GrantedOn.from_str(row[6])
 
-            if privilege == "USAGE" and granted_on == GrantedOn.ROLE:
+            if privilege is PermissionType.USAGE and granted_on == GrantedOn.ROLE:
                 SnowflakeAuthzAnalyzer._add_role_to_roles(role, name, role_to_roles)
             elif table is not None and granted_on in (GrantedOn.TABLE, GrantedOn.VIEW, GrantedOn.MATERIALIZED_VIEW):
                 SnowflakeAuthzAnalyzer._add_role_to_resources(
@@ -173,12 +182,53 @@ class SnowflakeAuthzAnalyzer:
         self.logger.info("Fetching users to roles grants")
         users_to_roles = self._get_users_to_role_mapping()
         role_to_roles, roles_to_grants = self._get_role_to_roles_and_role_to_resources()
+        shares = self._get_data_shares()
 
         return AuthorizationModel(
-            users_to_roles=users_to_roles, role_to_roles=role_to_roles, roles_to_grants=roles_to_grants
+            users_to_roles=users_to_roles, role_to_roles=role_to_roles, roles_to_grants=roles_to_grants, shares=shares
         )
 
-    def _get_rows(self, file_name_command: Path) -> List[Tuple[Any, ...]]:
-        command = (COMMANDS_DIR / file_name_command).read_text(encoding="utf-8")
-        self.cursor.execute(command)
-        return self.cursor.fetchall()  # type: ignore
+    def _get_data_shares(self) -> Set[DataShare]:
+        rows = self.service.get_rows(file_name_command=Path("shares.sql"))
+        results: Set[DataShare] = set()
+        for row in rows:
+            kind = DataShareKind(row[1])
+            share_id: List[str] = row[2].split(".")
+            share_name = share_id[-1]
+            share_to_accounts: str = row[4]
+            splitted_share_to_accounts = share_to_accounts.split(",") if share_to_accounts is not None else []
+            if kind is DataShareKind.OUTBOUND and share_to_accounts != "":
+                self.logger.debug("Found an outbound data share %s", share_name)
+                privileges = self._get_privileges_data_share(share_name=share_name)
+                share = DataShare(
+                    name=share_name, share_to_accounts=splitted_share_to_accounts, privileges=privileges, id=share_id
+                )
+                results.add(share)
+
+        return results
+
+    def _get_privileges_data_share(self, share_name: str) -> Set[DataSharePrivilege]:
+        rows = self.service.get_rows(file_name_command=Path("grants_to_share.sql"), params=(share_name,))
+        privileges: Set[DataSharePrivilege] = set()
+        for row in rows:
+            try:
+                database_permission = PermissionType(row[1])
+            except ValueError:
+                self.logger.info("Privilege doesn't grant permission to data, skipping privilege %s", row[1])
+                continue
+            try:
+                permission_level = PERMISSION_LEVEL_MAP[database_permission]
+            except KeyError:
+                self.logger.info("Privilege doesn't grant permission to data, skipping privilege %s", row[1])
+                continue
+            granted_on = row[2]
+            resource_name: List[str] = row[3].split(".")
+            privileges.add(
+                DataSharePrivilege(
+                    permission_level=permission_level,
+                    granted_on=granted_on,
+                    database_permission=database_permission,
+                    resource_name=resource_name,
+                )
+            )
+        return privileges

@@ -1,6 +1,14 @@
 from typing import Dict, Generator, List, Set
 
-from authz_analyzer.datastores.snowflake.model import AuthorizationModel, DBRole, ResourceGrant, User
+from authz_analyzer.datastores.snowflake.model import (
+    AuthorizationModel,
+    DataShare,
+    DBRole,
+    GrantedOn,
+    PermissionType,
+    ResourceGrant,
+    User,
+)
 from authz_analyzer.models import PermissionLevel
 from authz_analyzer.models.model import (
     Asset,
@@ -13,16 +21,11 @@ from authz_analyzer.models.model import (
 )
 from authz_analyzer.writers import BaseWriter
 
-USER_TYPE = IdentityType.USER
-ASSET_TYPE = AssetType.TABLE
 
-
-def _yield_row(user: User, permission_level: PermissionLevel, grant: ResourceGrant, roles: List[DBRole]):
-    auth_path_element = [
-        AuthzPathElement(id=role.name, name=role.name, type=AuthzPathElementType.ROLE, note="") for role in roles
-    ]
-    _add_db_permission_last_element(auth_path_element, grant.db_permission)
-    identity = Identity(id=user.id, name=user.name, type=USER_TYPE)
+def _yield_row(
+    identity: Identity, permission_level: PermissionLevel, grant: ResourceGrant, authz_path: List[AuthzPathElement]
+):
+    _add_db_permission_last_element(authz_path, grant.db_permission.value)
     try:
         asset_type = AssetType(str(grant.granted_on))  # translate to AssetType
     except ValueError:
@@ -31,7 +34,7 @@ def _yield_row(user: User, permission_level: PermissionLevel, grant: ResourceGra
     yield AuthzEntry(
         identity=identity,
         asset=asset,
-        path=auth_path_element,
+        path=authz_path,
         permission=permission_level,
     )
 
@@ -57,7 +60,14 @@ def _iter_role_row(
     grants = roles_to_grants.get(role.name, set())
     prev_roles.append(role)
     for grant in grants:
-        yield from _yield_row(user=user_name, permission_level=grant.permission_level, grant=grant, roles=prev_roles)
+        identity = Identity(id=user_name.id, name=user_name.name, type=IdentityType.USER)
+        authz_path = [
+            AuthzPathElement(id=role.name, name=role.name, type=AuthzPathElementType.ROLE, note="")
+            for role in prev_roles
+        ]
+        yield from _yield_row(
+            identity=identity, permission_level=grant.permission_level, grant=grant, authz_path=authz_path
+        )
 
     for granted_role in role_to_roles.get(role.name, set()):
         yield from _iter_role_row(
@@ -68,6 +78,26 @@ def _iter_role_row(
             role_to_roles=role_to_roles,
         )
     prev_roles.remove(role)
+
+
+def _yield_share(share: DataShare, write: BaseWriter):
+    for account in share.share_to_accounts:
+        identity = Identity(id=account, name=account, type=IdentityType.ACCOUNT)
+        for priv in share.privileges:
+            db_permission = PermissionType(priv.database_permission.value)
+            granted_on = GrantedOn(priv.granted_on)
+            grant = ResourceGrant(
+                name=priv.resource_name,
+                permission_level=priv.permission_level,
+                db_permission=db_permission,
+                granted_on=granted_on,
+            )
+            authz_path = [
+                AuthzPathElement(id=".".join(share.id), name=share.name, type=AuthzPathElementType.SHARE, note=""),
+            ]
+            yield from _yield_row(
+                identity=identity, permission_level=priv.permission_level, grant=grant, authz_path=authz_path
+            )
 
 
 def export(model: AuthorizationModel, writer: BaseWriter):
@@ -82,3 +112,6 @@ def export(model: AuthorizationModel, writer: BaseWriter):
                 role_to_roles=model.role_to_roles,
             ):
                 writer.write_entry(entry)
+    for share in model.shares:
+        for entry in _yield_share(share, writer):
+            writer.write_entry(entry)
