@@ -14,6 +14,9 @@ regex_account_id = re.compile(r"([0-9]+)$")
 regex_arn_account_id = re.compile(r"arn:aws:iam::([0-9]+):root$")
 
 
+IAM_USER_ARN_ORIGINATED_FOR_FEDERATED_USER_KEY = "iam-user-arn-originated-for-federated-user"
+
+
 @serde
 @dataclass
 class Principal:
@@ -57,6 +60,10 @@ class Principal:
             return f"arn:aws:iam::{account_id}:root"
         else:
             return self.policy_principal_str
+
+    def set_iam_user_originated_for_principal_federated(self, iam_user_arn: str):
+        assert self.is_federated_user_principal() and self.principal_metadata is not None
+        self.principal_metadata[IAM_USER_ARN_ORIGINATED_FOR_FEDERATED_USER_KEY] = iam_user_arn
 
     def is_no_entity_principal(
         self,
@@ -112,7 +119,25 @@ class Principal:
         if self.is_iam_role_principal() and other.is_role_session_principal():
             return self.get_role_name() == other.get_role_name() and self_account_id == other_account_id
 
-        if self.is_iam_user_account():
+        elif other.is_federated_user_principal():
+            if self.is_iam_user_principal():
+                if other.principal_metadata:
+                    other_originated_iam_user_arn: Optional[str] = other.principal_metadata.get(
+                        IAM_USER_ARN_ORIGINATED_FOR_FEDERATED_USER_KEY, None
+                    )
+                else:
+                    other_originated_iam_user_arn = None
+
+                if other_originated_iam_user_arn is None:
+                    raise Exception(
+                        f"Unable to check contains {self} with {other}, missing the originated iam_user of the federated principal"
+                    )
+                return self.policy_principal_str == other_originated_iam_user_arn
+            elif self.is_iam_user_account():
+                if self_account_id == other_account_id:
+                    return True
+
+        elif self.is_iam_user_account():
             if self_account_id == other_account_id:
                 return True
 
