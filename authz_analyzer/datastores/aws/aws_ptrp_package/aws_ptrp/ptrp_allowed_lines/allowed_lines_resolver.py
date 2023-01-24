@@ -278,15 +278,15 @@ class PtrpAllowedLinesBuilder:
 
     def _insert_attached_policies_and_inline_policies(
         self,
-        node_connect_to_target: Union[PrincipalNodeBase, PathNodeBase],
+        node_connect_to_policy: Union[PrincipalNodeBase, PathNodeBase],
         attached_policies_arn: List[str],
         inline_policies_and_names: List[Tuple[PolicyDocument, str]],
         identity_principal_for_resolver: Principal,
     ):
-        if isinstance(node_connect_to_target, PrincipalNodeBase):
-            arn_for_inline: str = node_connect_to_target.get_stmt_principal().get_arn()
-        elif isinstance(node_connect_to_target, PathNodeBase):
-            arn_for_inline = node_connect_to_target.get_path_arn()
+        if isinstance(node_connect_to_policy, PrincipalNodeBase):
+            arn_for_inline: str = node_connect_to_policy.get_stmt_principal().get_arn()
+        elif isinstance(node_connect_to_policy, PathNodeBase):
+            arn_for_inline = node_connect_to_policy.get_path_arn()
         else:
             assert False
 
@@ -306,7 +306,7 @@ class PtrpAllowedLinesBuilder:
                     is_resource_based_policy=False,
                     note="",
                 )
-                self.graph.add_edge(node_connect_to_target, path_policy_node)
+                self.graph.add_edge(node_connect_to_policy, path_policy_node)
                 self._connect_path_policy_node_with_resolved_service_resource(
                     identity_principal=identity_principal_for_resolver,
                     path_policy_node=path_policy_node,
@@ -328,7 +328,7 @@ class PtrpAllowedLinesBuilder:
                     is_resource_based_policy=False,
                     note="",
                 )
-                self.graph.add_edge(node_connect_to_target, path_policy_node)
+                self.graph.add_edge(node_connect_to_policy, path_policy_node)
                 self._connect_path_policy_node_with_resolved_service_resource(
                     identity_principal=identity_principal_for_resolver,
                     path_policy_node=path_policy_node,
@@ -355,6 +355,13 @@ class PtrpAllowedLinesBuilder:
 
             assert isinstance(iam_role, PathRoleNodeBase)
             path_role_node = PathRoleNode(base=iam_role, note="")
+            self._insert_attached_policies_and_inline_policies(
+                node_connect_to_policy=path_role_node,
+                attached_policies_arn=iam_role.get_attached_policies_arn(),
+                inline_policies_and_names=iam_role.get_inline_policies_and_names(),
+                identity_principal_for_resolver=iam_role.get_stmt_principal(),
+            )
+
             for trusted_principal_to_resolve in role_trust_service_principal_resolver.yield_trusted_principals(
                 iam_role
             ):
@@ -367,12 +374,6 @@ class PtrpAllowedLinesBuilder:
                     assert isinstance(resolved_principal_node, PrincipalNodeBase)
 
                     self.graph.add_edge(resolved_principal_node, path_role_node)
-                    self._insert_attached_policies_and_inline_policies(
-                        node_connect_to_target=path_role_node,
-                        attached_policies_arn=iam_role.get_attached_policies_arn(),
-                        inline_policies_and_names=iam_role.get_inline_policies_and_names(),
-                        identity_principal_for_resolver=resolved_principal_node.get_stmt_principal(),
-                    )
 
     def _insert_resources(self):
         for service_resources_type, service_resources in self.account_resources.account_resources.items():
@@ -427,7 +428,7 @@ class PtrpAllowedLinesBuilder:
             assert isinstance(iam_user, PrincipalAndPoliciesNodeBase)
             self.graph.add_edge(START_NODE, iam_user)
             self._insert_attached_policies_and_inline_policies(
-                node_connect_to_target=iam_user,
+                node_connect_to_policy=iam_user,
                 attached_policies_arn=iam_user.get_attached_policies_arn(),
                 inline_policies_and_names=iam_user.get_inline_policies_and_names(),
                 identity_principal_for_resolver=iam_user.identity_principal,
@@ -442,7 +443,7 @@ class PtrpAllowedLinesBuilder:
                 path_user_group_node = PathUserGroupNode(base=iam_group, note="")
                 self.graph.add_edge(iam_user, path_user_group_node)
                 self._insert_attached_policies_and_inline_policies(
-                    node_connect_to_target=path_user_group_node,
+                    node_connect_to_policy=path_user_group_node,
                     attached_policies_arn=iam_group.get_attached_policies_arn(),
                     inline_policies_and_names=iam_group.get_inline_policies_and_names(),
                     identity_principal_for_resolver=iam_user.identity_principal,
