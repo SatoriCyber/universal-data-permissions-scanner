@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 from unittest.mock import MagicMock, call
+
 import pytest
 
 from authz_analyzer import SnowflakeAuthzAnalyzer
@@ -16,7 +17,6 @@ from authz_analyzer.models.model import (
     PermissionLevel,
 )
 from tests.mocks.mock_writers import MockWriter
-
 
 ShareName = str
 

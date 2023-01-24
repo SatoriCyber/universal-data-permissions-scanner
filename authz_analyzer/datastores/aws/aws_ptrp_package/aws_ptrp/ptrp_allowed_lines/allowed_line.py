@@ -3,8 +3,8 @@ from logging import Logger
 from typing import Dict, Generator, List, Optional, Tuple
 
 from aws_ptrp.actions.aws_actions import AwsActions
-from aws_ptrp.iam.iam_entities import IAMRole
 from aws_ptrp.iam.iam_policies import IAMPolicy
+from aws_ptrp.iam.iam_roles import IAMRole, RoleSession
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.policy_evaluation import PolicyEvaluation
 from aws_ptrp.principals import Principal
@@ -177,6 +177,12 @@ class PtrpAllowedLine:
             policies_node_base.append(self.path_user_group_node.base)
 
         for path_role_node in self.path_role_nodes:
+            if isinstance(path_role_node.base, RoleSession):
+                # current principal is the role and the path_role_node is the role session (from this role), skipping
+                assert curr_principal.get_stmt_principal() == path_role_node.base.iam_role.get_stmt_principal()
+                curr_principal = path_role_node
+                continue
+
             yield curr_principal, policies_node_base, path_role_node
             policies_node_base = [path_role_node.base]
             curr_principal = path_role_node
