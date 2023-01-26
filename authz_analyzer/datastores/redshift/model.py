@@ -10,10 +10,10 @@ IdentityId = int
 
 
 class IdentityType(Enum):
-    UNKNOWN = auto()
-    USER = auto()
-    GROUP = auto()
-    ROLE = auto()
+    UNKNOWN = "UNKNOWN"
+    USER = "USER"
+    GROUP = "GROUP"
+    ROLE = "ROLE"
 
 
 class Privilege(Enum):
@@ -70,14 +70,14 @@ class DBIdentity:
 
     id_: IdentityId
     name: str
-    type_: IdentityType
+    type: IdentityType
     is_admin: bool
     relations: Set[DBIdentity]
 
     @classmethod
-    def new(cls, id_: IdentityId, name: str, type_: IdentityType, relations: Set[DBIdentity], is_admin: bool = False):
+    def new(cls, id_: IdentityId, name: str, identity_type: IdentityType, relations: Set[DBIdentity], is_admin: bool = False):
         """Create a new DBIdentity."""
-        return cls(id_=id_, name=name, type_=type_, is_admin=is_admin, relations=relations)
+        return cls(id_=id_, name=name, type=identity_type, is_admin=is_admin, relations=relations)
 
     def add_relation(self, relations: DBIdentity):
         self.relations.add(relations)

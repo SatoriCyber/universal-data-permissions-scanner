@@ -15,7 +15,7 @@ class SnowflakeService:
     def connect(cls, cursor: SnowflakeCursor):
         return cls(cursor=cursor)
 
-    def get_rows(self, file_name_command: Path, params: Optional[Tuple[str, ...]] = None) -> List[Tuple[Any, ...]]:
+    def get_rows(self, file_name_command: Path, params: Optional[str] = None) -> List[Tuple[Any, ...]]:
         """Get rows from Snowflake.
 
         Args:
@@ -25,8 +25,8 @@ class SnowflakeService:
         Returns:
             List[Tuple[Any, ...]]: results
         """
-        if params is None:
-            params = tuple()
         command = (COMMANDS_DIR / file_name_command).read_text(encoding="utf-8")
-        self.cursor.execute(command=command, params=params)
+        if params is not None:
+            command += " " + params
+        self.cursor.execute(command=command)
         return self.cursor.fetchall()  # type: ignore

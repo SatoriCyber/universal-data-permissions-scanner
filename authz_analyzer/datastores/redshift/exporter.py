@@ -16,16 +16,16 @@ from authz_analyzer.models.model import (
 from authz_analyzer.writers import BaseWriter
 
 IDENTITY_TYPE_MODEL_TO_OUTPUT = {
-    IdentityModelType.USER.name: IdentityType.USER,
-    IdentityModelType.GROUP.name: IdentityType.GROUP,
-    IdentityModelType.ROLE.name: IdentityType.ROLE,
+    IdentityModelType.USER: IdentityType.USER,
+    IdentityModelType.GROUP: IdentityType.GROUP,
+    IdentityModelType.ROLE: IdentityType.ROLE,
 }
 
 # TODO AuthzPathElementType should be merged into model.IdentityType
 IDENTITY_TYPE_MODEL_TO_AuthzPathElementType = {
-    IdentityModelType.USER.name: AuthzPathElementType.USER,
-    IdentityModelType.GROUP.name: AuthzPathElementType.GROUP,
-    IdentityModelType.ROLE.name: AuthzPathElementType.ROLE,
+    IdentityModelType.USER: AuthzPathElementType.USER,
+    IdentityModelType.GROUP: AuthzPathElementType.GROUP,
+    IdentityModelType.ROLE: AuthzPathElementType.ROLE,
 }
 
 
@@ -38,18 +38,18 @@ def _yield_row(
 ):
     auth_path_element = [
         AuthzPathElement(
-            id=path_identity.id_,
+            id=str(path_identity.id_),
             name=path_identity.name,
-            type=IDENTITY_TYPE_MODEL_TO_AuthzPathElementType.get(path_identity.type_),
+            type=IDENTITY_TYPE_MODEL_TO_AuthzPathElementType[path_identity.type],
             note="",
         )
         for path_identity in relations
     ]
     auth_path_element[-1].db_permissions = db_permissions
-    identity = Identity(id=identity.id_, name=identity.name, type=IDENTITY_TYPE_MODEL_TO_OUTPUT.get(identity.type_))
+    model_identity = Identity(id=str(identity.id_), name=identity.name, type=IDENTITY_TYPE_MODEL_TO_OUTPUT[identity.type])
     asset = Asset(name=grant_name, type=AssetType.TABLE)
     yield AuthzEntry(
-        identity=identity,
+        identity=model_identity,
         asset=asset,
         path=auth_path_element,
         permission=permission_level,
@@ -93,8 +93,8 @@ def export(model: AuthorizationModel, writer: BaseWriter):
         writer (BaseWriter): Write to write the entries
     """
     for role, roles in model.identity_to_identities.items():
-        if role.type_ == "USER":
-            for grants in model.identity_to_resource_privilege.get(role.id_, dict()).values():
+        if role.type is IdentityModelType.USER:
+            for grants in model.identity_to_resource_privilege.get(role.id_, {}).values():
                 for grant in grants:
                     for entry in _yield_row(
                         identity=role,
