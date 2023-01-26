@@ -36,8 +36,6 @@ class RedshiftMockService:
     cursors: List[MagicMock] = field(default_factory=list)
     identities: Dict[MagicMock, List[IdentityDB]] = field(default_factory=dict)
     identities_privileges: Dict[MagicMock, List[IdentitiesPrivileges]] = field(default_factory=dict)
-    # shares: List[Share] = field(default_factory=list)
-    # grants_share: Dict[ShareName, List[GrantsShare]] = field(default_factory=dict)
 
     @classmethod
     def new(cls):
@@ -78,12 +76,6 @@ class RedshiftMockService:
             return identities
         if command_name == Path("identities_privileges.sql"):
             return identities_privileges
-        # if command_name == Path("shares.sql"):
-        #     return self.shares
-        # if command_name == Path("grants_to_share.sql"):
-        #     if params is None:
-        #         raise Exception("Params is None")
-            # return self.grants_share[params[0]]
         raise Exception(f"Command {command_name} not mocked")
 
 
@@ -118,9 +110,6 @@ def test_users(database_name: str, identities: List[IdentityDB], identities_priv
         mocked_writer.mocked_writer.write_entry.assert_has_calls(expected_writes)  # type: ignore
     else:
         mocked_writer.assert_write_entry_not_called()
-
-# def test_data_share():
-#     pass
 
 def _call_analyzer(service: RedshiftMockService, mocked_writer: MockWriter):
     analyzer = RedshiftAuthzAnalyzer(service=service.get(), cursors=service.cursors, logger=MagicMock(), writer=mocked_writer.get()) #type: ignore
