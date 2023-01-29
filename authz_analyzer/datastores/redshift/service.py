@@ -1,9 +1,8 @@
-
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Tuple
 
-import redshift_connector #type: ignore
+import redshift_connector  # type: ignore
 
 
 @dataclass
@@ -13,6 +12,5 @@ class RedshiftService:
         """Get rows from Redshift."""
         command = (Path(__file__).parent / "commands" / command_name).read_text(encoding="utf-8")
 
-        redshift_cursor.execute(command) #type: ignore
-        return redshift_cursor.fetchall() #type: ignore
-    
+        redshift_cursor.execute(command)  # type: ignore
+        return redshift_cursor.fetchall()  # type: ignore

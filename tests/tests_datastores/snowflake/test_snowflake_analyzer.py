@@ -73,7 +73,7 @@ class SnowflakeMockService:
 
     @classmethod
     def new(cls):
-        mocked_service = MagicMock(name="SnowflakeMockService")
+        mocked_service = MagicMock(name="SnowflakeMockService") # type: ignore
         instance = cls(mocked_service)
         mocked_get_rows = MagicMock(name="SnowflakeServiceGetRows", side_effect=instance._side_effect_execute)
 
@@ -93,7 +93,7 @@ class SnowflakeMockService:
         return self.mocked_service
 
     def _side_effect_execute(
-        self, file_name_command: Path, params: Optional[Tuple[str, ...]] = None
+        self, file_name_command: Path, params: Optional[str] = None
     ) -> Sequence[Tuple[str, ...]]:
         if file_name_command == Path("user_grants.sql"):
             return self.user_grants
@@ -104,7 +104,7 @@ class SnowflakeMockService:
         if file_name_command == Path("grants_to_share.sql"):
             if params is None:
                 raise Exception("Params is None")
-            return self.grants_share[params[0]]
+            return self.grants_share[params]
         raise Exception(f"Command {file_name_command} not mocked")
 
 

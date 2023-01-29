@@ -94,7 +94,7 @@ class SnowflakeAuthzAnalyzer:
             warehouse=warehouse,
             **snowflake_connection_kwargs,
         )
-        
+
         cursor = connector.cursor()
         service = SnowflakeService(cursor)
         return cls(service=service, logger=logger, writer=writer)
