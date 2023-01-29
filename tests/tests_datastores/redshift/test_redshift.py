@@ -41,12 +41,14 @@ class IdentitiesPrivileges(NamedTuple):
     table_name: str
     db_permission: str
 
+
 class Table(NamedTuple):
     """all_tables.sql response"""
 
     schema_name: str
     table_name: str
     table_type: str
+
 
 @dataclass
 class RedshiftMockService:
@@ -66,7 +68,11 @@ class RedshiftMockService:
         return instance
 
     def add_database(
-        self, database_name: str, identities: List[IdentityDB], identities_privileges: List[IdentitiesPrivileges], all_tables: List[Table]
+        self,
+        database_name: str,
+        identities: List[IdentityDB],
+        identities_privileges: List[IdentitiesPrivileges],
+        all_tables: List[Table],
     ) -> None:
         """Add a database to the mocked service along with its identities and privileges.
 
@@ -75,8 +81,8 @@ class RedshiftMockService:
             identities (List[IdentityDB]): Identities to roles
             identities_privileges (List[str]): Identities privileges
         """
-        mocked_cursor = MagicMock(name=f"RedshiftServiceCursor{database_name}", spec=Cursor) #type: ignore
-        mocked_connection = MagicMock(name=f"RedshiftServiceConnection{database_name}") #type: ignore
+        mocked_cursor = MagicMock(name=f"RedshiftServiceCursor{database_name}", spec=Cursor)  # type: ignore
+        mocked_connection = MagicMock(name=f"RedshiftServiceConnection{database_name}")  # type: ignore
         mocked_connection._database = database_name
         mocked_cursor.connection = mocked_connection
         self.cursors.append(mocked_cursor)
@@ -112,11 +118,18 @@ def generate_authz_entry(
     "database_name,identities, identities_privileges, all_tables, expected_writes",
     [
         ("db1", [], [], [], []),  # test 1 - empty
-        ("db1", [IdentityDB("user_id_1", "user_1", "USER", "", "", "", False)], [], [], []),  # test 2 - user with no role
+        (
+            "db1",
+            [IdentityDB("user_id_1", "user_1", "USER", "", "", "", False)],
+            [],
+            [],
+            [],
+        ),  # test 2 - user with no role
         (  # test 3 - user with direct access
             "db1",
             [IdentityDB("user_id_1", "user_1", "USER", "", "", "", False)],
-            [IdentitiesPrivileges("UNKNOWN", "user_id_1", "schema_1", "table_1", "SELECT")], [],
+            [IdentitiesPrivileges("UNKNOWN", "user_id_1", "schema_1", "table_1", "SELECT")],
+            [],
             [
                 generate_authz_entry(
                     ["db1", "schema_1", "table_1"],
@@ -130,7 +143,8 @@ def generate_authz_entry(
         (  # test 4 - user with role and privs
             "db1",
             [IdentityDB("user_id_1", "user_1", "USER", "ROLE_1_ID", "ROLE_1", "ROLE", False)],
-            [IdentitiesPrivileges("UNKNOWN", "ROLE_1_ID", "schema_1", "table_1", "SELECT")], [],
+            [IdentitiesPrivileges("UNKNOWN", "ROLE_1_ID", "schema_1", "table_1", "SELECT")],
+            [],
             [
                 generate_authz_entry(
                     ["db1", "schema_1", "table_1"],
