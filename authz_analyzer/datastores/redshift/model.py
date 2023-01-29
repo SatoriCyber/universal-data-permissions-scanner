@@ -71,13 +71,12 @@ class DBIdentity:
     id_: IdentityId
     name: str
     type: IdentityType
-    is_admin: bool
     relations: Set[DBIdentity]
 
     @classmethod
-    def new(cls, id_: IdentityId, name: str, identity_type: IdentityType, relations: Set[DBIdentity], is_admin: bool = False):
+    def new(cls, id_: IdentityId, name: str, identity_type: IdentityType, relations: Set[DBIdentity]):
         """Create a new DBIdentity."""
-        return cls(id_=id_, name=name, type=identity_type, is_admin=is_admin, relations=relations)
+        return cls(id_=id_, name=name, type=identity_type, relations=relations)
 
     def add_relation(self, relations: DBIdentity):
         self.relations.add(relations)

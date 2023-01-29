@@ -115,6 +115,9 @@ class RedshiftAuthzAnalyzer:
         self.logger.info("Fetching identities to table privileges")
         identity_to_resource_privilege = self._get_identities_privileges()
         
+        self.logger.info("Fetching all tables for super users")
+        self._add_super_user_privileges(identity_to_resource_privilege)
+
         return AuthorizationModel(
             identity_to_identities=identity_to_identities,
             identity_to_resource_privilege=identity_to_resource_privilege,
@@ -139,7 +142,7 @@ class RedshiftAuthzAnalyzer:
             is_admin: bool = row[6]
 
             identity = DBIdentity.new(
-                id_=identity_id, name=identity_name, identity_type=identity_type, is_admin=is_admin, relations=set()
+                id_=identity_id, name=identity_name, identity_type=identity_type, relations=set()
             )
 
             identity_grants = results.setdefault(identity, set())
@@ -150,6 +153,8 @@ class RedshiftAuthzAnalyzer:
                 identity_grants.add(granted_identity)
             if identity.type is IdentityType.USER:
                 identity_grants.add(DBIdentity.new(id_=0, name="public", identity_type=IdentityType.GROUP, relations=set()))
+            if is_admin:
+                identity_grants.add(DBIdentity.new(id_=-1, name="super_user", identity_type=IdentityType.ROLE, relations=set()))
 
         return results
 
@@ -181,3 +186,19 @@ class RedshiftAuthzAnalyzer:
                     resource_permissions.add(ResourcePermission(asset_path, level, [db_permission]))
 
         return results
+
+    
+    def _add_super_user_privileges(self, identity_to_resource_privilege: Dict[IdentityId, Dict[str, Set[ResourcePermission]]]):
+        """Add to super user role full permissions to all tables in all databases."""
+        super_user_permissions: Dict[str, Set[ResourcePermission]] = {}
+        for pg_cursor in self.cursors:
+            for row in self.service.get_rows(pg_cursor, Path("all_tables.sql")):
+                db: str = row[0]
+                schema: str = row[1]
+                table: str = row[2]
+                _resource_type:str = row[0]
+                full_table_name = ".".join([db, schema, table])
+
+                table_permissions = super_user_permissions.setdefault(full_table_name, set())
+                table_permissions.add(ResourcePermission(name=[db, schema, table], permission_level=PermissionLevel.FULL, db_permissions=["ALL"]))
+        identity_to_resource_privilege[-1] = super_user_permissions
