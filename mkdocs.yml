@@ -4,10 +4,16 @@ repo_url: https://github.com/satoricyber/authz-analyzer
 repo_name: satoricyber/authz-analyzer
 #strict: true
 nav:
-  - Home: index.md
+  - Introduction: index.md
   - Installation: installation.md
   - Usage: usage.md
-  - Modules: api.md
+  - Data Stores:
+    - Amazon Redshift: datastores/redshift.md
+    - Amazon S3: datastores/s3.md
+    - Google BigQuery: datastores/bigquery.md
+    - MongoDB: datastores/mongodb.md
+    - PostgreSQL: datastores/postgresql.md
+    - Snowflake: datastores/snowflake.md
   - Contributing: contributing.md
   - Changelog: changelog.md
 theme:
@@ -50,20 +56,21 @@ plugins:
   - search:
       lang: en
 extra:
+  homepage: https://satoricyber.com
   social:
     - icon: fontawesome/brands/twitter
       # replace with your own tweet link below
-      link: https://github.com/waynerv/cookiecutter-pypackage
+      link: https://twitter.com/SatoriCyber
       name: Tweet
     - icon: fontawesome/brands/facebook
       # replace with your own facebook link below
-      link: https://github.com/waynerv/cookiecutter-pypackage
+      link: https://www.facebook.com/SatoriCyber
       name: Facebook
     - icon: fontawesome/brands/github
       link: https://github.com/satoricyber/authz-analyzer
       name: Github
     - icon: material/email
-      link: "mailto:omer.shtivi@satoricyber.com"
+      link: "mailto:contact@satoricyber.com"
   # to enable disqus, uncomment the following and put your disqus id below
   # disqus: disqus_id
 # uncomment the following and put your google tracking id below to enable GA
