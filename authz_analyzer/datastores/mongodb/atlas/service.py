@@ -2,9 +2,10 @@
 Handle all the communication with MongoDB Atlas.
 """
 from dataclasses import dataclass
-from typing import Dict, List, Set
+from typing import Any, Dict, List, Set
 
 import requests
+from pymongo import MongoClient
 from requests.auth import HTTPDigestAuth
 
 from authz_analyzer.datastores.mongodb.atlas.model import (
@@ -24,6 +25,7 @@ from authz_analyzer.datastores.mongodb.atlas.service_model import (
     OrganizationEntry,
     ProjectInfo,
 )
+from authz_analyzer.datastores.mongodb.service import MongoDBService
 
 BASE_API = "https://cloud.mongodb.com/api/atlas/v1.0/"
 
@@ -120,3 +122,17 @@ class AtlasService:
         """Get cluster info by cluster name."""
         json_response: ClusterEntry = self._get_resource(f"groups/{project_id}/clusters/{cluster_name}")
         return json_response
+
+    @staticmethod
+    def get_mongodb_client(connection_string: str, db_user: str, db_password: str, **kwargs: Any) -> MongoDBService:
+        """Get MongoDB connection."""
+        return MongoDBService(
+            MongoClient(
+                connection_string,
+                username=db_user,
+                password=db_password,
+                tlsAllowInvalidCertificates=True,
+                tls=True,
+                **kwargs,
+            )
+        )

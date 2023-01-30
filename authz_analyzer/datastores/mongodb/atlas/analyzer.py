@@ -39,8 +39,6 @@ from logging import Logger
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 
-from pymongo import MongoClient
-
 from authz_analyzer.datastores.mongodb.atlas.model import (
     Action,
     Cluster,
@@ -48,7 +46,6 @@ from authz_analyzer.datastores.mongodb.atlas.model import (
     DatabaseRole,
     Organization,
     OrganizationRoleName,
-    OrganizationTeam,
     OrganizationUser,
     Project,
 )
@@ -60,7 +57,6 @@ from authz_analyzer.datastores.mongodb.atlas.permission_resolvers import (
     resolve_project_role,
 )
 from authz_analyzer.datastores.mongodb.atlas.service import AtlasService
-from authz_analyzer.datastores.mongodb.service import MongoDBService
 from authz_analyzer.models.model import (
     Asset,
     AssetType,
@@ -149,24 +145,14 @@ class MongoDBAtlasAuthzAnalyzer:
         cluster_info = self.atlas_service.get_cluster_info_by_name(project.id, self.cluster_name)
         connection_string = cluster_info["connectionStrings"]["standardSrv"].split(',')[0]
         cluster = Cluster(name=cluster_info["name"], id=cluster_info["id"], connection_string=connection_string)
-        mongo_client = MongoDBService(
-            MongoClient(
-                cluster.connection_string,
-                username=self.db_user,
-                password=self.db_password,
-                tlsAllowInvalidCertificates=True,
-                tls=True,
-            )
-        )
+        mongo_client = self.atlas_service.get_mongodb_client(cluster.connection_string, self.db_user, self.db_password)
         for db_name, db_connection in mongo_client.iter_database_connections():
             for collection in db_connection.list_collection_names():
                 asset = Asset(name=[db_name, collection], type=AssetType.COLLECTION)
                 self._report_organization_users(
                     asset=asset, organization=organization, project=project, cluster=cluster, db=db_name
                 )
-                self._report_project_users(
-                    project, asset, db=db_name, organization_teams=organization.teams, cluster=cluster
-                )
+                self._report_project_users(project, asset, db=db_name, organization=organization, cluster=cluster)
                 self._report_db_users(asset=asset, db=db_name, project=project, cluster=cluster)
 
     def _report_organization_users(
@@ -219,7 +205,7 @@ class MongoDBAtlasAuthzAnalyzer:
         asset: Asset,
         cluster: Cluster,
         db: str,
-        organization_teams: Dict[str, OrganizationTeam],
+        organization: Organization,
     ):
         path = [
             AuthzPathElement(
@@ -245,20 +231,22 @@ class MongoDBAtlasAuthzAnalyzer:
                 )
                 self._report_entry_project_user(identity, asset, role, path)
                 path.pop(0)
-            for team_id in user.teams_ids:
-                team_roles = project_teams_roles.get(team_id)
-                if team_roles is not None:
-                    org_team = organization_teams[team_id]
-                    for role in team_roles:
-                        team_path = AuthzPathElement(
-                            id=team_id,
-                            name=org_team.name,
-                            type=AuthzPathElementType.TEAM,
-                            note=f"{identity.name} is part of team {org_team.name}",
-                        )
-                        path.append(team_path)
-                        self._report_entry_project_user(identity, asset, role, path)
-                        path.pop()
+            for org_user in organization.users:
+                identity = Identity(id=org_user.email_address, type=IdentityType.USER, name=org_user.username)
+                for team_id in org_user.teams_ids:
+                    team_roles = project_teams_roles.get(team_id)
+                    if team_roles is not None:
+                        org_team = organization.teams[team_id]
+                        for role in team_roles:
+                            team_path = AuthzPathElement(
+                                id=team_id,
+                                name=org_team.name,
+                                type=AuthzPathElementType.TEAM,
+                                note=f"{identity.name} is part of team {org_team.name}",
+                            )
+                            path.append(team_path)
+                            self._report_entry_project_user(identity, asset, role, path)
+                            path.pop()
 
     def _report_entry_project_user(
         self, identity: Identity, asset: Asset, role: OrganizationRoleName, path: List[AuthzPathElement]
