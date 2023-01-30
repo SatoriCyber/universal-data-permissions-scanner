@@ -14,7 +14,7 @@ from logging import Logger
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union
 
-import redshift_connector
+import redshift_connector  # type: ignore
 
 from authz_analyzer.datastores.redshift import exporter
 from authz_analyzer.datastores.redshift.model import (
@@ -25,6 +25,7 @@ from authz_analyzer.datastores.redshift.model import (
     IdentityType,
     ResourcePermission,
 )
+from authz_analyzer.datastores.redshift.service import RedshiftService
 from authz_analyzer.models import PermissionLevel
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
@@ -40,6 +41,7 @@ class RedshiftAuthzAnalyzer:
     cursors: List[redshift_connector.Cursor]
     writer: BaseWriter
     logger: Logger
+    service: RedshiftService = RedshiftService()
 
     @classmethod
     def connect(
@@ -99,12 +101,7 @@ class RedshiftAuthzAnalyzer:
 
     @staticmethod
     def _get_all_databases(redshift_cursor: redshift_connector.Cursor):
-        return {
-            database[0]
-            for database in RedshiftAuthzAnalyzer._get_rows(
-                redshift_cursor, (COMMANDS_DIR / "all_databases.sql").read_text()
-            )
-        }
+        return {database[0] for database in RedshiftService.get_rows(redshift_cursor, Path("all_databases.sql"))}
 
     def _get_authorization_model(self):
         self.logger.info("Fetching identities with relations")
@@ -113,49 +110,59 @@ class RedshiftAuthzAnalyzer:
         self.logger.info("Fetching identities to table privileges")
         identity_to_resource_privilege = self._get_identities_privileges()
 
+        self.logger.info("Fetching all tables for super users")
+        self._add_super_user_privileges(identity_to_resource_privilege)
+
         return AuthorizationModel(
             identity_to_identities=identity_to_identities,
             identity_to_resource_privilege=identity_to_resource_privilege,
         )
 
-    def _get_identity_identities_mapping(self):
-        command = (COMMANDS_DIR / "identities.sql").read_text()
-
+    def _get_identity_identities_mapping(self) -> Dict[DBIdentity, Set[DBIdentity]]:
         results: Dict[DBIdentity, Set[DBIdentity]] = {}
 
         # For identities, it is shared per cluster, there is no need to pull per DB
         pg_cursor = self.cursors[0]
-        rows = RedshiftAuthzAnalyzer._get_rows(pg_cursor, command)
+        rows = self.service.get_rows(pg_cursor, Path("identities.sql"))
         for row in rows:
             identity_id: IdentityId = row[0]
             identity_name: str = row[1]
-            identity_type: IdentityType = row[2]
+            identity_type: IdentityType = IdentityType(row[2])
             granted_identity_id: IdentityId = row[3]
             granted_identity_name: str = row[4]
-            granted_identity_type: IdentityType = row[5]
+            try:
+                granted_identity_type: IdentityType = IdentityType(row[5])
+            except ValueError:
+                granted_identity_type = IdentityType.UNKNOWN
             is_admin: bool = row[6]
 
-            identity = DBIdentity.new(
-                id_=identity_id, name=identity_name, type_=identity_type, is_admin=is_admin, relations=set()
-            )
+            identity = DBIdentity.new(id_=identity_id, name=identity_name, identity_type=identity_type, relations=set())
 
             identity_grants = results.setdefault(identity, set())
             if granted_identity_id is not None:
                 granted_identity = DBIdentity.new(
-                    id_=granted_identity_id, name=granted_identity_name, type_=granted_identity_type, relations=set()
+                    id_=granted_identity_id,
+                    name=granted_identity_name,
+                    identity_type=granted_identity_type,
+                    relations=set(),
                 )
                 identity_grants.add(granted_identity)
-            if identity.type_ == IdentityType.USER.name:
-                identity_grants.add(DBIdentity.new(id_=0, name="public", type_=IdentityType.GROUP, relations=set()))
+            if identity.type is IdentityType.USER:
+                identity_grants.add(
+                    DBIdentity.new(id_=0, name="public", identity_type=IdentityType.GROUP, relations=set())
+                )
+            if is_admin:
+                identity_grants.add(
+                    DBIdentity.new(id_=-1, name="super_user", identity_type=IdentityType.ROLE, relations=set())
+                )
 
         return results
 
     def _get_identities_privileges(self) -> Dict[IdentityId, Dict[str, Set[ResourcePermission]]]:
-        command = (COMMANDS_DIR / "identities_privileges.sql").read_text()
         results: Dict[IdentityId, Dict[str, Set[ResourcePermission]]] = {}
         for pg_cursor in self.cursors:
-            db_name = pg_cursor.connection.__getattribute__("_database")
-            rows = RedshiftAuthzAnalyzer._get_rows(pg_cursor, command)
+            db_name = pg_cursor.connection._database  # type: ignore
+            rows = self.service.get_rows(pg_cursor, Path("identities_privileges.sql"))
             for row in rows:
                 _grantor = row[0]
                 identity = row[1]
@@ -164,7 +171,7 @@ class RedshiftAuthzAnalyzer:
                 db_permission = row[4]
                 level = PERMISSION_LEVEL_MAP.get(db_permission, PermissionLevel.UNKNOWN)
 
-                identity_grants_to_table = results.setdefault(identity, dict())
+                identity_grants_to_table = results.setdefault(identity, {})
                 asset_path = [db_name, schema_name, table_name]
                 full_table_name = ".".join(asset_path)
                 resource_permissions = identity_grants_to_table.setdefault(full_table_name, set())
@@ -180,7 +187,23 @@ class RedshiftAuthzAnalyzer:
 
         return results
 
-    @staticmethod
-    def _get_rows(redshift_cursor: redshift_connector.Cursor, command: str):
-        redshift_cursor.execute(command)
-        return redshift_cursor.fetchall()
+    def _add_super_user_privileges(
+        self, identity_to_resource_privilege: Dict[IdentityId, Dict[str, Set[ResourcePermission]]]
+    ):
+        """Add to super user role full permissions to all tables in all databases."""
+        super_user_permissions: Dict[str, Set[ResourcePermission]] = {}
+        for pg_cursor in self.cursors:
+            for row in self.service.get_rows(pg_cursor, Path("all_tables.sql")):
+                db: str = row[0]
+                schema: str = row[1]
+                table: str = row[2]
+                _resource_type: str = row[0]
+                full_table_name = ".".join([db, schema, table])
+
+                table_permissions = super_user_permissions.setdefault(full_table_name, set())
+                table_permissions.add(
+                    ResourcePermission(
+                        name=[db, schema, table], permission_level=PermissionLevel.FULL, db_permissions=["ALL"]
+                    )
+                )
+        identity_to_resource_privilege[-1] = super_user_permissions
