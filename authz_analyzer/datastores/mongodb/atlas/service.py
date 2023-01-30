@@ -5,9 +5,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Set
 
 import requests
-from requests.auth import HTTPDigestAuth
-
 from pymongo import MongoClient
+from requests.auth import HTTPDigestAuth
 
 from authz_analyzer.datastores.mongodb.atlas.model import (
     Cluster,

@@ -39,7 +39,6 @@ from logging import Logger
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 
-
 from authz_analyzer.datastores.mongodb.atlas.model import (
     Action,
     Cluster,
@@ -153,9 +152,7 @@ class MongoDBAtlasAuthzAnalyzer:
                 self._report_organization_users(
                     asset=asset, organization=organization, project=project, cluster=cluster, db=db_name
                 )
-                self._report_project_users(
-                    project, asset, db=db_name, organization=organization, cluster=cluster
-                )
+                self._report_project_users(project, asset, db=db_name, organization=organization, cluster=cluster)
                 self._report_db_users(asset=asset, db=db_name, project=project, cluster=cluster)
 
     def _report_organization_users(
