@@ -80,7 +80,7 @@ def _iter_role_row(
     prev_roles.remove(role)
 
 
-def _yield_share(share: DataShare, write: BaseWriter):
+def _yield_share(share: DataShare):
     for account in share.share_to_accounts:
         identity = Identity(id=account, name=account, type=IdentityType.ACCOUNT)
         for priv in share.privileges:
@@ -113,5 +113,5 @@ def export(model: AuthorizationModel, writer: BaseWriter):
             ):
                 writer.write_entry(entry)
     for share in model.shares:
-        for entry in _yield_share(share, writer):
+        for entry in _yield_share(share):
             writer.write_entry(entry)

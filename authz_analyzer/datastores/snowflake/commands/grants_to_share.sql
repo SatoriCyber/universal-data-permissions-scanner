@@ -1,1 +1,1 @@
-show grants to share %s
+show grants to share

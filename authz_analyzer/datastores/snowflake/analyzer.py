@@ -94,6 +94,7 @@ class SnowflakeAuthzAnalyzer:
             warehouse=warehouse,
             **snowflake_connection_kwargs,
         )
+
         cursor = connector.cursor()
         service = SnowflakeService(cursor)
         return cls(service=service, logger=logger, writer=writer)
@@ -159,7 +160,7 @@ class SnowflakeAuthzAnalyzer:
             try:
                 privilege = PermissionType(row[2])
             except ValueError:
-                self.logger.info("Privilege doesn't grant permission to data, skipping privilege %s", row[2])
+                self.logger.debug("Privilege doesn't grant permission to data, skipping privilege %s", row[2])
                 continue
             db: str = row[3]
             schema: str = row[4]
@@ -208,18 +209,18 @@ class SnowflakeAuthzAnalyzer:
         return results
 
     def _get_privileges_data_share(self, share_name: str) -> Set[DataSharePrivilege]:
-        rows = self.service.get_rows(file_name_command=Path("grants_to_share.sql"), params=(share_name,))
+        rows = self.service.get_rows(file_name_command=Path("grants_to_share.sql"), params=share_name)
         privileges: Set[DataSharePrivilege] = set()
         for row in rows:
             try:
                 database_permission = PermissionType(row[1])
             except ValueError:
-                self.logger.info("Privilege doesn't grant permission to data, skipping privilege %s", row[1])
+                self.logger.debug("Privilege doesn't grant permission to data, skipping privilege %s", row[1])
                 continue
             try:
                 permission_level = PERMISSION_LEVEL_MAP[database_permission]
             except KeyError:
-                self.logger.info("Privilege doesn't grant permission to data, skipping privilege %s", row[1])
+                self.logger.debug("Privilege doesn't grant permission to data, skipping privilege %s", row[1])
                 continue
             granted_on = row[2]
             resource_name: List[str] = row[3].split(".")
