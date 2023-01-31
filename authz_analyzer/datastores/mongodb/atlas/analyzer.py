@@ -173,7 +173,7 @@ class MongoDBAtlasAuthzAnalyzer:
             ),
         ]
         for user in organization.users:
-            identity = Identity(id=user.email_address, type=IdentityType.USER, name=user.username)
+            identity = Identity(id=user.email_address, type=IdentityType.ORG_USER, name=user.username)
             path.insert(
                 0,
                 AuthzPathElement(
@@ -218,7 +218,7 @@ class MongoDBAtlasAuthzAnalyzer:
         users = self.atlas_service.get_all_organization_users_for_project(project)
         project_teams_roles = self.atlas_service.get_teams_roles(project)
         for user in users:
-            identity = Identity(id=user.email_address, type=IdentityType.USER, name=user.username)
+            identity = Identity(id=user.email_address, type=IdentityType.ORG_USER, name=user.username)
             for role in user.roles:
                 path.insert(
                     0,
@@ -232,7 +232,7 @@ class MongoDBAtlasAuthzAnalyzer:
                 self._report_entry_project_user(identity, asset, role, path)
                 path.pop(0)
             for org_user in organization.users:
-                identity = Identity(id=org_user.email_address, type=IdentityType.USER, name=org_user.username)
+                identity = Identity(id=org_user.email_address, type=IdentityType.ORG_USER, name=org_user.username)
                 for team_id in org_user.teams_ids:
                     team_roles = project_teams_roles.get(team_id)
                     if team_roles is not None:
@@ -273,7 +273,7 @@ class MongoDBAtlasAuthzAnalyzer:
                 db_user_scopes = {scope.name for scope in db_user.scopes}
                 if cluster.name not in db_user_scopes:
                     continue
-            identity = Identity(id=db_user.name, type=IdentityType.USER, name=db_user.name)
+            identity = Identity(id=db_user.name, type=IdentityType.DB_USER, name=db_user.name)
             for role in db_user.roles:
                 self._report_entry_db_user(identity, asset, role, db, project_custom_roles)
 

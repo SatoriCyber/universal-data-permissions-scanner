@@ -198,9 +198,13 @@ class MongoDBAtlasServiceMock:
 
 
 def generate_authz_entry(
-    username: str, asset_name: List[str], permission: PermissionLevel, path: List[AuthzPathElement]
+    username: str,
+    asset_name: List[str],
+    permission: PermissionLevel,
+    path: List[AuthzPathElement],
+    identity_type: IdentityType,
 ):
-    identity = Identity(id=username + "@example.com", name=username, type=IdentityType.USER)
+    identity = Identity(id=username + "@example.com", name=username, type=identity_type)
     asset = Asset(name=asset_name, type=AssetType.COLLECTION)
     return call(AuthzEntry(identity=identity, asset=asset, permission=permission, path=path))
 
@@ -251,6 +255,7 @@ def generate_authz_entry(
                             "database db1 is part of cluster MyCluster",
                         ),
                     ],
+                    IdentityType.ORG_USER,
                 )
             ],
         ),
@@ -278,6 +283,7 @@ def generate_authz_entry(
                             "database db1 is part of cluster MyCluster",
                         ),
                     ],
+                    IdentityType.ORG_USER,
                 )
             ],
         ),
@@ -322,6 +328,7 @@ def generate_authz_entry(
                             "database db1 is part of cluster MyCluster",
                         ),
                     ],
+                    IdentityType.ORG_USER,
                 )
             ],
         ),
