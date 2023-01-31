@@ -145,7 +145,7 @@ class BigQueryAuthzAnalyzer:
                     resolve_permission_callback=self._resolve_custom_role_to_permissions,
                 )
                 table_node.set_parent(dataset_node)
-                self._calc(Asset([name], type=AssetType.TABLE), table_node, [])
+                self._calc(Asset([fq_table_id], type=AssetType.TABLE), table_node, [])
         self.writer.close()
 
     def _calc(
