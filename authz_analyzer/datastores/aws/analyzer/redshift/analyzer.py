@@ -16,8 +16,8 @@ from typing import Any, Dict, List, Optional, Set, Union
 
 import redshift_connector  # type: ignore
 
-from authz_analyzer.datastores.redshift import exporter
-from authz_analyzer.datastores.redshift.model import (
+from authz_analyzer.datastores.aws.analyzer.redshift import exporter
+from authz_analyzer.datastores.aws.analyzer.redshift.model import (
     PERMISSION_LEVEL_MAP,
     AuthorizationModel,
     DBIdentity,
@@ -25,7 +25,7 @@ from authz_analyzer.datastores.redshift.model import (
     IdentityType,
     ResourcePermission,
 )
-from authz_analyzer.datastores.redshift.service import RedshiftService
+from authz_analyzer.datastores.aws.analyzer.redshift.service import RedshiftService
 from authz_analyzer.models import PermissionLevel
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer

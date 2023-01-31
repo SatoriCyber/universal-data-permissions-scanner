@@ -1,8 +1,8 @@
 from typing import Dict, Generator, List, Set
 
-from authz_analyzer.datastores.redshift.model import AuthorizationModel, DBIdentity, IdentityId
-from authz_analyzer.datastores.redshift.model import IdentityType as IdentityModelType
-from authz_analyzer.datastores.redshift.model import ResourcePermission
+from authz_analyzer.datastores.aws.analyzer.redshift.model import AuthorizationModel, DBIdentity, IdentityId
+from authz_analyzer.datastores.aws.analyzer.redshift.model import IdentityType as IdentityModelType
+from authz_analyzer.datastores.aws.analyzer.redshift.model import ResourcePermission
 from authz_analyzer.models.model import (
     Asset,
     AssetType,

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, call
 import pytest
 
 from redshift_connector import Cursor  # type: ignore
-from authz_analyzer.datastores.redshift.analyzer import RedshiftAuthzAnalyzer
+from authz_analyzer import RedshiftAuthzAnalyzer
 from authz_analyzer.models.model import (
     Asset,
     AssetType,
