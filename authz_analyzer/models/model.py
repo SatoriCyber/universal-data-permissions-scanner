@@ -139,6 +139,12 @@ class AuthzPathElement:
     def __repr__(self):
         return f"{self.type} {self.id} {self.name} {self.note}"
 
+    def __str__(self) -> str:
+        result = f"{self.type} {self.name}"
+        if len(self.db_permissions) != 0:
+            result += f" provides permissions {self.db_permissions}"
+        return result
+
 
 @dataclass
 class Asset:
@@ -150,6 +156,9 @@ class Asset:
     name: List[str]
     type: AssetType
 
+    def __str__(self) -> str:
+        return f"{self.type}: {'.'.join(self.name)}"
+
 
 @dataclass
 class Identity:
@@ -160,6 +169,9 @@ class Identity:
     id: str
     type: IdentityType
     name: str
+
+    def __str__(self) -> str:
+        return f"{self.type}: {self.name}"
 
 
 @dataclass

@@ -17,5 +17,5 @@ class CSVWriter(BaseWriter):
         self.writer.writerow(["identity", "permission", "asset", "granted_by"])
 
     def write_entry(self, entry: AuthzEntry):
-        path = "->".join(list(map(lambda x: x.id, entry.path)))
-        self.writer.writerow([entry.identity, entry.permission, entry.asset, path])
+        path = "->".join(list(map(lambda x: str(x), entry.path)))
+        self.writer.writerow([str(entry.identity), str(entry.permission), str(entry.asset), path])
