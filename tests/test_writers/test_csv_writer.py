@@ -30,7 +30,7 @@ def test_csv_writer_write_entry():
     mocked_csv.writerow = mocked_write_row
     mock_fh = MagicMock()
 
-    asset = Asset(name="table1", type=AssetType.TABLE)
+    asset = Asset(name=["table1"], type=AssetType.TABLE)
     identity = Identity(id="user1", name="user1", type=IdentityType.USER)
     authz_entry_path = AuthzPathElement(id="role1", name="role1", type=AuthzPathElementType.ROLE, note="")
     authz_entry = AuthzEntry(asset=asset, path=[authz_entry_path], identity=identity, permission=PermissionLevel.READ)
@@ -38,4 +38,4 @@ def test_csv_writer_write_entry():
     writer = CSVWriter(mock_fh)
     writer.writer = mocked_csv
     writer.write_entry(authz_entry)
-    mocked_write_row.assert_called_once()
+    mocked_write_row.assert_called_once_with(['USER: user1', 'READ', 'TABLE: table1', 'ROLE role1'])
