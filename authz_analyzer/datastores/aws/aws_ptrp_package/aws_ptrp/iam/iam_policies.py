@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Dict
 
-from aws_ptrp.iam.policy import Policy, PolicyDocument
+from aws_ptrp.iam.policy import Policy
+from aws_ptrp.iam.policy.policy_document import PolicyDocument, PolicyDocumentCtx
 from aws_ptrp.utils.pagination import paginate_response_list
 from boto3 import Session
 from serde import from_dict, serde
@@ -21,6 +22,11 @@ class IAMPolicy:
 
     def __repr__(self):
         return self.policy.arn
+
+    def to_policy_document_ctx(self) -> PolicyDocumentCtx:
+        return PolicyDocumentCtx(
+            policy_document=self.policy_document, policy_name=self.policy.policy_name, parent_arn=self.policy.arn
+        )
 
 
 def get_iam_policies(session: Session) -> Dict[str, IAMPolicy]:

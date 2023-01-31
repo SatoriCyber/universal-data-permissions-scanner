@@ -9,10 +9,12 @@ from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_models.ptrp_model import AwsPrincipalType
 from aws_ptrp.services import (
     ResolvedActionsSingleStmt,
-    ResolvedResourcesSingleStmt,
+    ResolvedSingleStmt,
+    ResolvedSingleStmtGetter,
     ServiceActionBase,
     ServiceResourceBase,
     ServiceResourcesResolverBase,
+    StmtResourcesToResolveCtx,
 )
 from aws_ptrp.services.assume_role.assume_role_actions import AssumeRoleAction, AssumeRoleActionType
 
@@ -24,10 +26,6 @@ class ResolvedAssumeRoleActions(ResolvedActionsSingleStmt):
     @property
     def resolved_stmt_actions(self) -> Set[ServiceActionBase]:
         return self.actions  # type: ignore[return-value]
-
-    def subtract(self, other: 'ResolvedActionsSingleStmt'):
-        if isinstance(other, ResolvedAssumeRoleActions):
-            self.actions = self.actions.difference(other.actions)
 
     def add(self, actions: Set[AssumeRoleAction]):
         self.actions = self.actions.union(actions)
@@ -41,18 +39,11 @@ class ResolvedAssumeRoleActions(ResolvedActionsSingleStmt):
 
 
 @dataclass
-class AssumeRoleResolvedStmt(ResolvedResourcesSingleStmt):
-    resolved_principals: List[Principal]
-    resolved_iam_roles_actions: Dict[IAMRole, ResolvedAssumeRoleActions]
-    # add here condition keys, tags, etc.. (single stmt scope)
+class AssumeRoleResolvedStmt(ResolvedSingleStmtGetter):
+    resolved_stmt: ResolvedSingleStmt
 
-    @property
-    def resolved_stmt_principals(self) -> List[Principal]:
-        return self.resolved_principals
-
-    @property
-    def resolved_stmt_resources(self) -> Dict[ServiceResourceBase, ResolvedActionsSingleStmt]:
-        return self.resolved_iam_roles_actions  # type: ignore[return-value]
+    def get(self) -> ResolvedSingleStmt:
+        return self.resolved_stmt
 
     @staticmethod
     def get_relevant_assume_action_by_principal_type(
@@ -69,19 +60,22 @@ class AssumeRoleResolvedStmt(ResolvedResourcesSingleStmt):
             return AssumeRoleActionType.ASSUME_ROLE
 
     def yield_trusted_principals(self, iam_role: IAMRole) -> Generator[Principal, None, None]:
-        for resolved_principal in self.resolved_principals:
+        for resolved_principal in self.resolved_stmt.resolved_stmt_principals:
             relevant_assume_role: Optional[
                 AssumeRoleActionType
             ] = AssumeRoleResolvedStmt.get_relevant_assume_action_by_principal_type(resolved_principal.principal_type)
             if relevant_assume_role is None:
                 continue
 
-            resolved_actions: Optional[ResolvedAssumeRoleActions] = self.resolved_iam_roles_actions.get(iam_role)
+            resolved_actions: Optional[ResolvedActionsSingleStmt] = self.resolved_stmt.resolved_stmt_resources.get(
+                iam_role
+            )
             if resolved_actions is None:
                 continue
 
             if not any(
-                resolved_action.action_type == relevant_assume_role for resolved_action in resolved_actions.actions
+                isinstance(resolved_action, AssumeRoleAction) and resolved_action.action_type == relevant_assume_role
+                for resolved_action in resolved_actions.resolved_stmt_actions
             ):
                 continue
 
@@ -92,7 +86,7 @@ class AssumeRoleResolvedStmt(ResolvedResourcesSingleStmt):
 class AssumeRoleServiceResourcesResolver(ServiceResourcesResolverBase):
     resolved_stmts: List[AssumeRoleResolvedStmt]
 
-    def get_resolved_stmts(self) -> List[ResolvedResourcesSingleStmt]:
+    def get_resolved_stmts(self) -> List[ResolvedSingleStmtGetter]:
         return self.resolved_stmts  # type: ignore[return-value]
 
     def yield_trusted_principals(self, iam_role: IAMRole) -> Generator[Principal, None, None]:
@@ -119,33 +113,25 @@ class AssumeRoleServiceResourcesResolver(ServiceResourcesResolverBase):
     @classmethod
     def load_from_single_stmt(
         cls,
-        logger: Logger,
-        stmt_relative_id_regexes: List[str],
-        service_resources: Set[ServiceResourceBase],
-        resolved_stmt_principals: List[Principal],
-        resolved_stmt_actions: Set[ServiceActionBase],
+        _logger: Logger,
+        stmt_ctx: StmtResourcesToResolveCtx,
     ) -> ServiceResourcesResolverBase:
         resolved_iam_roles_actions: Dict[IAMRole, ResolvedAssumeRoleActions] = dict()
         assume_role_actions = set(
             [
                 resolved_stmt_action
-                for resolved_stmt_action in resolved_stmt_actions
+                for resolved_stmt_action in stmt_ctx.resolved_stmt_actions
                 if isinstance(resolved_stmt_action, AssumeRoleAction)
             ]
         )
 
         resolved_assume_role_actions = ResolvedAssumeRoleActions.load(assume_role_actions)
-        for stmt_relative_id_regex in stmt_relative_id_regexes:
+        for stmt_relative_id_regex in stmt_ctx.stmt_relative_id_resource_regexes:
             yield_iam_roles = AssumeRoleServiceResourcesResolver._yield_resolve_resources_from_stmt_relative_id_regex(
-                stmt_relative_id_regex, service_resources
+                stmt_relative_id_regex, stmt_ctx.service_resources
             )
             for resolved_iam_role in yield_iam_roles:
                 resolved_iam_roles_actions[resolved_iam_role] = resolved_assume_role_actions
 
-        return cls(
-            resolved_stmts=[
-                AssumeRoleResolvedStmt(
-                    resolved_principals=resolved_stmt_principals, resolved_iam_roles_actions=resolved_iam_roles_actions
-                )
-            ]
-        )
+        resolved_stmt: ResolvedSingleStmt = ResolvedSingleStmt.load(stmt_ctx, resolved_iam_roles_actions)  # type: ignore
+        return cls(resolved_stmts=[AssumeRoleResolvedStmt(resolved_stmt=resolved_stmt)])

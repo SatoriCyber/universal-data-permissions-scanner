@@ -2,9 +2,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, NamedTuple, Sequence, Tuple, Union
 from unittest.mock import MagicMock, call
-import pytest
 
+import pytest
 from redshift_connector import Cursor  # type: ignore
+
 from authz_analyzer import RedshiftAuthzAnalyzer
 from authz_analyzer.models.model import (
     Asset,
@@ -16,7 +17,6 @@ from authz_analyzer.models.model import (
     IdentityType,
     PermissionLevel,
 )
-
 from tests.mocks.mock_writers import MockWriter
 
 

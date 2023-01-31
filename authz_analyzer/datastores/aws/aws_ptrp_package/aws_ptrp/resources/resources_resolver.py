@@ -10,6 +10,7 @@ from aws_ptrp.services import (
     ServiceResourceBase,
     ServiceResourcesResolverBase,
     ServiceResourceType,
+    StmtResourcesToResolveCtx,
 )
 
 
@@ -43,6 +44,10 @@ class ResourcesResolver:
     def resolve_stmt_resource_regexes(
         cls,
         logger: Logger,
+        stmt_name: Optional[str],
+        stmt_parent_arn: str,
+        policy_name: Optional[str],
+        is_condition_stmt_exists: bool,
         stmt_resource: Union[str, List[str]],
         account_resources: AwsAccountResources,
         resolved_stmt_principals: List[Principal],
@@ -74,14 +79,18 @@ class ResourcesResolver:
                 service_type
             )
             if service_resources and service_action_stmt_resolver and not service_action_stmt_resolver.is_empty():
+                stmt_ctx = StmtResourcesToResolveCtx(
+                    service_resources=service_resources,
+                    resolved_stmt_principals=resolved_stmt_principals,
+                    resolved_stmt_actions=service_action_stmt_resolver.get_resolved_actions(),
+                    stmt_relative_id_resource_regexes=service_regexes,
+                    is_condition_exists=is_condition_stmt_exists,
+                    stmt_name=stmt_name,
+                    stmt_parent_arn=stmt_parent_arn,
+                    policy_name=policy_name,
+                )
                 service_resource_resolver: ServiceResourcesResolverBase = (
-                    service_type.load_resolver_service_resources_from_single_stmt(
-                        logger,
-                        service_regexes,
-                        service_resources,
-                        resolved_stmt_principals,
-                        service_action_stmt_resolver.get_resolved_actions(),
-                    )
+                    service_type.load_resolver_service_resources_from_single_stmt(logger, stmt_ctx)
                 )
                 if not service_resource_resolver.is_empty():
                     services_resource_resolver[service_type] = service_resource_resolver

@@ -3,6 +3,32 @@ from enum import Enum, auto
 from typing import List
 
 
+class AwsPtrpNoteType(Enum):
+    """Types of note"""
+
+    POLICY_STMT_DENY_WITH_CONDITION = auto()
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name
+
+    def __hash__(self) -> int:
+        return hash(self.value)
+
+
+@dataclass
+class AwsPtrpNodeNote:
+    """Note information to be used for node in a PTRP line"""
+
+    note: str
+    note_type: AwsPtrpNoteType
+
+    def __repr__(self):
+        return f"{self.note_type}: {self.note}"
+
+
 class AwsPtrpResourceType(Enum):
     """Types of AWS resources supported by the PRTP"""
 
@@ -93,10 +119,10 @@ class AwsPtrpPathNode:
     arn: str
     name: str
     type: AwsPtrpPathNodeType
-    note: str
+    notes: List[AwsPtrpNodeNote]
 
     def __repr__(self):
-        return f"{self.type} {self.arn} {self.name} {self.note}"
+        return f"{self.type} {self.arn} {self.name} {self.notes}"
 
 
 @dataclass
@@ -105,6 +131,7 @@ class AwsPtrpResource:
 
     name: str
     type: AwsPtrpResourceType
+    notes: List[AwsPtrpNodeNote]
 
 
 @dataclass
@@ -115,6 +142,7 @@ class AwsPrincipal:
     arn: str
     type: AwsPrincipalType
     name: str
+    notes: List[AwsPtrpNodeNote]
 
 
 @dataclass

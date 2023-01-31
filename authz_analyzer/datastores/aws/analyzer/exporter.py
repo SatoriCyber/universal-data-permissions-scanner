@@ -111,7 +111,7 @@ class AWSPtrpModelConvertor:
                 id=path_node.arn,
                 name=path_node.name,
                 type=AWSPtrpModelConvertor._get_path_node_type(path_node.type),
-                note=path_node.note,
+                note="",
             )
             for path_node in self.line.path_nodes
         ]

@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Set, Union
 from aws_ptrp.actions.actions_resolver import ActionsResolver
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.policy.effect import Effect
-from aws_ptrp.iam.policy.policy_document import PolicyDocument
+from aws_ptrp.iam.policy.policy_document import PolicyDocument, PolicyDocumentCtx
 from aws_ptrp.principals import Principal
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.resources.resources_resolver import ResourcesResolver
@@ -32,7 +32,8 @@ def get_role_trust_resolver(
         logger=logger,
         all_stmts_service_resources_resolvers=all_stmts_service_resources_resolvers,
         policy_document=role_trust_policy,
-        parent_resource_arn=iam_role_arn,
+        parent_arn=iam_role_arn,
+        policy_name=None,
         identity_principal=None,
         aws_actions=aws_actions,
         account_resources=account_resources,
@@ -65,7 +66,8 @@ def get_resource_based_resolver(
         logger=logger,
         all_stmts_service_resources_resolvers=all_stmts_service_resources_resolvers,
         policy_document=policy_document,
-        parent_resource_arn=resource_arn,
+        parent_arn=resource_arn,
+        policy_name=None,
         identity_principal=None,
         aws_actions=aws_actions,
         account_resources=account_resources,
@@ -79,7 +81,7 @@ def get_resource_based_resolver(
 
 def get_identity_based_resolver(
     logger: Logger,
-    policy_documents: List[PolicyDocument],
+    policy_documents_ctx: List[PolicyDocumentCtx],
     identity_principal: Principal,
     effect: Effect,
     aws_actions: AwsActions,
@@ -88,12 +90,13 @@ def get_identity_based_resolver(
 ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
 
     all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase] = {}
-    for policy_document in policy_documents:
+    for policy_document_ctx in policy_documents_ctx:
         _services_resolver_for_policy_document(
             logger=logger,
             all_stmts_service_resources_resolvers=all_stmts_service_resources_resolvers,
-            policy_document=policy_document,
-            parent_resource_arn=None,  # no need parent_resource the policy should includes the resources for each stmt
+            policy_document=policy_document_ctx.policy_document,
+            parent_arn=policy_document_ctx.parent_arn,
+            policy_name=policy_document_ctx.policy_name,
             identity_principal=identity_principal,
             aws_actions=aws_actions,
             account_resources=account_resources,
@@ -110,7 +113,8 @@ def _services_resolver_for_policy_document(
     logger: Logger,
     all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase],
     policy_document: PolicyDocument,
-    parent_resource_arn: Optional[str],
+    parent_arn: str,
+    policy_name: Optional[str],
     identity_principal: Optional[Principal],
     aws_actions: AwsActions,
     account_resources: AwsAccountResources,
@@ -137,8 +141,8 @@ def _services_resolver_for_policy_document(
 
         if statement.resource:
             statement_resource: Union[str, List[str]] = statement.resource
-        elif parent_resource_arn:
-            statement_resource = parent_resource_arn
+        elif parent_arn:
+            statement_resource = parent_arn
         else:
             raise Exception(
                 f"Invalid resource input, both statement.resource & outer param parent_resource_arn are None - {statement}"
@@ -158,15 +162,20 @@ def _services_resolver_for_policy_document(
             )
             # has relevant resolved actions, check the resolved resources
             resolved_services_action: Set[ServiceActionType] = set(single_stmt_service_actions_resolvers.keys())
+            is_condition_stmt_exists: bool = statement.condition is not None
             single_stmt_service_resources_resolvers: Optional[
                 Dict[ServiceResourceType, ServiceResourcesResolverBase]
             ] = ResourcesResolver.resolve_stmt_resource_regexes(
-                logger,
-                statement_resource,
-                account_resources,
-                statement_principals,
-                resolved_services_action,
-                single_stmt_service_actions_resolvers,
+                logger=logger,
+                stmt_name=statement.sid,
+                stmt_parent_arn=parent_arn,
+                policy_name=policy_name,
+                is_condition_stmt_exists=is_condition_stmt_exists,
+                stmt_resource=statement_resource,
+                account_resources=account_resources,
+                resolved_stmt_principals=statement_principals,
+                resolved_stmt_services_action_types=resolved_services_action,
+                service_action_stmt_resolvers=single_stmt_service_actions_resolvers,
             )
 
             if single_stmt_service_resources_resolvers:

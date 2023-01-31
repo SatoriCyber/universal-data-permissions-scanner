@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Set
 from unittest.mock import MagicMock, call
+
 import pytest
 
 from authz_analyzer import MongoDBAtlasAuthzAnalyzer
@@ -14,10 +15,10 @@ from authz_analyzer.datastores.mongodb.atlas.model import (
 )
 from authz_analyzer.datastores.mongodb.atlas.service import AtlasService
 from authz_analyzer.datastores.mongodb.atlas.service_model import (
+    ClusterConnectionStringEntry,
     ClusterEntry,
     OrganizationEntry,
     ProjectInfo,
-    ClusterConnectionStringEntry,
 )
 from authz_analyzer.datastores.mongodb.service import MongoDBService
 from authz_analyzer.models.model import (
@@ -30,7 +31,6 @@ from authz_analyzer.models.model import (
     IdentityType,
     PermissionLevel,
 )
-
 from tests.mocks.mock_writers import MockWriter
 
 

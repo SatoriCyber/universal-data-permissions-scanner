@@ -6,36 +6,28 @@ from typing import Dict, List, Optional, Set
 from aws_ptrp.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
 from aws_ptrp.principals import Principal
 from aws_ptrp.services import (
-    ResolvedActionsSingleStmt,
-    ResolvedResourcesSingleStmt,
-    ServiceActionBase,
-    ServiceResourceBase,
+    ResolvedSingleStmt,
+    ResolvedSingleStmtGetter,
     ServiceResourcesResolverBase,
+    StmtResourcesToResolveCtx,
 )
 from aws_ptrp.services.s3.bucket import S3Bucket
 from aws_ptrp.services.s3.s3_actions import ResolvedS3BucketActions, S3Action, S3ActionType
 
 
 @dataclass
-class S3ResolvedStmt(ResolvedResourcesSingleStmt):
-    resolved_principals: List[Principal]
-    resolved_buckets: Dict[S3Bucket, ResolvedS3BucketActions]
-    # add here condition keys, tags, etc.. (single stmt scope)
+class S3ResolvedStmt(ResolvedSingleStmtGetter):
+    resolved_stmt: ResolvedSingleStmt
 
-    @property
-    def resolved_stmt_principals(self) -> List[Principal]:
-        return self.resolved_principals
-
-    @property
-    def resolved_stmt_resources(self) -> Dict[ServiceResourceBase, ResolvedActionsSingleStmt]:
-        return self.resolved_buckets  # type: ignore[return-value]
+    def get(self) -> ResolvedSingleStmt:
+        return self.resolved_stmt
 
 
 @dataclass
 class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
     resolved_stmts: List[S3ResolvedStmt]
 
-    def get_resolved_stmts(self) -> List[ResolvedResourcesSingleStmt]:
+    def get_resolved_stmts(self) -> List[ResolvedSingleStmtGetter]:
         return self.resolved_stmts  # type: ignore[return-value]
 
     @staticmethod
@@ -84,15 +76,13 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
     def load_from_single_stmt(
         cls,
         _logger: Logger,
-        stmt_relative_id_regexes: List[str],
-        service_resources: Set[ServiceResourceBase],
-        resolved_stmt_principals: List[Principal],
-        resolved_stmt_actions: Set[ServiceActionBase],
+        stmt_ctx: StmtResourcesToResolveCtx,
     ) -> 'S3ServiceResourcesResolver':
-        resolved_buckets: Dict[S3Bucket, ResolvedS3BucketActions] = dict()
-
-        s3_buckets: List[S3Bucket] = [s for s in service_resources if isinstance(s, S3Bucket)]
-        resolved_stmt_s3_actions: Set[S3Action] = set([a for a in resolved_stmt_actions if isinstance(a, S3Action)])
+        resolved_buckets: Dict[S3Bucket, ResolvedS3BucketActions] = {}
+        s3_buckets: List[S3Bucket] = [s for s in stmt_ctx.service_resources if isinstance(s, S3Bucket)]
+        resolved_stmt_s3_actions: Set[S3Action] = set(
+            [a for a in stmt_ctx.resolved_stmt_actions if isinstance(a, S3Action)]
+        )
         resolved_stmt_actions_bucket: Set[S3Action] = set(
             filter(lambda x: x.action_type == S3ActionType.BUCKET, resolved_stmt_s3_actions)
         )
@@ -100,7 +90,7 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
             filter(lambda x: x.action_type == S3ActionType.OBJECT, resolved_stmt_s3_actions)
         )
 
-        for stmt_relative_id_regex in stmt_relative_id_regexes:
+        for stmt_relative_id_regex in stmt_ctx.stmt_relative_id_resource_regexes:
             res = stmt_relative_id_regex.split('/', 1)
             stmt_relative_id_buckets_regex: str = res[0]
             stmt_relative_id_objects_regex: Optional[str] = None
@@ -112,11 +102,14 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
                 stmt_relative_id_buckets_regex,
                 stmt_relative_id_objects_regex,
                 s3_buckets,
-                resolved_stmt_principals,
+                stmt_ctx.resolved_stmt_principals,
                 resolved_stmt_s3_actions,
                 resolved_stmt_actions_bucket,
                 resolved_stmt_actions_object,
             )
 
-        resolved_stmt = S3ResolvedStmt(resolved_buckets=resolved_buckets, resolved_principals=resolved_stmt_principals)
-        return cls(resolved_stmts=[resolved_stmt])
+        resolved_stmt: ResolvedSingleStmt = ResolvedSingleStmt.load(stmt_ctx, resolved_buckets)  # type: ignore
+        s3_resolved_stmt = S3ResolvedStmt(
+            resolved_stmt=resolved_stmt,
+        )
+        return cls(resolved_stmts=[s3_resolved_stmt])
