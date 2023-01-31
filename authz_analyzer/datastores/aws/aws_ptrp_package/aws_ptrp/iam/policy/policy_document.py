@@ -65,7 +65,9 @@ class Statement:
     not_action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
     resource: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
     not_resource: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
-    # condition: TODO
+    # just to verify if condition exists (To ignore Deny stmts with condition, to be on the strict side for the allowed permissions)
+    # to revisit, once we will start to support condition
+    condition: Optional[Dict[str, Any]] = field(default=None, skip_if_default=True)
 
 
 @serde(rename_all="pascalcase")
@@ -78,3 +80,10 @@ class PolicyDocument:
             if stmt.principal and stmt.effect == effect:
                 for principal in stmt.principal.principals:
                     yield principal
+
+
+@dataclass
+class PolicyDocumentCtx:
+    policy_document: PolicyDocument
+    policy_name: Optional[str]
+    parent_arn: str

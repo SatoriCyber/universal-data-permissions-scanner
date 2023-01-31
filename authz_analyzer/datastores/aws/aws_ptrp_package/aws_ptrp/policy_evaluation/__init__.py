@@ -1,5 +1,3 @@
-from .policy_evaluation import PolicyEvaluation
+from .policy_evaluation import PolicyEvaluation, PolicyEvaluationResult, PolicyEvaluationsResult
 
-__all__ = [
-    'PolicyEvaluation',
-]
+__all__ = ['PolicyEvaluation', 'PolicyEvaluationsResult', 'PolicyEvaluationResult']

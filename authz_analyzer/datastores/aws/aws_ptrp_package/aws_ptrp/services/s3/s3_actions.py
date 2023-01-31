@@ -52,10 +52,6 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
     def resolved_stmt_actions(self) -> Set[ServiceActionBase]:
         return self.actions  # type: ignore[return-value]
 
-    def subtract(self, other: 'ResolvedActionsSingleStmt'):
-        if isinstance(other, ResolvedS3BucketActions):
-            self.actions = self.actions.difference(other.actions)
-
     def add(self, actions: Set[S3Action], stmt_relative_id_objects_regex: Optional[str]):
         if stmt_relative_id_objects_regex is not None:
             self.stmt_relative_id_objects_regexes.append(stmt_relative_id_objects_regex)

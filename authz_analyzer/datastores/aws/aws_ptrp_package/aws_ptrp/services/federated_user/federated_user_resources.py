@@ -10,10 +10,12 @@ from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PathFederatedPri
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
 from aws_ptrp.services import (
     ResolvedActionsSingleStmt,
-    ResolvedResourcesSingleStmt,
+    ResolvedSingleStmt,
+    ResolvedSingleStmtGetter,
     ServiceActionBase,
     ServiceResourceBase,
     ServiceResourcesResolverBase,
+    StmtResourcesToResolveCtx,
 )
 from aws_ptrp.services.federated_user.federated_user_actions import FederatedUserAction
 from serde import field, serde
@@ -80,10 +82,6 @@ class ResolvedFederatedUserActions(ResolvedActionsSingleStmt):
     def resolved_stmt_actions(self) -> Set[ServiceActionBase]:
         return self.actions  # type: ignore[return-value]
 
-    def subtract(self, other: 'ResolvedActionsSingleStmt'):
-        if isinstance(other, ResolvedFederatedUserActions):
-            self.actions = self.actions.difference(other.actions)
-
     def add(self, actions: Set[FederatedUserAction]):
         self.actions = self.actions.union(actions)
 
@@ -96,25 +94,18 @@ class ResolvedFederatedUserActions(ResolvedActionsSingleStmt):
 
 
 @dataclass
-class FederatedUserResolvedStmt(ResolvedResourcesSingleStmt):
-    resolved_principals: List[Principal]
-    resolved_federated_users_actions: Dict[FederatedUserPrincipal, ResolvedFederatedUserActions]
-    # add here condition keys, tags, etc.. (single stmt scope)
+class FederatedUserResolvedStmt(ResolvedSingleStmtGetter):
+    resolved_stmt: ResolvedSingleStmt
 
-    @property
-    def resolved_stmt_principals(self) -> List[Principal]:
-        return self.resolved_principals
-
-    @property
-    def resolved_stmt_resources(self) -> Dict[ServiceResourceBase, ResolvedActionsSingleStmt]:
-        return self.resolved_federated_users_actions  # type: ignore[return-value]
+    def get(self) -> ResolvedSingleStmt:
+        return self.resolved_stmt
 
 
 @dataclass
 class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
     resolved_stmts: List[FederatedUserResolvedStmt]
 
-    def get_resolved_stmts(self) -> List[ResolvedResourcesSingleStmt]:
+    def get_resolved_stmts(self) -> List[ResolvedSingleStmtGetter]:
         return self.resolved_stmts  # type: ignore[return-value]
 
     def is_principal_allowed_to_assume_federated_user(
@@ -147,35 +138,26 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
     def load_from_single_stmt(
         cls,
         _logger: Logger,
-        stmt_relative_id_regexes: List[str],
-        service_resources: Set[ServiceResourceBase],
-        resolved_stmt_principals: List[Principal],
-        resolved_stmt_actions: Set[ServiceActionBase],
+        stmt_ctx: StmtResourcesToResolveCtx,
     ) -> ServiceResourcesResolverBase:
-        resolved_federated_users_actions: Dict[FederatedUserPrincipal, ResolvedFederatedUserActions] = dict()
+        resolved_federated_users_actions: Dict[FederatedUserPrincipal, ResolvedFederatedUserActions] = {}
         federated_user_actions = set(
             [
                 resolved_stmt_action
-                for resolved_stmt_action in resolved_stmt_actions
+                for resolved_stmt_action in stmt_ctx.resolved_stmt_actions
                 if isinstance(resolved_stmt_action, FederatedUserAction)
             ]
         )
 
         resolved_federated_user_actions = ResolvedFederatedUserActions.load(federated_user_actions)
-        for stmt_relative_id_regex in stmt_relative_id_regexes:
+        for stmt_relative_id_regex in stmt_ctx.stmt_relative_id_resource_regexes:
             yield_federated_users = (
                 FederatedUserServiceResourcesResolver._yield_resolve_resources_from_stmt_relative_id_regex(
-                    stmt_relative_id_regex, service_resources
+                    stmt_relative_id_regex, stmt_ctx.service_resources
                 )
             )
             for yield_federated_user in yield_federated_users:
                 resolved_federated_users_actions[yield_federated_user] = resolved_federated_user_actions
 
-        return cls(
-            resolved_stmts=[
-                FederatedUserResolvedStmt(
-                    resolved_principals=resolved_stmt_principals,
-                    resolved_federated_users_actions=resolved_federated_users_actions,
-                )
-            ]
-        )
+        resolved_stmt: ResolvedSingleStmt = ResolvedSingleStmt.load(stmt_ctx, resolved_federated_users_actions)  # type: ignore
+        return cls(resolved_stmts=[FederatedUserResolvedStmt(resolved_stmt=resolved_stmt)])
