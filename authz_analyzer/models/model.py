@@ -51,6 +51,8 @@ class IdentityType(Enum):
     FEDERATED_USER = auto()  # AWS
     ALL_USERS = auto()  # AWS
     ACCOUNT = auto()  # Snowflake
+    DB_USER = auto()  # MongoDB Atlas
+    ORG_USER = auto()  # MongoDB Atlas
 
     def __str__(self) -> str:
         return self.name
