@@ -30,6 +30,7 @@ from authz_analyzer.models.model import (
     Asset,
     AssetType,
     AuthzEntry,
+    AuthzNote,
     AuthzPathElement,
     AuthzPathElementType,
     Identity,
@@ -149,16 +150,20 @@ class MongoDBAuthzAnalyzer:
         for role in user["roles"]:
             permission_level = get_permission_level_cluster(role['role'])
             custom_role = custom_roles.get(role['role'])
-            role_path_element = AuthzPathElement(
-                id=role['role'], name=role['role'], type=AuthzPathElementType.ROLE, note=""
-            )
+            role_path_element = AuthzPathElement(id=role['role'], name=role['role'], type=AuthzPathElementType.ROLE)
             if permission_level is not None:
-                role_path_element.note = MongoDBAuthzAnalyzer._generate_note_user(
-                    user["user"], role["role"], permission_level, "all databases"
+                role_path_element.notes.append(
+                    AuthzNote.to_generic_note(
+                        MongoDBAuthzAnalyzer._generate_note_user(
+                            user["user"], role["role"], permission_level, "all databases"
+                        )
+                    )
                 )
                 roles.add(AdminRole(permission_level=permission_level, name=role['role'], path=[role_path_element]))
             elif custom_role is not None:
-                role_path_element.note = MongoDBAuthzAnalyzer._generate_note_user(user["user"], role["role"])
+                role_path_element.notes.append(
+                    AuthzNote.to_generic_note(MongoDBAuthzAnalyzer._generate_note_user(user["user"], role["role"]))
+                )
                 for admin_role in MongoDBAuthzAnalyzer._iter_admin_custom_role(
                     custom_roles, custom_role, path=[role_path_element]
                 ):
@@ -186,20 +191,32 @@ class MongoDBAuthzAnalyzer:
         for priv in role.privileges:
             permission_level = MongoDBAuthzAnalyzer._get_highest_permission(privilege=priv, collection='')
             if permission_level is not None:
-                path[-1].note += f" which grants permission {permission_level} on all databases"
+                if len(path[-1].notes) > 0:
+                    path[-1].notes[0].note += f" which grants permission {permission_level} on all databases"
+                else:
+                    path[-1].notes = [
+                        AuthzNote.to_generic_note(f" which grants permission {permission_level} on all databases")
+                    ]
+
                 yield AdminRole(permission_level=permission_level, name=role.name, path=path)
         for inherited_role in role.inherited_roles:
             permission_level = get_permission_level_cluster(inherited_role.name)
             custom_role = custom_roles.get(inherited_role.name)
             role_path_element = AuthzPathElement(
-                id=inherited_role.name, name=inherited_role.name, type=AuthzPathElementType.ROLE, note=""
+                id=inherited_role.name, name=inherited_role.name, type=AuthzPathElementType.ROLE
             )
             if permission_level is not None:  # built-in role
-                role_path_element.note = f"role {role.name} inherits role {inherited_role.name} which grants permission {permission_level} on all databases"
+                role_path_element.notes.append(
+                    AuthzNote.to_generic_note(
+                        f"role {role.name} inherits role {inherited_role.name} which grants permission {permission_level} on all databases"
+                    )
+                )
                 path.append(role_path_element)
                 yield AdminRole(permission_level=permission_level, name=role.name, path=path)
             if custom_role is not None:
-                role_path_element.note = f"role {role.name} inherits role {inherited_role.name}"
+                role_path_element.notes.append(
+                    AuthzNote.to_generic_note(f"role {role.name} inherits role {inherited_role.name}")
+                )
                 path.append(role_path_element)
                 MongoDBAuthzAnalyzer._iter_admin_custom_role(custom_roles, custom_role, path=path)
 
@@ -242,10 +259,16 @@ class MongoDBAuthzAnalyzer:
                 )
             permission = get_permission_level(role['role'])
             if permission is not None:
-                note = MongoDBAuthzAnalyzer._generate_note_user(
-                    user["user"], role["role"], permission, database_name + "." + collection
-                )
-                path = [AuthzPathElement(type=AuthzPathElementType.ROLE, name=role['role'], id=role['role'], note=note)]
+                notes = [
+                    AuthzNote.to_generic_note(
+                        MongoDBAuthzAnalyzer._generate_note_user(
+                            user["user"], role["role"], permission, database_name + "." + collection
+                        )
+                    )
+                ]
+                path = [
+                    AuthzPathElement(type=AuthzPathElementType.ROLE, name=role['role'], id=role['role'], notes=notes)
+                ]
                 self._write_entry(
                     user_id=user["user"],
                     username=user["user"],
@@ -264,9 +287,7 @@ class MongoDBAuthzAnalyzer:
         custom_roles: Dict[str, Role],
         path: List[AuthzPathElement],
     ):
-        path.append(
-            AuthzPathElement(type=AuthzPathElementType.ROLE, name=custom_role.name, id=custom_role.name, note="")
-        )
+        path.append(AuthzPathElement(type=AuthzPathElementType.ROLE, name=custom_role.name, id=custom_role.name))
         highest_permission_level: Optional[PermissionLevel] = None
         for inherited_role in custom_role.inherited_roles:
             role = custom_roles.get(inherited_role.name)
@@ -275,7 +296,7 @@ class MongoDBAuthzAnalyzer:
                 if permission is not None:
                     path.append(
                         AuthzPathElement(
-                            type=AuthzPathElementType.ROLE, name=inherited_role.name, id=inherited_role.name, note=""
+                            type=AuthzPathElementType.ROLE, name=inherited_role.name, id=inherited_role.name
                         )
                     )
                     self._write_entry(

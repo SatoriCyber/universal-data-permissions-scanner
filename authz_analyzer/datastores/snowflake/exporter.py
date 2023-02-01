@@ -62,8 +62,7 @@ def _iter_role_row(
     for grant in grants:
         identity = Identity(id=user_name.id, name=user_name.name, type=IdentityType.USER)
         authz_path = [
-            AuthzPathElement(id=role.name, name=role.name, type=AuthzPathElementType.ROLE, note="")
-            for role in prev_roles
+            AuthzPathElement(id=role.name, name=role.name, type=AuthzPathElementType.ROLE) for role in prev_roles
         ]
         yield from _yield_row(
             identity=identity, permission_level=grant.permission_level, grant=grant, authz_path=authz_path
@@ -93,7 +92,7 @@ def _yield_share(share: DataShare):
                 granted_on=granted_on,
             )
             authz_path = [
-                AuthzPathElement(id=".".join(share.id), name=share.name, type=AuthzPathElementType.SHARE, note=""),
+                AuthzPathElement(id=".".join(share.id), name=share.name, type=AuthzPathElementType.SHARE),
             ]
             yield from _yield_row(
                 identity=identity, permission_level=priv.permission_level, grant=grant, authz_path=authz_path

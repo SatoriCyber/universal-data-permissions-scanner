@@ -32,7 +32,7 @@ def test_csv_writer_write_entry():
 
     asset = Asset(name=["table1"], type=AssetType.TABLE)
     identity = Identity(id="user1", name="user1", type=IdentityType.USER)
-    authz_entry_path = AuthzPathElement(id="role1", name="role1", type=AuthzPathElementType.ROLE, note="")
+    authz_entry_path = AuthzPathElement(id="role1", name="role1", type=AuthzPathElementType.ROLE)
     authz_entry = AuthzEntry(asset=asset, path=[authz_entry_path], identity=identity, permission=PermissionLevel.READ)
 
     writer = CSVWriter(mock_fh)

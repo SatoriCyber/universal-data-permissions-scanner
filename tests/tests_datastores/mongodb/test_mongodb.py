@@ -15,6 +15,7 @@ from authz_analyzer.models.model import (
     Asset,
     AssetType,
     AuthzEntry,
+    AuthzNote,
     AuthzPathElement,
     AuthzPathElementType,
     Identity,
@@ -78,7 +79,11 @@ def generate_authz_entry_admin_by_collection(
                     id=role_name,
                     name=role_name,
                     type=AuthzPathElementType.ROLE,
-                    note=f"user admin has role {role_name} which grants permission {permission_level} on {note_on}",
+                    notes=[
+                        AuthzNote.to_generic_note(
+                            f"user admin has role {role_name} which grants permission {permission_level} on {note_on}"
+                        )
+                    ],
                 )
             ],
         )

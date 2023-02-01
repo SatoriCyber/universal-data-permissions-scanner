@@ -5,7 +5,8 @@ import pathlib
 import pytest
 from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.utils.create_session import create_session_with_assume_role
-from serde.json import from_dict, to_json
+from serde.de import from_dict
+from serde.json import to_json
 
 from authz_analyzer.utils.logger import get_logger
 

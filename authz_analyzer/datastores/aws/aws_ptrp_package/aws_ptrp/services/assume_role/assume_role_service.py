@@ -13,7 +13,7 @@ from aws_ptrp.services.assume_role.assume_role_actions import AssumeRoleAction, 
 from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
 from serde import serde
 
-ROLE_TRUST_SERVICE_NAME = "role_trust_service"
+ROLE_TRUST_SERVICE_NAME = "assume role"
 ROLE_TRUST_ACTION_SERVICE_PREFIX = "sts:"
 ROLE_TRUST_RESOURCE_SERVICE_PREFIX = "arn:aws:iam::"
 

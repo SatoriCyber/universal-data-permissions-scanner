@@ -8,6 +8,8 @@ https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-json#loading_s
 import json
 from typing import Dict, List, Union
 
+from serde.se import to_dict
+
 from authz_analyzer.models.model import AuthzEntry
 from authz_analyzer.writers.base_writers import BaseWriter
 
@@ -26,13 +28,22 @@ class MultiJsonWriter(BaseWriter):
                     "id": x.id,
                     "name": x.name,
                     "db_permissions": x.db_permissions,
-                    "note": x.note,
+                    "notes": [to_dict(note) for note in x.notes],
                 },
                 entry.path,
             )
         )
-        identity = {"id": entry.identity.id, "type": str(entry.identity.type), "name": entry.identity.name}
-        asset = {"name": entry.asset.name, "type": str(entry.asset.type)}
+        identity = {
+            "id": entry.identity.id,
+            "type": str(entry.identity.type),
+            "name": entry.identity.name,
+            "notes": [to_dict(note) for note in entry.identity.notes],
+        }
+        asset = {
+            "name": entry.asset.name,
+            "type": str(entry.asset.type),
+            "notes": [to_dict(note) for note in entry.asset.notes],
+        }
 
         line = {
             "identity": identity,
