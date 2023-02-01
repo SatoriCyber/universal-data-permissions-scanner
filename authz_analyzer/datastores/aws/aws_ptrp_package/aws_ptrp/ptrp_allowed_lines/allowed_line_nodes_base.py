@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import List, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.principals import Principal
@@ -33,16 +33,25 @@ class NodeNote:
             assert False  # should not get here, unknown enum value
 
 
-class NodeArnBase(ABC):
+class NodeNoteBase(ABC):
     @abstractmethod
     def get_node_arn(self) -> str:
         pass
 
+    @abstractmethod
+    def get_node_name(self) -> str:
+        pass
 
-class PathNodeBase(NodeArnBase):
-    def get_node_arn(self) -> str:
-        return self.get_path_arn()
+    @abstractmethod
+    def add_node_note(self, node_note: NodeNote):
+        pass
 
+    @abstractmethod
+    def get_node_notes(self) -> Iterable[NodeNote]:
+        pass
+
+
+class PathNodeBase(ABC):
     @abstractmethod
     def get_path_type(self) -> AwsPtrpPathNodeType:
         pass
@@ -56,7 +65,7 @@ class PathNodeBase(NodeArnBase):
         pass
 
 
-class PoliciesNodeBase(NodeArnBase):
+class PoliciesNodeBase(ABC):
     @abstractmethod
     def get_attached_policies_arn(self) -> List[str]:
         pass
@@ -66,10 +75,11 @@ class PoliciesNodeBase(NodeArnBase):
         pass
 
 
-class PrincipalNodeBase(NodeArnBase):
-    def get_node_arn(self) -> str:
-        return self.get_stmt_principal().get_arn()
+class PoliciesAndNodeNoteBase(PoliciesNodeBase, NodeNoteBase):
+    pass
 
+
+class PrincipalNodeBase(ABC):
     @abstractmethod
     def get_stmt_principal(self) -> Principal:
         pass
@@ -82,6 +92,10 @@ class PrincipalAndPoliciesNodeBase(PrincipalNodeBase, PoliciesNodeBase):
 
     # def get_session_policies(self) -> List[PolicyDocument]:
     #     return []
+
+
+class PrincipalAndNodeNoteBase(PrincipalNodeBase, NodeNoteBase):
+    pass
 
 
 class PathRoleNodeBase(PrincipalAndPoliciesNodeBase, PathNodeBase):
@@ -103,7 +117,7 @@ class PathPolicyNodeBase(PathNodeBase):
 
 
 @dataclass
-class PrincipalAndPoliciesNode(PrincipalAndPoliciesNodeBase):
+class PrincipalAndPoliciesNode(PrincipalAndPoliciesNodeBase, PrincipalAndNodeNoteBase, PoliciesAndNodeNoteBase):
     base: PrincipalAndPoliciesNodeBase
     notes: List[NodeNote] = field(default_factory=list)
 
@@ -125,6 +139,19 @@ class PrincipalAndPoliciesNode(PrincipalAndPoliciesNodeBase):
     def __hash__(self):
         return hash(self.base)
 
+    # NodeNoteBase
+    def get_node_arn(self) -> str:
+        return self.base.get_stmt_principal().get_arn()
+
+    def get_node_name(self) -> str:
+        return self.base.get_stmt_principal().get_name()
+
+    def add_node_note(self, node_note: NodeNote):
+        self.notes.append(node_note)
+
+    def get_node_notes(self) -> Iterable[NodeNote]:
+        return self.notes
+
     # PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:
         return self.base.get_stmt_principal()
@@ -142,7 +169,7 @@ class PathUserGroupNodeBase(PoliciesNodeBase, PathNodeBase):
 
 
 @dataclass
-class PathUserGroupNode(PathUserGroupNodeBase):
+class PathUserGroupNode(PathUserGroupNodeBase, PoliciesAndNodeNoteBase):
     base: PathUserGroupNodeBase
     notes: List[NodeNote] = field(default_factory=list)
 
@@ -163,6 +190,19 @@ class PathUserGroupNode(PathUserGroupNodeBase):
     def __hash__(self):
         return hash(self.base)
 
+    # NodeNoteBase
+    def get_node_arn(self) -> str:
+        return self.base.get_path_arn()
+
+    def get_node_name(self) -> str:
+        return self.base.get_path_name()
+
+    def add_node_note(self, node_note: NodeNote):
+        self.notes.append(node_note)
+
+    def get_node_notes(self) -> Iterable[NodeNote]:
+        return self.notes
+
     # PoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
         return self.base.get_attached_policies_arn()
@@ -182,7 +222,7 @@ class PathUserGroupNode(PathUserGroupNodeBase):
 
 
 @dataclass
-class PathRoleNode(PathRoleNodeBase):
+class PathRoleNode(PathRoleNodeBase, PrincipalAndNodeNoteBase, PoliciesAndNodeNoteBase):
     base: PathRoleNodeBase
     notes: List[NodeNote] = field(default_factory=list)
 
@@ -202,6 +242,19 @@ class PathRoleNode(PathRoleNodeBase):
 
     def __hash__(self):
         return hash(self.base)
+
+    # NodeNoteBase
+    def get_node_arn(self) -> str:
+        return self.base.get_path_arn()
+
+    def get_node_name(self) -> str:
+        return self.base.get_path_name()
+
+    def add_node_note(self, node_note: NodeNote):
+        self.notes.append(node_note)
+
+    def get_node_notes(self) -> Iterable[NodeNote]:
+        return self.notes
 
     # PathRoleNodeBase
     def get_service_resource(self) -> ServiceResourceBase:
@@ -230,7 +283,7 @@ class PathRoleNode(PathRoleNodeBase):
 
 
 @dataclass
-class PathFederatedPrincipalNode(PathFederatedPrincipalNodeBase):
+class PathFederatedPrincipalNode(PathFederatedPrincipalNodeBase, PrincipalAndNodeNoteBase):
     base: PathFederatedPrincipalNodeBase
     notes: List[NodeNote] = field(default_factory=list)
 
@@ -250,6 +303,19 @@ class PathFederatedPrincipalNode(PathFederatedPrincipalNodeBase):
 
     def __hash__(self):
         return hash(self.base)
+
+    # NodeNoteBase
+    def get_node_arn(self) -> str:
+        return self.base.get_path_arn()
+
+    def get_node_name(self) -> str:
+        return self.base.get_path_name()
+
+    def add_node_note(self, node_note: NodeNote):
+        self.notes.append(node_note)
+
+    def get_node_notes(self) -> Iterable[NodeNote]:
+        return self.notes
 
     # PathFederatedPrincipalNodeBase
     def get_service_resource(self) -> ServiceResourceBase:
@@ -271,7 +337,7 @@ class PathFederatedPrincipalNode(PathFederatedPrincipalNodeBase):
 
 
 @dataclass
-class PathPolicyNode(PathPolicyNodeBase):
+class PathPolicyNode(PathPolicyNodeBase, NodeNoteBase):
     path_element_type: AwsPtrpPathNodeType
     path_arn: str
     path_name: str
@@ -300,6 +366,19 @@ class PathPolicyNode(PathPolicyNodeBase):
     def __hash__(self):
         return hash(self.path_arn) + hash(self.path_name)
 
+    # NodeNoteBase
+    def get_node_arn(self) -> str:
+        return self.get_path_arn()
+
+    def get_node_name(self) -> str:
+        return self.get_path_name()
+
+    def add_node_note(self, node_note: NodeNote):
+        self.notes.append(node_note)
+
+    def get_node_notes(self) -> Iterable[NodeNote]:
+        return self.notes
+
     # PathPolicyNodeBase
     def get_policy(self) -> PolicyDocument:
         return self.policy_document
@@ -322,7 +401,7 @@ class ResourceNodeBase(ServiceResourceBase):
 
 
 @dataclass
-class ResourceNode:
+class ResourceNode(ResourceNodeBase, NodeNoteBase):
     base: ResourceNodeBase
     service_resource_type: ServiceResourceType
     notes: List[NodeNote] = field(default_factory=list)
@@ -342,3 +421,33 @@ class ResourceNode:
 
     def __hash__(self):
         return hash(self.base)
+
+    # NodeNoteBase
+    def get_node_arn(self) -> str:
+        return self.base.get_resource_arn()
+
+    def get_node_name(self) -> str:
+        return self.base.get_resource_name()
+
+    def add_node_note(self, node_note: NodeNote):
+        self.notes.append(node_note)
+
+    def get_node_notes(self) -> Iterable[NodeNote]:
+        return self.notes
+
+    # ResourceNodeBase
+    def get_ptrp_resource_type(self) -> AwsPtrpResourceType:
+        return self.base.get_ptrp_resource_type()
+
+    # ServiceResourceBase
+    def get_resource_arn(self) -> str:
+        return self.base.get_resource_arn()
+
+    def get_resource_name(self) -> str:
+        return self.base.get_resource_name()
+
+    def get_resource_policy(self) -> Optional[PolicyDocument]:
+        return self.base.get_resource_policy()
+
+    def get_resource_account_id(self) -> str:
+        return self.base.get_resource_account_id()

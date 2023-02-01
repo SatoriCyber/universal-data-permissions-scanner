@@ -11,6 +11,9 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import List
 
+from serde import field as serde_field
+from serde import serde
+
 
 class AssetType(Enum):
     """Types of assets that are stored at the datastores."""
@@ -126,6 +129,41 @@ class PermissionLevel(Enum):
         return self.value >= other.value
 
 
+class AuthzNoteType(Enum):
+    """Note element type."""
+
+    GENERIC = auto()
+    AWS_POLICY_STMT_DENY_WITH_CONDITION = auto()
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name
+
+    def __hash__(self) -> int:
+        return hash(self.value)
+
+
+@serde
+@dataclass
+class AuthzNote:
+    """Note element to be use in a the authorization entry elements identity/path/assert."""
+
+    note: str
+    type: AuthzNoteType = serde_field(serializer=lambda x: x.name)
+
+    def __str__(self) -> str:
+        return f"{self.type}: {self.note}"
+
+    def __repr__(self) -> str:
+        return f"{self.type}: {self.note}"
+
+    @classmethod
+    def to_generic_note(cls, note: str) -> AuthzNote:
+        return AuthzNote(note=note, type=AuthzNoteType.GENERIC)
+
+
 @dataclass
 class AuthzPathElement:
     """Element of the authorization entry path which grants access.
@@ -135,16 +173,18 @@ class AuthzPathElement:
     id: str
     name: str
     type: AuthzPathElementType
-    note: str
+    notes: List[AuthzNote] = field(default_factory=list)
     db_permissions: List[str] = field(default_factory=list)
 
     def __repr__(self):
-        return f"{self.type} {self.id} {self.name} {self.note}"
+        return f"{self.type} {self.id} {self.name} {self.notes}"
 
     def __str__(self) -> str:
         result = f"{self.type} {self.name}"
         if len(self.db_permissions) != 0:
             result += f" provides permissions {self.db_permissions}"
+        if len(self.notes) != 0:
+            result += f" notes {self.notes}"
         return result
 
 
@@ -157,9 +197,13 @@ class Asset:
 
     name: List[str]
     type: AssetType
+    notes: List[AuthzNote] = field(default_factory=list)
 
     def __str__(self) -> str:
-        return f"{self.type}: {'.'.join(self.name)}"
+        result = f"{self.type}: {'.'.join(self.name)}"
+        if len(self.notes) != 0:
+            result += f", notes: {self.notes}"
+        return result
 
 
 @dataclass
@@ -171,9 +215,13 @@ class Identity:
     id: str
     type: IdentityType
     name: str
+    notes: List[AuthzNote] = field(default_factory=list)
 
     def __str__(self) -> str:
-        return f"{self.type}: {self.name}"
+        result = f"{self.type}: {self.name}"
+        if len(self.notes) != 0:
+            result += f", notes: {self.notes}"
+        return result
 
 
 @dataclass

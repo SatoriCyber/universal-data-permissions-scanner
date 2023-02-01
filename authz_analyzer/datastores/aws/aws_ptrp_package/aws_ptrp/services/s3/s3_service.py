@@ -14,7 +14,7 @@ from aws_ptrp.services.s3.s3_resources import S3ServiceResourcesResolver
 from boto3 import Session
 from serde import serde
 
-S3_SERVICE_NAME = "s3_service"
+S3_SERVICE_NAME = "s3"
 
 
 @serde

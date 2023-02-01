@@ -1,3 +1,8 @@
-from .policy_evaluation import PolicyEvaluation, PolicyEvaluationResult, PolicyEvaluationsResult
+from .policy_evaluation import (
+    PolicyEvaluation,
+    PolicyEvaluationApplyResult,
+    PolicyEvaluationResult,
+    PolicyEvaluationsResult,
+)
 
-__all__ = ['PolicyEvaluation', 'PolicyEvaluationsResult', 'PolicyEvaluationResult']
+__all__ = ['PolicyEvaluation', 'PolicyEvaluationsResult', 'PolicyEvaluationResult', 'PolicyEvaluationApplyResult']

@@ -152,7 +152,6 @@ def generate_authz_entry_role(
             id=role_path.name,
             name=role_path.name,
             type=AuthzPathElementType.ROLE,
-            note="",
             db_permissions=role_path.db_permissions,
         )
         for role_path in roles_path
@@ -174,7 +173,6 @@ def generate_authz_share(
             id=share_path.id,
             name=share_path.name,
             type=AuthzPathElementType.SHARE,
-            note="",
             db_permissions=share_path.db_permissions,
         )
     ]

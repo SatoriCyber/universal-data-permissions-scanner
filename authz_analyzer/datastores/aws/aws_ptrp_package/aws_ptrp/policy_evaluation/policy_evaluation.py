@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List, Optional, Set
+from typing import Dict, Generator, List, Optional, Set
 
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument, PolicyDocumentCtx
@@ -8,6 +8,7 @@ from aws_ptrp.iam.policy.policy_document_resolver import get_identity_based_reso
 from aws_ptrp.principals import Principal
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services import (
+    MethodOnStmtActionsResultType,
     MethodOnStmtActionsType,
     MethodOnStmtsActionsResult,
     ServiceActionType,
@@ -15,12 +16,47 @@ from aws_ptrp.services import (
     ServiceResourcesResolverBase,
     ServiceResourceType,
 )
+from aws_ptrp.services.resolved_stmt import ResolvedSingleStmt
 
 
 @dataclass
 class PolicyEvaluationExplicitDenyResult:
     difference_stmts_result_from_identity_policies: Optional[MethodOnStmtsActionsResult] = None
     difference_stmts_result_from_resource_policy: Optional[MethodOnStmtsActionsResult] = None
+
+    @staticmethod
+    def _yield_resolved_stmts(
+        difference_stmts_results: Optional[MethodOnStmtsActionsResult],
+        method_on_stmt_actions_type: MethodOnStmtActionsType,
+        method_on_stmt_actions_result_type: MethodOnStmtActionsResultType,
+    ) -> Generator[ResolvedSingleStmt, None, None]:
+        if method_on_stmt_actions_type == MethodOnStmtActionsType.DIFFERENCE:
+            if difference_stmts_results:
+                for resolved_stmt_result in difference_stmts_results.resolved_stmt_results:
+                    if resolved_stmt_result.result == method_on_stmt_actions_result_type:
+                        yield resolved_stmt_result.resolved_single_stmt
+
+    def yield_resolved_stmts_from_resource_policy(
+        self,
+        method_on_stmt_actions_type: MethodOnStmtActionsType,
+        method_on_stmt_actions_result_type: MethodOnStmtActionsResultType,
+    ) -> Generator[ResolvedSingleStmt, None, None]:
+        yield from PolicyEvaluationExplicitDenyResult._yield_resolved_stmts(
+            self.difference_stmts_result_from_resource_policy,
+            method_on_stmt_actions_type,
+            method_on_stmt_actions_result_type,
+        )
+
+    def yield_resolved_stmts_from_identity_policies(
+        self,
+        method_on_stmt_actions_type: MethodOnStmtActionsType,
+        method_on_stmt_actions_result_type: MethodOnStmtActionsResultType,
+    ) -> Generator[ResolvedSingleStmt, None, None]:
+        yield from PolicyEvaluationExplicitDenyResult._yield_resolved_stmts(
+            self.difference_stmts_result_from_identity_policies,
+            method_on_stmt_actions_type,
+            method_on_stmt_actions_result_type,
+        )
 
 
 @dataclass
@@ -38,6 +74,9 @@ class PolicyEvaluationResult:
             return self.target_resolver
         return None
 
+    def get_policy_apply_result(self) -> Optional[PolicyEvaluationApplyResult]:
+        return self.policy_apply_result
+
 
 @dataclass
 class PolicyEvaluationsResult:
@@ -47,6 +86,16 @@ class PolicyEvaluationsResult:
     def get_target_resolver(self) -> Optional[ServiceResourcesResolverBase]:
         if self.result:
             return self.result.get_target_resolver()
+        return None
+
+    def get_policy_apply_result(self) -> Optional[PolicyEvaluationApplyResult]:
+        if self.result:
+            return self.result.get_policy_apply_result()
+        return None
+
+    def get_cross_account_policy_apply_result(self) -> Optional[PolicyEvaluationApplyResult]:
+        if self.result_cross_account:
+            return self.result_cross_account.get_policy_apply_result()
         return None
 
 

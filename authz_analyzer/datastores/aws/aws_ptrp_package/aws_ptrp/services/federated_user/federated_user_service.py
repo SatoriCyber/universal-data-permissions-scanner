@@ -21,7 +21,7 @@ from aws_ptrp.services.s3.s3_resources import S3Bucket
 from aws_ptrp.services.s3.s3_service import S3Service
 from serde import serde
 
-FEDERATED_USER_SERVICE_NAME = "federated_user_service"
+FEDERATED_USER_SERVICE_NAME = "federated user"
 FEDERATED_USER_ACTION_SERVICE_PREFIX = "sts:"
 FEDERATED_USER_RESOURCE_SERVICE_PREFIX = "arn:aws:sts::"
 
