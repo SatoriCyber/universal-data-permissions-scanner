@@ -2,7 +2,7 @@
 
 __author__ = """SatoriCyber"""
 __email__ = 'omer.shtivi@satoricyber.com'
-__version__ = '4.6.0'
+__version__ = '4.7.0'
 
 from authz_analyzer.datastores.aws.analyzer import AWSAuthzAnalyzer  # type: ignore
 from authz_analyzer.datastores.aws.analyzer.redshift.analyzer import RedshiftAuthzAnalyzer  # type: ignore
