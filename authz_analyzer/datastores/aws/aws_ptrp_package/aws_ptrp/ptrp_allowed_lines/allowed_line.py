@@ -49,11 +49,12 @@ class PtrpAllowedLine:
         account_resources: AwsAccountResources,
         iam_policies: Dict[str, IAMPolicy],
     ) -> bool:
+        service_resource_type = AssumeRoleService()
         for yield_res in self.yield_principal_and_its_assumed_role():
             principal: PrincipalAndNodeNoteBase = yield_res[0]
             policies_node_base: List[PoliciesAndNodeNoteBase] = yield_res[1]
             path_role_node: PathRoleNode = yield_res[2]
-            identity_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_principal_policies(
+            principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
                 policies_node_base, iam_policies
             )
             iam_role = path_role_node.get_service_resource()
@@ -63,16 +64,16 @@ class PtrpAllowedLine:
                 logger=logger,
                 aws_actions=aws_actions,
                 account_resources=account_resources,
-                identity_policies_ctx=identity_policies_ctx,
+                principal_policies_ctx=principal_policies_ctx,
                 target_service_resource=iam_role,
-                service_resource_type=AssumeRoleService(),
+                service_resource_type=service_resource_type,
                 identity_principal=principal.get_stmt_principal(),
             )
             add_node_notes_from_target_policy_resource_based(
                 policy_evaluations_result=policy_evaluations_result,
-                note_prefix=f"{AssumeRoleService().get_service_name()} {iam_role.role_name}",
-                principal_node_note=principal,
-                principal_policies_node_notes=policies_node_base,
+                service_name=service_resource_type.get_service_name(),
+                principal_policies_node_bases=policies_node_base,
+                target_node_base=path_role_node,
                 resource_node_note=path_role_node,
             )
             assume_role_service_resolver = policy_evaluations_result.get_target_resolver()
@@ -105,15 +106,19 @@ class PtrpAllowedLine:
         if res is None:
             return True
 
+        service_resource_type = FederatedUserService()
         principal: PrincipalAndNodeNoteBase = res[0]
         policies_node_base: List[PoliciesAndNodeNoteBase] = res[1]
+        target_identity_node: PathPolicyNode = res[2]
         target_identity_policy_ctx = PolicyDocumentCtx(
-            policy_document=res[2].get_policy(), policy_name=res[2].get_path_name(), parent_arn=res[2].get_path_arn()
+            policy_document=target_identity_node.get_policy(),
+            policy_name=target_identity_node.get_path_name(),
+            parent_arn=target_identity_node.get_path_arn(),
         )
         federated_principal_node: PathFederatedPrincipalNode = res[3]
         federated_user_resource: ServiceResourceBase = federated_principal_node.get_service_resource()
         assert isinstance(federated_user_resource, FederatedUserPrincipal)
-        identity_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_principal_policies(
+        principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
             policies_node_base, iam_policies
         )
 
@@ -122,17 +127,17 @@ class PtrpAllowedLine:
             aws_actions=aws_actions,
             account_resources=account_resources,
             target_identity_policies_ctx=[target_identity_policy_ctx],
-            identity_policies_ctx=identity_policies_ctx,
+            principal_policies_ctx=principal_policies_ctx,
             service_resource=federated_user_resource,
-            service_resource_type=FederatedUserService(),
+            service_resource_type=service_resource_type,
             identity_principal=principal.get_stmt_principal(),
             during_cross_account_checking_flow=True,  # in both single-account/cross-accounts access. iam user must have explicit allow to the GetFederationToken action
         )
         add_node_notes_from_target_policies_identity_based(
             policy_evaluation_result=policy_evaluation_result,
-            note_prefix=f"{FederatedUserService().get_service_name()} {federated_user_resource.get_path_name()}",
-            principal_node_note=principal,
-            principal_policies_node_notes=policies_node_base,
+            service_name=service_resource_type.get_service_name(),
+            principal_policies_node_bases=policies_node_base,
+            target_node_base=target_identity_node,
             resource_node_note=federated_principal_node,
         )
         federated_user_service_resources_resolver = policy_evaluation_result.get_target_resolver()
@@ -217,36 +222,36 @@ class PtrpAllowedLine:
         return None
 
     @staticmethod
-    def get_principal_policies(
-        principal_path_policies_bases: List[PoliciesAndNodeNoteBase], iam_policies: Dict[str, IAMPolicy]
+    def get_policies_ctx(
+        policies_node_bases: List[PoliciesAndNodeNoteBase], iam_policies: Dict[str, IAMPolicy]
     ) -> List[PolicyDocumentCtx]:
 
-        principal_policies_ctx: List[PolicyDocumentCtx] = []
+        policies_ctx: List[PolicyDocumentCtx] = []
         # Extract all principal policies (inline & attached)
-        for principal_path_policies_base in principal_path_policies_bases:
-            principal_policies_ctx.extend(
+        for policies_node_base in policies_node_bases:
+            policies_ctx.extend(
                 list(
                     map(
                         lambda arn: iam_policies[arn].to_policy_document_ctx(),
-                        principal_path_policies_base.get_attached_policies_arn(),
+                        policies_node_base.get_attached_policies_arn(),
                     )
                 )
             )
 
             inline_policies_and_names: List[
                 Tuple[PolicyDocument, str]
-            ] = principal_path_policies_base.get_inline_policies_and_names()
-            principal_policies_ctx.extend(
+            ] = policies_node_base.get_inline_policies_and_names()
+            policies_ctx.extend(
                 [
                     PolicyDocumentCtx(
                         policy_document=policy_and_name[0],
                         policy_name=policy_and_name[1],
-                        parent_arn=principal_path_policies_base.get_node_arn(),
+                        parent_arn=policies_node_base.get_node_arn(),
                     )
                     for policy_and_name in inline_policies_and_names
                 ]
             )
-        return principal_policies_ctx
+        return policies_ctx
 
     def get_principal_policies_bases(self) -> List[PoliciesAndNodeNoteBase]:
         if self.path_role_nodes:
