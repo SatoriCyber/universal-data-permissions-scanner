@@ -169,7 +169,7 @@ class AwsPtrp:
         is_target_policy_resource_based: bool = line.target_policy_node.is_resource_based_policy
         principal_to_policy: PrincipalAndNodeNoteBase = line.get_principal_makes_the_request_to_resource()
         principal_policies_node_bases: List[PoliciesAndNodeNoteBase] = line.get_principal_policies_bases()
-        principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_principal_policies(
+        principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
             principal_policies_node_bases, self.iam_entities.iam_policies
         )
 
@@ -199,14 +199,14 @@ class AwsPtrp:
                 identity_principal=principal_to_policy.get_stmt_principal(),
                 target_service_resource=resource_node.base,
                 service_resource_type=resource_node.service_resource_type,
-                identity_policies_ctx=principal_policies_ctx,
+                principal_policies_ctx=principal_policies_ctx,
             )
             add_node_notes_from_target_policy_resource_based(
                 policy_evaluations_result=policy_evaluations_result,
-                note_prefix=f"{resource_node.service_resource_type.get_service_name()} {resource_node.get_resource_name()}",
-                principal_node_note=principal_to_policy,
-                principal_policies_node_notes=principal_policies_node_bases,
-                resource_node_note=line.target_policy_node,
+                service_name=resource_node.service_resource_type.get_service_name(),
+                principal_policies_node_bases=principal_policies_node_bases,
+                target_node_base=line.target_policy_node,
+                resource_node_note=line.resource_node,
             )
             return policy_evaluations_result.get_target_resolver()
         else:
@@ -223,13 +223,13 @@ class AwsPtrp:
                 target_identity_policies_ctx=[target_identity_policy_ctx],
                 service_resource=resource_node.base,
                 service_resource_type=resource_node.service_resource_type,
-                identity_policies_ctx=principal_policies_ctx,
+                principal_policies_ctx=principal_policies_ctx,
             )
             add_node_notes_from_target_policies_identity_based(
                 policy_evaluation_result=policy_evaluation_result,
-                note_prefix=f"{resource_node.service_resource_type.get_service_name()} {resource_node.get_resource_name()}",
-                principal_node_note=principal_to_policy,
-                principal_policies_node_notes=principal_policies_node_bases,
+                service_name=resource_node.service_resource_type.get_service_name(),
+                principal_policies_node_bases=principal_policies_node_bases,
+                target_node_base=line.target_policy_node,
                 resource_node_note=line.resource_node,
             )
             return policy_evaluation_result.get_target_resolver()

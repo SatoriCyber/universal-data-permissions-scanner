@@ -40,16 +40,25 @@ class MethodOnStmtActionsResultType(Enum):
     def __hash__(self) -> int:
         return hash(self.value)
 
+    def __eq__(self, other):
+        return self.value == other.value
+
 
 @dataclass
 class MethodOnStmtActionsResult:
     resolved_single_stmt: ResolvedSingleStmt
     result: MethodOnStmtActionsResultType
 
+    def __hash__(self) -> int:
+        return hash(self.result) + hash(self.resolved_single_stmt)
+
+    def __eq__(self, other):
+        return self.resolved_single_stmt == other.resolved_single_stmt and self.result == other.result
+
 
 @dataclass
 class MethodOnStmtsActionsResult:
-    resolved_stmt_results: List[MethodOnStmtActionsResult] = field(default_factory=list)
+    resolved_stmt_results: Set[MethodOnStmtActionsResult] = field(default_factory=set)
 
 
 @dataclass
@@ -100,7 +109,7 @@ class ServiceResourcesResolverBase(ABC):
                     other_resolved_stmt_principal.contains(principal)
                     for other_resolved_stmt_principal in other_resolved_stmt.resolved_stmt_principals
                 ):
-                    res.resolved_stmt_results.append(
+                    res.resolved_stmt_results.add(
                         MethodOnStmtActionsResult(
                             resolved_single_stmt=other_resolved_stmt,
                             result=MethodOnStmtActionsResultType.IGNORE_NO_OVERLAPS_TARGET_PRINCIPAL,
@@ -112,7 +121,7 @@ class ServiceResourcesResolverBase(ABC):
                     other_resolved_stmt.is_condition_exists is True
                     and method_on_stmt_actions_type == MethodOnStmtActionsType.DIFFERENCE
                 ):
-                    res.resolved_stmt_results.append(
+                    res.resolved_stmt_results.add(
                         MethodOnStmtActionsResult(
                             resolved_single_stmt=other_resolved_stmt,
                             result=MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_CONDITION_EXISTS,
@@ -128,7 +137,7 @@ class ServiceResourcesResolverBase(ABC):
                     ] = other_resolved_stmt.resolved_stmt_resources.get(service_resource)
 
                     if not other_resolved_action_single_stmt:
-                        res.resolved_stmt_results.append(
+                        res.resolved_stmt_results.add(
                             MethodOnStmtActionsResult(
                                 resolved_single_stmt=other_resolved_stmt,
                                 result=MethodOnStmtActionsResultType.IGNORE_NO_OVERLAPS_TARGET_RESOURCE,
@@ -144,7 +153,7 @@ class ServiceResourcesResolverBase(ABC):
                     else:
                         assert False  # should not get here, unknown enum value
 
-                    res.resolved_stmt_results.append(
+                    res.resolved_stmt_results.add(
                         MethodOnStmtActionsResult(
                             resolved_single_stmt=other_resolved_stmt,
                             result=MethodOnStmtActionsResultType.APPLIED,

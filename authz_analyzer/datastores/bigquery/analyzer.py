@@ -56,7 +56,7 @@ from logging import Logger
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
-from google.api_core.page_iterator import Iterator
+from google.api_core.page_iterator import Iterator  # type: ignore
 from google.cloud.bigquery.table import TableListItem  # type: ignore
 from google.oauth2.service_account import Credentials  # type: ignore
 
