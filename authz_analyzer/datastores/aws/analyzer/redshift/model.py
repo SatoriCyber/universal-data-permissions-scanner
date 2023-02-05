@@ -2,18 +2,48 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Dict, List, Set
+from typing import Dict, List, Optional, Set
 
 from authz_analyzer.models import PermissionLevel
 
 IdentityId = int
 
+@dataclass
+class DataShareConsumer():
+    account_id: Optional[str]
+    namespace: str
+
+#https://docs.aws.amazon.com/redshift/latest/dg/r_SVV_DATASHARE_OBJECTS.html
+class ShareObjectType(Enum):
+    SCHEMA = "SCHEMA"
+    TABLE = "TABLE"
+    VIEW = "VIEW"
+    LATE_BINDING_VIEW = "LATE_BINDING_VIEW"
+    MATERIALIZED_VIEW = "MATERIALIZED_VIEW"
+    FUNCTION = "FUNCTION"
+
+
+class ShareType(Enum):
+    OUTBOUND = "OUTBOUND"
+    INBOUND = "INBOUND"
 
 class IdentityType(Enum):
     UNKNOWN = "UNKNOWN"
     USER = "USER"
     GROUP = "GROUP"
     ROLE = "ROLE"
+
+
+@dataclass
+class Share():
+    id: str
+    name: str
+    consumer_account_id: Optional[str]
+    consumer_namespace: str
+    resources: Set[ResourcePermission]
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 class Privilege(Enum):
@@ -48,6 +78,11 @@ PERMISSION_LEVEL_MAP = {
     Privilege.TRIGGER.name: PermissionLevel.READ,
     Privilege.EXECUTE.name: PermissionLevel.FULL,
 }
+
+@dataclass
+class DatabaseEntry():
+    name: str
+    can_connect: bool
 
 
 @dataclass
@@ -94,3 +129,4 @@ class AuthorizationModel:
 
     identity_to_identities: Dict[DBIdentity, Set[DBIdentity]]
     identity_to_resource_privilege: Dict[IdentityId, Dict[str, Set[ResourcePermission]]]
+    data_shares: Set[Share]
