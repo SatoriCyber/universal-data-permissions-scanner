@@ -29,7 +29,6 @@ class UserGrant(NamedTuple):
 
 class RoleGrant(NamedTuple):
     role: str
-    grant: str
     permission: str
     db: str
     schema: str
@@ -189,7 +188,7 @@ def generate_authz_share(
         ),  # test1
         (  # test 2
             [UserGrant("user_1", "role_1", "user_1@example.com")],
-            [RoleGrant("", "role_1", "SELECT", "db1", "schema1", "table1", "TABLE")],
+            [RoleGrant("role_1", "SELECT", "db1", "schema1", "table1", "TABLE")],
             [
                 generate_authz_entry_role(
                     "user_1",
@@ -207,8 +206,8 @@ def generate_authz_share(
         (  # test 3
             [UserGrant("user_1", "role_1", "user_1@example.com")],
             [
-                RoleGrant("role_2", "role_1", "USAGE", "", "", "", "ROLE"),
-                RoleGrant("", "role_2", "SELECT", "db1", "schema1", "table1", "TABLE"),
+                RoleGrant("role_1", "USAGE", "", "", "role_2", "ROLE"),
+                RoleGrant("role_2", "SELECT", "db1", "schema1", "table1", "TABLE"),
             ],
             [
                 generate_authz_entry_role(
@@ -226,9 +225,29 @@ def generate_authz_share(
         ),
         (  # test 4
             [UserGrant("user_1", "role_1", "user_1@example.com")],
-            [RoleGrant("role_2", "role_1", "USAGE", "", "", "", "ROLE"), RoleGrant("", "role_2", "", "", "", "", "")],
+            [RoleGrant("role_1", "USAGE", "", "", "role_2", "ROLE"), RoleGrant("role_2", "", "", "", "", "")],
             []
             # end test 4
+        ),
+        (  # test 5
+            [UserGrant("user_1", "role_1", "user_1@example.com")],
+            [
+                RoleGrant("role_1", "REFERENCES", "db1", "schema1", "table1", "TABLE"),
+                RoleGrant("role_1", "SELECT", "db1", "schema1", "table1", "TABLE"),
+            ],
+            [
+                generate_authz_entry_role(
+                    "user_1",
+                    "user_1@example.com",
+                    IdentityType.USER,
+                    "db1",
+                    "schema1",
+                    "table1",
+                    PermissionLevel.READ,
+                    roles_path=[RolePath("role_1", ["REFERENCES", "SELECT"])],
+                )
+            ]
+            # end test 5
         ),
     ],
     ids=(
@@ -236,6 +255,7 @@ def generate_authz_share(
         "user with one role access to one table",
         "user has role1, role1 has role2, role2 has permission on table",
         "user1 has role1, role1 has role2, role2 got no permissions",
+        "user with one role multiple permissions",
     ),
 )
 def test_snowflake_analyzer_user_role(

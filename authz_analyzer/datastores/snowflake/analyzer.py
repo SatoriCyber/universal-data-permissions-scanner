@@ -41,6 +41,7 @@ from authz_analyzer.datastores.snowflake.model import (
     User,
 )
 from authz_analyzer.datastores.snowflake.service import SnowflakeService
+from authz_analyzer.models.model import PermissionLevel
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
@@ -138,45 +139,74 @@ class SnowflakeAuthzAnalyzer:
         role.add(granted_role)
 
     @staticmethod
-    def _add_role_to_resources(
-        role_name: str,
+    def _is_the_same_resource(
+        table_name: List[str], permission_level: PermissionLevel, granted_on: GrantedOn, resource: ResourceGrant
+    ) -> bool:
+        return (
+            resource.name == table_name
+            and resource.permission_level == permission_level
+            and resource.granted_on == granted_on
+        )
+
+    @staticmethod
+    def create_resource_grant(
         table_name: List[str],
         database_level: PermissionType,
-        role_to_resources: Dict[str, Set[ResourceGrant]],
         granted_on: GrantedOn,
     ):
         level = PERMISSION_LEVEL_MAP[database_level]
-        role_grants = role_to_resources.setdefault(role_name, set())
-        role_grants.add(ResourceGrant(table_name, level, database_level, granted_on=granted_on))
+        return ResourceGrant(table_name, level, [database_level], granted_on=granted_on)
 
     def _get_role_to_roles_and_role_to_resources(self) -> Tuple[Dict[str, Set[DBRole]], Dict[str, Set[ResourceGrant]]]:
         rows = self.service.get_rows(file_name_command=Path("grants_roles.sql"))
         role_to_roles: Dict[str, Set[DBRole]] = {}
         role_to_resources: Dict[str, Set[ResourceGrant]] = {}
 
+        current_resource_grant: Optional[ResourceGrant] = None
+        current_role: Optional[str] = None
         for row in rows:
-            name: str = row[0]
-            role: str = row[1]
+            role: str = row[0]
             try:
-                privilege = PermissionType(row[2])
+                privilege = PermissionType(row[1])
             except ValueError:
-                self.logger.debug("Privilege doesn't grant permission to data, skipping privilege %s", row[2])
+                self.logger.debug("Privilege doesn't grant permission to data, skipping privilege %s", row[1])
                 continue
-            db: str = row[3]
-            schema: str = row[4]
-            table: str = row[5]
-            granted_on = GrantedOn.from_str(row[6])
+            db: str = row[2]
+            schema: str = row[3]
+            resource_name: str = row[4]
+            granted_on = GrantedOn.from_str(row[5])
 
             if privilege is PermissionType.USAGE and granted_on == GrantedOn.ROLE:
-                SnowflakeAuthzAnalyzer._add_role_to_roles(role, name, role_to_roles)
-            elif table is not None and granted_on in (GrantedOn.TABLE, GrantedOn.VIEW, GrantedOn.MATERIALIZED_VIEW):
-                SnowflakeAuthzAnalyzer._add_role_to_resources(
-                    role_name=role,
-                    database_level=privilege,
-                    table_name=[db, schema, table],
-                    role_to_resources=role_to_resources,
-                    granted_on=granted_on,
-                )
+                SnowflakeAuthzAnalyzer._add_role_to_roles(role, resource_name, role_to_roles)
+
+            elif resource_name is not None and granted_on in (
+                GrantedOn.TABLE,
+                GrantedOn.VIEW,
+                GrantedOn.MATERIALIZED_VIEW,
+            ):
+                permission_level = PERMISSION_LEVEL_MAP[privilege]
+                table_name = [db, schema, resource_name]
+                if current_resource_grant is None:
+                    current_role = role
+                    current_resource_grant = SnowflakeAuthzAnalyzer.create_resource_grant(
+                        table_name, privilege, granted_on
+                    )
+                elif (
+                    current_resource_grant is not None
+                    and SnowflakeAuthzAnalyzer._is_the_same_resource(
+                        table_name, permission_level, granted_on, current_resource_grant
+                    )
+                    and current_role == role
+                ):
+                    current_resource_grant.db_permissions.append(privilege)
+                else:
+                    role_to_resources[role].add(current_resource_grant)
+                    current_resource_grant = SnowflakeAuthzAnalyzer.create_resource_grant(
+                        table_name, privilege, granted_on
+                    )
+                    current_role = role
+        if current_resource_grant is not None and current_role is not None:
+            role_to_resources.setdefault(current_role, set()).add(current_resource_grant)
         return role_to_roles, role_to_resources
 
     def _get_authorization_model(self):

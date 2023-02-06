@@ -25,7 +25,7 @@ from authz_analyzer.writers import BaseWriter
 def _yield_row(
     identity: Identity, permission_level: PermissionLevel, grant: ResourceGrant, authz_path: List[AuthzPathElement]
 ):
-    _add_db_permission_last_element(authz_path, grant.db_permission.value)
+    _add_db_permission_last_element(authz_path, grant.db_permissions)
     try:
         asset_type = AssetType(str(grant.granted_on))  # translate to AssetType
     except ValueError:
@@ -39,7 +39,7 @@ def _yield_row(
     )
 
 
-def _add_db_permission_last_element(auth_path_element: List[AuthzPathElement], db_permission: str):
+def _add_db_permission_last_element(auth_path_element: List[AuthzPathElement], db_permissions: List[PermissionType]):
     """Add db permission to the last authz path element.
     In Snowflake the last role in the path is the one which grants permissions to the resource.
 
@@ -47,7 +47,7 @@ def _add_db_permission_last_element(auth_path_element: List[AuthzPathElement], d
         auth_path_element (List[AuthzPathElement]): Path of roles from the user to the resource.
         db_permission (str): the original db permission, e.g. "SELECT", "INSERT", etc.
     """
-    auth_path_element[-1].db_permissions = [db_permission]
+    auth_path_element[-1].db_permissions = [db_permission.value for db_permission in db_permissions]
 
 
 def _iter_role_row(
@@ -88,7 +88,7 @@ def _yield_share(share: DataShare):
             grant = ResourceGrant(
                 name=priv.resource_name,
                 permission_level=priv.permission_level,
-                db_permission=db_permission,
+                db_permissions=[db_permission],
                 granted_on=granted_on,
             )
             authz_path = [
