@@ -22,15 +22,15 @@ jobs:
       matrix:
         # python-versions: [3.8, 3.9, "3.10", "3.11"]
         python-versions: [3.8]
-        os: [ubuntu-18.04]
-        # os: [ubuntu-18.04, macos-latest, windows-latest]
+        os: [ubuntu-22.04]
+        # os: [ubuntu-22.04, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-versions }}
 
