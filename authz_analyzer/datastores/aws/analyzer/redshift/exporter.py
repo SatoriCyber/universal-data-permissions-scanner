@@ -2,11 +2,13 @@ from typing import Dict, Generator, List, Set
 
 from authz_analyzer.datastores.aws.analyzer.redshift.model import AuthorizationModel, DBIdentity, IdentityId
 from authz_analyzer.datastores.aws.analyzer.redshift.model import IdentityType as IdentityModelType
-from authz_analyzer.datastores.aws.analyzer.redshift.model import ResourcePermission
+from authz_analyzer.datastores.aws.analyzer.redshift.model import ResourcePermission, Share
 from authz_analyzer.models.model import (
     Asset,
     AssetType,
     AuthzEntry,
+    AuthzNote,
+    AuthzNoteType,
     AuthzPathElement,
     AuthzPathElementType,
     Identity,
@@ -36,11 +38,18 @@ def _yield_row(
     relations: List[DBIdentity],
     db_permissions: List[str],
 ):
+    notes = [
+        AuthzNote(
+            note="",
+            type=AuthzNoteType.GENERIC,
+        )
+    ]
     auth_path_element = [
         AuthzPathElement(
             id=str(path_identity.id_),
             name=path_identity.name,
             type=IDENTITY_TYPE_MODEL_TO_AuthzPathElementType[path_identity.type],
+            notes=notes,
         )
         for path_identity in relations
     ]
@@ -86,6 +95,33 @@ def _iter_role_row(
     prev_roles.remove(granted_identity)
 
 
+def _iter_datashare_row(share: Share):
+    consumer = ""
+    if share.consumer_account_id is not None:
+        consumer = share.consumer_account_id + "_"
+    consumer += share.consumer_namespace
+    identity = Identity(
+        id=consumer,
+        type=IdentityType.CLUSTER,
+        name=consumer,
+    )
+    path = [AuthzPathElement(id=share.id, name=share.name, type=AuthzPathElementType.SHARE, db_permissions=[])]
+    for resource in share.resources:
+        notes = [
+            AuthzNote(
+                note=f"share {share.name} grants access to account {share.consumer_account_id} in the following namespace {share.consumer_namespace}",
+                type=AuthzNoteType.GENERIC,
+            )
+        ]
+        path[0].notes = notes
+        yield AuthzEntry(
+            identity=identity,
+            asset=Asset(name=resource.name, type=AssetType.TABLE),
+            path=path,
+            permission=PermissionLevel.READ,
+        )
+
+
 def export(model: AuthorizationModel, writer: BaseWriter):
     """Export the model to the writer.
 
@@ -115,3 +151,7 @@ def export(model: AuthorizationModel, writer: BaseWriter):
                     role_to_roles=model.identity_to_identities,
                 ):
                     writer.write_entry(entry)
+
+    for datashare in model.data_shares:
+        for entry in _iter_datashare_row(datashare):
+            writer.write_entry(entry)

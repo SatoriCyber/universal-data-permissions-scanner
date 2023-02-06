@@ -12,7 +12,7 @@ The database will not let you set up circular membership loops.
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, Optional, Set, Union
 
 import redshift_connector  # type: ignore
 
@@ -20,10 +20,15 @@ from authz_analyzer.datastores.aws.analyzer.redshift import exporter
 from authz_analyzer.datastores.aws.analyzer.redshift.model import (
     PERMISSION_LEVEL_MAP,
     AuthorizationModel,
+    DatabaseEntry,
+    DataShareConsumer,
     DBIdentity,
     IdentityId,
     IdentityType,
     ResourcePermission,
+    Share,
+    ShareObjectType,
+    ShareType,
 )
 from authz_analyzer.datastores.aws.analyzer.redshift.service import RedshiftService
 from authz_analyzer.models import PermissionLevel
@@ -33,12 +38,15 @@ from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 
 COMMANDS_DIR = Path(__file__).parent / "commands"
 
+DatabaseName = str
+ShareName = str
+
 
 @dataclass
 class RedshiftAuthzAnalyzer:
     """Analyze authorization for Redshift."""
 
-    cursors: List[redshift_connector.Cursor]
+    cursors: Dict[DatabaseName, redshift_connector.Cursor]
     writer: BaseWriter
     logger: Logger
     service: RedshiftService = RedshiftService()
@@ -77,15 +85,18 @@ class RedshiftAuthzAnalyzer:
         redshift_cursor = connector.cursor()
 
         # We generate cursor one per database in order to fetch the table grants and the information schema
-        redshift_cursors: List[redshift_connector.Cursor] = []
+        redshift_cursors: Dict[DatabaseName, redshift_connector.Cursor] = {}
         for database in RedshiftAuthzAnalyzer._get_all_databases(redshift_cursor):
+            if database.can_connect is False:
+                logger.debug("Skipping %s database, cannot connect", database.name)
+                continue
             if database == "rdsadmin":
                 logger.debug("Skipping rdsadmin database, internal use by AWS")
                 continue
             db_connector: redshift_connector.Connection = redshift_connector.connect(
-                user=username, password=password, host=host, database=database
+                user=username, password=password, host=host, database=database.name
             )
-            redshift_cursors.append(db_connector.cursor())
+            redshift_cursors[database.name] = db_connector.cursor()
         return cls(logger=logger, cursors=redshift_cursors, writer=writer)
 
     def run(
@@ -101,7 +112,11 @@ class RedshiftAuthzAnalyzer:
 
     @staticmethod
     def _get_all_databases(redshift_cursor: redshift_connector.Cursor):
-        return {database[0] for database in RedshiftService.get_rows(redshift_cursor, Path("all_databases.sql"))}
+        for row in RedshiftService.get_rows(redshift_cursor, Path("all_databases.sql")):
+            yield DatabaseEntry(
+                name=row[0],
+                can_connect=row[1],
+            )
 
     def _get_authorization_model(self):
         self.logger.info("Fetching identities with relations")
@@ -113,16 +128,20 @@ class RedshiftAuthzAnalyzer:
         self.logger.info("Fetching all tables for super users")
         self._add_super_user_privileges(identity_to_resource_privilege)
 
+        self.logger.info("Fetching datashares")
+        data_shares = self._get_datashares()
+
         return AuthorizationModel(
             identity_to_identities=identity_to_identities,
             identity_to_resource_privilege=identity_to_resource_privilege,
+            data_shares=data_shares,
         )
 
     def _get_identity_identities_mapping(self) -> Dict[DBIdentity, Set[DBIdentity]]:
         results: Dict[DBIdentity, Set[DBIdentity]] = {}
 
         # For identities, it is shared per cluster, there is no need to pull per DB
-        pg_cursor = self.cursors[0]
+        pg_cursor = self._get_single_cursor()
         rows = self.service.get_rows(pg_cursor, Path("identities.sql"))
         for row in rows:
             identity_id: IdentityId = row[0]
@@ -160,8 +179,7 @@ class RedshiftAuthzAnalyzer:
 
     def _get_identities_privileges(self) -> Dict[IdentityId, Dict[str, Set[ResourcePermission]]]:
         results: Dict[IdentityId, Dict[str, Set[ResourcePermission]]] = {}
-        for pg_cursor in self.cursors:
-            db_name = pg_cursor.connection._database  # type: ignore
+        for db_name, pg_cursor in self.cursors.items():
             rows = self.service.get_rows(pg_cursor, Path("identities_privileges.sql"))
             for row in rows:
                 _grantor = row[0]
@@ -192,7 +210,7 @@ class RedshiftAuthzAnalyzer:
     ):
         """Add to super user role full permissions to all tables in all databases."""
         super_user_permissions: Dict[str, Set[ResourcePermission]] = {}
-        for pg_cursor in self.cursors:
+        for pg_cursor in self.cursors.values():
             for row in self.service.get_rows(pg_cursor, Path("all_tables.sql")):
                 db: str = row[0]
                 schema: str = row[1]
@@ -207,3 +225,65 @@ class RedshiftAuthzAnalyzer:
                     )
                 )
         identity_to_resource_privilege[-1] = super_user_permissions
+
+    def _get_datashares(self) -> Set[Share]:
+        """Gather which datashare grants which resources to which accounts-clusters"""
+        cursor = self._get_single_cursor()
+        datashare_consumers_map = self._get_data_shares_consumers()
+        results: Set[Share] = set()
+        for row in self.service.get_rows(cursor, Path("datashares.sql")):
+            share_id: str = row[0]
+            share_name: str = row[1]
+            src_database: str = row[2]
+            db_cursor = self.cursors[src_database]
+            datashare_consumer = datashare_consumers_map[share_name]
+            datashare_resources = self.get_datashare_objects(db_cursor, share_name, src_database)
+            results.add(
+                Share(
+                    share_id,
+                    share_name,
+                    consumer_account_id=datashare_consumer.account_id,
+                    consumer_namespace=datashare_consumer.namespace,
+                    resources=datashare_resources,
+                )
+            )
+        return results
+
+    def _get_data_shares_consumers(self) -> Dict[ShareName, DataShareConsumer]:
+        """Gather which datashare grants goes to which accounts-clusters"""
+        cursor = self._get_single_cursor()  # All datashares resides in the same table
+        results: Dict[ShareName, DataShareConsumer] = {}
+        for row in self.service.get_rows(cursor, Path("datashare_consumers.sql")):
+            share_name: ShareName = row[0]
+            consumer_account: Optional[str] = row[1]
+            if consumer_account == "":
+                consumer_account = None
+            consumer_namespace: str = row[2]
+            results[share_name] = DataShareConsumer(consumer_account, consumer_namespace)
+        return results
+
+    def get_datashare_objects(self, cursor: redshift_connector.Cursor, share_name: ShareName, database_name: str):
+        results: Set[ResourcePermission] = set()
+        for row in self.service.get_rows(cursor, Path("datashare_desc.sql"), share_name):
+            share_type = ShareType(row[2])
+            object_type = ShareObjectType(row[4].upper())
+            object_name: str = row[5]
+
+            if share_type == ShareType.INBOUND:
+                self.logger.debug("Skipping inbound share %s", share_name)
+                continue
+            if object_type == ShareObjectType.FUNCTION:
+                self.logger.debug("Skipping function %s", object_name)
+                continue
+            if object_type == ShareObjectType.SCHEMA:
+                continue  # Schema only defines which tables can be shared.
+            name = [database_name]
+            name.extend(object_name.split("."))
+            resource_permission = ResourcePermission(
+                name=name, permission_level=PermissionLevel.READ, db_permissions=[]
+            )
+            results.add(resource_permission)
+        return results
+
+    def _get_single_cursor(self):
+        return next(iter(self.cursors.values()))
