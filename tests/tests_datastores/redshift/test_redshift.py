@@ -13,6 +13,8 @@ from authz_analyzer.models.model import (
     Asset,
     AssetType,
     AuthzEntry,
+    AuthzNote,
+    AuthzNoteType,
     AuthzPathElement,
     AuthzPathElementType,
     Identity,
@@ -219,7 +221,15 @@ def generate_authz_entry(
             [
                 generate_authz_entry(
                     ["db1", "schema_1", "table_1"],
-                    [AuthzPathElement("user_id_1", "user_1", AuthzPathElementType.USER, [], ["SELECT"])],
+                    [
+                        AuthzPathElement(
+                            "user_id_1",
+                            "user_1",
+                            AuthzPathElementType.USER,
+                            [AuthzNote("", AuthzNoteType.GENERIC)],
+                            ["SELECT"],
+                        )
+                    ],
                     "user_id_1",
                     "user_1",
                     PermissionLevel.READ,
@@ -234,7 +244,15 @@ def generate_authz_entry(
             [
                 generate_authz_entry(
                     ["db1", "schema_1", "table_1"],
-                    [AuthzPathElement("ROLE_1_ID", "ROLE_1", AuthzPathElementType.ROLE, [], ["SELECT"])],
+                    [
+                        AuthzPathElement(
+                            "ROLE_1_ID",
+                            "ROLE_1",
+                            AuthzPathElementType.ROLE,
+                            [AuthzNote("", AuthzNoteType.GENERIC)],
+                            ["SELECT"],
+                        )
+                    ],
                     "user_id_1",
                     "user_1",
                     PermissionLevel.READ,
@@ -288,7 +306,12 @@ def test_datashare():
                         id=share_id,
                         name=share_name,
                         type=AuthzPathElementType.SHARE,
-                        note="share share_1 grants access to account None in the following namespace consumer_namespace_1",
+                        notes=[
+                            AuthzNote(
+                                note="share share_1 grants access to account None in the following namespace consumer_namespace_1",
+                                type=AuthzNoteType.GENERIC,
+                            )
+                        ],
                         db_permissions=[],
                     )
                 ],

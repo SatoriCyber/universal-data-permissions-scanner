@@ -7,6 +7,8 @@ from authz_analyzer.models.model import (
     Asset,
     AssetType,
     AuthzEntry,
+    AuthzNote,
+    AuthzNoteType,
     AuthzPathElement,
     AuthzPathElementType,
     Identity,
@@ -36,11 +38,18 @@ def _yield_row(
     relations: List[DBIdentity],
     db_permissions: List[str],
 ):
+    notes = [
+        AuthzNote(
+            note="",
+            type=AuthzNoteType.GENERIC,
+        )
+    ]
     auth_path_element = [
         AuthzPathElement(
             id=str(path_identity.id_),
             name=path_identity.name,
             type=IDENTITY_TYPE_MODEL_TO_AuthzPathElementType[path_identity.type],
+            notes=notes,
         )
         for path_identity in relations
     ]
@@ -96,11 +105,15 @@ def _iter_datashare_row(share: Share):
         type=IdentityType.CLUSTER,
         name=consumer,
     )
-    path = [AuthzPathElement(id=share.id, name=share.name, type=AuthzPathElementType.SHARE, note="", db_permissions=[])]
+    path = [AuthzPathElement(id=share.id, name=share.name, type=AuthzPathElementType.SHARE, db_permissions=[])]
     for resource in share.resources:
-        path[
-            0
-        ].note = f"share {share.name} grants access to account {share.consumer_account_id} in the following namespace {share.consumer_namespace}"
+        notes = [
+            AuthzNote(
+                note=f"share {share.name} grants access to account {share.consumer_account_id} in the following namespace {share.consumer_namespace}",
+                type=AuthzNoteType.GENERIC,
+            )
+        ]
+        path[0].notes = notes
         yield AuthzEntry(
             identity=identity,
             asset=Asset(name=resource.name, type=AssetType.TABLE),
