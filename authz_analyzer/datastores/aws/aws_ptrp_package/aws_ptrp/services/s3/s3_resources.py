@@ -46,6 +46,7 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
         if buckets_regex_ends_with_wildcard and stmt_relative_id_objects_regex is None:
             # "arn:aws:s3:::*bucket_name*" -> relevant actions type are buckets & objects
             resolved_actions = resolved_stmt_actions_all
+            stmt_relative_id_objects_regex = "*"  #  the objects regex is actually wildcard
         elif stmt_relative_id_objects_regex == "":
             # "arn:aws:s3:::*bucket_name*/" -> relevant actions type are None
             return
