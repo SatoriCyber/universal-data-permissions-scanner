@@ -8,7 +8,9 @@ import redshift_connector  # type: ignore
 @dataclass
 class RedshiftService:
     @staticmethod
-    def get_rows(redshift_cursor: redshift_connector.Cursor, command_name: Path, params: Optional[str] = None) -> Tuple[Any, ...]:
+    def get_rows(
+        redshift_cursor: redshift_connector.Cursor, command_name: Path, params: Optional[str] = None
+    ) -> Tuple[Any, ...]:
         """Get rows from Redshift."""
         command = (Path(__file__).parent / "commands" / command_name).read_text(encoding="utf-8")
         if params is not None:

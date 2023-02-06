@@ -20,9 +20,9 @@ from authz_analyzer.datastores.aws.analyzer.redshift import exporter
 from authz_analyzer.datastores.aws.analyzer.redshift.model import (
     PERMISSION_LEVEL_MAP,
     AuthorizationModel,
-    DBIdentity,
-    DataShareConsumer,
     DatabaseEntry,
+    DataShareConsumer,
+    DBIdentity,
     IdentityId,
     IdentityType,
     ResourcePermission,
@@ -40,6 +40,8 @@ COMMANDS_DIR = Path(__file__).parent / "commands"
 
 DatabaseName = str
 ShareName = str
+
+
 @dataclass
 class RedshiftAuthzAnalyzer:
     """Analyze authorization for Redshift."""
@@ -132,7 +134,7 @@ class RedshiftAuthzAnalyzer:
         return AuthorizationModel(
             identity_to_identities=identity_to_identities,
             identity_to_resource_privilege=identity_to_resource_privilege,
-            data_shares=data_shares
+            data_shares=data_shares,
         )
 
     def _get_identity_identities_mapping(self) -> Dict[DBIdentity, Set[DBIdentity]]:
@@ -236,14 +238,20 @@ class RedshiftAuthzAnalyzer:
             db_cursor = self.cursors[src_database]
             datashare_consumer = datashare_consumers_map[share_name]
             datashare_resources = self.get_datashare_objects(db_cursor, share_name, src_database)
-            results.add(Share(share_id, share_name, consumer_account_id=datashare_consumer.account_id, consumer_namespace=datashare_consumer.namespace, resources = datashare_resources))
+            results.add(
+                Share(
+                    share_id,
+                    share_name,
+                    consumer_account_id=datashare_consumer.account_id,
+                    consumer_namespace=datashare_consumer.namespace,
+                    resources=datashare_resources,
+                )
+            )
         return results
-
-
 
     def _get_data_shares_consumers(self) -> Dict[ShareName, DataShareConsumer]:
         """Gather which datashare grants goes to which accounts-clusters"""
-        cursor = self._get_single_cursor() # All datashares resides in the same table
+        cursor = self._get_single_cursor()  # All datashares resides in the same table
         results: Dict[ShareName, DataShareConsumer] = {}
         for row in self.service.get_rows(cursor, Path("datashare_consumers.sql")):
             share_name: ShareName = row[0]
@@ -252,7 +260,7 @@ class RedshiftAuthzAnalyzer:
                 consumer_account = None
             consumer_namespace: str = row[2]
             results[share_name] = DataShareConsumer(consumer_account, consumer_namespace)
-        return results    
+        return results
 
     def get_datashare_objects(self, cursor: redshift_connector.Cursor, share_name: ShareName, database_name: str):
         results: Set[ResourcePermission] = set()
@@ -260,6 +268,7 @@ class RedshiftAuthzAnalyzer:
             share_type = ShareType(row[2])
             object_type = ShareObjectType(row[4].upper())
             object_name: str = row[5]
+
             if share_type == ShareType.INBOUND:
                 self.logger.debug("Skipping inbound share %s", share_name)
                 continue
@@ -267,17 +276,14 @@ class RedshiftAuthzAnalyzer:
                 self.logger.debug("Skipping function %s", object_name)
                 continue
             if object_type == ShareObjectType.SCHEMA:
-                continue # Schema only defines which tables can be shared.
+                continue  # Schema only defines which tables can be shared.
             name = [database_name]
             name.extend(object_name.split("."))
-            resource_permission =  ResourcePermission(
-                name = name,
-                permission_level = PermissionLevel.READ,
-                db_permissions = []
+            resource_permission = ResourcePermission(
+                name=name, permission_level=PermissionLevel.READ, db_permissions=[]
             )
             results.add(resource_permission)
         return results
-            
 
     def _get_single_cursor(self):
         return next(iter(self.cursors.values()))

@@ -8,12 +8,14 @@ from authz_analyzer.models import PermissionLevel
 
 IdentityId = int
 
+
 @dataclass
-class DataShareConsumer():
+class DataShareConsumer:
     account_id: Optional[str]
     namespace: str
 
-#https://docs.aws.amazon.com/redshift/latest/dg/r_SVV_DATASHARE_OBJECTS.html
+
+# https://docs.aws.amazon.com/redshift/latest/dg/r_SVV_DATASHARE_OBJECTS.html
 class ShareObjectType(Enum):
     SCHEMA = "SCHEMA"
     TABLE = "TABLE"
@@ -27,6 +29,7 @@ class ShareType(Enum):
     OUTBOUND = "OUTBOUND"
     INBOUND = "INBOUND"
 
+
 class IdentityType(Enum):
     UNKNOWN = "UNKNOWN"
     USER = "USER"
@@ -35,7 +38,7 @@ class IdentityType(Enum):
 
 
 @dataclass
-class Share():
+class Share:
     id: str
     name: str
     consumer_account_id: Optional[str]
@@ -79,8 +82,9 @@ PERMISSION_LEVEL_MAP = {
     Privilege.EXECUTE.name: PermissionLevel.FULL,
 }
 
+
 @dataclass
-class DatabaseEntry():
+class DatabaseEntry:
     name: str
     can_connect: bool
 
