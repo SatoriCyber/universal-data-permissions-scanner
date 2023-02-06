@@ -41,7 +41,6 @@ def _yield_row(
             id=str(path_identity.id_),
             name=path_identity.name,
             type=IDENTITY_TYPE_MODEL_TO_AuthzPathElementType[path_identity.type],
-            note="",
         )
         for path_identity in relations
     ]

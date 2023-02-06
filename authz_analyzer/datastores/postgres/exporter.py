@@ -15,7 +15,12 @@ from authz_analyzer.writers import BaseWriter
 
 def _yield_row(role_name: str, grant: ResourceGrant, roles: List[DBRole]):
     auth_path_element = [
-        AuthzPathElement(id=role.name, name=role.name, type=AuthzPathElementType.ROLE, note="") for role in roles
+        AuthzPathElement(
+            id=role.name,
+            name=role.name,
+            type=AuthzPathElementType.ROLE,
+        )
+        for role in roles
     ]
     auth_path_element[-1].db_permissions = [grant.db_permission]
     identity = Identity(id=role_name, name=role_name, type=IdentityType.ROLE_LOGIN)

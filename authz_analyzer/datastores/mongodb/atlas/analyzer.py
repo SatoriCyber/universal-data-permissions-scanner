@@ -61,6 +61,7 @@ from authz_analyzer.models.model import (
     Asset,
     AssetType,
     AuthzEntry,
+    AuthzNote,
     AuthzPathElement,
     AuthzPathElementType,
     Identity,
@@ -163,13 +164,13 @@ class MongoDBAtlasAuthzAnalyzer:
                 id=project.id,
                 name=project.name,
                 type=AuthzPathElementType.PROJECT,
-                note=f"cluster {cluster.name} is part of project {project.name}",
+                notes=[AuthzNote.to_generic_note(f"cluster {cluster.name} is part of project {project.name}")],
             ),
             AuthzPathElement(
                 id=cluster.name,
                 name=cluster.name,
                 type=AuthzPathElementType.CLUSTER,
-                note=f"database {db} is part of cluster {cluster.name}",
+                notes=[AuthzNote.to_generic_note(f"database {db} is part of cluster {cluster.name}")],
             ),
         ]
         for user in organization.users:
@@ -180,7 +181,11 @@ class MongoDBAtlasAuthzAnalyzer:
                     id=organization.id,
                     name=organization.name,
                     type=AuthzPathElementType.ORGANIZATION,
-                    note=f"Organization user {user.username} is part of organization {organization.name}",
+                    notes=[
+                        AuthzNote.to_generic_note(
+                            f"Organization user {user.username} is part of organization {organization.name}"
+                        )
+                    ],
                 ),
             )
             for role in user.roles:
@@ -191,7 +196,11 @@ class MongoDBAtlasAuthzAnalyzer:
                         id=role,
                         name=role,
                         type=AuthzPathElementType.ROLE,
-                        note=f"{user.username} has {role} role which grants {permission_level} access on {collection_name}",
+                        notes=[
+                            AuthzNote.to_generic_note(
+                                f"{user.username} has {role} role which grants {permission_level} access on {collection_name}"
+                            )
+                        ],
                     )
                     path.insert(0, role_entry)
                     entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
@@ -212,7 +221,7 @@ class MongoDBAtlasAuthzAnalyzer:
                 id=cluster.name,
                 name=cluster.name,
                 type=AuthzPathElementType.CLUSTER,
-                note=f"database {db} is part of cluster {cluster.name}",
+                notes=[AuthzNote.to_generic_note(f"database {db} is part of cluster {cluster.name}")],
             ),
         ]
         users = self.atlas_service.get_all_organization_users_for_project(project)
@@ -226,7 +235,9 @@ class MongoDBAtlasAuthzAnalyzer:
                         id=project.id,
                         name=project.name,
                         type=AuthzPathElementType.PROJECT,
-                        note=f"User {user.username} has {role} role defined at {project.name}",
+                        notes=[
+                            AuthzNote.to_generic_note(f"User {user.username} has {role} role defined at {project.name}")
+                        ],
                     ),
                 )
                 self._report_entry_project_user(identity, asset, role, path)
@@ -242,7 +253,7 @@ class MongoDBAtlasAuthzAnalyzer:
                                 id=team_id,
                                 name=org_team.name,
                                 type=AuthzPathElementType.TEAM,
-                                note=f"{identity.name} is part of team {org_team.name}",
+                                notes=[AuthzNote.to_generic_note(f"{identity.name} is part of team {org_team.name}")],
                             )
                             path.append(team_path)
                             self._report_entry_project_user(identity, asset, role, path)
@@ -258,7 +269,11 @@ class MongoDBAtlasAuthzAnalyzer:
                 id=role,
                 name=role,
                 type=AuthzPathElementType.ROLE,
-                note=f"User {identity.name} has {role} role which grants {permission_level} access on {collection_name}",
+                notes=[
+                    AuthzNote.to_generic_note(
+                        f"User {identity.name} has {role} role which grants {permission_level} access on {collection_name}"
+                    )
+                ],
             )
             path.insert(0, role_entry)
             entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
@@ -294,7 +309,11 @@ class MongoDBAtlasAuthzAnalyzer:
                     id=role.name,
                     name=role.name,
                     type=AuthzPathElementType.ROLE,
-                    note=f"DB user {identity.name} has {role.name} role which grants {permission_level} access on {asset.name}",
+                    notes=[
+                        AuthzNote.to_generic_note(
+                            f"DB user {identity.name} has {role.name} role which grants {permission_level} access on {asset.name}"
+                        )
+                    ],
                 )
             ]
             entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
@@ -320,7 +339,11 @@ class MongoDBAtlasAuthzAnalyzer:
                                 id=custom_role.name,
                                 name=custom_role.name,
                                 type=AuthzPathElementType.ROLE,
-                                note=f"DB user {identity.name} has {custom_role.name} role which grants {permission_level} access on {collection_name}",
+                                notes=[
+                                    AuthzNote.to_generic_note(
+                                        f"DB user {identity.name} has {custom_role.name} role which grants {permission_level} access on {collection_name}"
+                                    )
+                                ],
                             )
                         ]
                         entry = AuthzEntry(identity=identity, asset=asset, permission=permission_level, path=path)
@@ -339,7 +362,11 @@ class MongoDBAtlasAuthzAnalyzer:
                             id=custom_role.name,
                             name=custom_role.name,
                             type=AuthzPathElementType.ROLE,
-                            note=f"DB user {identity.name} has {custom_role.name} role which grants {permission_level} access on {collection_name}",
+                            notes=[
+                                AuthzNote.to_generic_note(
+                                    f"DB user {identity.name} has {custom_role.name} role which grants {permission_level} access on {collection_name}"
+                                )
+                            ],
                             db_permissions=role_db_permissions,
                         )
                     ]

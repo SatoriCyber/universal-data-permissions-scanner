@@ -5,6 +5,8 @@ from aws_ptrp.ptrp_models import (
     AwsPrincipalType,
     AwsPtrpActionPermissionLevel,
     AwsPtrpLine,
+    AwsPtrpNodeNote,
+    AwsPtrpNoteType,
     AwsPtrpPathNodeType,
     AwsPtrpResourceType,
 )
@@ -13,6 +15,8 @@ from authz_analyzer.models.model import (
     Asset,
     AssetType,
     AuthzEntry,
+    AuthzNote,
+    AuthzNoteType,
     AuthzPathElement,
     AuthzPathElementType,
     Identity,
@@ -28,7 +32,11 @@ class AWSPtrpModelConvertor:
 
     def _get_asset(self) -> Asset:
         if self.line.resource.type == AwsPtrpResourceType.S3_BUCKET:
-            return Asset(name=[self.line.resource.name], type=AssetType.S3_BUCKET)
+            return Asset(
+                name=[self.line.resource.name],
+                type=AssetType.S3_BUCKET,
+                notes=AWSPtrpModelConvertor._get_notes(self.line.resource.notes),
+            )
         else:
             raise Exception(f"unable to convert from {self.line.resource.type} to AssetType")
 
@@ -59,7 +67,12 @@ class AWSPtrpModelConvertor:
 
     def _get_identity(self) -> Identity:
         identity_type = self._get_identity_type()
-        return Identity(id=self.line.principal.arn, type=identity_type, name=self.line.principal.name)
+        return Identity(
+            id=self.line.principal.arn,
+            type=identity_type,
+            name=self.line.principal.name,
+            notes=AWSPtrpModelConvertor._get_notes(self.line.principal.notes),
+        )
 
     def _get_permission_level(self) -> PermissionLevel:
         if self.line.action_permission_level == AwsPtrpActionPermissionLevel.READ:
@@ -105,13 +118,27 @@ class AWSPtrpModelConvertor:
         else:
             raise Exception(f"unable to convert from {node_type} to AuthzPathElementType")
 
+    @staticmethod
+    def _get_note_type(note_type: AwsPtrpNoteType) -> AuthzNoteType:
+        if note_type == AwsPtrpNoteType.POLICY_STMT_DENY_WITH_CONDITION:
+            return AuthzNoteType.AWS_POLICY_STMT_DENY_WITH_CONDITION
+        else:
+            raise Exception(f"unable to convert from {note_type} to AuthzNoteType")
+
+    @staticmethod
+    def _get_notes(node_notes: List[AwsPtrpNodeNote]) -> List[AuthzNote]:
+        return [
+            AuthzNote(type=AWSPtrpModelConvertor._get_note_type(node_note.note_type), note=node_note.note)
+            for node_note in node_notes
+        ]
+
     def _get_path(self) -> List[AuthzPathElement]:
         return [
             AuthzPathElement(
                 id=path_node.arn,
                 name=path_node.name,
                 type=AWSPtrpModelConvertor._get_path_node_type(path_node.type),
-                note="",
+                notes=AWSPtrpModelConvertor._get_notes(path_node.notes),
             )
             for path_node in self.line.path_nodes
         ]

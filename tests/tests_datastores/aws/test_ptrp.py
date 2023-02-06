@@ -19,7 +19,8 @@ from aws_ptrp.services.federated_user.federated_user_service import FEDERATED_US
 from aws_ptrp.services.s3.bucket import S3Bucket
 from aws_ptrp.services.s3.s3_actions import S3Action
 from aws_ptrp.services.s3.s3_service import S3_SERVICE_NAME, S3Service
-from serde.json import from_dict, to_json
+from serde.de import from_dict
+from serde.json import to_json
 
 from authz_analyzer.datastores.aws.analyzer.exporter import AWSAuthzAnalyzerExporter
 from authz_analyzer.utils.logger import get_logger

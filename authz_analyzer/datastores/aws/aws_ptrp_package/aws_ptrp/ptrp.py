@@ -6,9 +6,16 @@ from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.iam.policy.policy_document import PolicyDocumentCtx
 from aws_ptrp.policy_evaluation import PolicyEvaluation, PolicyEvaluationResult, PolicyEvaluationsResult
-from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import ResourceNode
+from aws_ptrp.ptrp_allowed_lines.allowed_line_node_notes import (
+    add_node_notes_from_target_policies_identity_based,
+    add_node_notes_from_target_policy_resource_based,
+)
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
+    PoliciesAndNodeNoteBase,
+    PrincipalAndNodeNoteBase,
+    ResourceNode,
+)
 from aws_ptrp.ptrp_allowed_lines.allowed_lines_resolver import PtrpAllowedLines, PtrpAllowedLinesBuilder
 from aws_ptrp.ptrp_models.ptrp_model import (
     AwsPrincipal,
@@ -141,13 +148,13 @@ class AwsPtrp:
         resource: AwsPtrpResource = line.resource_node.get_ptrp_resource_to_report()
         path_nodes: List[AwsPtrpPathNode] = line.get_ptrp_path_nodes_to_report()
         principal_to_report: AwsPrincipal = line.principal_node.get_principal_to_report()
-        principal_to_policy_evaluation: Principal = line.get_principal_makes_the_request_to_resource()
+        principal_to_policy_evaluation: PrincipalAndNodeNoteBase = line.get_principal_makes_the_request_to_resource()
         service_resource: ServiceResourceBase = line.resource_node.base
 
         resolved_actions: Optional[
             Set[ServiceActionBase]
         ] = service_resources_resolver.get_resolved_actions_per_resource_and_principal(
-            service_resource, principal_to_policy_evaluation
+            service_resource, principal_to_policy_evaluation.get_stmt_principal()
         )
         if resolved_actions:
             self._cb_line_for_permissions_level(resolved_actions, principal_to_report, resource, path_nodes, cb_line)
@@ -160,9 +167,10 @@ class AwsPtrp:
 
         resource_node: ResourceNode = line.resource_node
         is_target_policy_resource_based: bool = line.target_policy_node.is_resource_based_policy
-        principal_to_policy: Principal = line.get_principal_makes_the_request_to_resource()
-        principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_principal_policies(
-            line.get_principal_policies_bases(), self.iam_entities.iam_policies
+        principal_to_policy: PrincipalAndNodeNoteBase = line.get_principal_makes_the_request_to_resource()
+        principal_policies_node_bases: List[PoliciesAndNodeNoteBase] = line.get_principal_policies_bases()
+        principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
+            principal_policies_node_bases, self.iam_entities.iam_policies
         )
 
         if (
@@ -188,10 +196,17 @@ class AwsPtrp:
                 logger=logger,
                 aws_actions=self.aws_actions,
                 account_resources=self.target_account_resources,
-                identity_principal=principal_to_policy,
+                identity_principal=principal_to_policy.get_stmt_principal(),
                 target_service_resource=resource_node.base,
                 service_resource_type=resource_node.service_resource_type,
-                identity_policies_ctx=principal_policies_ctx,
+                principal_policies_ctx=principal_policies_ctx,
+            )
+            add_node_notes_from_target_policy_resource_based(
+                policy_evaluations_result=policy_evaluations_result,
+                service_name=resource_node.service_resource_type.get_service_name(),
+                principal_policies_node_bases=principal_policies_node_bases,
+                target_node_base=line.target_policy_node,
+                resource_node_note=line.resource_node,
             )
             return policy_evaluations_result.get_target_resolver()
         else:
@@ -204,11 +219,18 @@ class AwsPtrp:
                 logger=logger,
                 aws_actions=self.aws_actions,
                 account_resources=self.target_account_resources,
-                identity_principal=principal_to_policy,
+                identity_principal=principal_to_policy.get_stmt_principal(),
                 target_identity_policies_ctx=[target_identity_policy_ctx],
                 service_resource=resource_node.base,
                 service_resource_type=resource_node.service_resource_type,
-                identity_policies_ctx=principal_policies_ctx,
+                principal_policies_ctx=principal_policies_ctx,
+            )
+            add_node_notes_from_target_policies_identity_based(
+                policy_evaluation_result=policy_evaluation_result,
+                service_name=resource_node.service_resource_type.get_service_name(),
+                principal_policies_node_bases=principal_policies_node_bases,
+                target_node_base=line.target_policy_node,
+                resource_node_note=line.resource_node,
             )
             return policy_evaluation_result.get_target_resolver()
 

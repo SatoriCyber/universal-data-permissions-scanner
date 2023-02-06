@@ -56,7 +56,7 @@ from logging import Logger
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
-from google.api_core.page_iterator import Iterator
+from google.api_core.page_iterator import Iterator  # type: ignore
 from google.cloud.bigquery.table import TableListItem  # type: ignore
 from google.oauth2.service_account import Credentials  # type: ignore
 
@@ -75,6 +75,7 @@ from authz_analyzer.models.model import (
     Asset,
     AssetType,
     AuthzEntry,
+    AuthzNote,
     AuthzPathElement,
     AuthzPathElementType,
     Identity,
@@ -207,7 +208,11 @@ class BigQueryAuthzAnalyzer:
             db_permissions = []
         self.logger.debug("Adding %s %s to path", node.type, node.name)
         authz_type = GRANTED_BY_TO_PATHZ_ELEMENT[node.type]
-        path.append(AuthzPathElement(node.id, node.name, authz_type, note, db_permissions=db_permissions))
+        path.append(
+            AuthzPathElement(
+                node.id, node.name, authz_type, notes=[AuthzNote.to_generic_note(note)], db_permissions=db_permissions
+            )
+        )
 
     def _add_role_to_path(self, path: List[AuthzPathElement], member: Member):
         self.logger.debug("Adding role %s to path", member.role)
@@ -216,7 +221,7 @@ class BigQueryAuthzAnalyzer:
                 member.role,
                 member.role,
                 AuthzPathElementType.ROLE,
-                f"Role {member.role} is granted to {member.name}",
+                [AuthzNote.to_generic_note(f"Role {member.role} is granted to {member.name}")],
                 db_permissions=member.db_permissions,
             )
         )

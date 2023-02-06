@@ -219,7 +219,7 @@ def generate_authz_entry(
             [
                 generate_authz_entry(
                     ["db1", "schema_1", "table_1"],
-                    [AuthzPathElement("user_id_1", "user_1", AuthzPathElementType.USER, "", ["SELECT"])],
+                    [AuthzPathElement("user_id_1", "user_1", AuthzPathElementType.USER, [], ["SELECT"])],
                     "user_id_1",
                     "user_1",
                     PermissionLevel.READ,
@@ -234,7 +234,7 @@ def generate_authz_entry(
             [
                 generate_authz_entry(
                     ["db1", "schema_1", "table_1"],
-                    [AuthzPathElement("ROLE_1_ID", "ROLE_1", AuthzPathElementType.ROLE, "", ["SELECT"])],
+                    [AuthzPathElement("ROLE_1_ID", "ROLE_1", AuthzPathElementType.ROLE, [], ["SELECT"])],
                     "user_id_1",
                     "user_1",
                     PermissionLevel.READ,

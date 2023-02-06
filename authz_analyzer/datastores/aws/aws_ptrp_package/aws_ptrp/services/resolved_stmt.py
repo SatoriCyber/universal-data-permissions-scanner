@@ -30,6 +30,16 @@ class ResolvedSingleStmt:
     policy_name: Optional[str]
     # add here condition keys, tags, etc.. (single stmt scope)
 
+    def __hash__(self) -> int:
+        return hash(self.stmt_name) + hash(self.stmt_parent_arn) + hash(self.policy_name)
+
+    def __eq__(self, other):
+        return (
+            self.stmt_parent_arn == other.stmt_parent_arn
+            and self.policy_name == other.policy_name
+            and self.stmt_name == other.stmt_name
+        )
+
     @classmethod
     def load(
         cls,

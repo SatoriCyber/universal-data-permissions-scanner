@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List, Optional, Set
+from typing import Dict, Generator, List, Optional, Set
 
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument, PolicyDocumentCtx
@@ -8,6 +8,7 @@ from aws_ptrp.iam.policy.policy_document_resolver import get_identity_based_reso
 from aws_ptrp.principals import Principal
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services import (
+    MethodOnStmtActionsResultType,
     MethodOnStmtActionsType,
     MethodOnStmtsActionsResult,
     ServiceActionType,
@@ -15,12 +16,41 @@ from aws_ptrp.services import (
     ServiceResourcesResolverBase,
     ServiceResourceType,
 )
+from aws_ptrp.services.resolved_stmt import ResolvedSingleStmt
 
 
 @dataclass
 class PolicyEvaluationExplicitDenyResult:
     difference_stmts_result_from_identity_policies: Optional[MethodOnStmtsActionsResult] = None
     difference_stmts_result_from_resource_policy: Optional[MethodOnStmtsActionsResult] = None
+
+    @staticmethod
+    def _yield_resolved_stmts(
+        difference_stmts_results: Optional[MethodOnStmtsActionsResult],
+        method_on_stmt_actions_type: MethodOnStmtActionsType,
+        method_on_stmt_actions_result_type: MethodOnStmtActionsResultType,
+    ) -> Generator[ResolvedSingleStmt, None, None]:
+        if method_on_stmt_actions_type == MethodOnStmtActionsType.DIFFERENCE:
+            if difference_stmts_results:
+                for resolved_stmt_result in difference_stmts_results.resolved_stmt_results:
+                    if resolved_stmt_result.result == method_on_stmt_actions_result_type:
+                        yield resolved_stmt_result.resolved_single_stmt
+
+    def yield_resolved_stmts(
+        self,
+        method_on_stmt_actions_type: MethodOnStmtActionsType,
+        method_on_stmt_actions_result_type: MethodOnStmtActionsResultType,
+    ) -> Generator[ResolvedSingleStmt, None, None]:
+        yield from PolicyEvaluationExplicitDenyResult._yield_resolved_stmts(
+            self.difference_stmts_result_from_resource_policy,
+            method_on_stmt_actions_type,
+            method_on_stmt_actions_result_type,
+        )
+        yield from PolicyEvaluationExplicitDenyResult._yield_resolved_stmts(
+            self.difference_stmts_result_from_identity_policies,
+            method_on_stmt_actions_type,
+            method_on_stmt_actions_result_type,
+        )
 
 
 @dataclass
@@ -38,6 +68,9 @@ class PolicyEvaluationResult:
             return self.target_resolver
         return None
 
+    def get_policy_apply_result(self) -> Optional[PolicyEvaluationApplyResult]:
+        return self.policy_apply_result
+
 
 @dataclass
 class PolicyEvaluationsResult:
@@ -47,6 +80,16 @@ class PolicyEvaluationsResult:
     def get_target_resolver(self) -> Optional[ServiceResourcesResolverBase]:
         if self.result:
             return self.result.get_target_resolver()
+        return None
+
+    def get_policy_apply_result(self) -> Optional[PolicyEvaluationApplyResult]:
+        if self.result:
+            return self.result.get_policy_apply_result()
+        return None
+
+    def get_cross_account_policy_apply_result(self) -> Optional[PolicyEvaluationApplyResult]:
+        if self.result_cross_account:
+            return self.result_cross_account.get_policy_apply_result()
         return None
 
 
@@ -117,7 +160,7 @@ class PolicyEvaluation:
         service_resource_type: ServiceResourceType,
         aws_actions: AwsActions,
         account_resources: AwsAccountResources,
-        identity_policies_ctx: List[PolicyDocumentCtx],
+        principal_policies_ctx: List[PolicyDocumentCtx],
     ) -> 'PolicyEvaluation':
         identity_policies_service_resolver = cls._get_identity_policies_service_resolver(
             logger=logger,
@@ -125,7 +168,7 @@ class PolicyEvaluation:
             account_resources=account_resources,
             identity_principal=identity_principal,
             service_resource_type=service_resource_type,
-            identity_policies_ctx=identity_policies_ctx,
+            principal_policies_ctx=principal_policies_ctx,
             effect=Effect.Deny,
         )
         resource_policy_service_resolver = cls._get_resource_policy_service_resolver(
@@ -156,7 +199,7 @@ class PolicyEvaluation:
         account_resources: AwsAccountResources,
         identity_principal: Principal,
         service_resource_type: ServiceResourceType,
-        identity_policies_ctx: List[PolicyDocumentCtx],
+        principal_policies_ctx: List[PolicyDocumentCtx],
         effect: Effect,
     ) -> Optional[ServiceResourcesResolverBase]:
 
@@ -165,7 +208,7 @@ class PolicyEvaluation:
             Dict[ServiceResourceType, ServiceResourcesResolverBase]
         ] = get_identity_based_resolver(
             logger=logger,
-            policy_documents_ctx=identity_policies_ctx,
+            policy_documents_ctx=principal_policies_ctx,
             identity_principal=identity_principal,
             aws_actions=aws_actions,
             account_resources=account_resources,
@@ -216,7 +259,7 @@ class PolicyEvaluation:
         target_identity_policies_ctx: List[PolicyDocumentCtx],
         service_resource_type: ServiceResourceType,
         service_resource: ServiceResourceBase,
-        identity_policies_ctx: List[PolicyDocumentCtx],
+        principal_policies_ctx: List[PolicyDocumentCtx],
         # session_policies: List[PolicyDocument] = [],
         # permission_boundary_policy: Optional[PolicyDocument] = None,
         during_cross_account_checking_flow: bool = False,
@@ -256,7 +299,7 @@ class PolicyEvaluation:
             service_resource_type=service_resource_type,
             aws_actions=aws_actions,
             account_resources=account_resources,
-            identity_policies_ctx=identity_policies_ctx,
+            principal_policies_ctx=principal_policies_ctx,
         )
 
         policy_apply_result = policy_evaluation._apply_policy_evaluation(policy_evaluation_result.target_resolver)
@@ -272,7 +315,7 @@ class PolicyEvaluation:
         identity_principal: Principal,
         target_service_resource: ServiceResourceBase,
         service_resource_type: ServiceResourceType,
-        identity_policies_ctx: List[PolicyDocumentCtx],
+        principal_policies_ctx: List[PolicyDocumentCtx],
         # session_policies: List[PolicyDocument] = [],
         # permission_boundary_policy: Optional[PolicyDocument] = None,
     ) -> PolicyEvaluationsResult:
@@ -308,7 +351,7 @@ class PolicyEvaluation:
             service_resource_type=service_resource_type,
             aws_actions=aws_actions,
             account_resources=account_resources,
-            identity_policies_ctx=identity_policies_ctx,
+            principal_policies_ctx=principal_policies_ctx,
         )
 
         policy_apply_result = policy_evaluation._apply_policy_evaluation(
@@ -334,10 +377,10 @@ class PolicyEvaluation:
             aws_actions=aws_actions,
             account_resources=account_resources,
             identity_principal=identity_principal,
-            target_identity_policies_ctx=identity_policies_ctx,
+            target_identity_policies_ctx=principal_policies_ctx,
             service_resource_type=service_resource_type,
             service_resource=target_service_resource,
-            identity_policies_ctx=identity_policies_ctx,
+            principal_policies_ctx=principal_policies_ctx,
             during_cross_account_checking_flow=True,
         )
 

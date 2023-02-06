@@ -59,9 +59,7 @@ def test_user_role_with_grant():
         AuthzEntry(
             identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
             path=[
-                AuthzPathElement(
-                    id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note="", db_permissions=["SELECT"]
-                )
+                AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, db_permissions=["SELECT"])
             ],
             permission=PermissionLevel.READ,
             asset=Asset(name=["db1", "schema1", "table1"], type=AssetType.TABLE),
@@ -86,10 +84,8 @@ def test_user_role_to_role_with_grant():
         AuthzEntry(
             identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
             path=[
-                AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note=""),
-                AuthzPathElement(
-                    id="role_2", name="role_2", type=AuthzPathElementType.ROLE, note="", db_permissions=["SELECT"]
-                ),
+                AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE),
+                AuthzPathElement(id="role_2", name="role_2", type=AuthzPathElementType.ROLE, db_permissions=["SELECT"]),
             ],
             permission=PermissionLevel.READ,
             asset=Asset(name=["db1", "schema1", "table1"], type=AssetType.TABLE),
@@ -106,11 +102,9 @@ def test_user_role_with_direct_grant():
         AuthzEntry(
             identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
             path=[
-                AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE, note=""),
-                AuthzPathElement(id="role_2", name="role_2", type=AuthzPathElementType.ROLE, note=""),
-                AuthzPathElement(
-                    id="role_3", name="role_3", type=AuthzPathElementType.ROLE, note="", db_permissions=["SELECT"]
-                ),
+                AuthzPathElement(id="role_1", name="role_1", type=AuthzPathElementType.ROLE),
+                AuthzPathElement(id="role_2", name="role_2", type=AuthzPathElementType.ROLE),
+                AuthzPathElement(id="role_3", name="role_3", type=AuthzPathElementType.ROLE, db_permissions=["SELECT"]),
             ],
             permission=PermissionLevel.READ,
             asset=Asset(name=["db1", "schema1", "table1"], type=AssetType.TABLE),
@@ -131,7 +125,6 @@ def test_super_user_grant():
                     id="super_user",
                     name="super_user",
                     type=AuthzPathElementType.ROLE,
-                    note="",
                     db_permissions=["super_user"],
                 ),
             ],
