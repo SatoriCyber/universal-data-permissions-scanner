@@ -1,17 +1,12 @@
-Postgres uses the RBAC to manage access to data assets. There are no notion of users, there are only roles, role can have a login property.
+PostgreSQL implements a role-based access control (RBAC) model to manage access to data assets. In PostgreSQL there is no dedicated user object, instead roles that have the login property are used by users to login to the database. Roles can be organized hierarchically. All users are assigned to the `PUBLIC` role by default.
 
-Roles can be assigned to other roles, creating a hierarchy of roles.
-Roles can't be circularly assigned to each other.
-All users has the `PUBLIC` role, which is the default role for all users.
-Superuser role have access to all data assets.
-
-## Setup Access to Scan Postgres
-authz-analyzer needs the following permissions:
+## Setup Access to Scan a PostgreSQL Server:
+1. Create a role for authz-analyzer using the following command: 
 ```
--- create a new role for ‘authz_analyzer’
 CREATE ROLE authz_analyzer NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN NOREPLICATION NOBYPASSRLS PASSWORD '<REPLACE_WITH_A_STRONG_PASSWORD>';
-
--- for each DB at the postgres cluster:
+```
+2. For each database on the server, grant permissions for the authz-analyzer role using the following command:
+```
 GRANT SELECT ON TABLE pg_database TO authz_analyzer;
 GRANT SELECT ON TABLE information_schema.tables TO authz_analyzer;
 GRANT SELECT ON TABLE information_schema.table_privileges TO authz_analyzer;
@@ -19,11 +14,11 @@ GRANT SELECT ON TABLE pg_catalog.pg_roles TO authz_analyzer;
     
 ```
 
-## Scanning Postgres
-Postgres needs an initial database to connect to.
-The following command will scan the Postgres database and generate a report:
+## Scanning a PostgreSQL Server
 ```
-authz-analyzer postgres --user <REPLACE_WITH_USER> --password <REPLACE_WITH_PASSWORD> --host <REPLACE_WITH_HOST> --dbname <REPLACE_WITH_DBNAME>
+authz-analyzer PostgreSQL \
+    --host <HOST> \
+    --user <USERNAME> \
+    --password <PASSWORD> \
+    --dbname <DB>
 ```
-
-## Known Limitations

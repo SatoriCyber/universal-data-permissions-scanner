@@ -1,109 +1,87 @@
-The project supports two types of MongoDB implementations:
+authz-analyzer supports two types of MongoDB implementations:
 
 * MongoDB Atlas
-* MongoDB cluster
+* Standalone MongoDB Cluster
 
+## MongoDB Atlas
 
-**MongoDB Atlas**
+MongoDB Atlas is a managed MongoDB service. It provides managed clusters and a host of related services. authz-analyzer currently supports scanning of MongoDB cluster permissions. MongoDB Atlas implements a role-based access control (RBAC) model to manage access to data assets.
 
-The Atlas is a managed service for MongoDB, it provides a managed cluster, and a managed user management.
-The Authz-Analyzer will scan only a single cluster.
 Atlas has two types of users:
 
-* Database User - A user that has access to a cluster. Database user may have privileges assigned to it, or it may have a role assigned to it.
-Two type of roles:
-    * Built-in roles - defined by MongoDB.
-    * User defined roles - defined by the user.
-Roles can be assigned to other roles, creating a hierarchy of roles.
-* Organization user  - A user that has access to Atlas. Organization users are assigned with a role.
+* Database Users - users that have access to an Atlas-managed MongoDB cluster. Database users may have privileges granted to them or they may be assigned with a built-in or user-defined role. Roles can be organized heirarchically.
+* Organization Users - users that have access to the Atlas console. Organization users are assigned to organization roles which define their permissions and resources like projects and clusters they can access.
 
-An Organization role has scope:
+### Setup Access to Scan a MongoDB Atlas Cluster
 
-  * Organization scope - which provides access across projects.
-  * Project scope - which provides access to a specific project.
-A user can be part of a team, and the team can have a role.
+To enable authz-analyzer to scan the list of users, roles and permissions perform the following steps:
+1. Create an organization API Key in the Atlas management console.
+2. Grant the `Organization Read Only` role to the API key you created
+3. Copy the Public and Private keys and store them for later use.
 
-There are ways to manage those users:
+To enable authz-analyzer to scan the list of databases and collections in a MongoDB cluster perform the following steps:
+1. Create a custom role.
+2. Grant the `listDatabases` action to the role.
+3. Grant the `listCollections` action on each database in the cluster to the role.
+4. Create a database user and assign it to the custom role you created.
 
-* Database user:
-    * Local - Users which are configured directly on Atlas.
-    * LDAP - The cluster will query the LDAP server for authentication.
-    * Cloud - Use AWS IAM role to authenticate.
-* Organization user:
-    * Local users - Users which are configured directly on Atlas.
-    * Federated users - Users which are configured on the organization's SAML provider.
-
-MongoDB also has a notion of Data API, which isn't supported by this project.
-
-**MongoDB cluster**
-
-A MongoDB cluster is a set of servers that store data.
-MongoDB implements RBAC model.
-Users are assigned with roles which have privileges.
-Roles which are assigned to the admin database have access across all databases.
-Roles which are assigned to a specific database have access only to that database.
-There are roles which are built-in, and roles which are defined by the user.
-Roles can be assigned to other roles, creating a hierarchy of roles.
-
-## Setup Access to Scan MongoDB Atlas
-authz-analyzer needs the following permissions:
-Atlas level:
+### Scanning a MongoDB Atlas Cluster
 ```
-Organization read only.
-```
-For each cluster create a database user with the following permissions:
-```
-list databases
-```
-For each database in the cluster assign:
-```
-list collections
+authz-analyzer atlas \
+    --public_key <PUBLIC KEY> \
+    --private_key <PRIVATE KEY> \
+    --username <DB USER> \
+    --password <DB USER PASSWORD> \
+    --cluster_name <CLUSTER> \
+    --project <PROJECT>
 ```
 
+## Standalone MongoDB Cluster
+MongoDB implements a role-based access control (RBAC) model to manage access to data assets. Users are assigned with roles which have privileges. Role can be built-it or user-defined, and organized hierarchically. Roles that are assigned to the admin database have access across all databases while roles that are assigned to a specific databases have access only to those databases.
 
-## Setup Access to Scan MongoDB cluster
-authz-analyzer needs the following permissions:
+### Setup Access to Scan a Standalone MongoDB Cluster
+1. Create a role for authz-analyzer using the following command:
 ```
 db.createRole(
-        {
-            role:"authz_analyzer_role",
-            privileges: [
-                {
-                    resource: {
-                        db: "",
-                        collection: ""
-                    },
-                    actions: ["listDatabases", "listCollections", "viewRole", "viewUser"]
-                }
-            ],
-            roles: []
-        }
-        )    
-
-        db.createUser(
+    {
+        role:"authz_analyzer",
+        privileges: [
             {
-                user: "authz_analyzer",
-                roles: ["authz_analyzer_role"],
-                pwd: "<password>"
+                resource: {
+                    db: "",
+                    collection: ""
+                },
+                actions: ["listDatabases", "listCollections", "viewRole", "viewUser"]
             }
-        ) 
+        ],
+        roles: []
+    }
+)    
 ```
 
-## Scanning MongoDB Atlas
+2. Create a user for authz-analyzer using the following command:
 ```
-authz-analyzer atlas --public_key <REPLACE WITH ATLAS ADMIN API PUBLIC KEY> --private_key <REPLACE WITH ATLAS ADMIN API PRIVATE KEY> --username <REPLACE WITH CLUSTER USER> --password <REPLACE WITH CLUSTER PASSWORD> --cluster_name <REPLACE WITH CLUSTER NAME> --project <REPLACE WITH PROJECT NAME>
+db.createUser(
+    {
+        user: "authz_analyzer",
+        roles: ["authz_analyzer"],
+        pwd: "<password>"
+    }
+) 
 ```
 
-## Scanning MongoDB cluster
+### Scanning a Standalone MongoDB Cluster
 ```
-authz-analyzer mongodb --host <REPLACE WITH HOST> --username <REPLACE WITH CLUSTER USER> --password <REPLACE WITH CLUSTER PASSWORD>
+authz-analyzer mongodb \
+    --host <CLUSTER HOSTNAME> \
+    --username <USERNAME> \
+    --password <PASSWORD>
 ```
 
 ## Known Limitations
-Data API
+The following MongoDB features are not currently supported by authz-analyzer:
 
-Cloud users
-
-LDAP Users
-
-Federated users
+* Data API
+* Cloud users
+* LDAP Users
+* Federated users
