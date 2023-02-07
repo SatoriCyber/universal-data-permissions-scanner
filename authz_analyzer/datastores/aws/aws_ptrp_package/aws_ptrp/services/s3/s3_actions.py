@@ -67,9 +67,11 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
         return cls(actions=actions, stmt_relative_id_objects_regexes=stmt_relative_id_objects_regexes)
 
     def difference(self, other: 'ResolvedActionsSingleStmt'):
+        """
+        the function checks that each object regex in self is a 'full subset' of all regexes in other, and if so, it removes the object actions (in addition to the bucket actions)
+        """
         difference_also_on_object_actions = True
         if isinstance(other, ResolvedS3BucketActions):
-            # We check if each object regex in self is a subset of all regexes in other, and if so, we want to aggravate and remove also the object actions
             for o_regex in other.stmt_relative_id_objects_regexes:
                 for s_regex in self.stmt_relative_id_objects_regexes:
                     difference_also_on_object_actions = difference_also_on_object_actions and is_aws_regex_full_subset(
