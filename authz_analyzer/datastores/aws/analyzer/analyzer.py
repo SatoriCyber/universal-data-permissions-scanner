@@ -23,13 +23,15 @@ class AWSAuthzAnalyzer:
     logger: Logger
     target_account_id: str
     additional_account_ids: Optional[Set[str]]
-    account_role_name: str
+    role_name: str
+    external_id: Optional[str]
 
     @classmethod
     def connect(
         cls,
-        target_account_id,
-        account_role_name,
+        target_account_id: str,
+        role_name: str,
+        external_id: Optional[str],
         additional_account_ids: Optional[Set[str]] = None,
         logger: Optional[Logger] = None,
         output_format: OutputFormat = OutputFormat.CSV,
@@ -45,7 +47,8 @@ class AWSAuthzAnalyzer:
             exporter=aws_exporter,
             target_account_id=target_account_id,
             additional_account_ids=additional_account_ids,
-            account_role_name=account_role_name,
+            role_name=role_name,
+            external_id=external_id,
         )
 
     def run_s3(self):
@@ -62,10 +65,11 @@ class AWSAuthzAnalyzer:
             self.additional_account_ids,
         )
         aws_ptrp = AwsPtrp.load_from_role(
-            self.logger,
-            self.account_role_name,
-            resource_service_types,
-            self.target_account_id,
-            self.additional_account_ids,
+            logger=self.logger,
+            role_name=self.role_name,
+            external_id=self.external_id,
+            resource_service_types_to_load=resource_service_types,
+            target_account_id=self.target_account_id,
+            additional_account_ids=self.additional_account_ids,
         )
         aws_ptrp.resolve_permissions(self.logger, self.exporter.export_entry_from_ptrp_line)

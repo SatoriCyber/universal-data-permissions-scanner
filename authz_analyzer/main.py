@@ -57,13 +57,15 @@ def run_aws_s3(
     filename: str,
     target_account_id: str,
     additional_account_ids: Optional[Set[str]],
-    account_role_name: str,
+    role_name: str,
+    external_id: Optional[str],
 ):
     writer = get_writer(filename, output_format)
     analyzer = AWSAuthzAnalyzer.connect(
         target_account_id=target_account_id,
         additional_account_ids=additional_account_ids,
-        account_role_name=account_role_name,
+        role_name=role_name,
+        external_id=external_id,
         output_path=filename,
         output_format=output_format,
         logger=logger,

@@ -59,9 +59,10 @@ def register_services_for_deserialize_from_file():
 def test_aws_ptrp_with_s3_write_satori_dev_account():
     target_account_id = '105246067165'
     additional_account_ids = set(['982269985744'])
-    assume_role_name = 'SatoriScanner'
+    role_name = 'SatoriScanner'
+    external_id = "12345"
     ptrp = AwsPtrp.load_from_role(
-        get_logger(False), assume_role_name, set([S3Service()]), target_account_id, additional_account_ids
+        get_logger(False), role_name, external_id, set([S3Service()]), target_account_id, additional_account_ids
     )
 
     ptrp_json = to_json(ptrp)

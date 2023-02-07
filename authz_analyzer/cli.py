@@ -2,7 +2,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import click
 
@@ -87,15 +87,23 @@ def bigquery(ctx: click.Context, project: str, key_file: Optional[str] = None):
     type=str,
     help="Additional AWS accounts to resolved",
 )
-@click.option('--account-role-name', required=True, type=str, help="The role to assume in the AWS account")
-def aws_s3(ctx: click.Context, target_account_id, additional_account_id, account_role_name):
+@click.option('--role-name', required=True, type=str, help="The AWS role name to assume")
+@click.option('--external-id', required=False, type=str, help="The external id to be used when assuming the AWS role")
+def aws_s3(
+    ctx: click.Context,
+    target_account_id: str,
+    additional_account_id: Optional[List[str]],
+    role_name: str,
+    external_id: Optional[str],
+):
     run_aws_s3(
-        ctx.obj['LOGGER'],
-        ctx.obj['FORMAT'],
-        ctx.obj['OUT'],
-        target_account_id,
-        set(additional_account_id),
-        account_role_name,
+        logger=ctx.obj['LOGGER'],
+        output_format=ctx.obj['FORMAT'],
+        filename=ctx.obj['OUT'],
+        target_account_id=target_account_id,
+        additional_account_ids=set(additional_account_id) if additional_account_id else None,
+        role_name=role_name,
+        external_id=external_id,
     )
 
 
