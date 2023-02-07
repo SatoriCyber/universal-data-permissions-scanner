@@ -65,8 +65,9 @@ class CompareAwsPtrpLines:
 def get_resolve_permissions_test_inputs() -> List[str]:
     ret = []
     assert os.path.isdir(RESOURCES_INPUT_DIR)
-    for filename in os.listdir(RESOURCES_INPUT_DIR):
-        ret.append(filename)
+    for root, _dirs, files in os.walk(RESOURCES_INPUT_DIR):
+        for file in files:
+            ret.append(os.path.relpath(os.path.join(root, file), RESOURCES_INPUT_DIR))
     return ret
 
 

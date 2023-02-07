@@ -17,7 +17,8 @@
                                         "Effect": "Allow",
                                         "Sid": "VisualEditor1",
                                         "Action": [
-                                            "s3:ListBucket", "s3:GetObject"
+                                            "s3:ListBucket",
+                                            "s3:GetObject"
                                         ],
                                         "Resource": [
                                             "arn:aws:s3:::bucket_1"
@@ -27,7 +28,8 @@
                                         "Effect": "Deny",
                                         "Sid": "VisualEditor2",
                                         "Action": [
-                                            "s3:ListBucket", "s3:GetObject"
+                                            "s3:ListBucket",
+                                            "s3:GetObject"
                                         ],
                                         "Resource": [
                                             "arn:aws:s3:::bucket_1*"
@@ -59,6 +61,5 @@
             }
         }
     },
-    "output": [
-    ]
+    "output": []
 }
