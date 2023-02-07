@@ -138,10 +138,10 @@ def run_redshift(
 
     Args:
         logger (Logger): Logger
-        username (str): Postgres username
-        password (str): Postgres password
-        host (str): FQDN or IP of the postgres DB
-        dbname (str): Postgres database name, for example postgres
+        username (str): Redshift username
+        password (str): Redshift password
+        host (str): FQDN or IP of the redshift DB
+        dbname (str): Redshift database name, for example dev
         output_format (OutputFormat): Output format, CSV or JSON
         output_path (str): Where to write the output
         port (int): Redshift port

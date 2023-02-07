@@ -16,6 +16,7 @@ from authz_analyzer.main import (  # pylint: disable=wrong-import-position
     run_mongodb,
     run_mongodb_atlas,
     run_postgres,
+    run_redshift,
     run_snowflake,
 )
 from authz_analyzer.utils.logger import get_logger  # pylint: disable=wrong-import-position
@@ -43,7 +44,7 @@ def main(ctx: click.Context, debug: bool, out: str, out_format: str):
     ctx.obj['OUT'] = out
     if out_format == "CSV":
         ctx.obj["FORMAT"] = OutputFormat.CSV
-    if out_format == "JSON":
+    elif out_format == "JSON":
         ctx.obj["FORMAT"] = OutputFormat.MULTI_JSON
     else:
         raise Exception("Unknown format")
@@ -111,16 +112,37 @@ def aws_s3(
 @click.pass_context
 @click.option('--user', '-u', required=True, type=str, help="Postgres username the analyzer should use to connect")
 @click.option('--password', '-p', required=True, type=str, help="Postgres password the analyzer should use to connect")
-@click.option('--port', required=False, type=str, help="Postgres port", default=5432)
+@click.option('--port', required=False, type=int, help="Postgres port", default=5432)
 @click.option('--host', '-t', required=True, type=str, help="Postgres host, FQDN or IP")
 @click.option('--dbname', '-d', required=False, type=str, help="Postgres database name", default="postgres")
-def postgres(ctx: click.Context, username: str, password: str, port: int, host: str, dbname: str):
-    """Analyzer Postgres Authorization"""
+def postgres(ctx: click.Context, user: str, password: str, port: int, host: str, dbname: str):
+    """Analyze Postgres Authorization"""
     run_postgres(
         logger=ctx.obj['LOGGER'],
         output_format=ctx.obj['FORMAT'],
         output_path=ctx.obj['OUT'],
-        username=username,
+        username=user,
+        password=password,
+        port=port,
+        host=host,
+        dbname=dbname,
+    )
+
+
+@main.command()
+@click.pass_context
+@click.option('--user', '-u', required=True, type=str, help="Redshift username the analyzer should use to connect")
+@click.option('--password', '-p', required=True, type=str, help="Redshift password the analyzer should use to connect")
+@click.option('--port', required=False, type=int, help="Redshift port", default=5439)
+@click.option('--host', '-t', required=True, type=str, help="Redshift host, FQDN or IP")
+@click.option('--dbname', '-d', required=False, type=str, help="Redshift database name", default="dev")
+def redshift(ctx: click.Context, user: str, password: str, port: int, host: str, dbname: str):
+    """Analyze Redshift Authorization"""
+    run_redshift(
+        logger=ctx.obj['LOGGER'],
+        output_format=ctx.obj['FORMAT'],
+        output_path=ctx.obj['OUT'],
+        username=user,
         password=password,
         port=port,
         host=host,
@@ -135,7 +157,7 @@ def postgres(ctx: click.Context, username: str, password: str, port: int, host: 
 @click.option('--port', required=False, type=str, help="port", default=5432)
 @click.option('--host', '-t', required=True, type=str, help="host, FQDN or IP")
 def mongodb(ctx: click.Context, username: str, password: str, port: int, host: str):
-    """Analyzer Postgres Authorization"""
+    """Analyze MongoDB Authorization"""
     run_mongodb(
         logger=ctx.obj['LOGGER'],
         output_format=ctx.obj['FORMAT'],
@@ -170,7 +192,7 @@ def mongodb(ctx: click.Context, username: str, password: str, port: int, host: s
 def atlas(
     ctx: click.Context, public_key: str, private_key: str, username: str, password: str, project: str, cluster: str
 ):
-    """Analyzer Postgres Authorization"""
+    """Analyze MongoDB Atlas Authorization"""
     run_mongodb_atlas(
         logger=ctx.obj['LOGGER'],
         output_format=ctx.obj['FORMAT'],
