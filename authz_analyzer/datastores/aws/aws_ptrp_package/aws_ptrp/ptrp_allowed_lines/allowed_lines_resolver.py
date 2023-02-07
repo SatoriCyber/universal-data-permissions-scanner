@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from logging import Logger
 from typing import Dict, Generator, Iterable, List, Optional, Set, Tuple, Union
 
@@ -127,7 +127,7 @@ class PtrpAllowedLinesBuilder:
     iam_entities: IAMEntities
     aws_actions: AwsActions
     account_resources: AwsAccountResources
-    graph: nx.DiGraph = nx.DiGraph()
+    graph: nx.DiGraph = field(default_factory=nx.DiGraph)
 
     def _resolve_no_entity_principal_for_principal(self, stmt_principal: Principal) -> Optional[NoEntityPrincipal]:
         if stmt_principal.is_no_entity_principal():
