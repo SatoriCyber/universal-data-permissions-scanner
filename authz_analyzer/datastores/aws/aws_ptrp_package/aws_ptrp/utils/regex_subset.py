@@ -1,9 +1,9 @@
 from typing import List
 
 
-def _safe_list_get(l: List[str], idx: int):
+def _safe_list_get(lst: List[str], idx: int):
     try:
-        return l[idx]
+        return lst[idx]
     except IndexError:
         return None
 
