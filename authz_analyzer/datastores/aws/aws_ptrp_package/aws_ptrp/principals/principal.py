@@ -68,7 +68,7 @@ class Principal:
     def is_no_entity_principal(
         self,
     ) -> bool:
-        is_no_entity = (
+        is_no_entity: bool = (
             # currently we don't support resolving format saml/web identity/canonical format
             # so, we treats it as no entity object (like aws service/federated etc..)
             self.principal_type == AwsPrincipalType.WEB_IDENTITY_SESSION
@@ -81,25 +81,25 @@ class Principal:
         return is_no_entity
 
     def is_all_principals(self) -> bool:
-        return self.principal_type == AwsPrincipalType.ALL_PRINCIPALS
+        return bool(self.principal_type == AwsPrincipalType.ALL_PRINCIPALS)
 
     def is_iam_user_principal(self) -> bool:
-        return self.principal_type == AwsPrincipalType.IAM_USER
+        return bool(self.principal_type == AwsPrincipalType.IAM_USER)
 
     def is_iam_user_account(self) -> bool:
-        return (
+        return bool(
             self.principal_type == AwsPrincipalType.AWS_ACCOUNT
             or self.principal_type == AwsPrincipalType.CANONICAL_USER
         )
 
     def is_federated_user_principal(self) -> bool:
-        return self.principal_type == AwsPrincipalType.AWS_STS_FEDERATED_USER_SESSION
+        return bool(self.principal_type == AwsPrincipalType.AWS_STS_FEDERATED_USER_SESSION)
 
     def is_iam_role_principal(self) -> bool:
-        return self.principal_type == AwsPrincipalType.IAM_ROLE
+        return bool(self.principal_type == AwsPrincipalType.IAM_ROLE)
 
     def is_role_session_principal(self) -> bool:
-        return self.principal_type == AwsPrincipalType.ASSUMED_ROLE_SESSION
+        return bool(self.principal_type == AwsPrincipalType.ASSUMED_ROLE_SESSION)
 
     def contains(self, other: 'Principal') -> bool:
         if other.principal_type == AwsPrincipalType.ALL_PRINCIPALS:
