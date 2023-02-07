@@ -5,6 +5,7 @@ from typing import List, Optional, Set
 
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpActionPermissionLevel
 from aws_ptrp.services import ResolvedActionsSingleStmt, ServiceActionBase, ServiceActionsResolverBase
+from aws_ptrp.utils.regex_subset import is_aws_regex_full_subset
 from aws_ptrp.utils.serde import serde_enum_field
 from serde import serde
 
@@ -64,6 +65,28 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
         if stmt_relative_id_objects_regex is not None:
             stmt_relative_id_objects_regexes.append(stmt_relative_id_objects_regex)
         return cls(actions=actions, stmt_relative_id_objects_regexes=stmt_relative_id_objects_regexes)
+
+    def difference(self, other: 'ResolvedActionsSingleStmt'):
+        difference_also_on_object_actions = True
+        if isinstance(other, ResolvedS3BucketActions):
+            # We check if each object regex in self is a subset of all regexes in other, and if so, we want to aggravate and remove also the object actions
+            for o_regex in other.stmt_relative_id_objects_regexes:
+                for s_regex in self.stmt_relative_id_objects_regexes:
+                    difference_also_on_object_actions = difference_also_on_object_actions and is_aws_regex_full_subset(
+                        o_regex, s_regex
+                    )
+                    if difference_also_on_object_actions is False:
+                        break
+                if difference_also_on_object_actions is False:
+                    break
+
+            if difference_also_on_object_actions is True:
+                actions_to_difference = other.actions
+            else:
+                # We remove only the bucket actions
+                actions_to_difference = set(filter(lambda a: a.action_type == S3ActionType.BUCKET, other.actions))
+
+            self.resolved_stmt_actions.difference_update(actions_to_difference)
 
 
 @dataclass
