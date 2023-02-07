@@ -51,6 +51,7 @@ class AwsPtrp:
         cls,
         logger: Logger,
         role_name: str,
+        external_id: Optional[str],
         resource_service_types_to_load: Set[ServiceResourceType],
         target_account_id: str,
         additional_account_ids: Optional[Set[str]] = None,
@@ -59,23 +60,26 @@ class AwsPtrp:
             if target_account_id in additional_account_ids:
                 additional_account_ids.remove(target_account_id)
             iam_entities: IAMEntities = cls._load_iam_entities_for_additional_account(
-                logger, role_name, additional_account_ids
+                logger, role_name, external_id, additional_account_ids
             )
         else:
             iam_entities = IAMEntities()
         return cls._load_for_target_account(
-            logger, role_name, target_account_id, iam_entities, resource_service_types_to_load
+            logger, role_name, external_id, target_account_id, iam_entities, resource_service_types_to_load
         )
 
     @classmethod
     def _load_iam_entities_for_additional_account(
-        cls, logger: Logger, role_name: str, additional_account_ids: Set[str]
+        cls, logger: Logger, role_name: str, external_id: Optional[str], additional_account_ids: Set[str]
     ) -> IAMEntities:
         iam_entities = IAMEntities()
         for additional_account_id in additional_account_ids:
-            session: Session = create_session_with_assume_role(additional_account_id, role_name)
+            session: Session = create_session_with_assume_role(additional_account_id, role_name, external_id)
             logger.info(
-                "Successfully assume the role %s for additional account id %s", role_name, additional_account_id
+                "Successfully assume the role %s (external id: %s) for additional account id %s",
+                role_name,
+                external_id,
+                additional_account_id,
             )
             iam_entities.update_for_account(logger, additional_account_id, session)
         return iam_entities
@@ -85,12 +89,13 @@ class AwsPtrp:
         cls,
         logger: Logger,
         role_name: str,
+        external_id: Optional[str],
         target_account_id: str,
         iam_entities: IAMEntities,
         resource_service_types_to_load: Set[ServiceResourceType],
     ) -> 'AwsPtrp':
         # update the iam_entities from the target account
-        target_session: Session = create_session_with_assume_role(target_account_id, role_name)
+        target_session: Session = create_session_with_assume_role(target_account_id, role_name, external_id)
         logger.info("Successfully assume the role %s for target account id %s", role_name, target_account_id)
         iam_entities.update_for_account(logger, target_account_id, target_session)
 

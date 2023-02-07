@@ -21,8 +21,9 @@ IAM_ENTITIES_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(
 )
 def test_iam_entities_write_satori_dev_account():
     aws_account_id = '105246067165'
-    assume_role_name = 'SatoriScanner'
-    session = create_session_with_assume_role(aws_account_id, assume_role_name)
+    role_name = 'SatoriScanner'
+    external_id = "12345"
+    session = create_session_with_assume_role(aws_account_id, role_name, external_id)
     iam_entities = IAMEntities.load_for_account(get_logger(False), aws_account_id, session)
     iam_entities_json = to_json(iam_entities)
     with open(IAM_ENTITIES_SATORI_DEV_JSON_FILE, "w", encoding="utf-8") as outfile:
