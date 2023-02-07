@@ -1,4 +1,5 @@
 from typing import Optional
+
 import boto3
 from boto3 import Session
 
