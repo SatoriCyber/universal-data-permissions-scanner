@@ -56,6 +56,7 @@ class IdentityType(Enum):
     ACCOUNT = auto()  # Snowflake
     DB_USER = auto()  # MongoDB Atlas
     ORG_USER = auto()  # MongoDB Atlas
+    CLUSTER = auto()  # AWS Redshift Cluster
 
     def __str__(self) -> str:
         return self.name

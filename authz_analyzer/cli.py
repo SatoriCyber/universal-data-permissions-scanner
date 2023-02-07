@@ -101,7 +101,7 @@ def aws_s3(ctx: click.Context, target_account_id, additional_account_id, account
 
 @main.command()
 @click.pass_context
-@click.option('--username', '-u', required=True, type=str, help="Postgres username the analyzer should use to connect")
+@click.option('--user', '-u', required=True, type=str, help="Postgres username the analyzer should use to connect")
 @click.option('--password', '-p', required=True, type=str, help="Postgres password the analyzer should use to connect")
 @click.option('--port', required=False, type=str, help="Postgres port", default=5432)
 @click.option('--host', '-t', required=True, type=str, help="Postgres host, FQDN or IP")

@@ -1,5 +1,6 @@
 SELECT
-    datname
+    datname,
+    datallowconn
 FROM
     pg_database
 where

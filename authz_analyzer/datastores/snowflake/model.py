@@ -112,7 +112,7 @@ class ResourceGrant:
 
     name: List[str]
     permission_level: PermissionLevel
-    db_permission: PermissionType
+    db_permissions: List[PermissionType]
     granted_on: GrantedOn
 
     def __hash__(self) -> int:
