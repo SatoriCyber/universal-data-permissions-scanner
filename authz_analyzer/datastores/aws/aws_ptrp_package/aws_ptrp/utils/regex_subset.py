@@ -1,18 +1,19 @@
-def _safe_list_get(l, idx):
+def _safe_list_get(l: list, idx: int):
   try:
     return l[idx]
   except IndexError:
     return None
 
-def aws_regex_subset(haystack_aws_regex: str, needle_aws_regex: str) -> bool:
+def is_aws_regex_full_subset(haystack_aws_regex: str, needle_aws_regex: str) -> bool:
     """
     This function checks if the needle_aws_regex is a full subset of the haystack_aws_regex.
+    Regex 'a' if a full subset of 'b' if any string that matches 'a' also matches 'b'. 
     AWS regex can have the following regex tokens:
     '*' => 0 or more characters(equivalent to .*)
     '?' => 1 character(equivalent to .)
     For example:
-    cab* is a full subset of cab *ab*
-    a?c is not a full subset of a*b
+    cab* is a full subset of *ab*
+    c?b* is not a full subset of *ab*, since it can match 'cdb' which is not matched by *ab*
 
     Returns True if any string that matches the needle_aws_regex also matches the haystack_aws_regex.
     """
