@@ -1,5 +1,6 @@
 from aws_ptrp.utils.regex_subset import is_aws_regex_full_subset
 
+
 def test_aws_regex_full_subset():
     assert is_aws_regex_full_subset("*ab", "c*") is False
     assert is_aws_regex_full_subset("ab*", "ab") is True

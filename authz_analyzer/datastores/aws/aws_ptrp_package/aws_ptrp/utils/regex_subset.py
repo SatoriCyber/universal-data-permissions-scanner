@@ -1,15 +1,17 @@
 from typing import List
 
-def _safe_list_get(l: List[str], idx: int):
-  try:
-    return l[idx]
-  except IndexError:
-    return None
+
+def _safe_list_get(lst: List[str], idx: int):
+    try:
+        return lst[idx]
+    except IndexError:
+        return None
+
 
 def is_aws_regex_full_subset(haystack_aws_regex: str, needle_aws_regex: str) -> bool:
     """
     This function checks if the needle_aws_regex is a full subset of the haystack_aws_regex.
-    Regex 'a' if a full subset of 'b' if any string that matches 'a' also matches 'b'. 
+    Regex 'a' if a full subset of 'b' if any string that matches 'a' also matches 'b'.
     AWS regex can have the following regex tokens:
     '*' => 0 or more characters(equivalent to .*)
     '?' => 1 character(equivalent to .)
@@ -48,13 +50,13 @@ def is_aws_regex_full_subset(haystack_aws_regex: str, needle_aws_regex: str) -> 
         elif haystack_char != needle_char:
             # If previous char in haystack was a wildcard, we can skip the current char in needle, since current needle will match
             if _safe_list_get(haystack_chars, i - 1) == "*":
-                j+=1
+                j += 1
                 continue
             return False
-            
+
     haystack_finished = i >= len(haystack_chars)
     needle_finished = j >= len(needle_chars)
-    
+
     if haystack_finished is False and needle_finished is True:
         # We need to check if the rest of the haystack is a wildcard, and if so, needle will match(since * can be treated also as zero sequence of chars)
         return haystack_chars[j:] == ['*']
