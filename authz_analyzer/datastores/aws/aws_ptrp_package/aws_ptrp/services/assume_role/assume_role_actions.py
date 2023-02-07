@@ -5,6 +5,7 @@ from typing import List, Set
 
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpActionPermissionLevel
 from aws_ptrp.services import ServiceActionBase, ServiceActionsResolverBase
+from aws_ptrp.utils.serde import serde_enum_field
 from serde import serde
 
 
@@ -20,9 +21,9 @@ class AssumeRoleActionType(Enum):
 @dataclass
 class AssumeRoleAction(ServiceActionBase):
     name: str
-    action_type: AssumeRoleActionType
-    permission_level: AwsPtrpActionPermissionLevel
     is_assumed_role: bool
+    action_type: AssumeRoleActionType = serde_enum_field(AssumeRoleActionType)
+    permission_level: AwsPtrpActionPermissionLevel = serde_enum_field(AwsPtrpActionPermissionLevel)
 
     def __repr__(self):
         return self.name
@@ -65,16 +66,16 @@ class AssumeRoleServiceActionsResolver(ServiceActionsResolverBase):
 
 
 role_trust_actions: List[ServiceActionBase] = [
-    AssumeRoleAction("AssumeRole", AssumeRoleActionType.ASSUME_ROLE, AwsPtrpActionPermissionLevel.FULL, True),
+    AssumeRoleAction("AssumeRole", True, AssumeRoleActionType.ASSUME_ROLE, AwsPtrpActionPermissionLevel.FULL),
     AssumeRoleAction(
         "AssumeRoleWithWebIdentity",
+        True,
         AssumeRoleActionType.ASSUME_ROLE_WITH_WEB_IDENTITY,
         AwsPtrpActionPermissionLevel.FULL,
-        True,
     ),
     AssumeRoleAction(
-        "AssumeRoleWithSAML", AssumeRoleActionType.ASSUME_ROLE_WITH_SAML, AwsPtrpActionPermissionLevel.FULL, True
+        "AssumeRoleWithSAML", True, AssumeRoleActionType.ASSUME_ROLE_WITH_SAML, AwsPtrpActionPermissionLevel.FULL
     ),
-    AssumeRoleAction("TagSession", AssumeRoleActionType.TAG_SESSION, AwsPtrpActionPermissionLevel.FULL, False),
-    AssumeRoleAction("TagSession", AssumeRoleActionType.SET_SOURCE_IDENTITY, AwsPtrpActionPermissionLevel.FULL, False),
+    AssumeRoleAction("TagSession", False, AssumeRoleActionType.TAG_SESSION, AwsPtrpActionPermissionLevel.FULL),
+    AssumeRoleAction("TagSession", False, AssumeRoleActionType.SET_SOURCE_IDENTITY, AwsPtrpActionPermissionLevel.FULL),
 ]

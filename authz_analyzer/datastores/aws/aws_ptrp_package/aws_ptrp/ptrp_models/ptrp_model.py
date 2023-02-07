@@ -2,6 +2,9 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import List
 
+from aws_ptrp.utils.serde import serde_enum_field
+from serde import field, serde
+
 
 class AwsPtrpNoteType(Enum):
     """Types of note"""
@@ -17,13 +20,16 @@ class AwsPtrpNoteType(Enum):
     def __hash__(self) -> int:
         return hash(self.value)
 
+    def __eq__(self, other):
+        return self.value == other.value
+
 
 @dataclass
 class AwsPtrpNodeNote:
     """Note information to be used for node in a PTRP line"""
 
     note: str
-    note_type: AwsPtrpNoteType
+    note_type: AwsPtrpNoteType = serde_enum_field(AwsPtrpNoteType)
 
     def __repr__(self):
         return f"{self.note_type}: {self.note}"
@@ -42,6 +48,9 @@ class AwsPtrpResourceType(Enum):
 
     def __hash__(self) -> int:
         return hash(self.value)
+
+    def __eq__(self, other):
+        return self.value == other.value
 
 
 class AwsPrincipalType(Enum):
@@ -66,6 +75,9 @@ class AwsPrincipalType(Enum):
 
     def __hash__(self) -> int:
         return hash(self.value)
+
+    def __eq__(self, other):
+        return self.value == other.value
 
 
 class AwsPtrpPathNodeType(Enum):
@@ -94,6 +106,9 @@ class AwsPtrpPathNodeType(Enum):
     def __hash__(self) -> int:
         return hash(self.value)
 
+    def __eq__(self, other):
+        return self.value == other.value
+
 
 class AwsPtrpActionPermissionLevel(Enum):
     """Permission level of AWS action to a AWS resource"""
@@ -111,49 +126,56 @@ class AwsPtrpActionPermissionLevel(Enum):
     def __hash__(self) -> int:
         return hash(self.value)
 
+    def __eq__(self, other):
+        return self.value == other.value
 
+
+@serde
 @dataclass
 class AwsPtrpPathNode:
     """A single path node in PTRP line that grant permissions to resource."""
 
     arn: str
     name: str
-    type: AwsPtrpPathNodeType
-    notes: List[AwsPtrpNodeNote]
+    type: AwsPtrpPathNodeType = serde_enum_field(AwsPtrpPathNodeType)
+    notes: List[AwsPtrpNodeNote] = field(default=None, skip_if_default=True)
 
     def __repr__(self):
         return f"{self.type} {self.arn} {self.name} {self.notes}"
 
 
+@serde
 @dataclass
 class AwsPtrpResource:
     """AWS PTRP resource, like S3 Bucket and its name"""
 
     name: str
-    type: AwsPtrpResourceType
-    notes: List[AwsPtrpNodeNote]
+    type: AwsPtrpResourceType = serde_enum_field(AwsPtrpResourceType)
+    notes: List[AwsPtrpNodeNote] = field(default=None, skip_if_default=True)
 
 
+@serde
 @dataclass
 class AwsPrincipal:
     """AWS Principal,
     For example, alon_user, IAM_USER, arn:aws:iam::105246207958:user/alon_user"""
 
     arn: str
-    type: AwsPrincipalType
     name: str
-    notes: List[AwsPtrpNodeNote]
+    type: AwsPrincipalType = serde_enum_field(AwsPrincipalType)
+    notes: List[AwsPtrpNodeNote] = field(default=None, skip_if_default=True)
 
 
+@serde
 @dataclass
 class AwsPtrpLine:
     """TheAWS PTRP Line. includes the edged from principal to resource, path nodes between with the granted permissions"""
 
     resource: AwsPtrpResource
-    path_nodes: List[AwsPtrpPathNode]
     principal: AwsPrincipal
-    action_permission_level: AwsPtrpActionPermissionLevel
-    action_permissions: List[str]
+    action_permission_level: AwsPtrpActionPermissionLevel = serde_enum_field(AwsPtrpActionPermissionLevel)
+    path_nodes: List[AwsPtrpPathNode] = field(default=None, skip_if_default=True)
+    action_permissions: List[str] = field(default=None, skip_if_default=True)
 
     def __repr__(self):
         return f"{self.principal} {self.action_permission_level} {self.resource} {self.path_nodes}"
