@@ -103,7 +103,6 @@
                     "notes": []
                 }
             ],
-            "Comment": "Only GetObjectAttributes should be allowed",
             "action_permissions": [
                 "GetObjectAttributes"
             ]
