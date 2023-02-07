@@ -1,4 +1,6 @@
-def _safe_list_get(l: list, idx: int):
+from typing import List
+
+def _safe_list_get(l: List[str], idx: int):
   try:
     return l[idx]
   except IndexError:
