@@ -4,6 +4,7 @@ from typing import List, Set
 
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpActionPermissionLevel
 from aws_ptrp.services import ServiceActionBase, ServiceActionsResolverBase
+from aws_ptrp.utils.serde import serde_enum_field
 from serde import serde
 
 
@@ -11,7 +12,7 @@ from serde import serde
 @dataclass
 class FederatedUserAction(ServiceActionBase):
     name: str
-    permission_level: AwsPtrpActionPermissionLevel
+    permission_level: AwsPtrpActionPermissionLevel = serde_enum_field(AwsPtrpActionPermissionLevel)
 
     def __repr__(self):
         return self.name

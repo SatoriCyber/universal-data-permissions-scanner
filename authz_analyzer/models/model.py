@@ -151,7 +151,7 @@ class AuthzNote:
     """Note element to be use in a the authorization entry elements identity/path/assert."""
 
     note: str
-    type: AuthzNoteType = serde_field(serializer=lambda x: x.name)
+    type: AuthzNoteType = serde_field(serializer=lambda x: x.name, deserializer=lambda x: AuthzNoteType[x])
 
     def __str__(self) -> str:
         return f"{self.type}: {self.note}"

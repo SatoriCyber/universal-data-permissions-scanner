@@ -115,6 +115,6 @@ ENV/
 # mkdocs build dir
 site/
 authz-analyzer-export*
-tests/tests_datastores/aws/satori_dev_account_iam_entities.json
-tests/tests_datastores/aws/satori_dev_account_ptrp.json
-tests/tests_datastores/aws/satori_dev_account_ptrp_result.json
+tests/tests_datastores/aws/aws_ptrp/satori_dev_account_iam_entities.json
+tests/tests_datastores/aws/aws_ptrp/satori_dev_account_ptrp_result.json
+tests/tests_datastores/aws/aws_ptrp/satori_dev_account_ptrp.json

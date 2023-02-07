@@ -5,6 +5,7 @@ from typing import List, Optional, Set
 
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpActionPermissionLevel
 from aws_ptrp.services import ResolvedActionsSingleStmt, ServiceActionBase, ServiceActionsResolverBase
+from aws_ptrp.utils.serde import serde_enum_field
 from serde import serde
 
 S3_ACTION_SERVICE_PREFIX = "s3:"
@@ -20,8 +21,8 @@ class S3ActionType(Enum):
 @dataclass
 class S3Action(ServiceActionBase):
     name: str
-    action_type: S3ActionType
-    permission_level: AwsPtrpActionPermissionLevel
+    action_type: S3ActionType = serde_enum_field(S3ActionType)
+    permission_level: AwsPtrpActionPermissionLevel = serde_enum_field(AwsPtrpActionPermissionLevel)
 
     def __repr__(self):
         return self.name

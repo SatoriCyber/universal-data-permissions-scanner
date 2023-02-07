@@ -19,8 +19,8 @@ S3_RESOURCE_SERVICE_PREFIX = "arn:aws:s3:::"
 @dataclass
 class S3Bucket(ResourceNodeBase, ServiceResourceBase):
     name: str
-    acl: S3BucketACL
     aws_account_id: str
+    acl: Optional[S3BucketACL] = field(default=None, skip_if_default=True)
     public_access_block_config: Optional[PublicAccessBlockConfiguration] = field(default=None, skip_if_default=True)
     policy_document: Optional[PolicyDocument] = field(default=None, skip_if_default=True)
 

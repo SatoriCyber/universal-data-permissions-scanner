@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Iterable, List, Optional, Tuple, Set
+from typing import Iterable, List, Optional, Set, Tuple
 
 from aws_ptrp.iam.policy.policy_document import PolicyDocument
 from aws_ptrp.principals import Principal
