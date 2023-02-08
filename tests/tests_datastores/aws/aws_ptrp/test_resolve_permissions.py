@@ -76,7 +76,6 @@ def test_aws_ptrp_resolve_permissions_flows(
     register_services_for_deserialize_from_file,
     test_input,
 ):  # pylint: disable=unused-argument,redefined-outer-name
-
     should_override_output = os.environ.get("TEST_PTRP_RESOLVE_PERMISSIONS_OVERRIDE_OUTPUT", "False").lower() == "true"
     test_file_path = os.path.join(RESOURCES_INPUT_DIR, test_input)
 

@@ -107,7 +107,7 @@ class MongoDBAuthzAnalyzer:
     def run(self):
         """Analyze authorization for a user and resource."""
         admin_users = self._handle_admin_users()
-        for (database_name, db_connection) in self.client.iter_database_connections():
+        for database_name, db_connection in self.client.iter_database_connections():
             if database_name == "admin":  # Because admin database is special case, we need to handle it separately.
                 continue
             users = self.client.get_users(db_connection)

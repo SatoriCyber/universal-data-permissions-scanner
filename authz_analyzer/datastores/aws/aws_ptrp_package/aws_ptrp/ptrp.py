@@ -169,7 +169,6 @@ class AwsPtrp:
         logger: Logger,
         line: PtrpAllowedLine,
     ) -> Optional[ServiceResourcesResolverBase]:
-
         resource_node: ResourceNode = line.resource_node
         is_target_policy_resource_based: bool = line.target_policy_node.is_resource_based_policy
         principal_to_policy: PrincipalAndNodeNoteBase = line.get_principal_makes_the_request_to_resource()

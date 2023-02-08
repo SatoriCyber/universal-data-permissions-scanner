@@ -54,7 +54,6 @@ class ResourcesResolver:
         resolved_stmt_services_action_types: Set[ServiceActionType],
         service_action_stmt_resolvers: Dict[ServiceActionType, ServiceActionsResolverBase],
     ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
-
         services_resource_resolver: Dict[ServiceResourceType, ServiceResourcesResolverBase] = dict()
         # need to resolve resources which resolved by the action resolver & in the account resources
         service_types_to_resolve: Set[ServiceResourceType] = set(

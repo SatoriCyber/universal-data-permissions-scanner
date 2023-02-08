@@ -26,7 +26,6 @@ def get_role_trust_resolver(
     aws_actions: AwsActions,
     account_resources: AwsAccountResources,
 ) -> Optional[AssumeRoleServiceResourcesResolver]:
-
     all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase] = {}
     _services_resolver_for_policy_document(
         logger=logger,
@@ -60,7 +59,6 @@ def get_resource_based_resolver(
     aws_actions: AwsActions,
     account_resources: AwsAccountResources,
 ) -> Optional[ServiceResourcesResolverBase]:
-
     all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase] = {}
     _services_resolver_for_policy_document(
         logger=logger,
@@ -88,7 +86,6 @@ def get_identity_based_resolver(
     account_resources: AwsAccountResources,
     allowed_service_action_types: Optional[Set[ServiceActionType]] = None,
 ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:
-
     all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase] = {}
     for policy_document_ctx in policy_documents_ctx:
         _services_resolver_for_policy_document(
@@ -121,7 +118,6 @@ def _services_resolver_for_policy_document(
     effect: Effect,
     allowed_service_action_types: Optional[Set[ServiceActionType]] = None,
 ):
-
     for statement in policy_document.statement:
         if statement.action is None:
             # missing action or resource on this stmt, noting to resolve

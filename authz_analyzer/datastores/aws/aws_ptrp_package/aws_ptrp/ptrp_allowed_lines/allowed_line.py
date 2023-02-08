@@ -208,7 +208,8 @@ class PtrpAllowedLine:
         Tuple[PrincipalAndNodeNoteBase, List[PoliciesAndNodeNoteBase], PathPolicyNode, PathFederatedPrincipalNode]
     ]:
         '''get the assumed federated user in the line. Return tuple is the principal, the relevant list of PoliciesNodeBase,
-        the policy with the GetFederationToken to the federated-user resources, and the actual actual federated-user resolved resource'''
+        the policy with the GetFederationToken to the federated-user resources, and the actual actual federated-user resolved resource
+        '''
         if self.path_federated_nodes:
             policies_node_base: List[PoliciesAndNodeNoteBase] = [self.principal_node]
             if self.path_user_group_node:
@@ -225,7 +226,6 @@ class PtrpAllowedLine:
     def get_policies_ctx(
         policies_node_bases: List[PoliciesAndNodeNoteBase], iam_policies: Dict[str, IAMPolicy]
     ) -> List[PolicyDocumentCtx]:
-
         policies_ctx: List[PolicyDocumentCtx] = []
         # Extract all principal policies (inline & attached)
         for policies_node_base in policies_node_bases:
