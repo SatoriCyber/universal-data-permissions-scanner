@@ -104,7 +104,6 @@ class ServiceResourcesResolverBase(ABC):
                 continue
             # self stmt relevant to this principal
             for other_resolved_stmt in other.yield_resolved_stmts():
-
                 if not any(
                     other_resolved_stmt_principal.contains(principal)
                     for other_resolved_stmt_principal in other_resolved_stmt.resolved_stmt_principals

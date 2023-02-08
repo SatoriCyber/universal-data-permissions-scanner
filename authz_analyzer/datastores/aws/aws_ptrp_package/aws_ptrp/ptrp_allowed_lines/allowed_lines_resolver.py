@@ -232,7 +232,6 @@ class PtrpAllowedLinesBuilder:
     def _yield_resolved_service_resources_for_identity_based_policy(
         self, identity_principal: Principal, policy_document: PolicyDocument, parent_policy_arn: str, policy_name: str
     ) -> Generator[Tuple[ServiceResourceType, ServiceResourceBase], None, None,]:
-
         policy_document_ctx = PolicyDocumentCtx(
             policy_document=policy_document, policy_name=policy_name, parent_arn=parent_policy_arn
         )
@@ -266,7 +265,6 @@ class PtrpAllowedLinesBuilder:
         service_resource_type: ServiceResourceType,
         service_resource: ServiceResourceBase,
     ):
-
         if isinstance(service_resource, ResourceNodeBase):
             resource_node = ResourceNode(base=service_resource, service_resource_type=service_resource_type)
             self.graph.add_edge(path_policy_node, resource_node)

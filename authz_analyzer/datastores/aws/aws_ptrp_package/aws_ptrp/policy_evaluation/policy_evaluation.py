@@ -202,7 +202,6 @@ class PolicyEvaluation:
         principal_policies_ctx: List[PolicyDocumentCtx],
         effect: Effect,
     ) -> Optional[ServiceResourcesResolverBase]:
-
         allowed_service_action_types: Set[ServiceActionType] = set([service_resource_type])
         identity_policies_services_resolver: Optional[
             Dict[ServiceResourceType, ServiceResourcesResolverBase]
@@ -319,7 +318,6 @@ class PolicyEvaluation:
         # session_policies: List[PolicyDocument] = [],
         # permission_boundary_policy: Optional[PolicyDocument] = None,
     ) -> PolicyEvaluationsResult:
-
         policy_evaluations_result = PolicyEvaluationsResult()
         resource_policy: Optional[PolicyDocument] = target_service_resource.get_resource_policy()
         if resource_policy is None:

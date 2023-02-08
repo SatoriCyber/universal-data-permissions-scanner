@@ -1,8 +1,8 @@
 """Top-level package for authz-analyzer."""
 
 __author__ = """SatoriCyber"""
-__email__ = 'omer.shtivi@satoricyber.com'
-__version__ = '5.0.0'
+__email__ = 'contact@satoricyber.com'
+__version__ = '0.1.0'
 
 from authz_analyzer.datastores.aws.analyzer import AWSAuthzAnalyzer  # type: ignore
 from authz_analyzer.datastores.aws.analyzer.redshift.analyzer import RedshiftAuthzAnalyzer  # type: ignore

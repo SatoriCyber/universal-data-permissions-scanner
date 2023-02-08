@@ -200,7 +200,7 @@ class SnowflakeAuthzAnalyzer:
                 ):
                     current_resource_grant.db_permissions.append(privilege)
                 else:
-                    role_to_resources[role].add(current_resource_grant)
+                    role_to_resources.setdefault(role, set()).add(current_resource_grant)
                     current_resource_grant = SnowflakeAuthzAnalyzer.create_resource_grant(
                         table_name, privilege, granted_on
                     )
