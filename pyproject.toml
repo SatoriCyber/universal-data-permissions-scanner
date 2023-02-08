@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "authz-analyzer"
-version = "5.0.0"
+version = "0.1.0"
 homepage = "https://github.com/satoricyber/authz-analyzer"
 description = "Analyze DB authorization."
 authors = ["SatoriCyber"]
@@ -23,7 +23,7 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.8.1,<4.0"
 click = "8.1.3"
-snowflake-connector-python = "=2.9.0"
+snowflake-connector-python = "=3.0.0"
 google-cloud-bigquery = ">=2.1.0,<3.0"
 google-cloud-resource-manager = ">=1.6.3,<2.0"
 google-api-python-client = "~2.66.0"
