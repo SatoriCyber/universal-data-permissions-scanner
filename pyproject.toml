@@ -1,0 +1,115 @@
+[tool]
+[tool.poetry]
+name = "authz-analyzer"
+version = "5.0.0"
+homepage = "https://github.com/satoricyber/authz-analyzer"
+description = "Analyze DB authorization."
+authors = ["SatoriCyber"]
+readme = "README.md"
+classifiers=[
+    'Development Status :: 2 - Pre-Alpha',
+    'Intended Audience :: Developers',
+    'Natural Language :: English',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+]
+packages = [
+    { include = "authz_analyzer" },
+    { include = "tests", format = "sdist" },
+]
+
+[tool.poetry.dependencies]
+python = ">=3.8.1,<4.0"
+click = "8.1.3"
+snowflake-connector-python = "=2.9.0"
+google-cloud-bigquery = ">=2.1.0,<3.0"
+google-cloud-resource-manager = ">=1.6.3,<2.0"
+google-api-python-client = "~2.66.0"
+boto3 = "^1.26.27"
+pydantic = "^1.10.2"
+networkx = "^2.8.8"
+pyserde = "^0.9.6"
+psycopg2 = "^2.9.5"
+psycopg2-binary = "^2.9.5"
+google-cloud-iam = "^2.10.0"
+pytest  = {version="^7.2.0", optional = true}
+pytest-cov  = {version="^4.0.0", optional = true}
+black = {version="^22.12.0", optional=true}
+isort = {version="^5.11.3", optional=true}
+twine = {version="^4.0.2", optional=true}
+redshift-connector = "^2.0.909"
+requests = "^2.28.1"
+pymongo = "^4.3.3"
+
+[tool.poetry.extras]
+test = ["pytest", "pytest-cov", "black", "isort", "twine"]
+
+
+[tool.poetry.scripts]
+authz-analyzer = 'authz_analyzer.cli:main'
+
+[tool.poetry.group.dev.dependencies]
+types-psycopg2 = "^2.9.21.2"
+google-api-python-client-stubs = "^1.13.0"
+black  = "^22.12.0"
+isort  = "^5.11.3"
+flake8  = "^6.0.0"
+mypy = "^0.991"
+virtualenv  = "^20.17.1"
+pip  =  "^22.3.1"
+types-requests = "^2.28.11.7"
+
+[tool.poetry.group.test.dependencies]
+black  = "^22.12.0"
+isort  = "^5.11.3"
+flake8  = "^6.0.0"
+mypy = "^0.991"
+pytest  = "^7.2.0"
+pytest-cov  = "^4.0.0"
+tox  = "^4.0.14"
+virtualenv  = "^20.17.1"
+pip  =  "^22.3.1"
+twine  = "^4.0.2"
+pre-commit = "^2.20.0"
+bump2version ="^1.0.1"
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.4.2"
+
+
+[tool.black]
+line-length = 120
+skip-string-normalization = true
+target-version = ['py36', 'py37', 'py38']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 120
+skip_gitignore = true
+# you can skip files as below
+#skip_glob = docs/conf.py
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

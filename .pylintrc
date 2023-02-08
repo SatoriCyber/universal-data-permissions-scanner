@@ -1,0 +1,6 @@
+[MASTER]
+disable=C0114, C0115, C0116 ; missing-module-docstring ,  missing-class-docstring, missing-function-docstring
+# Please check the comment in ./authz_analyzer/datastores/aws/__init__.py
+init-hook="import sys; sys.path.insert(0, '.'); sys.path.insert(1, './authz_analyzer/datastores/aws/aws_ptrp_package')"
+[FORMAT]
+max-line-length=120
