@@ -18,7 +18,7 @@ GRANT SELECT ON TABLE pg_catalog.pg_roles TO authz_analyzer;
 ```
 authz-analyzer PostgreSQL \
     --host <HOST> \
-    --user <USERNAME> \
+    --username <USERNAME> \
     --password <PASSWORD> \
     --dbname <DB>
 ```

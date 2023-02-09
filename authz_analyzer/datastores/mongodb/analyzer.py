@@ -68,6 +68,7 @@ class MongoDBAuthzAnalyzer:
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
         logger: Optional[Logger] = None,
+        ssl: bool = True,
         **kwargs: Any,
     ):
         """Connect to MongoDB.
@@ -93,8 +94,7 @@ class MongoDBAuthzAnalyzer:
                     host,
                     username=username,
                     password=password,
-                    tlsAllowInvalidCertificates=True,
-                    tls=True,
+                    tls=ssl,
                     **kwargs,
                 )
             )

@@ -5,7 +5,7 @@ Snowflake implements a role-based access control (RBAC) model to manage access t
 ```
 CREATE ROLE AUTHZ_ANALYZER_ROLE;
 ```
-2. Grant priviliges to the role you created using the following command:
+2. Grant privileges to the role you created using the following command:
 ```
 GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE AUTHZ_ANALYZER_ROLE;
 GRANT USAGE ON WAREHOUSE <REPLACE_WITH_WAREHOUSE_NAME> TO ROLE AUTHZ_ANALYZER_ROLE;
@@ -21,7 +21,7 @@ GRANT ROLE AUTHZ_ANALYZER_ROLE TO USER AUTHZ_ANALYZER;
 ```
 authz-analyzer snowflake \
     --account <REPLACE_WITH_ACCOUNT> \
-    --user <USERNAME> \
+    --username <USERNAME> \
     --password <PASSWORD> 
 ```
 

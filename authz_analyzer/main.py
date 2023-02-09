@@ -167,6 +167,7 @@ def run_mongodb(
     output_format: OutputFormat,
     output_path: Path,
     port: int,
+    ssl: bool,
 ):
     """Run MongoDB analyzer.
 
@@ -178,6 +179,7 @@ def run_mongodb(
         output_format (OutputFormat): Output format, CSV or JSON
         output_path (str): Where to write the output
         port (int): port
+        ssl(bool): use ssl
     """
     analyzer = MongoDBAuthzAnalyzer.connect(
         username=username,
@@ -187,6 +189,7 @@ def run_mongodb(
         output_format=output_format,
         logger=logger,
         port=port,
+        ssl=ssl,
     )
     analyzer.run()
 

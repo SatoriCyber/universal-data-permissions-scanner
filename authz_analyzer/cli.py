@@ -55,7 +55,7 @@ def main(ctx: click.Context, debug: bool, out: str, out_format: str):
 
 @main.command()
 @click.pass_context
-@click.option('--user', '-u', required=True, type=str, help="Username")
+@click.option('--username', '-u', required=True, type=str, help="Username")
 @click.option('--password', '-p', required=True, type=str, help="Password")
 @click.option('--account', '-a', required=True, type=str, help="Account")
 @click.option('--host', '-t', required=False, type=str, help="Hostname")
@@ -110,7 +110,7 @@ def aws_s3(
 
 @main.command()
 @click.pass_context
-@click.option('--user', '-u', required=True, type=str, help="Postgres username the analyzer should use to connect")
+@click.option('--username', '-u', required=True, type=str, help="Postgres username the analyzer should use to connect")
 @click.option('--password', '-p', required=True, type=str, help="Postgres password the analyzer should use to connect")
 @click.option('--port', required=False, type=int, help="Postgres port", default=5432)
 @click.option('--host', '-t', required=True, type=str, help="Postgres host, FQDN or IP")
@@ -131,7 +131,7 @@ def postgres(ctx: click.Context, user: str, password: str, port: int, host: str,
 
 @main.command()
 @click.pass_context
-@click.option('--user', '-u', required=True, type=str, help="Redshift username the analyzer should use to connect")
+@click.option('--username', '-u', required=True, type=str, help="Redshift username the analyzer should use to connect")
 @click.option('--password', '-p', required=True, type=str, help="Redshift password the analyzer should use to connect")
 @click.option('--port', required=False, type=int, help="Redshift port", default=5439)
 @click.option('--host', '-t', required=True, type=str, help="Redshift host, FQDN or IP")
@@ -154,9 +154,10 @@ def redshift(ctx: click.Context, user: str, password: str, port: int, host: str,
 @click.pass_context
 @click.option('--username', '-u', required=True, type=str, help="username")
 @click.option('--password', '-p', required=True, type=str, help="password")
-@click.option('--port', required=False, type=str, help="port", default=5432)
+@click.option('--port', required=False, type=int, help="port", default=27017)
 @click.option('--host', '-t', required=True, type=str, help="host, FQDN or IP")
-def mongodb(ctx: click.Context, username: str, password: str, port: int, host: str):
+@click.option('--ssl', '-s', required=False, type=bool, help="ssl", default=True)
+def mongodb(ctx: click.Context, username: str, password: str, port: int, host: str, ssl: bool):
     """Analyze MongoDB Authorization"""
     run_mongodb(
         logger=ctx.obj['LOGGER'],
@@ -166,6 +167,7 @@ def mongodb(ctx: click.Context, username: str, password: str, port: int, host: s
         password=password,
         port=port,
         host=host,
+        ssl=ssl,
     )
 
 
@@ -174,7 +176,7 @@ def mongodb(ctx: click.Context, username: str, password: str, port: int, host: s
 @click.option('--public_key', '-pk', required=True, type=str, help="Atlas API public key from access manager")
 @click.option('--private_key', '-k', required=True, type=str, help="Atlas API private key from access manager")
 @click.option(
-    '--username',
+    'user',
     '-u',
     required=True,
     type=str,
