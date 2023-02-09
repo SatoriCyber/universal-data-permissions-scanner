@@ -10,7 +10,7 @@ format:
 lint:
 	flake8 $(sources) tests
 	# Disable mypy for now
-	# mypy $(sources) tests
+	mypy $(sources) tests
 
 unittest:
 	pytest
