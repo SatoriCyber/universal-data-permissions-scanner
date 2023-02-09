@@ -22,7 +22,7 @@ GRANT ROLE satori_scanner_role TO satori_scanner_user;
 ```
 authz-analyzer redshift \
     --host <HOST> \
-    --user <USERNAME> \
+    --username <USERNAME> \
     --password <PASSWORD>
 ```
 

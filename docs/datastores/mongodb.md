@@ -9,7 +9,7 @@ MongoDB Atlas is a managed MongoDB service. It provides managed clusters and a h
 
 Atlas has two types of users:
 
-* Database Users - users that have access to an Atlas-managed MongoDB cluster. Database users may have privileges granted to them or they may be assigned with a built-in or user-defined role. Roles can be organized heirarchically.
+* Database Users - users that have access to an Atlas-managed MongoDB cluster. Database users may have privileges granted to them or they may be assigned with a built-in or user-defined role. Roles can be organized hierarchically.
 * Organization Users - users that have access to the Atlas console. Organization users are assigned to organization roles which define their permissions and resources like projects and clusters they can access.
 
 ### Setup Access to Scan a MongoDB Atlas Cluster
