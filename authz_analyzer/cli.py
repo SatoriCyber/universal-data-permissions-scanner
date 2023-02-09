@@ -97,6 +97,7 @@ def aws_s3(
     role_name: str,
     external_id: Optional[str],
 ):
+    """Analyze AWS S3 buckets"""
     run_aws_s3(
         logger=ctx.obj['LOGGER'],
         output_format=ctx.obj['FORMAT'],
