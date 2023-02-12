@@ -1,4 +1,9 @@
-from .resolved_stmt import ResolvedSingleStmt, ResolvedSingleStmtGetter, StmtResourcesToResolveCtx
+from .resolved_stmt import (
+    ResolvedSingleStmt,
+    ResolvedSingleStmtGetter,
+    StatementPrincipalResolver,
+    StmtResourcesToResolveCtx,
+)
 from .service_action_base import ServiceActionBase
 from .service_action_type import (
     ServiceActionType,
@@ -40,6 +45,7 @@ __all__ = [
     'ServiceResourceBase',
     'ServiceResourcesResolverBase',
     'StmtResourcesToResolveCtx',
+    'StatementPrincipalResolver',
     'ResolvedSingleStmtGetter',
     'get_service_resource_by_name',
     'register_service_resource_by_name',

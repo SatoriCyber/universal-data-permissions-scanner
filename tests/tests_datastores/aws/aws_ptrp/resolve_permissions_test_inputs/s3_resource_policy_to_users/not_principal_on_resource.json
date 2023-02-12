@@ -1,0 +1,119 @@
+{
+    "input": {
+        "iam_entities": {
+            "iam_users": {
+                "arn:aws:iam::1234:user/iam_user_1": {
+                    "user_name": "iam_user_1",
+                    "user_id": "11",
+                    "aws_account_id": "1234",
+                    "path": "/",
+                    "user_policies": [
+                        {
+                            "UserName": "iam_user_1",
+                            "PolicyName": "inline-policy-1",
+                            "PolicyDocument": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor",
+                                        "Action": [
+                                            "s3:GetObject"
+                                        ],
+                                        "Resource": [
+                                            "*"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "attached_policies_arn": [],
+                    "identity_principal": "arn:aws:iam::1234:user/iam_user_1"
+                },
+                "arn:aws:iam::1234:user/iam_user_2": {
+                    "user_name": "iam_user_2",
+                    "user_id": "22",
+                    "aws_account_id": "1234",
+                    "path": "/",
+                    "user_policies": [
+                        {
+                            "UserName": "iam_user_2",
+                            "PolicyName": "inline-policy-2",
+                            "PolicyDocument": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor",
+                                        "Action": [
+                                            "s3:GetObject"
+                                        ],
+                                        "Resource": [
+                                            "*"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "attached_policies_arn": [],
+                    "identity_principal": "arn:aws:iam::1234:user/iam_user_2"
+                }
+            },
+            "iam_groups": {},
+            "iam_roles": {},
+            "iam_policies": {}
+        },
+        "target_account_resources": {
+            "account_resources": {
+                "s3": [
+                    {
+                        "name": "bucket_1",
+                        "aws_account_id": "1234",
+                        "policy_document": {
+                            "Statement": [
+                                {
+                                    "Effect": "Deny",
+                                    "NotPrincipal": {
+                                        "AWS": "arn:aws:iam::1234:user/iam_user_2"
+                                    },
+                                    "Action": "s3:*",
+                                    "Resource": [
+                                        "arn:aws:s3:::bucket_1",
+                                        "arn:aws:s3:::bucket_1/*"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::1234:user/iam_user_2",
+                "name": "iam_user_2",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::1234:user/iam_user_2",
+                    "name": "inline-policy-2",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        }
+    ]
+}

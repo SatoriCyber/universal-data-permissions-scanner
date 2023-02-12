@@ -7,11 +7,35 @@ from aws_ptrp.services.service_action_base import ServiceActionBase
 from aws_ptrp.services.service_actions_resolver_base import ResolvedActionsSingleStmt
 from aws_ptrp.services.service_resource_base import ServiceResourceBase
 
+@dataclass
+class StatementPrincipalResolver:
+    statement_principals: List[Principal]
+    not_principal: bool
+    
+    @classmethod
+    def load(cls, statement_principals: List[Principal], not_principal: bool) -> 'StatementPrincipalResolver':
+        return cls(statement_principals=statement_principals, not_principal=not_principal)
+        
+    def any_contains(self, principal: Principal) -> bool:
+        if self.not_principal:
+            return any(
+                not statement_principal.contains(principal)
+                for statement_principal in self.statement_principals
+            )
+        else:
+            return any(
+                statement_principal.contains(principal)
+                for statement_principal in self.statement_principals
+            )
+    
+    def get_principals(self) -> List[Principal]:
+        return self.statement_principals
+
 
 @dataclass
 class StmtResourcesToResolveCtx:
     service_resources: Set[ServiceResourceBase]
-    resolved_stmt_principals: List[Principal]
+    resolved_stmt_principals: StatementPrincipalResolver
     resolved_stmt_actions: Set[ServiceActionBase]
     stmt_relative_id_resource_regexes: List[str]
     is_condition_exists: bool
@@ -22,7 +46,7 @@ class StmtResourcesToResolveCtx:
 
 @dataclass
 class ResolvedSingleStmt:
-    resolved_stmt_principals: List[Principal]
+    resolved_stmt_principals: StatementPrincipalResolver
     resolved_stmt_resources: Dict[ServiceResourceBase, ResolvedActionsSingleStmt]
     is_condition_exists: bool
     stmt_name: Optional[str]

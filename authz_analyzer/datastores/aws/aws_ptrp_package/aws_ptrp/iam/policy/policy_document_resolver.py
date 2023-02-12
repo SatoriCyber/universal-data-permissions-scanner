@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 from aws_ptrp.actions.actions_resolver import ActionsResolver
 from aws_ptrp.actions.aws_actions import AwsActions
@@ -16,6 +16,7 @@ from aws_ptrp.services import (
 )
 from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
 from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
+from aws_ptrp.services.resolved_stmt import StatementPrincipalResolver
 
 
 def get_role_trust_resolver(
@@ -126,14 +127,23 @@ def _services_resolver_for_policy_document(
         if statement.effect != effect:
             continue
 
-        if statement.principal:
-            statement_principals: List[Principal] = statement.principal.principals
-        elif identity_principal:
-            statement_principals = [identity_principal]
-        else:
-            raise Exception(
-                "Invalid principal input both statement.principal & outer param identity_principal are None"
-            )
+        statement_principals_and_annotation: Tuple[List[Principal], bool] = statement.get_principals()
+        statement_principals, not_principal = (
+            statement_principals_and_annotation[0],
+            statement_principals_and_annotation[1],
+        )
+        if not statement_principals:
+            if identity_principal:
+                statement_principals = [identity_principal]
+                not_principal = False
+            else:
+                raise Exception(
+                    "Invalid principal input both statement.principal & outer param identity_principal are None"
+                )
+
+        statement_principal_resolver: StatementPrincipalResolver = StatementPrincipalResolver.load(
+            statement_principals=statement_principals, not_principal=not_principal
+        )
 
         if statement.resource:
             statement_resource: Union[str, List[str]] = statement.resource
@@ -169,7 +179,7 @@ def _services_resolver_for_policy_document(
                 is_condition_stmt_exists=is_condition_stmt_exists,
                 stmt_resource=statement_resource,
                 account_resources=account_resources,
-                resolved_stmt_principals=statement_principals,
+                resolved_stmt_principals=statement_principal_resolver,
                 resolved_stmt_services_action_types=resolved_services_action,
                 service_action_stmt_resolvers=single_stmt_service_actions_resolvers,
             )

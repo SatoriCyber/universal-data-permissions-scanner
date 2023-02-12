@@ -97,17 +97,11 @@ class ServiceResourcesResolverBase(ABC):
         '''
         res = MethodOnStmtsActionsResult()
         for resolved_stmt in self.yield_resolved_stmts():
-            if not any(
-                resolved_stmt_principal.contains(principal)
-                for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals
-            ):
+            if not resolved_stmt.resolved_stmt_principals.any_contains(principal):
                 continue
             # self stmt relevant to this principal
             for other_resolved_stmt in other.yield_resolved_stmts():
-                if not any(
-                    other_resolved_stmt_principal.contains(principal)
-                    for other_resolved_stmt_principal in other_resolved_stmt.resolved_stmt_principals
-                ):
+                if not other_resolved_stmt.resolved_stmt_principals.any_contains(principal):
                     res.resolved_stmt_results.add(
                         MethodOnStmtActionsResult(
                             resolved_single_stmt=other_resolved_stmt,
@@ -184,8 +178,9 @@ class ServiceResourcesResolverBase(ABC):
     def yield_resolved_stmt_principals(
         self,
     ) -> Generator[Principal, None, None]:
+        # TODO probably need to remove this method after resolving correctly the principals with Principal or NotPrincipal
         for resolved_stmt in self.yield_resolved_stmts():
-            for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals:
+            for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals.get_principals():
                 yield resolved_stmt_principal
 
     def yield_resolved_resources(
@@ -194,10 +189,7 @@ class ServiceResourcesResolverBase(ABC):
     ) -> Generator[ServiceResourceBase, None, None]:
         aggregate_resources: Set[ServiceResourceBase] = set()
         for resolved_stmt in self.yield_resolved_stmts():
-            if not any(
-                resolved_stmt_principal.contains(principal)
-                for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals
-            ):
+            if not resolved_stmt.resolved_stmt_principals.any_contains(principal):
                 continue
             for resource in resolved_stmt.resolved_stmt_resources.keys():
                 aggregate_resources.add(resource)
@@ -212,10 +204,7 @@ class ServiceResourcesResolverBase(ABC):
     ) -> Optional[Set[ServiceActionBase]]:
         aggregate_actions: Set[ServiceActionBase] = set()
         for resolved_stmt in self.yield_resolved_stmts():
-            if not any(
-                resolved_stmt_principal.contains(principal)
-                for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals
-            ):
+            if not resolved_stmt.resolved_stmt_principals.any_contains(principal):
                 continue
 
             resolved_actions: Optional[ResolvedActionsSingleStmt] = resolved_stmt.resolved_stmt_resources.get(

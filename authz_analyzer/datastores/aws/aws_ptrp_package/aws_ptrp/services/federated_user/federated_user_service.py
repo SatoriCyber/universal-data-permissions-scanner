@@ -68,7 +68,11 @@ class FederatedUserService(ServiceResourceType):
             bucket_policy: Optional[PolicyDocument] = s3_bucket.get_resource_policy()
             if bucket_policy is None:
                 continue
-            for principal in bucket_policy.yield_stmt_principals(Effect.Allow):
+            for principal, not_principal in bucket_policy.yield_stmt_principals(Effect.Allow):
+                # if NotPrincipal break. we resolve all actual federated principals that found on bucket policy
+                # NotPrincipal is not relevant here, same as principal wildcard
+                if not_principal:
+                    break
                 if principal.is_federated_user_principal():
                     ret.add(FederatedUserPrincipal(federated_principal=principal))
 

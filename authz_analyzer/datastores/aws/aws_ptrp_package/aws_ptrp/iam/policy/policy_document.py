@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Generator, List, Optional, Union
+from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
 from aws_ptrp.iam.policy.effect import Effect
 from aws_ptrp.principals.principal import Principal
@@ -55,11 +55,19 @@ class StmtPrincipals:
 class Statement:
     effect: Effect
     sid: Optional[str] = field(default=None, skip_if_default=True)
-    principal: Optional[StmtPrincipals] = field(
+    _principal: Optional[StmtPrincipals] = field(
         default=None,
         skip_if_default=True,
         deserializer=StmtPrincipals.from_stmt_document_principal,
         serializer=StmtPrincipals.to_stmt_document_principal,
+        rename="Principal",
+    )
+    _not_principal: Optional[StmtPrincipals] = field(
+        default=None,
+        skip_if_default=True,
+        deserializer=StmtPrincipals.from_stmt_document_principal,
+        serializer=StmtPrincipals.to_stmt_document_principal,
+        rename="NotPrincipal",
     )
     action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
     not_action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
@@ -69,17 +77,28 @@ class Statement:
     # to revisit, once we will start to support condition
     condition: Optional[Dict[str, Any]] = field(default=None, skip_if_default=True)
 
+    def get_principals(self) -> Tuple[List[Principal], bool]:
+        lst: List[Principal] = []
+        not_principal: bool = False
+        if self._principal:
+            lst.extend(self._principal.principals)
+        elif self._not_principal:
+            lst.extend(self._not_principal.principals)
+            not_principal = True
+        return lst, not_principal
+
 
 @serde(rename_all="pascalcase")
 @dataclass
 class PolicyDocument:
     statement: List[Statement]
 
-    def yield_stmt_principals(self, effect: Effect) -> Generator[Principal, None, None]:
+    def yield_stmt_principals(self, effect: Effect) -> Generator[Tuple[Principal, bool], None, None]:
         for stmt in self.statement:
-            if stmt.principal and stmt.effect == effect:
-                for principal in stmt.principal.principals:
-                    yield principal
+            principals, not_principal = stmt.get_principals()
+            if principals and stmt.effect == effect:
+                for principal in principals:
+                    yield principal, not_principal
 
 
 @dataclass
