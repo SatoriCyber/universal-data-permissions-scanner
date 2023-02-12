@@ -166,15 +166,20 @@ def generate_authz_share(
     table: str,
     permission: PermissionLevel,
     share_path: SharePath,
+    extra_path: Optional[List[AuthzPathElement]] = None,
 ):
+
     authz_path = [
         AuthzPathElement(
             id=share_path.id,
             name=share_path.name,
             type=AuthzPathElementType.SHARE,
-            db_permissions=share_path.db_permissions,
+            db_permissions=[],
         )
     ]
+    if extra_path is not None:
+        authz_path.extend(extra_path)
+    authz_path[-1].db_permissions = share_path.db_permissions
     return generate_authz_entry(account, account, identity_type, db, schema, table, permission, authz_path)
 
 
@@ -280,7 +285,7 @@ def _call_analyzer(service: MagicMock, mocked_writer: MockWriter):
 
 
 @pytest.mark.parametrize(
-    "share,grant_share,expected_writes",
+    "share,grant_share,roles,expected_writes",
     [
         (  # test 1
             Share(
@@ -303,6 +308,7 @@ def _call_analyzer(service: MagicMock, mocked_writer: MockWriter):
                 "false",
                 "ACCOUNTADMIN",
             ),
+            [],
             [],
         ),
         (  # test 2
@@ -327,6 +333,7 @@ def _call_analyzer(service: MagicMock, mocked_writer: MockWriter):
                 "ACCOUNTADMIN",
             ),
             [],
+            [],
         ),
         (  # test 3
             Share(
@@ -349,6 +356,7 @@ def _call_analyzer(service: MagicMock, mocked_writer: MockWriter):
                 "false",
                 "ACCOUNTADMIN",
             ),
+            [],
             [
                 generate_authz_share(
                     "ACCOUNT1",
@@ -361,14 +369,94 @@ def _call_analyzer(service: MagicMock, mocked_writer: MockWriter):
                 )
             ],
         ),
+        (  # test 4
+            Share(
+                "2023-01-22T05:03:45.169-08:00",
+                "OUTBOUND",
+                "OUGNBIN.PDA02239.SHARE1",
+                "DB1",
+                "ACCOUNT1",
+                "ACCOUNTADMIN",
+                "",
+                "",
+            ),
+            GrantsShare(
+                "2023-01-22 05:03:55.849 -0800",
+                "USAGE",
+                "DATABASE_ROLE",
+                "DB1.ROLE_SHARE",
+                "SHARE",
+                "PDA02239.SHARE1",
+                "false",
+                "ACCOUNTADMIN",
+            ),
+            [],
+            [],
+        ),
+        (  # test 4
+            Share(
+                "2023-01-22T05:03:45.169-08:00",
+                "OUTBOUND",
+                "OUGNBIN.PDA02239.SHARE1",
+                "DB1",
+                "ACCOUNT1",
+                "ACCOUNTADMIN",
+                "",
+                "",
+            ),
+            GrantsShare(
+                "2023-01-22 05:03:55.849 -0800",
+                "USAGE",
+                "DATABASE_ROLE",
+                "DB1.ROLE_SHARE",
+                "SHARE",
+                "PDA02239.SHARE1",
+                "false",
+                "ACCOUNTADMIN",
+            ),
+            [
+                RoleGrant(
+                    role="ROLE_SHARE",
+                    permission="SELECT",
+                    db="DB1",
+                    schema="SCHEMA1",
+                    table="TABLE1",
+                    asset_type="TABLE",
+                )
+            ],
+            [
+                generate_authz_share(
+                    "ACCOUNT1",
+                    IdentityType.ACCOUNT,
+                    "DB1",
+                    "SCHEMA1",
+                    "TABLE1",
+                    PermissionLevel.READ,
+                    SharePath("OUGNBIN.PDA02239.SHARE1", "SHARE1", ["SELECT"]),
+                    [
+                        AuthzPathElement(
+                            id="ROLE_SHARE",
+                            name="ROLE_SHARE",
+                            type=AuthzPathElementType.ROLE,
+                            notes=[],
+                            db_permissions=["SELECT"],
+                        )
+                    ],
+                )
+            ],
+        ),
     ],
     ids=(
         "Outbound share no account",
         "No relevant permissions",  # We grant usage permission on database, but no access to data
         "Outbound simple share",
+        "Share with database user with no access",
+        "Share with database user with access",
     ),
 )
-def test_snowflake_analyzer_shares(share: Share, grant_share: GrantsShare, expected_writes: List[AuthzEntry]):
+def test_snowflake_analyzer_shares(
+    share: Share, grant_share: GrantsShare, roles: List[RoleGrant], expected_writes: List[AuthzEntry]
+):
     """Test the snowflake shares.
 
     There are two types of share:
@@ -380,6 +468,7 @@ def test_snowflake_analyzer_shares(share: Share, grant_share: GrantsShare, expec
     mocked_writer = MockWriter.new()
     snowflake_mock_service.shares = [share]
     snowflake_mock_service.add_grant_share(grant_share)
+    snowflake_mock_service.role_grants = roles
     _call_analyzer(snowflake_mock_service.get(), mocked_writer)
     if len(expected_writes) != 0:
         mocked_writer.mocked_writer.write_entry.assert_has_calls(expected_writes)  # type: ignore
