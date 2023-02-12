@@ -38,13 +38,13 @@ class ActionsResolver:
             # if NotAction is used, we need to include the actions which are not in ret[service_type] for each service_type
             for service_type in service_types_to_resolve:
                 service_actions: List[ServiceActionBase] = service_type.load_service_actions(logger)
-                included_service_actions: set[ServiceActionBase] = set()
+                included_service_actions: Set[ServiceActionBase] = set()
                 if service_type not in ret:
                     # if the service_type is not in ret, then all the service_actions should be included
                     included_service_actions = set(service_actions)
                 else:
                     for action in ret[service_type]:
-                        current_action_complement_set: set[ServiceActionBase] = set()
+                        current_action_complement_set: Set[ServiceActionBase] = set()
                         for service_action in service_actions:
                             # if the service_action is a full-subset of the action, then we don't need to include it
                             # e.g. action = "s3:Get*" and service_action = "s3:GetObject"
