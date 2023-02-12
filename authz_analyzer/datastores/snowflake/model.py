@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Set
 
 from authz_analyzer.models import PermissionLevel
+
+ResourceName = List[str]
 
 
 @dataclass
@@ -12,12 +14,35 @@ class DataShare:
     """Define a dataShare."""
 
     name: str
-    id: List[str]
+    id: str
     share_to_accounts: List[str]
-    privileges: Set[DataSharePrivilege]
+    resources: Dict[PermissionLevel, Dict[DataSharePrivilege, Set[PermissionType]]]
+    roles: Set[DBRole] = field(default_factory=set)
+
+    @classmethod
+    def new(cls, name: str, share_id: str, share_to_accounts: List[str]):
+        resources: Dict[PermissionLevel, Dict[DataSharePrivilege, Set[PermissionType]]] = {
+            PermissionLevel.READ: {},
+            PermissionLevel.WRITE: {},
+            PermissionLevel.FULL: {},
+        }
+        return cls(name=name, id=share_id, share_to_accounts=share_to_accounts, resources=resources)
 
     def __hash__(self) -> int:
         return hash(self.name)
+
+    def add_role(self, role: DBRole):
+        self.roles.add(role)
+
+    def add_privilege(
+        self,
+        permission_level: PermissionLevel,
+        granted_on: GrantedOn,
+        resource_name: ResourceName,
+        database_permission: PermissionType,
+    ):
+        datashare_priv = DataSharePrivilege(granted_on=granted_on, resource_name=resource_name)
+        self.resources[permission_level].setdefault(datashare_priv, set()).add(database_permission)
 
 
 class DataShareKind(Enum):
@@ -25,24 +50,6 @@ class DataShareKind(Enum):
 
     OUTBOUND = "OUTBOUND"
     INBOUND = "INBOUND"
-
-
-@dataclass
-class DataSharePrivilege:
-    """Define a dataShare privilege.
-    granted_on: table/view/mview
-    permission_level: read/write/full
-    database_permission: select/insert/update/delete
-    resource_name: db.schema.table
-    """
-
-    granted_on: str
-    permission_level: PermissionLevel
-    database_permission: PermissionType
-    resource_name: List[str]
-
-    def __hash__(self) -> int:
-        return hash(self.granted_on + str(self.database_permission))
 
 
 class PermissionType(Enum):
@@ -57,6 +64,23 @@ class PermissionType(Enum):
     REFERENCES = "REFERENCES"
     REBUILD = "REBUILD"
     OWNERSHIP = "OWNERSHIP"
+
+
+@dataclass
+class DataSharePrivilege:
+    """Define a dataShare privilege.
+    granted_on: table/view/mview
+    permission_level: read/write/full
+    database_permission: select/insert/update/delete
+    resource_name: db.schema.table
+    database_roles: Snowflake support that the share has a role that grants the permissions.
+    """
+
+    granted_on: GrantedOn
+    resource_name: List[str]
+
+    def __hash__(self) -> int:
+        return hash(self.granted_on) + hash(str(self.resource_name))
 
 
 PERMISSION_LEVEL_MAP = {
@@ -79,6 +103,8 @@ class GrantedOn(Enum):
     MATERIALIZED_VIEW = "MATERIALIZED VIEW"
     ROLE = "ROLE"
     OTHER = "OTHER"
+    DATABASE_ROLE = "DATABASE_ROLE"
+    DATABASE = "DATABASE"
 
     def __str__(self) -> str:
         return self.value
