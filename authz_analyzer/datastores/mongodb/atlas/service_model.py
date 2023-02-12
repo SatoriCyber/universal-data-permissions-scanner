@@ -39,7 +39,7 @@ class OrganizationRole(TypedDict):
 class OrganizationUserEntry(TypedDict):
     """An organization user entry."""
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     username: str
     emailAddress: str
     databaseName: str
@@ -57,7 +57,7 @@ class ProjectTeamEntry(TypedDict):
 class OrganizationTeamEntry(TypedDict):
     """An organization team entry."""
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str
 
 
@@ -70,7 +70,7 @@ class ClusterConnectionStringEntry(TypedDict):
 class ClusterEntry(TypedDict):
     """Single entry from groups/{groupId}/clusters."""
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str
     connectionStrings: ClusterConnectionStringEntry
 
@@ -108,7 +108,7 @@ class CustomRoleEntry(TypedDict):
 class ProjectInfo(TypedDict):
     """A project info entry."""
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str
     orgId: str
 
@@ -116,5 +116,5 @@ class ProjectInfo(TypedDict):
 class OrganizationEntry(TypedDict):
     """An organization entry."""
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str

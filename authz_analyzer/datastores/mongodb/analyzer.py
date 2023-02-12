@@ -15,7 +15,7 @@ from logging import Logger
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union
 
-from pymongo import MongoClient
+from pymongo import MongoClient  # pylint: disable=import-error
 
 from authz_analyzer.datastores.mongodb.atlas.model import OrganizationUser
 from authz_analyzer.datastores.mongodb.model import AdminRole, AdminUser, Privilege, Role

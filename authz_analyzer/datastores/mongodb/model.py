@@ -45,7 +45,7 @@ class Role:
     """Define a MongoDB role."""
 
     name: str
-    db: str
+    db: str  # pylint: disable=invalid-name
     inherited_roles: List[InheritedRole]
     privileges: List[Privilege]
 
@@ -84,7 +84,7 @@ class AdminRole:
 class AdminUser:
     """Define a MongoDB admin user with a single role."""
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str
     roles: Set[AdminRole]
 

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Set
 
 import requests
-from pymongo import MongoClient
+from pymongo import MongoClient  # pylint: disable=import-error
 from requests.auth import HTTPDigestAuth
 
 from authz_analyzer.datastores.mongodb.atlas.model import (

@@ -17,7 +17,7 @@ def get_logger(debug: bool):
     if logger.handlers:
         return logger
 
-    ch = logging.StreamHandler()
+    ch = logging.StreamHandler()  # pylint: disable=C0103
     ch.setLevel(level)
     formatter = logging.Formatter('%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
