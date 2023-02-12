@@ -124,7 +124,8 @@ class AWSPtrpModelConvertor:
     def _get_note_type(note_type: AwsPtrpNoteType) -> AuthzNoteType:
         if note_type == AwsPtrpNoteType.POLICY_STMT_DENY_WITH_CONDITION:
             return AuthzNoteType.AWS_POLICY_STMT_DENY_WITH_CONDITION
-        raise Exception(f"unable to convert from {note_type} to AuthzNoteType")  # pylint disable=broad-exception-raised
+        else:
+            raise Exception(f"unable to convert from {note_type} to AuthzNoteType")
 
     @staticmethod
     def _get_notes(node_notes: List[AwsPtrpNodeNote]) -> List[AuthzNote]:
