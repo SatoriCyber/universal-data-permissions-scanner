@@ -61,13 +61,31 @@ class Statement:
         deserializer=StmtPrincipals.from_stmt_document_principal,
         serializer=StmtPrincipals.to_stmt_document_principal,
     )
-    action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
-    not_action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
+    _action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True, rename="Action")
+    _not_action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True, rename="NotAction")
     resource: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
     not_resource: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
     # just to verify if condition exists (To ignore Deny stmts with condition, to be on the strict side for the allowed permissions)
     # to revisit, once we will start to support condition
     condition: Optional[Dict[str, Any]] = field(default=None, skip_if_default=True)
+
+    def get_actions(self) -> Union[str, List[str]]:
+        actions: List[str] = []
+        if self._action:
+            actions = self._action if isinstance(self._action, list) else [self._action]
+        elif self._not_action:
+            actions = self._not_action if isinstance(self._not_action, list) else [self._not_action]
+        else:
+            raise Exception("No Action or NotAction in statement")
+        return actions
+
+    def is_not_action_in_statement(self) -> bool:
+        if self._action:
+            return False
+        elif self._not_action:
+            return True
+        else:
+            raise Exception("No Action or NotAction in statement")
 
 
 @serde(rename_all="pascalcase")
