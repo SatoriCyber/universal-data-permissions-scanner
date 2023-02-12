@@ -37,7 +37,9 @@ class AWSPtrpModelConvertor:
                 type=AssetType.S3_BUCKET,
                 notes=AWSPtrpModelConvertor._get_notes(self.line.resource.notes),
             )
-        raise Exception(f"unable to convert from {self.line.resource.type} to AssetType")
+        raise Exception(  # pylint: disable=broad-exception-raised
+            f"unable to convert from {self.line.resource.type} to AssetType"
+        )
 
     def _get_identity_type(self) -> IdentityType:  # pylint: disable=too-many-return-statements
         aws_principal_type = self.line.principal.type
@@ -61,9 +63,9 @@ class AWSPtrpModelConvertor:
             return IdentityType.AWS_SERVICE
         if aws_principal_type == AwsPrincipalType.ALL_PRINCIPALS:
             return IdentityType.ALL_USERS
-        raise Exception(
+        raise Exception(  # pylint disable=broad-exception-raised
             f"unable to convert from {aws_principal_type} to IdentityType"
-        )  # pylint disable=broad-exception-raised
+        )
 
     def _get_identity(self) -> Identity:
         identity_type = self._get_identity_type()
@@ -122,7 +124,7 @@ class AWSPtrpModelConvertor:
     def _get_note_type(note_type: AwsPtrpNoteType) -> AuthzNoteType:
         if note_type == AwsPtrpNoteType.POLICY_STMT_DENY_WITH_CONDITION:
             return AuthzNoteType.AWS_POLICY_STMT_DENY_WITH_CONDITION
-        raise Exception(f"unable to convert from {note_type} to AuthzNoteType")
+        raise Exception(f"unable to convert from {note_type} to AuthzNoteType")  # pylint disable=broad-exception-raised
 
     @staticmethod
     def _get_notes(node_notes: List[AwsPtrpNodeNote]) -> List[AuthzNote]:
