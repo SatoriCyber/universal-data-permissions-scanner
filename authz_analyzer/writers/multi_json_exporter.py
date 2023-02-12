@@ -8,7 +8,7 @@ https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-json#loading_s
 import json
 from typing import Dict, List, Union
 
-from serde.se import to_dict
+from serde.se import to_dict  # pylint: disable=import-error #type: ignore
 
 from authz_analyzer.models.model import AuthzEntry
 from authz_analyzer.writers.base_writers import BaseWriter

@@ -14,7 +14,7 @@ class DataShare:
     """Define a dataShare."""
 
     name: str
-    id: str
+    id: str  # pylint: disable=invalid-name
     share_to_accounts: List[str]
     resources: Dict[PermissionLevel, Dict[DataSharePrivilege, Set[PermissionType]]]
     roles: Set[DBRole] = field(default_factory=set)
@@ -120,7 +120,7 @@ class GrantedOn(Enum):
 @dataclass
 class User:
     name: str
-    id: str
+    id: str  # pylint: disable=invalid-name
 
     def __hash__(self) -> int:
         return hash(self.id)

@@ -111,7 +111,7 @@ class RolePath(NamedTuple):
 
 
 class SharePath(NamedTuple):
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str
     db_permissions: List[str]
 

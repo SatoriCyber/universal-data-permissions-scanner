@@ -37,33 +37,33 @@ class AWSPtrpModelConvertor:
                 type=AssetType.S3_BUCKET,
                 notes=AWSPtrpModelConvertor._get_notes(self.line.resource.notes),
             )
-        else:
-            raise Exception(f"unable to convert from {self.line.resource.type} to AssetType")
+        raise Exception(f"unable to convert from {self.line.resource.type} to AssetType")
 
-    def _get_identity_type(self) -> IdentityType:
+    def _get_identity_type(self) -> IdentityType:  # pylint: disable=too-many-return-statements
         aws_principal_type = self.line.principal.type
         if aws_principal_type == AwsPrincipalType.AWS_ACCOUNT:
             return IdentityType.AWS_ACCOUNT
-        elif aws_principal_type == AwsPrincipalType.IAM_ROLE:
+        if aws_principal_type == AwsPrincipalType.IAM_ROLE:
             return IdentityType.IAM_ROLE
-        elif aws_principal_type == AwsPrincipalType.ASSUMED_ROLE_SESSION:
+        if aws_principal_type == AwsPrincipalType.ASSUMED_ROLE_SESSION:
             return IdentityType.ROLE_SESSION
-        elif aws_principal_type == AwsPrincipalType.WEB_IDENTITY_SESSION:
+        if aws_principal_type == AwsPrincipalType.WEB_IDENTITY_SESSION:
             return IdentityType.WEB_IDENTITY_SESSION
-        elif aws_principal_type == AwsPrincipalType.SAML_SESSION:
+        if aws_principal_type == AwsPrincipalType.SAML_SESSION:
             return IdentityType.SAML_SESSION
-        elif aws_principal_type == AwsPrincipalType.IAM_USER:
+        if aws_principal_type == AwsPrincipalType.IAM_USER:
             return IdentityType.IAM_USER
-        elif aws_principal_type == AwsPrincipalType.CANONICAL_USER:
+        if aws_principal_type == AwsPrincipalType.CANONICAL_USER:
             return IdentityType.AWS_ACCOUNT
-        elif aws_principal_type == AwsPrincipalType.AWS_STS_FEDERATED_USER_SESSION:
+        if aws_principal_type == AwsPrincipalType.AWS_STS_FEDERATED_USER_SESSION:
             return IdentityType.FEDERATED_USER
-        elif aws_principal_type == AwsPrincipalType.AWS_SERVICE:
+        if aws_principal_type == AwsPrincipalType.AWS_SERVICE:
             return IdentityType.AWS_SERVICE
-        elif aws_principal_type == AwsPrincipalType.ALL_PRINCIPALS:
+        if aws_principal_type == AwsPrincipalType.ALL_PRINCIPALS:
             return IdentityType.ALL_USERS
-        else:
-            raise Exception(f"unable to convert from {aws_principal_type} to IdentityType")
+        raise Exception(
+            f"unable to convert from {aws_principal_type} to IdentityType"
+        )  # pylint disable=broad-exception-raised
 
     def _get_identity(self) -> Identity:
         identity_type = self._get_identity_type()
@@ -77,53 +77,52 @@ class AWSPtrpModelConvertor:
     def _get_permission_level(self) -> PermissionLevel:
         if self.line.action_permission_level == AwsPtrpActionPermissionLevel.READ:
             return PermissionLevel.READ
-        elif self.line.action_permission_level == AwsPtrpActionPermissionLevel.WRITE:
+        if self.line.action_permission_level == AwsPtrpActionPermissionLevel.WRITE:
             return PermissionLevel.WRITE
-        elif self.line.action_permission_level == AwsPtrpActionPermissionLevel.FULL:
+        if self.line.action_permission_level == AwsPtrpActionPermissionLevel.FULL:
             return PermissionLevel.FULL
-        else:
-            raise Exception(f"unable to convert from {self.line.action_permission_level} to PermissionLevel")
+        raise Exception(f"unable to convert from {self.line.action_permission_level} to PermissionLevel")
 
     def _get_permissions(self) -> List[str]:
         return self.line.action_permissions
 
     @staticmethod
-    def _get_path_node_type(node_type: AwsPtrpPathNodeType) -> AuthzPathElementType:
+    def _get_path_node_type(  # pylint: disable=too-many-return-statements, too-many-branches
+        node_type: AwsPtrpPathNodeType,
+    ) -> AuthzPathElementType:
         if node_type == AwsPtrpPathNodeType.AWS_ACCOUNT:
             return AuthzPathElementType.AWS_ACCOUNT
-        elif node_type == AwsPtrpPathNodeType.AWS_SERVICE:
+        if node_type == AwsPtrpPathNodeType.AWS_SERVICE:
             return AuthzPathElementType.AWS_SERVICE
-        elif node_type == AwsPtrpPathNodeType.IAM_USER:
+        if node_type == AwsPtrpPathNodeType.IAM_USER:
             return AuthzPathElementType.IAM_USER
-        elif node_type == AwsPtrpPathNodeType.IAM_GROUP:
+        if node_type == AwsPtrpPathNodeType.IAM_GROUP:
             return AuthzPathElementType.IAM_GROUP
-        elif node_type == AwsPtrpPathNodeType.IAM_INLINE_POLICY:
+        if node_type == AwsPtrpPathNodeType.IAM_INLINE_POLICY:
             return AuthzPathElementType.IAM_INLINE_POLICY
-        elif node_type == AwsPtrpPathNodeType.IAM_POLICY:
+        if node_type == AwsPtrpPathNodeType.IAM_POLICY:
             return AuthzPathElementType.IAM_POLICY
-        elif node_type == AwsPtrpPathNodeType.IAM_ROLE:
+        if node_type == AwsPtrpPathNodeType.IAM_ROLE:
             return AuthzPathElementType.IAM_ROLE
-        elif node_type == AwsPtrpPathNodeType.ROLE_SESSION:
+        if node_type == AwsPtrpPathNodeType.ROLE_SESSION:
             return AuthzPathElementType.ROLE_SESSION
-        elif node_type == AwsPtrpPathNodeType.RESOURCE_POLICY:
+        if node_type == AwsPtrpPathNodeType.RESOURCE_POLICY:
             return AuthzPathElementType.RESOURCE_POLICY
-        elif node_type == AwsPtrpPathNodeType.WEB_IDENTITY_SESSION:
+        if node_type == AwsPtrpPathNodeType.WEB_IDENTITY_SESSION:
             return AuthzPathElementType.WEB_IDENTITY_SESSION
-        elif node_type == AwsPtrpPathNodeType.SAML_SESSION:
+        if node_type == AwsPtrpPathNodeType.SAML_SESSION:
             return AuthzPathElementType.SAML_SESSION
-        elif node_type == AwsPtrpPathNodeType.FEDERATED_USER:
+        if node_type == AwsPtrpPathNodeType.FEDERATED_USER:
             return AuthzPathElementType.FEDERATED_USER
-        elif node_type == AwsPtrpPathNodeType.ALL_USERS:
+        if node_type == AwsPtrpPathNodeType.ALL_USERS:
             return AuthzPathElementType.ALL_USERS
-        else:
-            raise Exception(f"unable to convert from {node_type} to AuthzPathElementType")
+        raise Exception(f"unable to convert from {node_type} to AuthzPathElementType")
 
     @staticmethod
     def _get_note_type(note_type: AwsPtrpNoteType) -> AuthzNoteType:
         if note_type == AwsPtrpNoteType.POLICY_STMT_DENY_WITH_CONDITION:
             return AuthzNoteType.AWS_POLICY_STMT_DENY_WITH_CONDITION
-        else:
-            raise Exception(f"unable to convert from {note_type} to AuthzNoteType")
+        raise Exception(f"unable to convert from {note_type} to AuthzNoteType")
 
     @staticmethod
     def _get_notes(node_notes: List[AwsPtrpNodeNote]) -> List[AuthzNote]:

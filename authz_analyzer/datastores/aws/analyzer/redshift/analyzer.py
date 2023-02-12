@@ -52,7 +52,7 @@ class RedshiftAuthzAnalyzer:
     service: RedshiftService = RedshiftService()
 
     @classmethod
-    def connect(
+    def connect(  # pylint: disable=too-many-locals
         cls,
         username: str,
         password: str,
@@ -80,7 +80,7 @@ class RedshiftAuthzAnalyzer:
 
         writer = get_writer(filename=output_path, output_format=output_format)
         connector: redshift_connector.Connection = redshift_connector.connect(
-            user=username, password=password, host=host, port=port, database=dbname
+            user=username, password=password, host=host, port=port, database=dbname, **connection_kwargs
         )
         redshift_cursor = connector.cursor()
 
@@ -147,7 +147,7 @@ class RedshiftAuthzAnalyzer:
             identity_id: IdentityId = row[0]
             identity_name: str = row[1]
             identity_type: IdentityType = IdentityType(row[2])
-            granted_identity_id: IdentityId = row[3]
+            granted_identity_id: Optional[IdentityId] = row[3]
             granted_identity_name: str = row[4]
             try:
                 granted_identity_type: IdentityType = IdentityType(row[5])
@@ -177,7 +177,9 @@ class RedshiftAuthzAnalyzer:
 
         return results
 
-    def _get_identities_privileges(self) -> Dict[IdentityId, Dict[str, Set[ResourcePermission]]]:
+    def _get_identities_privileges(  # pylint: disable=too-many-locals
+        self,
+    ) -> Dict[IdentityId, Dict[str, Set[ResourcePermission]]]:
         results: Dict[IdentityId, Dict[str, Set[ResourcePermission]]] = {}
         for db_name, pg_cursor in self.cursors.items():
             rows = self.service.get_rows(pg_cursor, Path("identities_privileges.sql"))
@@ -212,7 +214,7 @@ class RedshiftAuthzAnalyzer:
         super_user_permissions: Dict[str, Set[ResourcePermission]] = {}
         for pg_cursor in self.cursors.values():
             for row in self.service.get_rows(pg_cursor, Path("all_tables.sql")):
-                db: str = row[0]
+                db: str = row[0]  # pylint: disable=invalid-name
                 schema: str = row[1]
                 table: str = row[2]
                 _resource_type: str = row[0]

@@ -9,7 +9,7 @@ from serde import field, serde
 @dataclass
 class Owner:
     display_name: str
-    id: str = field(rename='ID')
+    id: str = field(rename='ID')  # pylint: disable=invalid-name
 
 
 class Permission(str, Enum):
@@ -31,7 +31,7 @@ class GrantType(str, Enum):
 class Grantee:
     display_name: str
     type: GrantType
-    id: str = field(rename='ID')
+    id: str = field(rename='ID')  # pylint: disable=invalid-name
 
 
 @serde(rename_all="pascalcase")

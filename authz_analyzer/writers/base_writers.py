@@ -18,8 +18,8 @@ class OutputFormat(Enum):
 class BaseWriter(ABC):
     """Base class for writers."""
 
-    def __init__(self, fh: TextIO) -> None:
-        self.fh = fh
+    def __init__(self, fh: TextIO) -> None:  # pylint: disable=(invalid-name)
+        self.fh = fh  # pylint: disable=(invalid-name)
         self._write_header()
 
     @abstractmethod
