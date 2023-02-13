@@ -44,3 +44,9 @@ jobs:
 
       - name: list files
         run: ls -l .
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            .test_results/*.xml
