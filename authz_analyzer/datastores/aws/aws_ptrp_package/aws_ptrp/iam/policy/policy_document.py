@@ -69,7 +69,7 @@ class Statement:
     # to revisit, once we will start to support condition
     condition: Optional[Dict[str, Any]] = field(default=None, skip_if_default=True)
 
-    def get_actions(self) -> Union[str, List[str]]:
+    def get_actions(self) -> List[str]:
         actions: List[str] = []
         if self._action:
             actions = self._action if isinstance(self._action, list) else [self._action]

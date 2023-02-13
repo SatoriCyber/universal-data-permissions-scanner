@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set
 
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.services import ServiceActionBase, ServiceActionsResolverBase, ServiceActionType
@@ -38,7 +38,7 @@ class ActionsResolver:
     def resolve_stmt_action_regexes(
         cls,
         logger: Logger,
-        stmt_action_regexes: Union[str, List[str]],
+        stmt_action_regexes: List[str],
         not_action_annotated: bool,
         aws_actions: AwsActions,
         allowed_service_action_types: Optional[Set[ServiceActionType]] = None,
