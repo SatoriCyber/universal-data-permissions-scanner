@@ -34,16 +34,16 @@ def from_dict_deserializer(
 @serde
 @dataclass
 class AwsActions:
-    aws_actions: Dict[ServiceActionType, List[ServiceActionBase]] = field(
+    aws_actions: Dict[ServiceActionType, Set[ServiceActionBase]] = field(
         serializer=to_dict_serializer, deserializer=from_dict_deserializer
     )
 
     @classmethod
     def load(cls, logger: Logger, service_types_to_load: Set[ServiceActionType]):
         logger.info(f"Init AwsActions {service_types_to_load}...")
-        aws_actions: Dict[ServiceActionType, List[ServiceActionBase]] = dict()
+        aws_actions: Dict[ServiceActionType, Set[ServiceActionBase]] = dict()
         for service_type_to_load in service_types_to_load:
-            ret: List[ServiceActionBase] = service_type_to_load.load_service_actions(logger)
+            ret: Set[ServiceActionBase] = service_type_to_load.load_service_actions(logger)
             aws_actions[service_type_to_load] = ret
 
         return cls(aws_actions=aws_actions)

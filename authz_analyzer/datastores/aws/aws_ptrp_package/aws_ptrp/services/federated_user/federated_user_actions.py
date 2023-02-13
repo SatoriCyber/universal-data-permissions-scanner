@@ -33,7 +33,7 @@ class FederatedUserAction(ServiceActionBase):
         return self.get_action_name() == "GetFederationToken"
 
     @classmethod
-    def load_federated_user_actions(cls, _logger: Logger) -> List[ServiceActionBase]:
+    def load_federated_user_actions(cls, _logger: Logger) -> Set[ServiceActionBase]:
         return federated_user_actions
 
 
@@ -46,10 +46,14 @@ class FederatedUserServiceActionsResolver(ServiceActionsResolverBase):
 
     @classmethod
     def load_from_single_stmt(
-        cls, _logger: Logger, stmt_regexes: List[str], service_actions: List[ServiceActionBase]
+        cls,
+        _logger: Logger,
+        stmt_regexes: List[str],
+        service_actions: Set[ServiceActionBase],
+        not_action_annotated: bool,
     ) -> 'ServiceActionsResolverBase':
         resolved_actions = ServiceActionsResolverBase.resolve_actions_from_single_stmt_regexes(
-            stmt_regexes, service_actions
+            stmt_regexes, service_actions, not_action_annotated
         )
         resolved_federated_user_actions: Set[FederatedUserAction] = set(
             [s for s in resolved_actions if isinstance(s, FederatedUserAction)]
@@ -57,6 +61,6 @@ class FederatedUserServiceActionsResolver(ServiceActionsResolverBase):
         return cls(resolved_actions=resolved_federated_user_actions)
 
 
-federated_user_actions: List[ServiceActionBase] = [
+federated_user_actions: Set[ServiceActionBase] = {
     FederatedUserAction("GetFederationToken", AwsPtrpActionPermissionLevel.FULL),
-]
+}

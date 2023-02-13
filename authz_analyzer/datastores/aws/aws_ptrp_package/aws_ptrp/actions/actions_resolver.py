@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set
 
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.services import ServiceActionBase, ServiceActionsResolverBase, ServiceActionType
@@ -38,7 +38,8 @@ class ActionsResolver:
     def resolve_stmt_action_regexes(
         cls,
         logger: Logger,
-        stmt_action_regexes: Union[str, List[str]],
+        stmt_action_regexes: List[str],
+        not_action_annotated: bool,
         aws_actions: AwsActions,
         allowed_service_action_types: Optional[Set[ServiceActionType]] = None,
     ) -> Optional[Dict[ServiceActionType, ServiceActionsResolverBase]]:
@@ -54,11 +55,11 @@ class ActionsResolver:
             logger, stmt_action_regexes, service_types_to_resolve
         )
         for service_type, service_regexes in ret.items():
-            service_actions: Optional[List[ServiceActionBase]] = aws_actions.aws_actions.get(service_type)
+            service_actions: Optional[Set[ServiceActionBase]] = aws_actions.aws_actions.get(service_type)
             if service_actions:
                 service_action_resolver: ServiceActionsResolverBase = (
                     service_type.load_resolver_service_actions_from_single_stmt(
-                        logger, service_regexes, service_actions
+                        logger, service_regexes, service_actions, not_action_annotated
                     )
                 )
                 if not service_action_resolver.is_empty():

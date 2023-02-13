@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from logging import Logger
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Optional, Set, Type
 
 from aws_ptrp.services.service_action_base import ServiceActionBase
 from aws_ptrp.services.service_actions_resolver_base import ServiceActionsResolverBase
@@ -42,13 +42,17 @@ class ServiceActionType(ServiceType):
 
     @classmethod
     @abstractmethod
-    def load_service_actions(cls, logger: Logger) -> List[ServiceActionBase]:
+    def load_service_actions(cls, logger: Logger) -> Set[ServiceActionBase]:
         pass
 
     @classmethod
     def load_resolver_service_actions_from_single_stmt(
-        cls, logger: Logger, stmt_relative_id_regexes: List[str], service_actions: List[ServiceActionBase]
+        cls,
+        logger: Logger,
+        stmt_relative_id_regexes: List[str],
+        service_actions: Set[ServiceActionBase],
+        not_action_annotated: bool,
     ) -> ServiceActionsResolverBase:
         return cls.get_service_actions_resolver_type().load_from_single_stmt(
-            logger, stmt_relative_id_regexes, service_actions
+            logger, stmt_relative_id_regexes, service_actions, not_action_annotated
         )

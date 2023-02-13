@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import List, Optional, Set, Type
+from typing import Optional, Set, Type
 
 from aws_ptrp.services import (
     ServiceActionBase,
@@ -46,5 +46,5 @@ class S3Service(ServiceResourceType):
         return buckets
 
     @classmethod
-    def load_service_actions(cls, logger: Logger) -> List[ServiceActionBase]:
+    def load_service_actions(cls, logger: Logger) -> Set[ServiceActionBase]:
         return S3Action.load_s3_actions(logger)

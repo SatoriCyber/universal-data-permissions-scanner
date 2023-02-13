@@ -34,28 +34,31 @@ class ServiceActionsResolverBase(ABC):
     @classmethod
     @abstractmethod
     def load_from_single_stmt(
-        cls, logger: Logger, stmt_regexes: List[str], service_actions: List[ServiceActionBase]
+        cls,
+        logger: Logger,
+        stmt_regexes: List[str],
+        service_actions: Set[ServiceActionBase],
+        not_action_annotated: bool,
     ) -> 'ServiceActionsResolverBase':
         pass
 
     @staticmethod
     def resolve_actions_from_single_stmt_regex(
-        stmt_regex: str, service_actions: List[ServiceActionBase]
+        stmt_regex: str, service_actions: Set[ServiceActionBase]
     ) -> Set[ServiceActionBase]:
         # actions are case insensitive
         regex = re.compile(fix_stmt_regex_to_valid_regex(stmt_regex, with_case_sensitive=False))
-        service_actions_matches: List[ServiceActionBase] = [
-            s for s in service_actions if regex.match(s.get_action_name()) is not None
-        ]
-        return set(service_actions_matches)
+        return set([s for s in service_actions if regex.match(s.get_action_name()) is not None])
 
     @staticmethod
     def resolve_actions_from_single_stmt_regexes(
-        stmt_regexes: List[str], service_actions: List[ServiceActionBase]
+        stmt_regexes: List[str], service_actions: Set[ServiceActionBase], not_action_annotated: bool
     ) -> Set[ServiceActionBase]:
         resolved_actions: Set[ServiceActionBase] = set()
         for stmt_regex in stmt_regexes:
             resolved_actions = resolved_actions.union(
                 ServiceActionsResolverBase.resolve_actions_from_single_stmt_regex(stmt_regex, service_actions)
             )
+        if not_action_annotated:
+            resolved_actions = service_actions.difference(resolved_actions)
         return resolved_actions

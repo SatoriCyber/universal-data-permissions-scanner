@@ -119,10 +119,6 @@ def _services_resolver_for_policy_document(
     allowed_service_action_types: Optional[Set[ServiceActionType]] = None,
 ):
     for statement in policy_document.statement:
-        if statement.action is None:
-            # missing action or resource on this stmt, noting to resolve
-            continue
-
         if statement.effect != effect:
             continue
 
@@ -147,7 +143,11 @@ def _services_resolver_for_policy_document(
         single_stmt_service_actions_resolvers: Optional[
             Dict[ServiceActionType, ServiceActionsResolverBase]
         ] = ActionsResolver.resolve_stmt_action_regexes(
-            logger, statement.action, aws_actions, allowed_service_action_types
+            logger,
+            statement.get_actions(),
+            statement.is_not_action_in_statement(),
+            aws_actions,
+            allowed_service_action_types,
         )
 
         if single_stmt_service_actions_resolvers:
