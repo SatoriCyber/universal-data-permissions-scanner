@@ -1,8 +1,9 @@
 import json
 import os
 import pathlib
+from collections import OrderedDict
 from dataclasses import dataclass, field
-from typing import List
+from typing import Any, Dict, List, Set
 
 import pytest
 from aws_ptrp import AwsPtrp
@@ -12,6 +13,7 @@ from aws_ptrp.iam.iam_roles import IAMRole
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpLine
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services import (
+    ServiceResourceType,
     register_service_action_by_name,
     register_service_action_type_by_name,
     register_service_resource_by_name,
@@ -52,14 +54,18 @@ def register_services_for_deserialize_from_file():
 
 @dataclass
 class CompareAwsPtrpLines:
-    expected_output: List[AwsPtrpLine]
+    expected_output: Dict[str, Any]
     test_output: List[AwsPtrpLine] = field(default_factory=list)
 
     def append_test_aws_ptrp_line(self, line: AwsPtrpLine):
         self.test_output.append(line)
 
+    def get_test_output_dict(self) -> List[Any]:
+        self.test_output.sort()
+        return [to_dict(line) for line in self.test_output]
+
     def is_equal(self) -> bool:
-        return self.expected_output == self.test_output
+        return self.expected_output == self.get_test_output_dict()
 
 
 def get_resolve_permissions_test_inputs() -> List[str]:
@@ -74,29 +80,35 @@ def get_resolve_permissions_test_inputs() -> List[str]:
 @pytest.mark.parametrize("test_input", get_resolve_permissions_test_inputs())
 def test_aws_ptrp_resolve_permissions_flows(
     register_services_for_deserialize_from_file,
-    test_input,
+    test_input: str,
 ):  # pylint: disable=unused-argument,redefined-outer-name
     should_override_output = os.environ.get("TEST_PTRP_RESOLVE_PERMISSIONS_OVERRIDE_OUTPUT", "False").lower() == "true"
     test_file_path = os.path.join(RESOURCES_INPUT_DIR, test_input)
 
     with open(test_file_path, "r", encoding="utf-8") as json_file_r:
-        json_loaded = json.load(json_file_r)
-        aws_actions = AwsActions.load(
-            get_logger(False), set([AssumeRoleService(), FederatedUserService(), S3Service()])
+        json_loaded = json.load(json_file_r, object_pairs_hook=OrderedDict)
+        resource_service_types_to_load: Set[ServiceResourceType] = set(
+            [AssumeRoleService(), FederatedUserService(), S3Service()]
         )
+        aws_actions = AwsActions.load(get_logger(False), resource_service_types_to_load)  # type: ignore
         iam_entities: IAMEntities = from_dict(IAMEntities, json_loaded['input']['iam_entities'])  # type: ignore
         target_account_resources: AwsAccountResources = from_dict(AwsAccountResources, json_loaded['input']['target_account_resources'])  # type: ignore
+        target_account_resources.update_services_from_iam_entities(
+            get_logger(False), iam_entities, resource_service_types_to_load
+        )
+
         ptrp = AwsPtrp(
             aws_actions=aws_actions, iam_entities=iam_entities, target_account_resources=target_account_resources
         )
 
-        expected_output: List[AwsPtrpLine] = from_dict(List[AwsPtrpLine], json_loaded['output'])  # type: ignore
+        expected_output: Dict[str, Any] = json_loaded['output']
         compare_lines = CompareAwsPtrpLines(expected_output=expected_output)
         ptrp.resolve_permissions(get_logger(False), compare_lines.append_test_aws_ptrp_line)
         if not should_override_output:
             assert compare_lines.is_equal()
 
     if should_override_output:
+        json_loaded['output'] = compare_lines.get_test_output_dict()
+        to_write: str = json.dumps(json_loaded, indent=4)
         with open(test_file_path, "w", encoding="utf-8") as json_file_w:
-            json_loaded['output'] = [to_dict(line) for line in compare_lines.test_output]
-            json.dump(json_loaded, json_file_w, indent=4)
+            json_file_w.write(to_write)

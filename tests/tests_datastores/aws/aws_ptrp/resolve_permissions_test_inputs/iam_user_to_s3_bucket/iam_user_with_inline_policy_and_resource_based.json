@@ -1,0 +1,142 @@
+{
+    "input": {
+        "iam_entities": {
+            "iam_users": {
+                "arn:aws:iam::105246067165:user/iam_user_1": {
+                    "user_name": "iam_user_1",
+                    "user_id": "iam_user_1",
+                    "aws_account_id": "105246067165",
+                    "path": "/",
+                    "user_policies": [
+                        {
+                            "UserName": "iam_user_1",
+                            "PolicyName": "inline-policy-1",
+                            "PolicyDocument": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor",
+                                        "Action": [
+                                            "s3:GETObject*"
+                                        ],
+                                        "Resource": [
+                                            "*"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "attached_policies_arn": [],
+                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_1"
+                }
+            },
+            "iam_groups": {},
+            "iam_roles": {},
+            "iam_policies": {}
+        },
+        "target_account_resources": {
+            "account_resources": {
+                "s3": [
+                    {
+                        "name": "bucket_1",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Sid": "VisualEditor1",
+                                    "Principal": {
+                                        "AWS": [
+                                            "arn:aws:iam::105246067165:user/iam_user_1"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:deleteObject"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::bucket_1/*",
+                                        "arn:aws:s3:::bucket_1"
+                                    ]
+                                },
+                                {
+                                    "Effect": "Deny",
+                                    "Sid": "VisualEditor1",
+                                    "Principal": {
+                                        "AWS": [
+                                            "arn:aws:iam::105246067165:user/iam_user_1"
+                                        ]
+                                    },
+                                    "__comment1": "valid that deny here is taking into account, and remove allowed actions from the principal based policies",
+                                    "Action": [
+                                        "s3:GetObjectVersion",
+                                        "s3:GetObjectVersionTagging",
+                                        "s3:GetObjectTagging",
+                                        "s3:GetObjectVersionAttributes",
+                                        "s3:GetObject"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::bucket_1/*",
+                                        "arn:aws:s3:::bucket_1"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-1",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObjectAttributes"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "WRITE",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "DeleteObject"
+            ]
+        }
+    ]
+}

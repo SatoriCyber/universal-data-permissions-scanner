@@ -51,7 +51,7 @@ def _add_node_notes(
                 else:
                     for attached_policy_arn in principal_policies_node_base.get_attached_policies_arn():
                         if attached_policy_arn == resolved_stmt.stmt_parent_arn:
-                            attached_iam_policy = f"({resolved_stmt.stmt_parent_arn})"
+                            attached_iam_policy = f" ({resolved_stmt.stmt_parent_arn})"
                             node_base_to_add = principal_policies_node_base
                             break
                 if node_base_to_add:
