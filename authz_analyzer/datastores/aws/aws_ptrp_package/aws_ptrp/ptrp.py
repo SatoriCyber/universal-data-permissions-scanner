@@ -108,9 +108,11 @@ class AwsPtrp:
         aws_actions = AwsActions.load(logger, action_service_types_to_load)
 
         # target account resources
-        account_resources = AwsAccountResources.load(
-            logger, target_account_id, iam_entities, target_session, resource_service_types_to_load
+        account_resources = AwsAccountResources.load_services_from_session(
+            logger, target_account_id, target_session, resource_service_types_to_load
         )
+        account_resources.update_services_from_iam_entities(logger, iam_entities, resource_service_types_to_load)
+
         return cls(
             aws_actions=aws_actions,
             target_account_resources=account_resources,

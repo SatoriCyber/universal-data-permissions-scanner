@@ -1,9 +1,18 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import List
+from typing import Any, List
 
 from aws_ptrp.utils.serde import serde_enum_field
 from serde import field, serde
+from serde.se import to_dict  # pylint: disable=import-error #type: ignore
+
+
+def sort_list(in_list: List[Any]) -> List[Any]:
+    return sorted(in_list)
+
+
+def serialize_list(in_list: List[Any]) -> List[Any]:
+    return [to_dict(x) for x in sort_list(in_list)]
 
 
 class AwsPtrpNoteType(Enum):
@@ -23,7 +32,11 @@ class AwsPtrpNoteType(Enum):
     def __eq__(self, other):
         return self.value == other.value
 
+    def __lt__(self, other) -> bool:
+        return bool(self.value < other.value)
 
+
+@serde
 @dataclass
 class AwsPtrpNodeNote:
     """Note information to be used for node in a PTRP line"""
@@ -33,6 +46,15 @@ class AwsPtrpNodeNote:
 
     def __repr__(self):
         return f"{self.note_type}: {self.note}"
+
+    def __eq__(self, other):
+        return self.note_type == other.note_type and self.note == other.note
+
+    def __lt__(self, other) -> bool:
+        if self.note_type != other.note_type:
+            return bool(self.note_type < other.note_type)
+        else:
+            return bool(self.note < other.note)
 
 
 class AwsPtrpResourceType(Enum):
@@ -51,6 +73,9 @@ class AwsPtrpResourceType(Enum):
 
     def __eq__(self, other):
         return self.value == other.value
+
+    def __lt__(self, other) -> bool:
+        return bool(self.value < other.value)
 
 
 class AwsPrincipalType(Enum):
@@ -78,6 +103,9 @@ class AwsPrincipalType(Enum):
 
     def __eq__(self, other):
         return self.value == other.value
+
+    def __lt__(self, other) -> bool:
+        return bool(self.value < other.value)
 
 
 class AwsPtrpPathNodeType(Enum):
@@ -109,6 +137,9 @@ class AwsPtrpPathNodeType(Enum):
     def __eq__(self, other):
         return self.value == other.value
 
+    def __lt__(self, other) -> bool:
+        return bool(self.value < other.value)
+
 
 class AwsPtrpActionPermissionLevel(Enum):
     """Permission level of AWS action to a AWS resource"""
@@ -129,6 +160,9 @@ class AwsPtrpActionPermissionLevel(Enum):
     def __eq__(self, other):
         return self.value == other.value
 
+    def __lt__(self, other) -> bool:
+        return bool(self.value < other.value)
+
 
 @serde
 @dataclass
@@ -138,10 +172,25 @@ class AwsPtrpPathNode:
     arn: str
     name: str
     type: AwsPtrpPathNodeType = serde_enum_field(AwsPtrpPathNodeType)
-    notes: List[AwsPtrpNodeNote] = field(default=None, skip_if_default=True)
+    notes: List[AwsPtrpNodeNote] = field(default=None, skip_if_default=True, serializer=serialize_list)
 
     def __repr__(self):
         return f"{self.type} {self.arn} {self.name} {self.notes}"
+
+    def __eq__(self, other):
+        return (
+            self.arn == other.arn and self.name == other.name and self.type == other.type and self.notes == other.notes
+        )
+
+    def __lt__(self, other) -> bool:
+        if self.arn != other.arn:
+            return bool(self.arn < other.arn)
+        elif self.name != other.name:
+            return bool(self.name < other.name)
+        elif self.type != other.type:
+            return bool(self.type < other.type)
+        else:
+            return bool(self.notes < other.notes)
 
 
 @serde
@@ -151,7 +200,18 @@ class AwsPtrpResource:
 
     name: str
     type: AwsPtrpResourceType = serde_enum_field(AwsPtrpResourceType)
-    notes: List[AwsPtrpNodeNote] = field(default=None, skip_if_default=True)
+    notes: List[AwsPtrpNodeNote] = field(default=None, skip_if_default=True, serializer=serialize_list)
+
+    def __eq__(self, other):
+        return self.name == other.name and self.type == other.type and self.notes == other.notes
+
+    def __lt__(self, other) -> bool:
+        if self.name != other.name:
+            return bool(self.name < other.name)
+        elif self.type != other.type:
+            return bool(self.type < other.type)
+        else:
+            return bool(self.notes < other.notes)
 
 
 @serde
@@ -163,7 +223,22 @@ class AwsPrincipal:
     arn: str
     name: str
     type: AwsPrincipalType = serde_enum_field(AwsPrincipalType)
-    notes: List[AwsPtrpNodeNote] = field(default=None, skip_if_default=True)
+    notes: List[AwsPtrpNodeNote] = field(default=None, skip_if_default=True, serializer=serialize_list)
+
+    def __eq__(self, other):
+        return (
+            self.arn == other.arn and self.name == other.name and self.type == other.type and self.notes == other.notes
+        )
+
+    def __lt__(self, other) -> bool:
+        if self.arn != other.arn:
+            return bool(self.arn < other.arn)
+        elif self.name != other.name:
+            return bool(self.name < other.name)
+        elif self.type != other.type:
+            return bool(self.type < other.type)
+        else:
+            return bool(self.notes < other.notes)
 
 
 @serde
@@ -175,7 +250,28 @@ class AwsPtrpLine:
     principal: AwsPrincipal
     action_permission_level: AwsPtrpActionPermissionLevel = serde_enum_field(AwsPtrpActionPermissionLevel)
     path_nodes: List[AwsPtrpPathNode] = field(default=None, skip_if_default=True)
-    action_permissions: List[str] = field(default=None, skip_if_default=True)
+    action_permissions: List[str] = field(default=None, skip_if_default=True, serializer=serialize_list)
 
     def __repr__(self):
         return f"{self.principal} {self.action_permission_level} {self.resource} {self.path_nodes}"
+
+    def __eq__(self, other):
+        return (
+            self.resource == other.resource
+            and self.principal == other.principal
+            and self.action_permission_level == other.action_permission_level
+            and self.path_nodes == other.path_nodes
+            and self.action_permissions == other.action_permissions
+        )
+
+    def __lt__(self, other) -> bool:
+        if self.resource != other.resource:
+            return bool(self.resource < other.resource)
+        elif self.principal != other.principal:
+            return bool(self.principal < other.principal)
+        elif self.action_permission_level != other.action_permission_level:
+            return bool(self.action_permission_level < other.action_permission_level)
+        elif self.path_nodes != other.path_nodes:
+            return bool(self.path_nodes < other.path_nodes)
+        else:
+            return bool(self.action_permissions < other.action_permissions)
