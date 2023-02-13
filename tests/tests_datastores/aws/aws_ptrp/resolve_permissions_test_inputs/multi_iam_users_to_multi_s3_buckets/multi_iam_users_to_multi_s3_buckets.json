@@ -238,8 +238,8 @@
                 }
             ],
             "action_permissions": [
-                "ListBucketVersions",
-                "ListBucket"
+                "ListBucket",
+                "ListBucketVersions"
             ]
         },
         {
@@ -290,31 +290,31 @@
             ],
             "action_permissions": [
                 "PutAccelerateConfiguration",
-                "PutBucketAcl",
-                "PutObjectLegalHold",
-                "PutBucketPolicy",
-                "PutObjectVersionAcl",
-                "PutBucketTagging",
-                "PutObjectRetention",
-                "PutBucketRequestPayment",
-                "PutBucketWebsite",
                 "PutAnalyticsConfiguration",
-                "PutBucketOwnershipControls",
-                "PutInventoryConfiguration",
-                "PutBucketLogging",
-                "PutReplicationConfiguration",
-                "PutObjectVersionTagging",
-                "PutBucketObjectLockConfiguration",
-                "PutLifecycleConfiguration",
-                "PutIntelligentTieringConfiguration",
-                "PutMetricsConfiguration",
-                "PutBucketVersioning",
+                "PutBucketAcl",
                 "PutBucketCORS",
+                "PutBucketLogging",
                 "PutBucketNotification",
-                "PutEncryptionConfiguration",
+                "PutBucketObjectLockConfiguration",
+                "PutBucketOwnershipControls",
+                "PutBucketPolicy",
                 "PutBucketPublicAccessBlock",
+                "PutBucketRequestPayment",
+                "PutBucketTagging",
+                "PutBucketVersioning",
+                "PutBucketWebsite",
+                "PutEncryptionConfiguration",
+                "PutIntelligentTieringConfiguration",
+                "PutInventoryConfiguration",
+                "PutLifecycleConfiguration",
+                "PutMetricsConfiguration",
                 "PutObjectAcl",
-                "PutObjectTagging"
+                "PutObjectLegalHold",
+                "PutObjectRetention",
+                "PutObjectTagging",
+                "PutObjectVersionAcl",
+                "PutObjectVersionTagging",
+                "PutReplicationConfiguration"
             ]
         },
         {
@@ -339,12 +339,12 @@
                 }
             ],
             "action_permissions": [
+                "GetObject",
                 "GetObjectAttributes",
-                "GetObjectVersionAttributes",
                 "GetObjectTagging",
                 "GetObjectVersion",
-                "GetObjectVersionTagging",
-                "GetObject"
+                "GetObjectVersionAttributes",
+                "GetObjectVersionTagging"
             ]
         },
         {
@@ -365,6 +365,31 @@
                     "arn": "arn:aws:iam::105246067165:policy/policy_2",
                     "name": "policy_2",
                     "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "PutObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_2",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_2",
+                "name": "iam_user_2",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "WRITE",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_2",
+                    "name": "inline-policy-2",
+                    "type": "IAM_INLINE_POLICY",
                     "notes": []
                 }
             ],
@@ -394,38 +419,41 @@
                 }
             ],
             "action_permissions": [
+                "PutBucketObjectLockConfiguration",
+                "PutObjectAcl",
                 "PutObjectLegalHold",
                 "PutObjectRetention",
+                "PutObjectTagging",
                 "PutObjectVersionAcl",
-                "PutObjectVersionTagging",
-                "PutObjectAcl",
-                "PutBucketObjectLockConfiguration",
-                "PutObjectTagging"
+                "PutObjectVersionTagging"
             ]
         },
         {
             "resource": {
-                "name": "bucket_2",
+                "name": "bucket_3",
                 "type": "S3_BUCKET",
                 "notes": []
             },
             "principal": {
-                "arn": "arn:aws:iam::105246067165:user/iam_user_2",
-                "name": "iam_user_2",
+                "arn": "arn:aws:iam::105246067165:user/iam_user_3",
+                "name": "iam_user_3",
                 "type": "IAM_USER",
                 "notes": []
             },
             "action_permission_level": "WRITE",
             "path_nodes": [
                 {
-                    "arn": "arn:aws:iam::105246067165:user/iam_user_2",
-                    "name": "inline-policy-2",
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_3",
+                    "name": "inline-policy-3",
                     "type": "IAM_INLINE_POLICY",
                     "notes": []
                 }
             ],
             "action_permissions": [
-                "PutObject"
+                "DeleteObject",
+                "DeleteObjectTagging",
+                "DeleteObjectVersion",
+                "DeleteObjectVersionTagging"
             ]
         },
         {
@@ -465,34 +493,6 @@
                 "type": "IAM_USER",
                 "notes": []
             },
-            "action_permission_level": "WRITE",
-            "path_nodes": [
-                {
-                    "arn": "arn:aws:iam::105246067165:user/iam_user_3",
-                    "name": "inline-policy-3",
-                    "type": "IAM_INLINE_POLICY",
-                    "notes": []
-                }
-            ],
-            "action_permissions": [
-                "DeleteObjectVersion",
-                "DeleteObject",
-                "DeleteObjectVersionTagging",
-                "DeleteObjectTagging"
-            ]
-        },
-        {
-            "resource": {
-                "name": "bucket_3",
-                "type": "S3_BUCKET",
-                "notes": []
-            },
-            "principal": {
-                "arn": "arn:aws:iam::105246067165:user/iam_user_3",
-                "name": "iam_user_3",
-                "type": "IAM_USER",
-                "notes": []
-            },
             "action_permission_level": "FULL",
             "path_nodes": [
                 {
@@ -503,9 +503,9 @@
                 }
             ],
             "action_permissions": [
-                "DeleteBucketWebsite",
                 "DeleteBucket",
-                "DeleteBucketPolicy"
+                "DeleteBucketPolicy",
+                "DeleteBucketWebsite"
             ]
         }
     ]

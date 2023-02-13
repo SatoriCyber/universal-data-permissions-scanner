@@ -60,6 +60,7 @@ class CompareAwsPtrpLines:
         self.test_output.append(line)
 
     def is_equal(self) -> bool:
+        self.test_output.sort()
         return self.expected_output == self.test_output
 
 
@@ -103,6 +104,8 @@ def test_aws_ptrp_resolve_permissions_flows(
             assert compare_lines.is_equal()
 
     if should_override_output:
+        compare_lines.test_output.sort()
+        json_loaded['output'] = [to_dict(line) for line in compare_lines.test_output]
+        to_write: str = json.dumps(json_loaded, indent=4)
         with open(test_file_path, "w", encoding="utf-8") as json_file_w:
-            json_loaded['output'] = [to_dict(line) for line in compare_lines.test_output]
-            json.dump(json_loaded, json_file_w, indent=4)
+            json_file_w.write(to_write)

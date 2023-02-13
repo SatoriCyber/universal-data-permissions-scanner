@@ -179,33 +179,8 @@
                 }
             ],
             "action_permissions": [
-                "ListBucketVersions",
-                "ListBucket"
-            ]
-        },
-        {
-            "resource": {
-                "name": "bucket_1",
-                "type": "S3_BUCKET",
-                "notes": []
-            },
-            "principal": {
-                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
-                "name": "iam_user_1",
-                "type": "IAM_USER",
-                "notes": []
-            },
-            "action_permission_level": "FULL",
-            "path_nodes": [
-                {
-                    "arn": "arn:aws:iam::105246067165:policy/policy_1",
-                    "name": "policy_1",
-                    "type": "IAM_POLICY",
-                    "notes": []
-                }
-            ],
-            "action_permissions": [
-                "PutBucketAcl"
+                "ListBucket",
+                "ListBucketVersions"
             ]
         },
         {
@@ -230,78 +205,14 @@
                 }
             ],
             "action_permissions": [
-                "ListBucket",
-                "GetObjectVersionTagging",
-                "GetObjectTagging",
                 "GetObject",
                 "GetObjectAttributes",
-                "GetObjectVersionAttributes",
+                "GetObjectTagging",
                 "GetObjectVersion",
+                "GetObjectVersionAttributes",
+                "GetObjectVersionTagging",
+                "ListBucket",
                 "ListBucketVersions"
-            ]
-        },
-        {
-            "resource": {
-                "name": "bucket_1",
-                "type": "S3_BUCKET",
-                "notes": []
-            },
-            "principal": {
-                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
-                "name": "iam_user_1",
-                "type": "IAM_USER",
-                "notes": []
-            },
-            "action_permission_level": "WRITE",
-            "path_nodes": [
-                {
-                    "arn": "arn:aws:iam::105246067165:policy/policy_2",
-                    "name": "policy_2",
-                    "type": "IAM_POLICY",
-                    "notes": []
-                }
-            ],
-            "action_permissions": [
-                "DeleteObjectVersionTagging",
-                "DeleteObject",
-                "RestoreObject",
-                "DeleteObjectVersion",
-                "DeleteObjectTagging"
-            ]
-        },
-        {
-            "resource": {
-                "name": "bucket_1",
-                "type": "S3_BUCKET",
-                "notes": []
-            },
-            "principal": {
-                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
-                "name": "iam_user_1",
-                "type": "IAM_USER",
-                "notes": []
-            },
-            "action_permission_level": "FULL",
-            "path_nodes": [
-                {
-                    "arn": "arn:aws:iam::105246067165:policy/policy_2",
-                    "name": "policy_2",
-                    "type": "IAM_POLICY",
-                    "notes": []
-                }
-            ],
-            "action_permissions": [
-                "PutBucketAcl",
-                "DeleteBucketWebsite",
-                "DeleteBucket",
-                "ReplicateTags",
-                "BypassGovernanceRetention",
-                "ReplicateObject",
-                "PutBucketLogging",
-                "DeleteBucketPolicy",
-                "CreateBucket",
-                "ObjectOwnerOverrideToBucketOwner",
-                "ReplicateDelete"
             ]
         },
         {
@@ -341,6 +252,95 @@
                 "type": "IAM_USER",
                 "notes": []
             },
+            "action_permission_level": "WRITE",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy_2",
+                    "name": "policy_2",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "DeleteObject",
+                "DeleteObjectTagging",
+                "DeleteObjectVersion",
+                "DeleteObjectVersionTagging",
+                "RestoreObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "FULL",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy_1",
+                    "name": "policy_1",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "PutBucketAcl"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "FULL",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy_2",
+                    "name": "policy_2",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "BypassGovernanceRetention",
+                "CreateBucket",
+                "DeleteBucket",
+                "DeleteBucketPolicy",
+                "DeleteBucketWebsite",
+                "ObjectOwnerOverrideToBucketOwner",
+                "PutBucketAcl",
+                "PutBucketLogging",
+                "ReplicateDelete",
+                "ReplicateObject",
+                "ReplicateTags"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
             "action_permission_level": "FULL",
             "path_nodes": [
                 {
@@ -351,8 +351,8 @@
                 }
             ],
             "action_permissions": [
-                "PutBucketLogging",
-                "PutBucketAcl"
+                "PutBucketAcl",
+                "PutBucketLogging"
             ]
         }
     ]

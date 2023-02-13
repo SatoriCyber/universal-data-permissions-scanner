@@ -198,9 +198,9 @@
             "action_permission_level": "READ",
             "path_nodes": [
                 {
-                    "arn": "arn:aws:s3:::bucket_1",
-                    "name": "bucket_1",
-                    "type": "RESOURCE_POLICY",
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-1",
+                    "type": "IAM_INLINE_POLICY",
                     "notes": []
                 }
             ],
@@ -223,9 +223,9 @@
             "action_permission_level": "READ",
             "path_nodes": [
                 {
-                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
-                    "name": "inline-policy-1",
-                    "type": "IAM_INLINE_POLICY",
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
                     "notes": []
                 }
             ],
@@ -256,6 +256,31 @@
             ],
             "action_permissions": [
                 "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_3",
+                "name": "iam_user_3",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy_3",
+                    "name": "policy_3",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObjectTagging"
             ]
         },
         {
@@ -305,32 +330,7 @@
                 }
             ],
             "action_permissions": [
-                "GetObjectTagging",
-                "GetObject"
-            ]
-        },
-        {
-            "resource": {
-                "name": "bucket_1",
-                "type": "S3_BUCKET",
-                "notes": []
-            },
-            "principal": {
-                "arn": "arn:aws:iam::105246067165:user/iam_user_3",
-                "name": "iam_user_3",
-                "type": "IAM_USER",
-                "notes": []
-            },
-            "action_permission_level": "READ",
-            "path_nodes": [
-                {
-                    "arn": "arn:aws:iam::105246067165:policy/policy_3",
-                    "name": "policy_3",
-                    "type": "IAM_POLICY",
-                    "notes": []
-                }
-            ],
-            "action_permissions": [
+                "GetObject",
                 "GetObjectTagging"
             ]
         }

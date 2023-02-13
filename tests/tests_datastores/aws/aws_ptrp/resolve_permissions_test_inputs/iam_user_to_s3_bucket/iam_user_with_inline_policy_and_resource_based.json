@@ -100,17 +100,17 @@
                 "type": "IAM_USER",
                 "notes": []
             },
-            "action_permission_level": "WRITE",
+            "action_permission_level": "READ",
             "path_nodes": [
                 {
-                    "arn": "arn:aws:s3:::bucket_1",
-                    "name": "bucket_1",
-                    "type": "RESOURCE_POLICY",
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-1",
+                    "type": "IAM_INLINE_POLICY",
                     "notes": []
                 }
             ],
             "action_permissions": [
-                "DeleteObject"
+                "GetObjectAttributes"
             ]
         },
         {
@@ -125,17 +125,17 @@
                 "type": "IAM_USER",
                 "notes": []
             },
-            "action_permission_level": "READ",
+            "action_permission_level": "WRITE",
             "path_nodes": [
                 {
-                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
-                    "name": "inline-policy-1",
-                    "type": "IAM_INLINE_POLICY",
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
                     "notes": []
                 }
             ],
             "action_permissions": [
-                "GetObjectAttributes"
+                "DeleteObject"
             ]
         }
     ]
