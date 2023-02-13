@@ -2,7 +2,8 @@ import json
 import os
 import pathlib
 from dataclasses import dataclass, field
-from typing import List, Set
+from collections import OrderedDict
+from typing import Any, Dict, List, Set
 
 import pytest
 from aws_ptrp import AwsPtrp
@@ -53,15 +54,18 @@ def register_services_for_deserialize_from_file():
 
 @dataclass
 class CompareAwsPtrpLines:
-    expected_output: List[AwsPtrpLine]
+    expected_output: Dict[str, Any]
     test_output: List[AwsPtrpLine] = field(default_factory=list)
 
     def append_test_aws_ptrp_line(self, line: AwsPtrpLine):
         self.test_output.append(line)
 
-    def is_equal(self) -> bool:
+    def get_test_output_dict(self) -> List[Any]:
         self.test_output.sort()
-        return self.expected_output == self.test_output
+        return [to_dict(line) for line in self.test_output]
+
+    def is_equal(self) -> bool:
+        return self.expected_output == self.get_test_output_dict()
 
 
 def get_resolve_permissions_test_inputs() -> List[str]:
@@ -82,7 +86,7 @@ def test_aws_ptrp_resolve_permissions_flows(
     test_file_path = os.path.join(RESOURCES_INPUT_DIR, test_input)
 
     with open(test_file_path, "r", encoding="utf-8") as json_file_r:
-        json_loaded = json.load(json_file_r)
+        json_loaded = json.load(json_file_r, object_pairs_hook=OrderedDict)
         resource_service_types_to_load: Set[ServiceResourceType] = set(
             [AssumeRoleService(), FederatedUserService(), S3Service()]
         )
@@ -97,15 +101,14 @@ def test_aws_ptrp_resolve_permissions_flows(
             aws_actions=aws_actions, iam_entities=iam_entities, target_account_resources=target_account_resources
         )
 
-        expected_output: List[AwsPtrpLine] = from_dict(List[AwsPtrpLine], json_loaded['output'])  # type: ignore
+        expected_output: Dict[str, Any] = json_loaded['output']
         compare_lines = CompareAwsPtrpLines(expected_output=expected_output)
         ptrp.resolve_permissions(get_logger(False), compare_lines.append_test_aws_ptrp_line)
         if not should_override_output:
             assert compare_lines.is_equal()
 
     if should_override_output:
-        compare_lines.test_output.sort()
-        json_loaded['output'] = [to_dict(line) for line in compare_lines.test_output]
+        json_loaded['output'] = compare_lines.get_test_output_dict()
         to_write: str = json.dumps(json_loaded, indent=4)
         with open(test_file_path, "w", encoding="utf-8") as json_file_w:
             json_file_w.write(to_write)
