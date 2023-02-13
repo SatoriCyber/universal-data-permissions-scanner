@@ -41,7 +41,7 @@ class AssumeRoleAction(ServiceActionBase):
         return self.permission_level
 
     @classmethod
-    def load_role_trust_actions(cls, _logger: Logger) -> List[ServiceActionBase]:
+    def load_role_trust_actions(cls, _logger: Logger) -> Set[ServiceActionBase]:
         return role_trust_actions
 
 
@@ -54,10 +54,14 @@ class AssumeRoleServiceActionsResolver(ServiceActionsResolverBase):
 
     @classmethod
     def load_from_single_stmt(
-        cls, _logger: Logger, stmt_regexes: List[str], service_actions: List[ServiceActionBase]
+        cls,
+        _logger: Logger,
+        stmt_regexes: List[str],
+        service_actions: Set[ServiceActionBase],
+        not_action_annotated: bool,
     ) -> 'ServiceActionsResolverBase':
         resolved_actions = ServiceActionsResolverBase.resolve_actions_from_single_stmt_regexes(
-            stmt_regexes, service_actions
+            stmt_regexes, service_actions, not_action_annotated
         )
         resolved_assume_actions: Set[AssumeRoleAction] = set(
             [s for s in resolved_actions if isinstance(s, AssumeRoleAction)]
@@ -65,7 +69,7 @@ class AssumeRoleServiceActionsResolver(ServiceActionsResolverBase):
         return cls(resolved_actions=resolved_assume_actions)
 
 
-role_trust_actions: List[ServiceActionBase] = [
+role_trust_actions: Set[ServiceActionBase] = {
     AssumeRoleAction("AssumeRole", True, AssumeRoleActionType.ASSUME_ROLE, AwsPtrpActionPermissionLevel.FULL),
     AssumeRoleAction(
         "AssumeRoleWithWebIdentity",
@@ -78,4 +82,4 @@ role_trust_actions: List[ServiceActionBase] = [
     ),
     AssumeRoleAction("TagSession", False, AssumeRoleActionType.TAG_SESSION, AwsPtrpActionPermissionLevel.FULL),
     AssumeRoleAction("TagSession", False, AssumeRoleActionType.SET_SOURCE_IDENTITY, AwsPtrpActionPermissionLevel.FULL),
-]
+}

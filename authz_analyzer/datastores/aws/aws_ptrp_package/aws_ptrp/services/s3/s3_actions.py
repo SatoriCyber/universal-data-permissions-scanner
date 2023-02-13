@@ -41,7 +41,7 @@ class S3Action(ServiceActionBase):
         return self.permission_level
 
     @classmethod
-    def load_s3_actions(cls, _logger: Logger) -> List[ServiceActionBase]:
+    def load_s3_actions(cls, _logger: Logger) -> Set[ServiceActionBase]:
         return s3_actions
 
 
@@ -100,16 +100,20 @@ class S3ServiceActionsResolver(ServiceActionsResolverBase):
 
     @classmethod
     def load_from_single_stmt(
-        cls, _logger: Logger, stmt_regexes: List[str], service_actions: List[ServiceActionBase]
+        cls,
+        _logger: Logger,
+        stmt_regexes: List[str],
+        service_actions: Set[ServiceActionBase],
+        not_action_annotated: bool,
     ) -> 'ServiceActionsResolverBase':
         resolved_actions = ServiceActionsResolverBase.resolve_actions_from_single_stmt_regexes(
-            stmt_regexes, service_actions
+            stmt_regexes, service_actions, not_action_annotated
         )
         s3_resolved_actions: Set[S3Action] = set([s for s in resolved_actions if isinstance(s, S3Action)])
         return cls(resolved_actions=s3_resolved_actions)
 
 
-s3_actions: List[ServiceActionBase] = [
+s3_actions: Set[ServiceActionBase] = {
     # S3Action("AbortMultipartUpload", S3ActionType.OBJECT, AwsPtrpActionPermissionLevel.WRITE),
     S3Action("BypassGovernanceRetention", S3ActionType.OBJECT, AwsPtrpActionPermissionLevel.FULL),
     S3Action("CreateBucket", S3ActionType.BUCKET, AwsPtrpActionPermissionLevel.FULL),
@@ -193,4 +197,4 @@ s3_actions: List[ServiceActionBase] = [
     S3Action("ReplicateObject", S3ActionType.OBJECT, AwsPtrpActionPermissionLevel.FULL),
     S3Action("ReplicateTags", S3ActionType.OBJECT, AwsPtrpActionPermissionLevel.FULL),
     S3Action("RestoreObject", S3ActionType.OBJECT, AwsPtrpActionPermissionLevel.WRITE),
-]
+}

@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Dict, List, Optional, Set, Type
+from typing import Dict, Optional, Set, Type
 
 from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument
 from aws_ptrp.services import (
@@ -46,7 +46,7 @@ class FederatedUserService(ServiceResourceType):
         return FederatedUserServiceActionsResolver
 
     @classmethod
-    def load_service_actions(cls, logger: Logger) -> List[ServiceActionBase]:
+    def load_service_actions(cls, logger: Logger) -> Set[ServiceActionBase]:
         return FederatedUserAction.load_federated_user_actions(logger)
 
     @classmethod
