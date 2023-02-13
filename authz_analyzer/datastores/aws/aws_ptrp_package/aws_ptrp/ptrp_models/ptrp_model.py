@@ -24,6 +24,7 @@ class AwsPtrpNoteType(Enum):
         return self.value == other.value
 
 
+@serde
 @dataclass
 class AwsPtrpNodeNote:
     """Note information to be used for node in a PTRP line"""

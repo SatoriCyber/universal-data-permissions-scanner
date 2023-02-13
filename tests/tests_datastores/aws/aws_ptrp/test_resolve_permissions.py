@@ -2,7 +2,7 @@ import json
 import os
 import pathlib
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Set
 
 import pytest
 from aws_ptrp import AwsPtrp
@@ -12,6 +12,7 @@ from aws_ptrp.iam.iam_roles import IAMRole
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpLine
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services import (
+    ServiceResourceType,
     register_service_action_by_name,
     register_service_action_type_by_name,
     register_service_resource_by_name,
@@ -74,18 +75,23 @@ def get_resolve_permissions_test_inputs() -> List[str]:
 @pytest.mark.parametrize("test_input", get_resolve_permissions_test_inputs())
 def test_aws_ptrp_resolve_permissions_flows(
     register_services_for_deserialize_from_file,
-    test_input,
+    test_input: str,
 ):  # pylint: disable=unused-argument,redefined-outer-name
     should_override_output = os.environ.get("TEST_PTRP_RESOLVE_PERMISSIONS_OVERRIDE_OUTPUT", "False").lower() == "true"
     test_file_path = os.path.join(RESOURCES_INPUT_DIR, test_input)
 
     with open(test_file_path, "r", encoding="utf-8") as json_file_r:
         json_loaded = json.load(json_file_r)
-        aws_actions = AwsActions.load(
-            get_logger(False), set([AssumeRoleService(), FederatedUserService(), S3Service()])
+        resource_service_types_to_load: Set[ServiceResourceType] = set(
+            [AssumeRoleService(), FederatedUserService(), S3Service()]
         )
+        aws_actions = AwsActions.load(get_logger(False), resource_service_types_to_load)  # type: ignore
         iam_entities: IAMEntities = from_dict(IAMEntities, json_loaded['input']['iam_entities'])  # type: ignore
         target_account_resources: AwsAccountResources = from_dict(AwsAccountResources, json_loaded['input']['target_account_resources'])  # type: ignore
+        target_account_resources.update_services_from_iam_entities(
+            get_logger(False), iam_entities, resource_service_types_to_load
+        )
+
         ptrp = AwsPtrp(
             aws_actions=aws_actions, iam_entities=iam_entities, target_account_resources=target_account_resources
         )
