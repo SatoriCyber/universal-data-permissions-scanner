@@ -33,7 +33,7 @@ class AwsPtrpNoteType(Enum):
         return self.value == other.value
 
     def __lt__(self, other) -> bool:
-        return self.value < other.value
+        return bool(self.value < other.value)
 
 
 @serde
@@ -52,9 +52,9 @@ class AwsPtrpNodeNote:
 
     def __lt__(self, other) -> bool:
         if self.note_type != other.note_type:
-            return self.note_type < other.note_type
+            return bool(self.note_type < other.note_type)
         else:
-            return self.note < other.note
+            return bool(self.note < other.note)
 
 
 class AwsPtrpResourceType(Enum):
@@ -75,7 +75,7 @@ class AwsPtrpResourceType(Enum):
         return self.value == other.value
 
     def __lt__(self, other) -> bool:
-        return self.value < other.value
+        return bool(self.value < other.value)
 
 
 class AwsPrincipalType(Enum):
@@ -105,7 +105,7 @@ class AwsPrincipalType(Enum):
         return self.value == other.value
 
     def __lt__(self, other) -> bool:
-        return self.value < other.value
+        return bool(self.value < other.value)
 
 
 class AwsPtrpPathNodeType(Enum):
@@ -138,7 +138,7 @@ class AwsPtrpPathNodeType(Enum):
         return self.value == other.value
 
     def __lt__(self, other) -> bool:
-        return self.value < other.value
+        return bool(self.value < other.value)
 
 
 class AwsPtrpActionPermissionLevel(Enum):
@@ -161,7 +161,7 @@ class AwsPtrpActionPermissionLevel(Enum):
         return self.value == other.value
 
     def __lt__(self, other) -> bool:
-        return self.value < other.value
+        return bool(self.value < other.value)
 
 
 @serde
@@ -184,13 +184,13 @@ class AwsPtrpPathNode:
 
     def __lt__(self, other) -> bool:
         if self.arn != other.arn:
-            return self.arn < other.arn
+            return bool(self.arn < other.arn)
         elif self.name != other.name:
-            return self.name < other.name
+            return bool(self.name < other.name)
         elif self.type != other.type:
-            return self.type < other.type
+            return bool(self.type < other.type)
         else:
-            return self.notes < other.notes
+            return bool(self.notes < other.notes)
 
 
 @serde
@@ -207,11 +207,11 @@ class AwsPtrpResource:
 
     def __lt__(self, other) -> bool:
         if self.name != other.name:
-            return self.name < other.name
+            return bool(self.name < other.name)
         elif self.type != other.type:
-            return self.type < other.type
+            return bool(self.type < other.type)
         else:
-            return self.notes < other.notes
+            return bool(self.notes < other.notes)
 
 
 @serde
@@ -232,13 +232,13 @@ class AwsPrincipal:
 
     def __lt__(self, other) -> bool:
         if self.arn != other.arn:
-            return self.arn < other.arn
+            return bool(self.arn < other.arn)
         elif self.name != other.name:
-            return self.name < other.name
+            return bool(self.name < other.name)
         elif self.type != other.type:
-            return self.type < other.type
+            return bool(self.type < other.type)
         else:
-            return self.notes < other.notes
+            return bool(self.notes < other.notes)
 
 
 @serde
@@ -266,12 +266,12 @@ class AwsPtrpLine:
 
     def __lt__(self, other) -> bool:
         if self.resource != other.resource:
-            return self.resource < other.resource
+            return bool(self.resource < other.resource)
         elif self.principal != other.principal:
-            return self.principal < other.principal
+            return bool(self.principal < other.principal)
         elif self.action_permission_level != other.action_permission_level:
-            return self.action_permission_level < other.action_permission_level
+            return bool(self.action_permission_level < other.action_permission_level)
         elif self.path_nodes != other.path_nodes:
-            return self.path_nodes < other.path_nodes
+            return bool(self.path_nodes < other.path_nodes)
         else:
-            return self.action_permissions < other.action_permissions
+            return bool(self.action_permissions < other.action_permissions)
