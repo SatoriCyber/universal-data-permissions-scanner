@@ -171,12 +171,12 @@ class SnowflakeAuthzAnalyzer:
             except ValueError:
                 self.logger.debug("Privilege doesn't grant permission to data, skipping privilege %s", row[1])
                 continue
-            db: str = row[2]
+            db: str = row[2]  # pylint: disable=invalid-name
             schema: str = row[3]
-            resource_name: str = row[4]
+            resource_name: Optional[str] = row[4]
             granted_on = GrantedOn.from_str(row[5])
 
-            if privilege is PermissionType.USAGE and granted_on == GrantedOn.ROLE:
+            if privilege is PermissionType.USAGE and granted_on == GrantedOn.ROLE and resource_name is not None:
                 SnowflakeAuthzAnalyzer._add_role_to_roles(role, resource_name, role_to_roles)
 
             elif resource_name is not None and granted_on in (

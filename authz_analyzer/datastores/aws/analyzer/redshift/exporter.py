@@ -23,7 +23,7 @@ IDENTITY_TYPE_MODEL_TO_OUTPUT = {
     IdentityModelType.ROLE: IdentityType.ROLE,
 }
 
-# TODO AuthzPathElementType should be merged into model.IdentityType
+
 IDENTITY_TYPE_MODEL_TO_AuthzPathElementType = {
     IdentityModelType.USER: AuthzPathElementType.USER,
     IdentityModelType.GROUP: AuthzPathElementType.GROUP,
@@ -74,7 +74,7 @@ def _iter_role_row(
     role_to_roles: Dict[DBIdentity, Set[DBIdentity]],
 ) -> Generator[AuthzEntry, None, None]:
     prev_roles.append(granted_identity)
-    for grants in roles_to_grants.get(granted_identity.id_, dict()).values():
+    for grants in roles_to_grants.get(granted_identity.id_, {}).values():
         for grant in grants:
             yield from _yield_row(
                 identity=identity,

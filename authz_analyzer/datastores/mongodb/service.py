@@ -7,8 +7,8 @@ To make shortcuts for repeated logic, use the client directly for all others.
 from dataclasses import dataclass
 from typing import Any
 
-from pymongo import MongoClient
-from pymongo.database import Database
+from pymongo import MongoClient  # pylint: disable=import-error
+from pymongo.database import Database  # pylint: disable=import-error
 
 from authz_analyzer.datastores.mongodb.model import Role
 from authz_analyzer.datastores.mongodb.service_model import RolesInfoEntry, UserInfoResponseEntry

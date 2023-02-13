@@ -157,7 +157,12 @@ class MongoDBAtlasAuthzAnalyzer:
                 self._report_db_users(asset=asset, db=db_name, project=project, cluster=cluster)
 
     def _report_organization_users(
-        self, asset: Asset, organization: Organization, project: Project, cluster: Cluster, db: str
+        self,
+        asset: Asset,
+        organization: Organization,
+        project: Project,
+        cluster: Cluster,
+        db: str,  # pylint: disable=invalid-name
     ):
         path = [
             AuthzPathElement(
@@ -208,12 +213,12 @@ class MongoDBAtlasAuthzAnalyzer:
                     path.pop(0)
             path.pop(0)
 
-    def _report_project_users(
+    def _report_project_users(  # pylint: disable=too-many-locals
         self,
         project: Project,
         asset: Asset,
         cluster: Cluster,
-        db: str,
+        db: str,  # pylint: disable=invalid-name
         organization: Organization,
     ):
         path = [
@@ -280,7 +285,9 @@ class MongoDBAtlasAuthzAnalyzer:
             self.writer.write_entry(entry)
             path.pop(0)
 
-    def _report_db_users(self, project: Project, asset: Asset, db: str, cluster: Cluster):
+    def _report_db_users(
+        self, project: Project, asset: Asset, db: str, cluster: Cluster
+    ):  # pylint: disable=invalid-name
         db_users = self.atlas_service.get_all_db_users_for_project(project)
         project_custom_roles = self.atlas_service.get_custom_roles_by_project(project)
         for db_user in db_users:
@@ -292,12 +299,12 @@ class MongoDBAtlasAuthzAnalyzer:
             for role in db_user.roles:
                 self._report_entry_db_user(identity, asset, role, db, project_custom_roles)
 
-    def _report_entry_db_user(
+    def _report_entry_db_user(  # pylint: disable=too-many-branches
         self,
         identity: Identity,
         asset: Asset,
         role: DatabaseRole,
-        db: str,
+        db: str,  # pylint: disable=invalid-name
         project_custom_roles: Dict[str, CustomRole],
     ):
         role_map = resolve_database_role(role.name)

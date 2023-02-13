@@ -11,8 +11,8 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import List
 
-from serde import field as serde_field
-from serde import serde
+from serde import field as serde_field  # pylint: disable=import-error #type: ignore
+from serde import serde  # pylint: disable=import-error #type: ignore
 
 
 class AssetType(Enum):
@@ -171,7 +171,7 @@ class AuthzPathElement:
     For example a group or a role that was used to grant permission to an asset.
     """
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str
     type: AuthzPathElementType
     notes: List[AuthzNote] = field(default_factory=list)
@@ -213,7 +213,7 @@ class Identity:
     For example, User, Role, ServiceAccount etc'
     """
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     type: IdentityType
     name: str
     notes: List[AuthzNote] = field(default_factory=list)

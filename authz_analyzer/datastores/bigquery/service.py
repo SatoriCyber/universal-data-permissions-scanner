@@ -1,16 +1,16 @@
 from dataclasses import dataclass
 from typing import Any, Callable, List, Optional
 
-import googleapiclient.discovery
-from google.cloud import bigquery, resourcemanager_v3  # type: ignore
-from google.cloud.resourcemanager_v3.types import Project
+import googleapiclient.discovery  # pylint: disable=import-error
+from google.cloud import bigquery, resourcemanager_v3  # pylint: disable=no-name-in-module
+from google.cloud.resourcemanager_v3.types import Project  # pylint: disable=no-name-in-module
 from google.iam.v1 import iam_policy_pb2  # type: ignore
 
 from authz_analyzer.datastores.bigquery.policy_tree import CustomPermission, IamPolicyNode
 
 
 @dataclass
-class BigQueryService:
+class BigQueryService:  # pylint: disable=(too-many-instance-attributes)
     """BigQueryService is a wrapper for the BigQuery client."""
 
     project_id: str
@@ -116,7 +116,9 @@ class BigQueryService:
         """
         return self.bq_client.get_iam_policy(table_fqn)  # type: ignore
 
-    def lookup_ref(self, ref_id: str, resolve_permission_callback: Callable[[str], Optional[CustomPermission]]):
+    def lookup_ref(
+        self, ref_id: str, resolve_permission_callback: Callable[[str], Optional[CustomPermission]]
+    ) -> Optional[IamPolicyNode]:
         """_summary_
 
         Args:
@@ -128,6 +130,7 @@ class BigQueryService:
         """
         if ref_id == "PROJECT":
             return self.lookup_project(resolve_permission_callback)
+        return None
 
     def get_permissions_by_role(self, role: str) -> List[str]:
         """Provide permissions for a given role

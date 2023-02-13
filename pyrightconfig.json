@@ -1,0 +1,6 @@
+{
+    "extraPaths": [
+        "./authz_analyzer/datastores/aws/aws_ptrp_package"
+    ],
+    "stubPath": ""
+}

@@ -22,7 +22,7 @@ OrganizationTeamId = str
 class OrganizationUser:
     """Define an Atlas organization user."""
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     email_address: str
     username: str
     teams_ids: Set[OrganizationTeamId]
@@ -50,7 +50,7 @@ class OrganizationUser:
 class OrganizationTeam:
     """Define an Atlas team."""
 
-    id: OrganizationTeamId
+    id: OrganizationTeamId  # pylint: disable=invalid-name
     name: str
 
     def __hash__(self) -> int:
@@ -66,7 +66,7 @@ class OrganizationTeam:
 class OrganizationRole:
     """Define an Atlas organization role."""
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str
 
     def __hash__(self) -> int:
@@ -77,7 +77,7 @@ class OrganizationRole:
 class Organization:
     """MongoDB organization."""
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str
     users: Set[OrganizationUser]
     teams: Dict[OrganizationTeamId, OrganizationTeam]
@@ -94,7 +94,7 @@ class Organization:
 class Project:
     """Single MongoDB project."""
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str
 
     def __hash__(self) -> int:
@@ -105,7 +105,7 @@ class Project:
 class Cluster:
     """Single MongoDB cluster."""
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str
     connection_string: str
 

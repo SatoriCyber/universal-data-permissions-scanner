@@ -39,7 +39,7 @@ class IdentityType(Enum):
 
 @dataclass
 class Share:
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str
     consumer_account_id: Optional[str]
     consumer_namespace: str

@@ -136,7 +136,7 @@ class GcpBindingDict(TypedDict):
 class PolicyNode:
     """Base class for a policy node, other policies node inherit from this class."""
 
-    id: str
+    id: str  # pylint: disable=invalid-name
     name: str
     type: str
     parent: Optional[PolicyNode] = None

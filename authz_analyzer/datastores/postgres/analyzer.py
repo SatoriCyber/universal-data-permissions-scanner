@@ -2,14 +2,12 @@
 
 Postgres both users and groups are roles.
 Roles can be members of other roles.
-In order to bootstrap the database system, a freshly initialized system always contains one predefined role. 
+In order to bootstrap the database system, a freshly initialized system always contains one predefined role.
 This role is always a "superuser".
- 
 Attributes:
 Login:
-Only roles that have the LOGIN attribute can be used as the initial role name for a database connection. 
+Only roles that have the LOGIN attribute can be used as the initial role name for a database connection.
 A role with the LOGIN attribute can be considered the same as a “database user”
-
 The database will not let you set up circular membership loops.
 """
 
@@ -155,7 +153,7 @@ class PostgresAuthzAnalyzer:
             for row in rows:
                 _grantor = row[0]
                 role = row[1]
-                db: str = row[2]  # type: ignore
+                db: str = row[2]  # type: ignore #pylint: disable=invalid-name
                 schema: str = row[3]  # type: ignore
                 table: str = row[4]  # type: ignore
                 db_permission: str = row[5]
@@ -174,7 +172,7 @@ class PostgresAuthzAnalyzer:
             rows = PostgresAuthzAnalyzer._get_rows(pg_cursor, command)
 
             for row in rows:
-                db: str = row[0]  # type: ignore
+                db: str = row[0]  # type: ignore #pylint: disable=invalid-name
                 schema = row[1]  # type: ignore
                 table = row[2]  # type: ignore
                 all_tables.add(ResourceGrant([db, schema, table], PermissionLevel.FULL, db_permission="super_user"))
