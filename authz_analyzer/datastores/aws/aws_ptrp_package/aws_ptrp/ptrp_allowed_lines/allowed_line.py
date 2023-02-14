@@ -52,10 +52,10 @@ class PtrpAllowedLine:
         service_resource_type = AssumeRoleService()
         for yield_res in self.yield_principal_and_its_assumed_role():
             principal: PrincipalAndNodeNoteBase = yield_res[0]
-            policies_node_base: List[PoliciesAndNodeNoteBase] = yield_res[1]
+            policies_node_bases: List[PoliciesAndNodeNoteBase] = yield_res[1]
             path_role_node: PathRoleNode = yield_res[2]
             principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
-                policies_node_base, iam_policies
+                policies_node_bases, iam_policies
             )
             iam_role = path_role_node.get_service_resource()
             assert isinstance(iam_role, IAMRole)
@@ -72,7 +72,7 @@ class PtrpAllowedLine:
             add_node_notes_from_target_policy_resource_based(
                 policy_evaluations_result=policy_evaluations_result,
                 service_name=service_resource_type.get_service_name(),
-                principal_policies_node_bases=policies_node_base,
+                principal_policies_node_bases=policies_node_bases,
                 target_node_base=path_role_node,
                 resource_node_note=path_role_node,
             )
@@ -108,7 +108,7 @@ class PtrpAllowedLine:
 
         service_resource_type = FederatedUserService()
         principal: PrincipalAndNodeNoteBase = res[0]
-        policies_node_base: List[PoliciesAndNodeNoteBase] = res[1]
+        policies_node_bases: List[PoliciesAndNodeNoteBase] = res[1]
         target_identity_node: PathPolicyNode = res[2]
         target_identity_policy_ctx = PolicyDocumentCtx(
             policy_document=target_identity_node.get_policy(),
@@ -119,7 +119,7 @@ class PtrpAllowedLine:
         federated_user_resource: ServiceResourceBase = federated_principal_node.get_service_resource()
         assert isinstance(federated_user_resource, FederatedUserPrincipal)
         principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
-            policies_node_base, iam_policies
+            policies_node_bases, iam_policies
         )
 
         policy_evaluation_result: PolicyEvaluationResult = PolicyEvaluation.run_target_policies_identity_based(
@@ -136,7 +136,7 @@ class PtrpAllowedLine:
         add_node_notes_from_target_policies_identity_based(
             policy_evaluation_result=policy_evaluation_result,
             service_name=service_resource_type.get_service_name(),
-            principal_policies_node_bases=policies_node_base,
+            principal_policies_node_bases=policies_node_bases,
             target_node_base=target_identity_node,
             resource_node_note=federated_principal_node,
         )
@@ -188,8 +188,6 @@ class PtrpAllowedLine:
         '''yield tuple of every assumed role in the line. Each tuple is the principal, the relevant list of PoliciesNodeBase, and role which its assuming'''
         curr_principal: PrincipalAndNodeNoteBase = self.principal_node
         policies_node_base: List[PoliciesAndNodeNoteBase] = [self.principal_node]
-        if self.path_user_group_node:
-            policies_node_base.append(self.path_user_group_node)
 
         for path_role_node in self.path_role_nodes:
             if isinstance(path_role_node.base, RoleSession):
@@ -212,8 +210,6 @@ class PtrpAllowedLine:
         '''
         if self.path_federated_nodes:
             policies_node_base: List[PoliciesAndNodeNoteBase] = [self.principal_node]
-            if self.path_user_group_node:
-                policies_node_base.append(self.path_user_group_node)
             return (
                 self.principal_node,
                 policies_node_base,
@@ -258,6 +254,4 @@ class PtrpAllowedLine:
             return [self.path_role_nodes[-1]]
         else:
             ret: List[PoliciesAndNodeNoteBase] = [self.principal_node]
-            if self.path_user_group_node:
-                ret.append(self.path_user_group_node)
             return ret

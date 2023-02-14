@@ -174,14 +174,16 @@ def _services_resolver_for_policy_document(
                 service_action_stmt_resolvers=single_stmt_service_actions_resolvers,
             )
 
+            # update the all_stmts_service_resources_resolvers with the current single stmt result
             if single_stmt_service_resources_resolvers:
-                for service_type, all_stmts_service_resolver in all_stmts_service_resources_resolvers.items():
-                    curr_service_resolver: Optional[
-                        ServiceResourcesResolverBase
-                    ] = single_stmt_service_resources_resolvers.get(service_type)
-                    if curr_service_resolver is not None:
-                        all_stmts_service_resolver.extend_resolved_stmts(curr_service_resolver.get_resolved_stmts())
-
                 for service_type, single_stmt_service_resolver in single_stmt_service_resources_resolvers.items():
-                    if all_stmts_service_resources_resolvers.get(service_type) is None:
+                    all_stmts_service_resources_resolver: Optional[
+                        ServiceResourcesResolverBase
+                    ] = all_stmts_service_resources_resolvers.get(service_type)
+
+                    if all_stmts_service_resources_resolver is not None:
+                        all_stmts_service_resources_resolver.extend_resolved_stmts(
+                            single_stmt_service_resolver.get_resolved_stmts()
+                        )
+                    else:
                         all_stmts_service_resources_resolvers[service_type] = single_stmt_service_resolver

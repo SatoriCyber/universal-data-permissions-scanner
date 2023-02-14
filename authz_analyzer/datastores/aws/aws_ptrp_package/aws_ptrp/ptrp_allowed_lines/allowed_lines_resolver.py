@@ -25,6 +25,7 @@ from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
     PathRoleNodeBase,
     PathUserGroupNode,
     PathUserGroupNodeBase,
+    PoliciesNodeBase,
     PrincipalAndPoliciesNode,
     PrincipalAndPoliciesNodeBase,
     PrincipalNodeBase,
@@ -206,7 +207,15 @@ class PtrpAllowedLinesBuilder:
         principal_iam_users: Iterable[IAMUser] = self._resolve_iam_users_for_principal(stmt_principal)
         for principal_iam_user in principal_iam_users:
             assert isinstance(principal_iam_user, PrincipalAndPoliciesNodeBase)
-            principal_iam_user_node = PrincipalAndPoliciesNode(base=principal_iam_user)
+            attached_iam_groups = self.iam_entities.get_attached_iam_groups_for_iam_user(principal_iam_user)
+            additional_policies_bases: List[PoliciesNodeBase] = [
+                attached_iam_group
+                for attached_iam_group in attached_iam_groups
+                if isinstance(attached_iam_group, PoliciesNodeBase)
+            ]
+            principal_iam_user_node = PrincipalAndPoliciesNode(
+                base=principal_iam_user, additional_policies_bases=additional_policies_bases
+            )
             self.graph.add_edge(START_NODE, principal_iam_user_node)
             yield principal_iam_user_node
 
@@ -426,7 +435,13 @@ class PtrpAllowedLinesBuilder:
     def _insert_iam_users_and_iam_groups(self):
         for iam_user in self.iam_entities.iam_users.values():
             assert isinstance(iam_user, PrincipalAndPoliciesNodeBase)
-            iam_user_node = PrincipalAndPoliciesNode(base=iam_user)
+            attached_iam_groups = self.iam_entities.get_attached_iam_groups_for_iam_user(iam_user)
+            additional_policies_bases: List[PoliciesNodeBase] = [
+                attached_iam_group
+                for attached_iam_group in attached_iam_groups
+                if isinstance(attached_iam_group, PoliciesNodeBase)
+            ]
+            iam_user_node = PrincipalAndPoliciesNode(base=iam_user, additional_policies_bases=additional_policies_bases)
             self.graph.add_edge(START_NODE, iam_user_node)
             self._insert_attached_policies_and_inline_policies(
                 node_connect_to_policy=iam_user_node,
@@ -435,11 +450,7 @@ class PtrpAllowedLinesBuilder:
                 identity_principal_for_resolver=iam_user.identity_principal,
             )
 
-            for iam_group in self.iam_entities.iam_groups.values():
-                # if current iam_user in part of this iam_group, edged them (and also it relevant roles)
-                if iam_user.user_id not in iam_group.group_user_ids:
-                    continue
-
+            for iam_group in attached_iam_groups:
                 assert isinstance(iam_group, PathUserGroupNodeBase)
                 path_user_group_node = PathUserGroupNode(base=iam_group)
                 self.graph.add_edge(iam_user_node, path_user_group_node)

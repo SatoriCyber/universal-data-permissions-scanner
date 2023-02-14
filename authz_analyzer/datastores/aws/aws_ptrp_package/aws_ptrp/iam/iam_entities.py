@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass, field
 from logging import Logger
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from aws_ptrp.iam.iam_groups import IAMGroup, get_iam_groups
 from aws_ptrp.iam.iam_policies import IAMPolicy, get_iam_policies
@@ -32,6 +32,13 @@ class IAMEntities:
         iam_entities = cls()
         iam_entities.update_for_account(logger, account_id, session)
         return iam_entities
+
+    def get_attached_iam_groups_for_iam_user(self, iam_user: IAMUser) -> List[IAMGroup]:
+        ret: List[IAMGroup] = []
+        for iam_group in self.iam_groups.values():
+            if iam_user.user_id in iam_group.group_user_ids:
+                ret.append(iam_group)
+        return ret
 
     def update_for_account(self, logger: Logger, account_id: str, session: Session):
         logger.info(f"Start pulling IAM entities from aws account: {account_id}...")

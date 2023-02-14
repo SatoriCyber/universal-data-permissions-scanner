@@ -137,6 +137,7 @@ class PathPolicyNodeBase(PathNodeBase):
 @dataclass
 class PrincipalAndPoliciesNode(PrincipalAndPoliciesNodeBase, PrincipalAndNodeNoteBase, PoliciesAndNodeNoteBase):
     base: PrincipalAndPoliciesNodeBase
+    additional_policies_bases: List[PoliciesNodeBase] = field(default_factory=list)
     notes: Set[NodeNote] = field(default_factory=set)
 
     def get_principal_to_report(self) -> AwsPrincipal:
@@ -176,18 +177,24 @@ class PrincipalAndPoliciesNode(PrincipalAndPoliciesNodeBase, PrincipalAndNodeNot
 
     # PoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
-        return self.base.get_attached_policies_arn()
+        ret = self.base.get_attached_policies_arn()
+        for additional_policies_base in self.additional_policies_bases:
+            ret.extend(additional_policies_base.get_attached_policies_arn())
+        return ret
 
     def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
-        return self.base.get_inline_policies_and_names()
+        ret = self.base.get_inline_policies_and_names()
+        for additional_policies_base in self.additional_policies_bases:
+            ret.extend(additional_policies_base.get_inline_policies_and_names())
+        return ret
 
 
-class PathUserGroupNodeBase(PoliciesNodeBase, PathNodeBase):
+class PathUserGroupNodeBase(PathNodeBase, PoliciesNodeBase):
     pass
 
 
 @dataclass
-class PathUserGroupNode(PathUserGroupNodeBase, PoliciesAndNodeNoteBase):
+class PathUserGroupNode(PathNodeBase, NodeNoteBase):
     base: PathUserGroupNodeBase
     notes: Set[NodeNote] = field(default_factory=set)
 
@@ -220,13 +227,6 @@ class PathUserGroupNode(PathUserGroupNodeBase, PoliciesAndNodeNoteBase):
 
     def get_node_notes(self) -> Iterable[NodeNote]:
         return self.notes
-
-    # PoliciesNodeBase
-    def get_attached_policies_arn(self) -> List[str]:
-        return self.base.get_attached_policies_arn()
-
-    def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
-        return self.base.get_inline_policies_and_names()
 
     # PathNodeBase
     def get_path_type(self) -> AwsPtrpPathNodeType:
