@@ -189,9 +189,8 @@ class BigQueryAuthzAnalyzer:
                 path.pop()
 
         # Finally, go to the parent and get the inherited permissions
-        if node.parent is None:
-            return
-        self._goto_parent(fq_table_id, node, path, permissions)
+        if node.parent is not None:
+            self._goto_parent(fq_table_id, node, path, permissions)
 
     def _goto_parent(
         self, fq_table_id: Asset, node: PolicyNode, path: List[AuthzPathElement], permissions: List[PermissionLevel]
