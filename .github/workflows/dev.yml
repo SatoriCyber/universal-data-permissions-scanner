@@ -48,3 +48,8 @@ jobs:
         with:
           files: |
             .test_results/*.xml
+      - name: Code Coverage
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+          files: coverage.xml
