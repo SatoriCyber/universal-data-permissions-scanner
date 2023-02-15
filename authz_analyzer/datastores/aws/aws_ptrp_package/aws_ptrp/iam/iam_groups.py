@@ -29,14 +29,15 @@ class IAMGroup(PathUserGroupNodeBase):
     def __repr__(self):
         return self.arn
 
-    # impl PathNodeBase
+    # PathNodeBase
     def get_path_type(self) -> AwsPtrpPathNodeType:
         return AwsPtrpPathNodeType.IAM_GROUP
 
-    def get_path_name(self) -> str:
+    # NodeBase
+    def get_node_name(self) -> str:
         return self.group_name
 
-    def get_path_arn(self) -> str:
+    def get_node_arn(self) -> str:
         return self.arn
 
     # impl PoliciesNodeBase

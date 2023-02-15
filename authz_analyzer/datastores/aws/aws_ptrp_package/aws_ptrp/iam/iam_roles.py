@@ -18,23 +18,24 @@ class RoleSession(PathRoleNodeBase):
     role_session_principal: Principal
 
     def __repr__(self):
-        return self.get_path_arn()
+        return self.get_node_arn()
 
     def __eq__(self, other):
-        return self.get_path_arn() == other.get_path_arn()
+        return self.get_node_arn() == other.get_node_arn()
 
     def __hash__(self):
-        return hash(self.get_path_arn())
+        return hash(self.get_node_arn())
+
+    # NodeBase
+    def get_node_arn(self) -> str:
+        return self.get_stmt_principal().get_arn()
+
+    def get_node_name(self) -> str:
+        return self.get_stmt_principal().get_name()
 
     # impl PathNodeBase
     def get_path_type(self) -> AwsPtrpPathNodeType:
         return AwsPtrpPathNodeType.ROLE_SESSION
-
-    def get_path_name(self) -> str:
-        return self.get_stmt_principal().get_name()
-
-    def get_path_arn(self) -> str:
-        return self.get_stmt_principal().get_arn()
 
     # impl PathRoleNodeBase
     def get_service_resource(self) -> ServiceResourceBase:
@@ -93,15 +94,16 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
     # def get_session_policies(self) -> List[PolicyDocument]:
     #     return []
 
-    # impl PathNodeBase
-    def get_path_type(self) -> AwsPtrpPathNodeType:
-        return AwsPtrpPathNodeType.IAM_ROLE
+    # NodeBase
+    def get_node_arn(self) -> str:
+        return self.arn
 
-    def get_path_name(self) -> str:
+    def get_node_name(self) -> str:
         return self.role_name
 
-    def get_path_arn(self) -> str:
-        return self.arn
+    # PathNodeBase
+    def get_path_type(self) -> AwsPtrpPathNodeType:
+        return AwsPtrpPathNodeType.IAM_ROLE
 
     # impl PathRoleNodeBase
     def get_service_resource(self) -> ServiceResourceBase:

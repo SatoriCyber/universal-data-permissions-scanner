@@ -30,13 +30,13 @@ class FederatedUserPrincipal(PathFederatedPrincipalNodeBase, ServiceResourceBase
     )
 
     def __repr__(self):
-        return self.get_path_arn()
+        return self.get_node_arn()
 
     def __eq__(self, other):
-        return self.get_path_arn() == other.get_path_arn()
+        return self.get_node_arn() == other.get_node_arn()
 
     def __hash__(self):
-        return hash(self.get_path_arn())
+        return hash(self.get_node_arn())
 
     # impl ServiceResourceBase
     def get_resource_arn(self) -> str:
@@ -59,15 +59,16 @@ class FederatedUserPrincipal(PathFederatedPrincipalNodeBase, ServiceResourceBase
     def get_service_resource(self) -> ServiceResourceBase:
         return self
 
+    # impl NodeBase
+    def get_node_name(self) -> str:
+        return self.get_stmt_principal().get_name()
+
+    def get_node_arn(self) -> str:
+        return self.get_stmt_principal().get_arn()
+
     # impl PathNodeBase
     def get_path_type(self) -> AwsPtrpPathNodeType:
         return AwsPtrpPathNodeType.FEDERATED_USER
-
-    def get_path_name(self) -> str:
-        return self.get_stmt_principal().get_name()
-
-    def get_path_arn(self) -> str:
-        return self.get_stmt_principal().get_arn()
 
     # impl PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:

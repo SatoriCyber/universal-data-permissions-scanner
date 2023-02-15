@@ -26,6 +26,13 @@ class NoEntityPrincipal(PrincipalAndPoliciesNodeBase):
     # def get_session_policies(self) -> List[PolicyDocument]:
     #     return []
 
+    # NodeBase
+    def get_node_arn(self) -> str:
+        return self.stmt_principal.get_arn()
+
+    def get_node_name(self) -> str:
+        return self.stmt_principal.get_name()
+
     # impl PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:
         return self.stmt_principal
