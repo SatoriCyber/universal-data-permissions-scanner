@@ -150,7 +150,6 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
             ]
         )
 
-        resolved_federated_user_actions = ResolvedFederatedUserActions.load(federated_user_actions)
         for stmt_relative_id_regex in stmt_ctx.stmt_relative_id_resource_regexes:
             yield_federated_users = (
                 FederatedUserServiceResourcesResolver._yield_resolve_resources_from_stmt_relative_id_regex(
@@ -158,7 +157,9 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
                 )
             )
             for yield_federated_user in yield_federated_users:
-                resolved_federated_users_actions[yield_federated_user] = resolved_federated_user_actions
+                resolved_federated_users_actions[yield_federated_user] = ResolvedFederatedUserActions.load(
+                    federated_user_actions.copy()
+                )
 
         resolved_stmt: ResolvedSingleStmt = ResolvedSingleStmt.load(stmt_ctx, resolved_federated_users_actions)  # type: ignore
         return cls(resolved_stmts=[FederatedUserResolvedStmt(resolved_stmt=resolved_stmt)])

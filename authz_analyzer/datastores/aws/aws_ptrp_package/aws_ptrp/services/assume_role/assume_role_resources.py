@@ -125,13 +125,12 @@ class AssumeRoleServiceResourcesResolver(ServiceResourcesResolverBase):
             ]
         )
 
-        resolved_assume_role_actions = ResolvedAssumeRoleActions.load(assume_role_actions)
         for stmt_relative_id_regex in stmt_ctx.stmt_relative_id_resource_regexes:
             yield_iam_roles = AssumeRoleServiceResourcesResolver._yield_resolve_resources_from_stmt_relative_id_regex(
                 stmt_relative_id_regex, stmt_ctx.service_resources
             )
             for resolved_iam_role in yield_iam_roles:
-                resolved_iam_roles_actions[resolved_iam_role] = resolved_assume_role_actions
+                resolved_iam_roles_actions[resolved_iam_role] = ResolvedAssumeRoleActions.load(assume_role_actions.copy())
 
         resolved_stmt: ResolvedSingleStmt = ResolvedSingleStmt.load(stmt_ctx, resolved_iam_roles_actions)  # type: ignore
         return cls(resolved_stmts=[AssumeRoleResolvedStmt(resolved_stmt=resolved_stmt)])
