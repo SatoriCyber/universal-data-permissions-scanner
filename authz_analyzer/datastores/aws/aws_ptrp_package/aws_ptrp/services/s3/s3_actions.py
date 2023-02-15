@@ -64,7 +64,7 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
         stmt_relative_id_objects_regexes = []
         if stmt_relative_id_objects_regex is not None:
             stmt_relative_id_objects_regexes.append(stmt_relative_id_objects_regex)
-        return cls(actions=actions, stmt_relative_id_objects_regexes=stmt_relative_id_objects_regexes)
+        return cls(actions=actions.copy(), stmt_relative_id_objects_regexes=stmt_relative_id_objects_regexes)
 
     def difference(self, other: 'ResolvedActionsSingleStmt'):
         """
