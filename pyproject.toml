@@ -55,11 +55,12 @@ mkdocs = {version="^1.4.2", optional=true}
 pylint = {version="^2.16.2", optional=true}
 pyright = {version="^1.1.293", optional=true}
 mkdocs-material = {version="^9.0.12", optional=true}
+mkdocs-include-markdown-plugin = {version = "^4.0.3", optional=true}
 
 [tool.poetry.extras]
 test = ["pytest", "pytest-cov", "black", "isort", "twine", "mypy", "types-psycopg2", 
         "google-api-python-client-stubs", "types-requests", "pylint", "pyright"]
-release = ["twine", "mkdocs", "mkdocs-material"]
+release = ["twine", "mkdocs", "mkdocs-material", "mkdocs-include-markdown-plugin"]
 
 [tool.poetry.scripts]
 authz-analyzer = 'authz_analyzer.cli:main'
