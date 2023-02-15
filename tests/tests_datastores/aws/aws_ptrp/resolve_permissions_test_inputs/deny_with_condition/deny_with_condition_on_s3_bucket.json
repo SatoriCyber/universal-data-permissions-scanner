@@ -314,20 +314,7 @@
                 "arn": "arn:aws:iam::105246067165:user/iam_user_1",
                 "name": "iam_user_1",
                 "type": "IAM_USER",
-                "notes": [
-                    {
-                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    },
-                    {
-                        "note": "statement 'IamUser1Inline' in policy 'inline-policy-deny' has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    },
-                    {
-                        "note": "statement 'Policy1Deny' in policy 'policy_1' (arn:aws:iam::105246067165:policy/policy_1) has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    }
-                ]
+                "notes": []
             },
             "action_permission_level": "READ",
             "path_nodes": [
@@ -475,6 +462,145 @@
                 "arn": "arn:aws:iam::105246067165:user/iam_user_1",
                 "name": "iam_user_1",
                 "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_1",
+                    "name": "iam_role_1",
+                    "type": "IAM_ROLE",
+                    "notes": [
+                        {
+                            "note": "statement 'IamRole1InlineDeny' in policy 'inline-policy-iam-role-1' has deny with condition for s3 service",
+                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
+                        }
+                    ]
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy_1",
+                    "name": "policy_1",
+                    "type": "IAM_POLICY",
+                    "notes": [
+                        {
+                            "note": "statement 'Policy1Deny' in policy 'policy_1' has deny with condition for s3 service",
+                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
+                        }
+                    ]
+                }
+            ],
+            "action_permissions": [
+                "GetObject",
+                "GetObjectVersion"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": [
+                    {
+                        "note": "statement 'Bucket1PolicyDeny' in policy of arn:aws:s3:::bucket_1 has deny with condition for s3 service",
+                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
+                    }
+                ]
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_1",
+                    "name": "iam_role_1",
+                    "type": "IAM_ROLE",
+                    "notes": [
+                        {
+                            "note": "statement 'Policy1Deny' in policy 'policy_1' (arn:aws:iam::105246067165:policy/policy_1) has deny with condition for s3 service",
+                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
+                        }
+                    ]
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_1",
+                    "name": "inline-policy-iam-role-1",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": [
+                        {
+                            "note": "statement 'IamRole1InlineDeny' in policy 'inline-policy-iam-role-1' has deny with condition for s3 service",
+                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
+                        }
+                    ]
+                }
+            ],
+            "action_permissions": [
+                "GetObject",
+                "GetObjectVersion"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": [
+                    {
+                        "note": "statement 'Bucket1PolicyDeny' in policy of arn:aws:s3:::bucket_1 has deny with condition for s3 service",
+                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
+                    }
+                ]
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": [
+                    {
+                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for s3 service",
+                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
+                    },
+                    {
+                        "note": "statement 'IamUser1Inline' in policy 'inline-policy-deny' has deny with condition for s3 service",
+                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
+                    }
+                ]
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy_1",
+                    "name": "policy_1",
+                    "type": "IAM_POLICY",
+                    "notes": [
+                        {
+                            "note": "statement 'Policy1Deny' in policy 'policy_1' has deny with condition for s3 service",
+                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
+                        }
+                    ]
+                }
+            ],
+            "action_permissions": [
+                "GetObject",
+                "GetObjectVersion"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": [
+                    {
+                        "note": "statement 'Bucket1PolicyDeny' in policy of arn:aws:s3:::bucket_1 has deny with condition for s3 service",
+                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
+                    }
+                ]
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
                 "notes": [
                     {
                         "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for s3 service",
@@ -503,183 +629,6 @@
                     "name": "inline-policy-iam-group-1",
                     "type": "IAM_INLINE_POLICY",
                     "notes": []
-                }
-            ],
-            "action_permissions": [
-                "GetObject",
-                "GetObjectVersion"
-            ]
-        },
-        {
-            "resource": {
-                "name": "bucket_1",
-                "type": "S3_BUCKET",
-                "notes": [
-                    {
-                        "note": "statement 'Bucket1PolicyDeny' in policy of arn:aws:s3:::bucket_1 has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    }
-                ]
-            },
-            "principal": {
-                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
-                "name": "iam_user_1",
-                "type": "IAM_USER",
-                "notes": [
-                    {
-                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    },
-                    {
-                        "note": "statement 'IamUser1Inline' in policy 'inline-policy-deny' has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    },
-                    {
-                        "note": "statement 'Policy1Deny' in policy 'policy_1' (arn:aws:iam::105246067165:policy/policy_1) has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    }
-                ]
-            },
-            "action_permission_level": "READ",
-            "path_nodes": [
-                {
-                    "arn": "arn:aws:iam::105246067165:policy/policy_1",
-                    "name": "policy_1",
-                    "type": "IAM_POLICY",
-                    "notes": [
-                        {
-                            "note": "statement 'Policy1Deny' in policy 'policy_1' has deny with condition for s3 service",
-                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                        }
-                    ]
-                }
-            ],
-            "action_permissions": [
-                "GetObject",
-                "GetObjectVersion"
-            ]
-        },
-        {
-            "resource": {
-                "name": "bucket_1",
-                "type": "S3_BUCKET",
-                "notes": [
-                    {
-                        "note": "statement 'Bucket1PolicyDeny' in policy of arn:aws:s3:::bucket_1 has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    }
-                ]
-            },
-            "principal": {
-                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
-                "name": "iam_user_1",
-                "type": "IAM_USER",
-                "notes": [
-                    {
-                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    },
-                    {
-                        "note": "statement 'IamUser1Inline' in policy 'inline-policy-deny' has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    },
-                    {
-                        "note": "statement 'Policy1Deny' in policy 'policy_1' (arn:aws:iam::105246067165:policy/policy_1) has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    }
-                ]
-            },
-            "action_permission_level": "READ",
-            "path_nodes": [
-                {
-                    "arn": "arn:aws:iam::105246067165:role/iam_role_1",
-                    "name": "iam_role_1",
-                    "type": "IAM_ROLE",
-                    "notes": [
-                        {
-                            "note": "statement 'IamRole1InlineDeny' in policy 'inline-policy-iam-role-1' has deny with condition for s3 service",
-                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                        },
-                        {
-                            "note": "statement 'Policy1Deny' in policy 'policy_1' (arn:aws:iam::105246067165:policy/policy_1) has deny with condition for s3 service",
-                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                        }
-                    ]
-                },
-                {
-                    "arn": "arn:aws:iam::105246067165:policy/policy_1",
-                    "name": "policy_1",
-                    "type": "IAM_POLICY",
-                    "notes": [
-                        {
-                            "note": "statement 'Policy1Deny' in policy 'policy_1' has deny with condition for s3 service",
-                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                        }
-                    ]
-                }
-            ],
-            "action_permissions": [
-                "GetObject",
-                "GetObjectVersion"
-            ]
-        },
-        {
-            "resource": {
-                "name": "bucket_1",
-                "type": "S3_BUCKET",
-                "notes": [
-                    {
-                        "note": "statement 'Bucket1PolicyDeny' in policy of arn:aws:s3:::bucket_1 has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    }
-                ]
-            },
-            "principal": {
-                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
-                "name": "iam_user_1",
-                "type": "IAM_USER",
-                "notes": [
-                    {
-                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    },
-                    {
-                        "note": "statement 'IamUser1Inline' in policy 'inline-policy-deny' has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    },
-                    {
-                        "note": "statement 'Policy1Deny' in policy 'policy_1' (arn:aws:iam::105246067165:policy/policy_1) has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    }
-                ]
-            },
-            "action_permission_level": "READ",
-            "path_nodes": [
-                {
-                    "arn": "arn:aws:iam::105246067165:role/iam_role_1",
-                    "name": "iam_role_1",
-                    "type": "IAM_ROLE",
-                    "notes": [
-                        {
-                            "note": "statement 'IamRole1InlineDeny' in policy 'inline-policy-iam-role-1' has deny with condition for s3 service",
-                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                        },
-                        {
-                            "note": "statement 'Policy1Deny' in policy 'policy_1' (arn:aws:iam::105246067165:policy/policy_1) has deny with condition for s3 service",
-                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                        }
-                    ]
-                },
-                {
-                    "arn": "arn:aws:iam::105246067165:role/iam_role_1",
-                    "name": "inline-policy-iam-role-1",
-                    "type": "IAM_INLINE_POLICY",
-                    "notes": [
-                        {
-                            "note": "statement 'IamRole1InlineDeny' in policy 'inline-policy-iam-role-1' has deny with condition for s3 service",
-                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                        }
-                    ]
                 }
             ],
             "action_permissions": [

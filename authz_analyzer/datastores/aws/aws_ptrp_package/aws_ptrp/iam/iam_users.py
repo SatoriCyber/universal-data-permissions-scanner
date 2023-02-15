@@ -39,6 +39,13 @@ class IAMUser(PrincipalAndPoliciesNodeBase):
     # def get_session_policies(self) -> List[PolicyDocument]:
     #     return []
 
+    # NodeBase
+    def get_node_arn(self) -> str:
+        return self.identity_principal.get_arn()
+
+    def get_node_name(self) -> str:
+        return self.identity_principal.get_name()
+
     # impl PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:
         return self.identity_principal

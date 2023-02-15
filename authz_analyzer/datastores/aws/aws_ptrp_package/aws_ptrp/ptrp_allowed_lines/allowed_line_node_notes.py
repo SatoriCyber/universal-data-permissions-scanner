@@ -1,21 +1,68 @@
-from typing import List, Optional
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional
 
 from aws_ptrp.policy_evaluation import PolicyEvaluationApplyResult, PolicyEvaluationResult, PolicyEvaluationsResult
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
+    NodeBase,
     NodeNote,
-    NodeNoteBase,
+    NodeNotesGetter,
     NodeNoteType,
-    PoliciesAndNodeNoteBase,
+    PoliciesNodeBase,
 )
+from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpNodeNote
 from aws_ptrp.services import MethodOnStmtActionsResultType, MethodOnStmtActionsType
 
 
-def _add_node_notes(
+@dataclass
+class NodeNotes:
+    node_notes: List[NodeNote] = field(default_factory=list)
+
+    def extend(self, other: 'NodeNotes'):
+        self.node_notes.extend(other.node_notes)
+
+    def add_node_note(self, node_note: NodeNote):
+        self.node_notes.append(node_note)
+
+    def get_node_notes(self) -> List[NodeNote]:
+        return self.node_notes
+
+    def get_aws_ptrp_node_notes(self) -> List[AwsPtrpNodeNote]:
+        return [node_note.to_ptrp_node_note() for node_note in self.node_notes]
+
+
+@dataclass
+class NodesNotes(NodeNotesGetter):
+    nodes_notes: Dict[NodeBase, NodeNotes] = field(default_factory=dict)
+
+    def extend(self, other: 'NodesNotes'):
+        for other_node_base, other_node_notes in other.nodes_notes.items():
+            node_notes: Optional[NodeNotes] = self.nodes_notes.get(other_node_base)
+            if node_notes:
+                node_notes.extend(other_node_notes)
+            else:
+                self.nodes_notes[other_node_base] = other_node_notes
+
+    # NodeNotesGetter
+    def get_node_notes(self, node_base: NodeBase) -> List[NodeNote]:
+        node_notes = self.nodes_notes.get(node_base)
+        if node_notes:
+            return node_notes.get_node_notes()
+        return []
+
+    def get_aws_ptrp_node_notes(self, node_base: NodeBase) -> List[AwsPtrpNodeNote]:
+        node_notes = self.nodes_notes.get(node_base)
+        if node_notes:
+            return node_notes.get_aws_ptrp_node_notes()
+        return []
+
+
+def _update_nodes_notes(
+    nodes_notes: NodesNotes,
     policy_apply_result: PolicyEvaluationApplyResult,
     service_name: str,
-    principal_policies_node_bases: List[PoliciesAndNodeNoteBase],
-    target_node_base: NodeNoteBase,
-    resource_node_note: NodeNoteBase,
+    principal_policies_node_bases: List[PoliciesNodeBase],
+    target_node_base: NodeBase,
+    resource_node_note: NodeBase,
 ):
     # For each resolved_stmt in the policy evaluation result, explicit deny result: check if there are stmt with Deny + condition
     for resolved_stmt in policy_apply_result.explicit_deny_result.yield_resolved_stmts(
@@ -29,7 +76,7 @@ def _add_node_notes(
             else f"policy of {resolved_stmt.stmt_parent_arn}"
         )
         attached_iam_policy = ""
-        node_base_to_add: Optional[NodeNoteBase] = None
+        node_base_to_add: Optional[NodeBase] = None
 
         # lookup the relevant node to add the note
         # first, check the target node base (prior to the resource node / identity policies nodes)
@@ -58,7 +105,8 @@ def _add_node_notes(
                     break
 
         if node_base_to_add:
-            node_base_to_add.add_node_note(
+            node_notes = nodes_notes.nodes_notes.setdefault(node_base_to_add, NodeNotes())
+            node_notes.add_node_note(
                 NodeNote(
                     NodeNoteType.POLICY_STMT_DENY_WITH_CONDITION,
                     f"{stmt_name}{policy_name}{attached_iam_policy} has deny with condition for {service_name} service",
@@ -66,16 +114,18 @@ def _add_node_notes(
             )
 
 
-def add_node_notes_from_target_policy_resource_based(
+def get_nodes_notes_from_target_policy_resource_based(
     policy_evaluations_result: PolicyEvaluationsResult,
     service_name: str,
-    principal_policies_node_bases: List[PoliciesAndNodeNoteBase],
-    target_node_base: NodeNoteBase,
-    resource_node_note: NodeNoteBase,
-):
+    principal_policies_node_bases: List[PoliciesNodeBase],
+    target_node_base: NodeBase,
+    resource_node_note: NodeBase,
+) -> NodesNotes:
+    nodes_notes = NodesNotes()
     policy_apply_result = policy_evaluations_result.get_policy_apply_result()
     if policy_apply_result:
-        _add_node_notes(
+        _update_nodes_notes(
+            nodes_notes=nodes_notes,
             policy_apply_result=policy_apply_result,
             service_name=service_name,
             principal_policies_node_bases=principal_policies_node_bases,
@@ -84,28 +134,33 @@ def add_node_notes_from_target_policy_resource_based(
         )
     policy_apply_result_cross_account = policy_evaluations_result.get_cross_account_policy_apply_result()
     if policy_apply_result_cross_account:
-        _add_node_notes(
+        _update_nodes_notes(
+            nodes_notes=nodes_notes,
             policy_apply_result=policy_apply_result_cross_account,
             service_name=service_name,
             principal_policies_node_bases=principal_policies_node_bases,
             target_node_base=target_node_base,
             resource_node_note=resource_node_note,
         )
+    return nodes_notes
 
 
-def add_node_notes_from_target_policies_identity_based(
+def get_nodes_notes_from_target_policies_identity_based(
     policy_evaluation_result: PolicyEvaluationResult,
     service_name: str,
-    principal_policies_node_bases: List[PoliciesAndNodeNoteBase],
-    target_node_base: NodeNoteBase,
-    resource_node_note: NodeNoteBase,
-):
+    principal_policies_node_bases: List[PoliciesNodeBase],
+    target_node_base: NodeBase,
+    resource_node_note: NodeBase,
+) -> NodesNotes:
     policy_apply_result = policy_evaluation_result.get_policy_apply_result()
+    nodes_notes = NodesNotes()
     if policy_apply_result:
-        _add_node_notes(
+        _update_nodes_notes(
+            nodes_notes=nodes_notes,
             policy_apply_result=policy_apply_result,
             service_name=service_name,
             principal_policies_node_bases=principal_policies_node_bases,
             target_node_base=target_node_base,
             resource_node_note=resource_node_note,
         )
+    return nodes_notes

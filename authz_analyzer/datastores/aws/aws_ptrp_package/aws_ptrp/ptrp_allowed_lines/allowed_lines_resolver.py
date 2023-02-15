@@ -300,7 +300,7 @@ class PtrpAllowedLinesBuilder:
         if isinstance(node_connect_to_policy, PrincipalNodeBase):
             arn_for_inline: str = node_connect_to_policy.get_stmt_principal().get_arn()
         elif isinstance(node_connect_to_policy, PathNodeBase):
-            arn_for_inline = node_connect_to_policy.get_path_arn()
+            arn_for_inline = node_connect_to_policy.get_node_arn()
         else:
             assert False
 
