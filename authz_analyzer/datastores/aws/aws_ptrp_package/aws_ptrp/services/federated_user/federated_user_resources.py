@@ -91,7 +91,7 @@ class ResolvedFederatedUserActions(ResolvedActionsSingleStmt):
         cls,
         actions: Set[FederatedUserAction],
     ) -> 'ResolvedFederatedUserActions':
-        return cls(actions=actions.copy())
+        return cls(actions=actions)
 
 
 @dataclass
@@ -158,7 +158,7 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
             )
             for yield_federated_user in yield_federated_users:
                 resolved_federated_users_actions[yield_federated_user] = ResolvedFederatedUserActions.load(
-                    federated_user_actions
+                    federated_user_actions.copy()
                 )
 
         resolved_stmt: ResolvedSingleStmt = ResolvedSingleStmt.load(stmt_ctx, resolved_federated_users_actions)  # type: ignore

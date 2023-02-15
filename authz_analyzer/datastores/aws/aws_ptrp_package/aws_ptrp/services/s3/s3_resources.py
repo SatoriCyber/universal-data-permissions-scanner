@@ -70,7 +70,7 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
                     resolved_bucket_actions.add(resolved_actions, stmt_relative_id_objects_regex)
                 else:
                     resolved_buckets[bucket] = ResolvedS3BucketActions.load(
-                        resolved_actions, stmt_relative_id_objects_regex
+                        resolved_actions.copy(), stmt_relative_id_objects_regex
                     )
 
     @classmethod
