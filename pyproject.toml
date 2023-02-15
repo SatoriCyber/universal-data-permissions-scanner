@@ -3,12 +3,12 @@
 name = "authz-analyzer"
 version = "0.1.1"
 homepage = "https://github.com/satoricyber/authz-analyzer"
-description = "Analyze DB authorization."
+description = "Analyze authorization."
 authors = ["SatoriCyber"]
 readme = "README.md"
 classifiers=[
-    'Development Status :: 2 - Pre-Alpha',
-    'Intended Audience :: Developers',
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Data Engineers',
     'Natural Language :: English',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.8',
@@ -34,48 +34,36 @@ pyserde = "^0.9.6"
 psycopg2 = "^2.9.5"
 psycopg2-binary = "^2.9.5"
 google-cloud-iam = "^2.10.0"
+redshift-connector = "^2.0.909"
+requests = "^2.28.1"
+pymongo = "^4.3.3"
 pytest  = {version="^7.2.0", optional = true}
 pytest-cov  = {version="^4.0.0", optional = true}
 black = {version="^22.12.0", optional=true}
 isort = {version="^5.11.3", optional=true}
 twine = {version="^4.0.2", optional=true}
-redshift-connector = "^2.0.909"
-requests = "^2.28.1"
-pymongo = "^4.3.3"
+types-psycopg2 = {version="^2.9.21.2", optional=true}
+google-api-python-client-stubs = {version="^1.13.0", optional=true}
+mypy = {version="^0.991", optional=true}
+virtualenv  = {version="^20.17.1", optional=true}
+pip  =  {version="^22.3.1", optional=true}
+types-requests = {version="^2.28.11.7", optional=true}
+tox  = {version="^4.0.14", optional=true}
+pre-commit = {version="^2.20.0", optional=true}
+bump2version = {version="^1.0.1", optional=true}
+mkdocs = {version="^1.4.2", optional=true}
+pylint = {version="^2.16.2", optional=true}
+pyright = {version="^1.1.293", optional=true}
+mkdocs-material = {version="^9.0.12", optional=true}
+mkdocs-include-markdown-plugin = {version = "^4.0.3", optional=true}
 
 [tool.poetry.extras]
-test = ["pytest", "pytest-cov", "black", "isort", "twine", "mypy"]
-dev = ["types-psycopg2", "google-api-python-client-stubs", "types-requests"]
+test = ["pytest", "pytest-cov", "black", "isort", "twine", "mypy", "types-psycopg2", 
+        "google-api-python-client-stubs", "types-requests", "pylint", "pyright"]
+release = ["twine", "mkdocs", "mkdocs-material", "mkdocs-include-markdown-plugin"]
 
 [tool.poetry.scripts]
 authz-analyzer = 'authz_analyzer.cli:main'
-
-[tool.poetry.group.dev.dependencies]
-types-psycopg2 = "^2.9.21.2"
-google-api-python-client-stubs = "^1.13.0"
-black  = "^22.12.0"
-isort  = "^5.11.3"
-mypy = "^0.991"
-virtualenv  = "^20.17.1"
-pip  =  "^22.3.1"
-types-requests = "^2.28.11.7"
-
-[tool.poetry.group.test.dependencies]
-black  = "^22.12.0"
-isort  = "^5.11.3"
-flake8  = "^6.0.0"
-mypy = "^0.991"
-pytest  = "^7.2.0"
-pytest-cov  = "^4.0.0"
-tox  = "^4.0.14"
-virtualenv  = "^20.17.1"
-pip  =  "^22.3.1"
-twine  = "^4.0.2"
-pre-commit = "^2.20.0"
-bump2version ="^1.0.1"
-
-[tool.poetry.group.docs.dependencies]
-mkdocs = "^1.4.2"
 
 
 [tool.black]

@@ -36,8 +36,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install poetry tox tox-gh-actions mypy pylint pyright
-
+          pip install poetry tox tox-gh-actions
       - name: test with tox
         run: tox -v
 
