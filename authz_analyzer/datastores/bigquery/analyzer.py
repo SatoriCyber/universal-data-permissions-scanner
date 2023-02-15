@@ -195,7 +195,7 @@ class BigQueryAuthzAnalyzer:
     def _goto_parent(
         self, fq_table_id: Asset, node: PolicyNode, path: List[AuthzPathElement], permissions: List[PermissionLevel]
     ):
-        note = f"{node.type} is included in {node.parent.type.lower()} {node.parent.name}"  # type: ignore
+        note = f"{node.type.lower()} {node.name} is included in {node.parent.type.lower()} {node.parent.name}"  # type: ignore
         self._add_to_path(path, node, note, [])
         self._calc(fq_table_id, node.parent, path, permissions)  # type: ignore
         path.pop()
@@ -238,7 +238,7 @@ class BigQueryAuthzAnalyzer:
         self._add_role_to_path(path, member)
         reversed_path = list(reversed(path))
 
-        identity = Identity(id=str(member.type) + ":" + member.name, type=member.type, name=member.name)
+        identity = Identity(id=f"{member.original_identity_type}:{member.name}", type=member.type, name=member.name)
         authz = AuthzEntry(fq_table_id, path=reversed_path, identity=identity, permission=permission)
         self.writer.write_entry(authz)
         path.pop()

@@ -52,7 +52,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 .test_results/
-
+codecov
 # Translations
 *.mo
 *.pot
