@@ -361,7 +361,7 @@
                 "type": "IAM_USER",
                 "notes": [
                     {
-                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for s3 service",
+                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' (arn:aws:iam::105246067165:group/iam_group_1) has deny with condition for s3 service",
                         "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
                     },
                     {
@@ -416,7 +416,7 @@
                 "type": "IAM_USER",
                 "notes": [
                     {
-                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for s3 service",
+                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' (arn:aws:iam::105246067165:group/iam_group_1) has deny with condition for s3 service",
                         "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
                     },
                     {
@@ -558,7 +558,7 @@
                 "type": "IAM_USER",
                 "notes": [
                     {
-                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for s3 service",
+                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' (arn:aws:iam::105246067165:group/iam_group_1) has deny with condition for s3 service",
                         "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
                     },
                     {
@@ -603,7 +603,7 @@
                 "type": "IAM_USER",
                 "notes": [
                     {
-                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for s3 service",
+                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' (arn:aws:iam::105246067165:group/iam_group_1) has deny with condition for s3 service",
                         "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
                     },
                     {
@@ -619,14 +619,8 @@
             "action_permission_level": "READ",
             "path_nodes": [
                 {
-                    "arn": "arn:aws:iam::105246067165:group/iam_group_1",
-                    "name": "iam_group_1",
-                    "type": "IAM_GROUP",
-                    "notes": []
-                },
-                {
-                    "arn": "arn:aws:iam::105246067165:group/iam_group_1",
-                    "name": "inline-policy-iam-group-1",
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-allow",
                     "type": "IAM_INLINE_POLICY",
                     "notes": []
                 }
@@ -653,10 +647,6 @@
                 "type": "IAM_USER",
                 "notes": [
                     {
-                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for s3 service",
-                        "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
-                    },
-                    {
                         "note": "statement 'IamUser1Inline' in policy 'inline-policy-deny' has deny with condition for s3 service",
                         "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
                     },
@@ -669,10 +659,21 @@
             "action_permission_level": "READ",
             "path_nodes": [
                 {
-                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
-                    "name": "inline-policy-allow",
-                    "type": "IAM_INLINE_POLICY",
+                    "arn": "arn:aws:iam::105246067165:group/iam_group_1",
+                    "name": "iam_group_1",
+                    "type": "IAM_GROUP",
                     "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:group/iam_group_1",
+                    "name": "inline-policy-iam-group-1",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": [
+                        {
+                            "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for s3 service",
+                            "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
+                        }
+                    ]
                 }
             ],
             "action_permissions": [

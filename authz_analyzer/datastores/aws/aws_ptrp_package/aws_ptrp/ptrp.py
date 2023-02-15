@@ -118,6 +118,7 @@ class AwsPtrp:
                 for action in actions
                 if action.get_action_permission_level() == permissions_level
             ]
+            action_permissions.sort()
 
             if action_permissions:
                 cb_line(

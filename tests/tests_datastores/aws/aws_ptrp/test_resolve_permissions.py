@@ -1,9 +1,8 @@
 import json
 import os
 import pathlib
-from collections import OrderedDict
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Set
+from typing import Any, List, Set
 
 import pytest
 from aws_ptrp import AwsPtrp
@@ -54,7 +53,7 @@ def register_services_for_deserialize_from_file():
 
 @dataclass
 class CompareAwsPtrpLines:
-    expected_output: Dict[str, Any]
+    expected_output: List[Any]
     test_output: List[AwsPtrpLine] = field(default_factory=list)
 
     def append_test_aws_ptrp_line(self, line: AwsPtrpLine):
@@ -86,7 +85,7 @@ def test_aws_ptrp_resolve_permissions_flows(
     test_file_path = os.path.join(RESOURCES_INPUT_DIR, test_input)
 
     with open(test_file_path, "r", encoding="utf-8") as json_file_r:
-        json_loaded = json.load(json_file_r, object_pairs_hook=OrderedDict)
+        json_loaded = json.load(json_file_r)
         resource_service_types_to_load: Set[ServiceResourceType] = set(
             [AssumeRoleService(), FederatedUserService(), S3Service()]
         )
@@ -101,7 +100,7 @@ def test_aws_ptrp_resolve_permissions_flows(
             aws_actions=aws_actions, iam_entities=iam_entities, target_account_resources=target_account_resources
         )
 
-        expected_output: Dict[str, Any] = json_loaded['output']
+        expected_output: List[Any] = json_loaded['output']
         compare_lines = CompareAwsPtrpLines(expected_output=expected_output)
         ptrp.resolve_permissions(get_logger(False), compare_lines.append_test_aws_ptrp_line)
         if not should_override_output:

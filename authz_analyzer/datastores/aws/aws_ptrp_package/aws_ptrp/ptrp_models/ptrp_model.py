@@ -32,6 +32,9 @@ class AwsPtrpNoteType(Enum):
     def __eq__(self, other):
         return self.value == other.value
 
+    def __ne__(self, other):
+        return not self.value == other.value
+
     def __lt__(self, other) -> bool:
         return bool(self.value < other.value)
 
@@ -47,8 +50,8 @@ class AwsPtrpNodeNote:
     def __repr__(self):
         return f"{self.note_type}: {self.note}"
 
-    def __eq__(self, other):
-        return self.note_type == other.note_type and self.note == other.note
+    def __ne__(self, other):
+        return self.note_type != other.note_type or self.note != other.note
 
     def __lt__(self, other) -> bool:
         if self.note_type != other.note_type:
@@ -73,6 +76,9 @@ class AwsPtrpResourceType(Enum):
 
     def __eq__(self, other):
         return self.value == other.value
+
+    def __ne__(self, other):
+        return not self.value == other.value
 
     def __lt__(self, other) -> bool:
         return bool(self.value < other.value)
@@ -103,6 +109,9 @@ class AwsPrincipalType(Enum):
 
     def __eq__(self, other):
         return self.value == other.value
+
+    def __ne__(self, other):
+        return not self.value == other.value
 
     def __lt__(self, other) -> bool:
         return bool(self.value < other.value)
@@ -137,6 +146,9 @@ class AwsPtrpPathNodeType(Enum):
     def __eq__(self, other):
         return self.value == other.value
 
+    def __ne__(self, other):
+        return not self.value == other.value
+
     def __lt__(self, other) -> bool:
         return bool(self.value < other.value)
 
@@ -160,6 +172,9 @@ class AwsPtrpActionPermissionLevel(Enum):
     def __eq__(self, other):
         return self.value == other.value
 
+    def __ne__(self, other):
+        return not self.value == other.value
+
     def __lt__(self, other) -> bool:
         return bool(self.value < other.value)
 
@@ -177,10 +192,8 @@ class AwsPtrpPathNode:
     def __repr__(self):
         return f"{self.type} {self.arn} {self.name} {self.notes}"
 
-    def __eq__(self, other):
-        return (
-            self.arn == other.arn and self.name == other.name and self.type == other.type and self.notes == other.notes
-        )
+    def __ne__(self, other):
+        return self.arn != other.arn or self.name != other.name or self.type != other.type or self.notes != other.notes
 
     def __lt__(self, other) -> bool:
         if self.arn != other.arn:
@@ -202,8 +215,8 @@ class AwsPtrpResource:
     type: AwsPtrpResourceType = serde_enum_field(AwsPtrpResourceType)
     notes: List[AwsPtrpNodeNote] = field(default=None, skip_if_default=True, serializer=serialize_list)
 
-    def __eq__(self, other):
-        return self.name == other.name and self.type == other.type and self.notes == other.notes
+    def __ne__(self, other):
+        return self.name != other.name or self.type != other.type or self.notes != other.notes
 
     def __lt__(self, other) -> bool:
         if self.name != other.name:
@@ -225,10 +238,8 @@ class AwsPrincipal:
     type: AwsPrincipalType = serde_enum_field(AwsPrincipalType)
     notes: List[AwsPtrpNodeNote] = field(default=None, skip_if_default=True, serializer=serialize_list)
 
-    def __eq__(self, other):
-        return (
-            self.arn == other.arn and self.name == other.name and self.type == other.type and self.notes == other.notes
-        )
+    def __ne__(self, other):
+        return self.arn != other.arn or self.name != other.name or self.type != other.type or self.notes != other.notes
 
     def __lt__(self, other) -> bool:
         if self.arn != other.arn:
@@ -255,13 +266,13 @@ class AwsPtrpLine:
     def __repr__(self):
         return f"{self.principal} {self.action_permission_level} {self.resource} {self.path_nodes}"
 
-    def __eq__(self, other):
+    def __ne__(self, other):
         return (
-            self.resource == other.resource
-            and self.principal == other.principal
-            and self.action_permission_level == other.action_permission_level
-            and self.path_nodes == other.path_nodes
-            and self.action_permissions == other.action_permissions
+            self.resource != other.resource
+            or self.principal != other.principal
+            or self.action_permission_level != other.action_permission_level
+            or self.path_nodes != other.path_nodes
+            or self.action_permissions != other.action_permissions
         )
 
     def __lt__(self, other) -> bool:

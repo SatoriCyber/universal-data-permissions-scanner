@@ -52,7 +52,9 @@ class NodesNotes(NodeNotesGetter):
     def get_aws_ptrp_node_notes(self, node_base: NodeBase) -> List[AwsPtrpNodeNote]:
         node_notes = self.nodes_notes.get(node_base)
         if node_notes:
-            return node_notes.get_aws_ptrp_node_notes()
+            ret = node_notes.get_aws_ptrp_node_notes()
+            ret.sort()
+            return ret
         return []
 
 
@@ -60,7 +62,7 @@ def _update_nodes_notes(
     nodes_notes: NodesNotes,
     policy_apply_result: PolicyEvaluationApplyResult,
     service_name: str,
-    principal_policies_node_bases: List[PoliciesNodeBase],
+    principal_policies_node_base: PoliciesNodeBase,
     target_node_base: NodeBase,
     resource_node_note: NodeBase,
 ):
@@ -75,7 +77,7 @@ def _update_nodes_notes(
             if resolved_stmt.policy_name
             else f"policy of {resolved_stmt.stmt_parent_arn}"
         )
-        attached_iam_policy = ""
+        attached_to_other_node_arn = ""
         node_base_to_add: Optional[NodeBase] = None
 
         # lookup the relevant node to add the note
@@ -89,27 +91,27 @@ def _update_nodes_notes(
         elif resource_node_note.get_node_arn() == resolved_stmt.stmt_parent_arn:
             node_base_to_add = resource_node_note
         else:
-            # for each principal node base (For example could be 2 in a line, IAM User & IAM Group):
             # check if the resolved_stmt with the deny condition coming from inline policy or attached iam policy (which doesn't appear as a node in the allowed line nodes)
-            for principal_policies_node_base in principal_policies_node_bases:
-                if principal_policies_node_base.get_node_arn() == resolved_stmt.stmt_parent_arn:
+            for _, policy_arn, _ in principal_policies_node_base.get_inline_policies_arns_and_names():
+                if policy_arn == resolved_stmt.stmt_parent_arn:
                     node_base_to_add = principal_policies_node_base
+                    # if the arn of the node is not the same as the inline policy arn (can happen for iam user that attached to iam group which has inline policy)
+                    if principal_policies_node_base.get_node_arn() != policy_arn:
+                        attached_to_other_node_arn = f" ({resolved_stmt.stmt_parent_arn})"
                     break
-                else:
-                    for attached_policy_arn in principal_policies_node_base.get_attached_policies_arn():
-                        if attached_policy_arn == resolved_stmt.stmt_parent_arn:
-                            attached_iam_policy = f" ({resolved_stmt.stmt_parent_arn})"
-                            node_base_to_add = principal_policies_node_base
-                            break
-                if node_base_to_add:
-                    break
+            if node_base_to_add is None:
+                for attached_policy_arn in principal_policies_node_base.get_attached_policies_arn():
+                    if attached_policy_arn == resolved_stmt.stmt_parent_arn:
+                        attached_to_other_node_arn = f" ({resolved_stmt.stmt_parent_arn})"
+                        node_base_to_add = principal_policies_node_base
+                        break
 
         if node_base_to_add:
             node_notes = nodes_notes.nodes_notes.setdefault(node_base_to_add, NodeNotes())
             node_notes.add_node_note(
                 NodeNote(
                     NodeNoteType.POLICY_STMT_DENY_WITH_CONDITION,
-                    f"{stmt_name}{policy_name}{attached_iam_policy} has deny with condition for {service_name} service",
+                    f"{stmt_name}{policy_name}{attached_to_other_node_arn} has deny with condition for {service_name} service",
                 )
             )
 
@@ -117,7 +119,7 @@ def _update_nodes_notes(
 def get_nodes_notes_from_target_policy_resource_based(
     policy_evaluations_result: PolicyEvaluationsResult,
     service_name: str,
-    principal_policies_node_bases: List[PoliciesNodeBase],
+    principal_policies_node_base: PoliciesNodeBase,
     target_node_base: NodeBase,
     resource_node_note: NodeBase,
 ) -> NodesNotes:
@@ -128,7 +130,7 @@ def get_nodes_notes_from_target_policy_resource_based(
             nodes_notes=nodes_notes,
             policy_apply_result=policy_apply_result,
             service_name=service_name,
-            principal_policies_node_bases=principal_policies_node_bases,
+            principal_policies_node_base=principal_policies_node_base,
             target_node_base=target_node_base,
             resource_node_note=resource_node_note,
         )
@@ -138,7 +140,7 @@ def get_nodes_notes_from_target_policy_resource_based(
             nodes_notes=nodes_notes,
             policy_apply_result=policy_apply_result_cross_account,
             service_name=service_name,
-            principal_policies_node_bases=principal_policies_node_bases,
+            principal_policies_node_base=principal_policies_node_base,
             target_node_base=target_node_base,
             resource_node_note=resource_node_note,
         )
@@ -148,7 +150,7 @@ def get_nodes_notes_from_target_policy_resource_based(
 def get_nodes_notes_from_target_policies_identity_based(
     policy_evaluation_result: PolicyEvaluationResult,
     service_name: str,
-    principal_policies_node_bases: List[PoliciesNodeBase],
+    principal_policies_node_base: PoliciesNodeBase,
     target_node_base: NodeBase,
     resource_node_note: NodeBase,
 ) -> NodesNotes:
@@ -159,7 +161,7 @@ def get_nodes_notes_from_target_policies_identity_based(
             nodes_notes=nodes_notes,
             policy_apply_result=policy_apply_result,
             service_name=service_name,
-            principal_policies_node_bases=principal_policies_node_bases,
+            principal_policies_node_base=principal_policies_node_base,
             target_node_base=target_node_base,
             resource_node_note=resource_node_note,
         )

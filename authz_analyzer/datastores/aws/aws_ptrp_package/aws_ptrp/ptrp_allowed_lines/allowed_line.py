@@ -54,10 +54,10 @@ class PtrpAllowedLine:
         service_resource_type = AssumeRoleService()
         for yield_res in self.yield_principal_and_its_assumed_role():
             principal: PrincipalNodeBase = yield_res[0]
-            policies_node_bases: List[PoliciesNodeBase] = yield_res[1]
+            policies_node_base: PoliciesNodeBase = yield_res[1]
             path_role_node: PathRoleNode = yield_res[2]
             principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
-                policies_node_bases, iam_policies
+                policies_node_base, iam_policies
             )
             iam_role = path_role_node.get_service_resource()
             assert isinstance(iam_role, IAMRole)
@@ -74,7 +74,7 @@ class PtrpAllowedLine:
             nodes_notes_assume_role_service = get_nodes_notes_from_target_policy_resource_based(
                 policy_evaluations_result=policy_evaluations_result,
                 service_name=service_resource_type.get_service_name(),
-                principal_policies_node_bases=policies_node_bases,
+                principal_policies_node_base=policies_node_base,
                 target_node_base=path_role_node,
                 resource_node_note=path_role_node,
             )
@@ -112,7 +112,7 @@ class PtrpAllowedLine:
 
         service_resource_type = FederatedUserService()
         principal: PrincipalNodeBase = res[0]
-        policies_node_bases: List[PoliciesNodeBase] = res[1]
+        policies_node_base: PoliciesNodeBase = res[1]
         target_identity_node: PathPolicyNode = res[2]
         target_identity_policy_ctx = PolicyDocumentCtx(
             policy_document=target_identity_node.get_policy(),
@@ -123,7 +123,7 @@ class PtrpAllowedLine:
         federated_user_resource: ServiceResourceBase = federated_principal_node.get_service_resource()
         assert isinstance(federated_user_resource, FederatedUserPrincipal)
         principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
-            policies_node_bases, iam_policies
+            policies_node_base, iam_policies
         )
 
         policy_evaluation_result: PolicyEvaluationResult = PolicyEvaluation.run_target_policies_identity_based(
@@ -140,7 +140,7 @@ class PtrpAllowedLine:
         nodes_notes_federated_service = get_nodes_notes_from_target_policies_identity_based(
             policy_evaluation_result=policy_evaluation_result,
             service_name=service_resource_type.get_service_name(),
-            principal_policies_node_bases=policies_node_bases,
+            principal_policies_node_base=policies_node_base,
             target_node_base=target_identity_node,
             resource_node_note=federated_principal_node,
         )
@@ -189,10 +189,10 @@ class PtrpAllowedLine:
 
     def yield_principal_and_its_assumed_role(
         self,
-    ) -> Generator[Tuple[PrincipalNodeBase, List[PoliciesNodeBase], PathRoleNode], None, None]:
+    ) -> Generator[Tuple[PrincipalNodeBase, PoliciesNodeBase, PathRoleNode], None, None]:
         '''yield tuple of every assumed role in the line. Each tuple is the principal, the relevant list of PoliciesNodeBase, and role which its assuming'''
         curr_principal: PrincipalNodeBase = self.principal_node
-        policies_node_base: List[PoliciesNodeBase] = [self.principal_node]
+        policies_node_base: PoliciesNodeBase = self.principal_node
 
         for path_role_node in self.path_role_nodes:
             if isinstance(path_role_node.base, RoleSession):
@@ -202,17 +202,17 @@ class PtrpAllowedLine:
                 continue
 
             yield curr_principal, policies_node_base, path_role_node
-            policies_node_base = [path_role_node]
+            policies_node_base = path_role_node
             curr_principal = path_role_node
 
     def get_principal_and_its_assumed_federated_user(
         self,
-    ) -> Optional[Tuple[PrincipalNodeBase, List[PoliciesNodeBase], PathPolicyNode, PathFederatedPrincipalNode]]:
+    ) -> Optional[Tuple[PrincipalNodeBase, PoliciesNodeBase, PathPolicyNode, PathFederatedPrincipalNode]]:
         '''get the assumed federated user in the line. Return tuple is the principal, the relevant list of PoliciesNodeBase,
         the policy with the GetFederationToken to the federated-user resources, and the actual actual federated-user resolved resource
         '''
         if self.path_federated_nodes:
-            policies_node_base: List[PoliciesNodeBase] = [self.principal_node]
+            policies_node_base: PoliciesNodeBase = self.principal_node
             return (
                 self.principal_node,
                 policies_node_base,
@@ -223,38 +223,36 @@ class PtrpAllowedLine:
 
     @staticmethod
     def get_policies_ctx(
-        policies_node_bases: List[PoliciesNodeBase], iam_policies: Dict[str, IAMPolicy]
+        policies_node_base: PoliciesNodeBase, iam_policies: Dict[str, IAMPolicy]
     ) -> List[PolicyDocumentCtx]:
         policies_ctx: List[PolicyDocumentCtx] = []
         # Extract all principal policies (inline & attached)
-        for policies_node_base in policies_node_bases:
-            policies_ctx.extend(
-                list(
-                    map(
-                        lambda arn: iam_policies[arn].to_policy_document_ctx(),
-                        policies_node_base.get_attached_policies_arn(),
-                    )
+        policies_ctx.extend(
+            list(
+                map(
+                    lambda arn: iam_policies[arn].to_policy_document_ctx(),
+                    policies_node_base.get_attached_policies_arn(),
                 )
             )
+        )
 
-            inline_policies_and_names: List[
-                Tuple[PolicyDocument, str]
-            ] = policies_node_base.get_inline_policies_and_names()
-            policies_ctx.extend(
-                [
-                    PolicyDocumentCtx(
-                        policy_document=policy_and_name[0],
-                        policy_name=policy_and_name[1],
-                        parent_arn=policies_node_base.get_node_arn(),
-                    )
-                    for policy_and_name in inline_policies_and_names
-                ]
-            )
+        inline_policies_arns_and_names: List[
+            Tuple[PolicyDocument, str, str]
+        ] = policies_node_base.get_inline_policies_arns_and_names()
+        policies_ctx.extend(
+            [
+                PolicyDocumentCtx(
+                    policy_document=policy_arn_and_name[0],
+                    parent_arn=policy_arn_and_name[1],
+                    policy_name=policy_arn_and_name[2],
+                )
+                for policy_arn_and_name in inline_policies_arns_and_names
+            ]
+        )
         return policies_ctx
 
-    def get_principal_policies_bases(self) -> List[PoliciesNodeBase]:
+    def get_principal_policies_base(self) -> PoliciesNodeBase:
         if self.path_role_nodes:
-            return [self.path_role_nodes[-1]]
+            return self.path_role_nodes[-1]
         else:
-            ret: List[PoliciesNodeBase] = [self.principal_node]
-            return ret
+            return self.principal_node
