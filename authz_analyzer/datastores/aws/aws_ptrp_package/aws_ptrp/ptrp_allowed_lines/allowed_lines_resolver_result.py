@@ -34,9 +34,9 @@ class PtrpAllowedLinesResolverResult:
         resource_node: ResourceNode = line.resource_node
         is_target_policy_resource_based: bool = line.target_policy_node.is_resource_based_policy
         principal_to_policy: PrincipalNodeBase = line.get_principal_makes_the_request_to_resource()
-        principal_policies_node_bases: List[PoliciesNodeBase] = line.get_principal_policies_bases()
+        principal_policies_node_base: PoliciesNodeBase = line.get_principal_policies_base()
         principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
-            principal_policies_node_bases, iam_entities.iam_policies
+            principal_policies_node_base, iam_entities.iam_policies
         )
 
         nodes_notes_all_services = NodesNotes()
@@ -75,7 +75,7 @@ class PtrpAllowedLinesResolverResult:
             nodes_notes = get_nodes_notes_from_target_policy_resource_based(
                 policy_evaluations_result=policy_evaluations_result,
                 service_name=resource_node.service_resource_type.get_service_name(),
-                principal_policies_node_bases=principal_policies_node_bases,
+                principal_policies_node_base=principal_policies_node_base,
                 target_node_base=line.target_policy_node,
                 resource_node_note=line.resource_node,
             )
@@ -104,7 +104,7 @@ class PtrpAllowedLinesResolverResult:
             nodes_notes = get_nodes_notes_from_target_policies_identity_based(
                 policy_evaluation_result=policy_evaluation_result,
                 service_name=resource_node.service_resource_type.get_service_name(),
-                principal_policies_node_bases=principal_policies_node_bases,
+                principal_policies_node_base=principal_policies_node_base,
                 target_node_base=line.target_policy_node,
                 resource_node_note=line.resource_node,
             )
