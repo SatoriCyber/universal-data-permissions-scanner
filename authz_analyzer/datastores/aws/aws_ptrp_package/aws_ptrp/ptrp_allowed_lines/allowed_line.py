@@ -237,17 +237,17 @@ class PtrpAllowedLine:
                 )
             )
 
-            inline_policies_and_names: List[
-                Tuple[PolicyDocument, str]
-            ] = policies_node_base.get_inline_policies_and_names()
+            inline_policies_arns_and_names: List[
+                Tuple[PolicyDocument, str, str]
+            ] = policies_node_base.get_inline_policies_arns_and_names()
             policies_ctx.extend(
                 [
                     PolicyDocumentCtx(
-                        policy_document=policy_and_name[0],
-                        policy_name=policy_and_name[1],
-                        parent_arn=policies_node_base.get_node_arn(),
+                        policy_document=policy_arn_and_name[0],
+                        parent_arn=policy_arn_and_name[1],
+                        policy_name=policy_arn_and_name[2],
                     )
-                    for policy_and_name in inline_policies_and_names
+                    for policy_arn_and_name in inline_policies_arns_and_names
                 ]
             )
         return policies_ctx

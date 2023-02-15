@@ -41,5 +41,5 @@ class NoEntityPrincipal(PrincipalAndPoliciesNodeBase):
     def get_attached_policies_arn(self) -> List[str]:
         return []
 
-    def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
+    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
         return []

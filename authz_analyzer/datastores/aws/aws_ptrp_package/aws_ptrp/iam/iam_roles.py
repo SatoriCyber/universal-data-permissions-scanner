@@ -49,8 +49,8 @@ class RoleSession(PathRoleNodeBase):
     def get_attached_policies_arn(self) -> List[str]:
         return self.iam_role.get_attached_policies_arn()
 
-    def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
-        return self.iam_role.get_inline_policies_and_names()
+    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
+        return self.iam_role.get_inline_policies_arns_and_names()
 
 
 @serde
@@ -117,8 +117,8 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
     def get_attached_policies_arn(self) -> List[str]:
         return self.attached_policies_arn
 
-    def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
-        return list(map(lambda x: (x.policy_document, x.policy_name), self.role_policies))
+    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
+        return list(map(lambda x: (x.policy_document, self.arn, x.policy_name), self.role_policies))
 
 
 def get_iam_roles(session: Session) -> Dict[str, IAMRole]:

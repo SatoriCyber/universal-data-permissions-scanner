@@ -342,7 +342,7 @@
                 "type": "IAM_USER",
                 "notes": [
                     {
-                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for assume role service",
+                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' (arn:aws:iam::105246067165:group/iam_group_1) has deny with condition for assume role service",
                         "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
                     },
                     {
@@ -397,7 +397,7 @@
                 "type": "IAM_USER",
                 "notes": [
                     {
-                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' has deny with condition for assume role service",
+                        "note": "statement 'IamGroup1InlineDeny' in policy 'inline-policy-iam-group-1' (arn:aws:iam::105246067165:group/iam_group_1) has deny with condition for assume role service",
                         "note_type": "POLICY_STMT_DENY_WITH_CONDITION"
                     },
                     {

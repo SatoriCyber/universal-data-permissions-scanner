@@ -89,7 +89,7 @@ class PoliciesNodeBase(NodeBase):
         pass
 
     @abstractmethod
-    def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
+    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
         pass
 
 
@@ -167,10 +167,10 @@ class PrincipalAndPoliciesNode(PrincipalAndPoliciesNodeBase):
             ret.extend(additional_policies_base.get_attached_policies_arn())
         return ret
 
-    def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
-        ret = self.base.get_inline_policies_and_names()
+    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
+        ret = self.base.get_inline_policies_arns_and_names()
         for additional_policies_base in self.additional_policies_bases:
-            ret.extend(additional_policies_base.get_inline_policies_and_names())
+            ret.extend(additional_policies_base.get_inline_policies_arns_and_names())
         return ret
 
 
@@ -251,8 +251,8 @@ class PathRoleNode(PathRoleNodeBase):
     def get_attached_policies_arn(self) -> List[str]:
         return self.base.get_attached_policies_arn()
 
-    def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
-        return self.base.get_inline_policies_and_names()
+    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
+        return self.base.get_inline_policies_arns_and_names()
 
     # PathNodeBase
     def get_path_type(self) -> AwsPtrpPathNodeType:

@@ -44,8 +44,8 @@ class IAMGroup(PathUserGroupNodeBase):
     def get_attached_policies_arn(self) -> List[str]:
         return self.attached_policies_arn
 
-    def get_inline_policies_and_names(self) -> List[Tuple[PolicyDocument, str]]:
-        return list(map(lambda x: (x.policy_document, x.policy_name), self.group_policies))
+    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
+        return list(map(lambda x: (x.policy_document, self.arn, x.policy_name), self.group_policies))
 
 
 def get_iam_groups(session: Session) -> Dict[str, IAMGroup]:

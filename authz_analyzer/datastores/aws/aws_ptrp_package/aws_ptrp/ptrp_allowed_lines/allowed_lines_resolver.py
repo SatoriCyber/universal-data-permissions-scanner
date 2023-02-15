@@ -294,16 +294,9 @@ class PtrpAllowedLinesBuilder:
         self,
         node_connect_to_policy: Union[PrincipalNodeBase, PathNodeBase],
         attached_policies_arn: List[str],
-        inline_policies_and_names: List[Tuple[PolicyDocument, str]],
+        inline_policies_arns_and_names: List[Tuple[PolicyDocument, str, str]],
         identity_principal_for_resolver: Principal,
     ):
-        if isinstance(node_connect_to_policy, PrincipalNodeBase):
-            arn_for_inline: str = node_connect_to_policy.get_stmt_principal().get_arn()
-        elif isinstance(node_connect_to_policy, PathNodeBase):
-            arn_for_inline = node_connect_to_policy.get_node_arn()
-        else:
-            assert False
-
         for attached_policy_arn in attached_policies_arn:
             iam_policy = self.iam_entities.iam_policies[attached_policy_arn]
             for service_type, service_resource in self._yield_resolved_service_resources_for_identity_based_policy(
@@ -326,16 +319,16 @@ class PtrpAllowedLinesBuilder:
                     service_resource_type=service_type,
                     service_resource=service_resource,
                 )
-        for inline_policy, policy_name in inline_policies_and_names:
+        for inline_policy, parent_policy_arn, policy_name in inline_policies_arns_and_names:
             for service_type, service_resource in self._yield_resolved_service_resources_for_identity_based_policy(
                 identity_principal=identity_principal_for_resolver,
                 policy_document=inline_policy,
-                parent_policy_arn=arn_for_inline,
+                parent_policy_arn=parent_policy_arn,
                 policy_name=policy_name,
             ):
                 path_policy_node = PathPolicyNode(
                     path_element_type=AwsPtrpPathNodeType.IAM_INLINE_POLICY,
-                    path_arn=arn_for_inline,
+                    path_arn=parent_policy_arn,
                     path_name=policy_name,
                     policy_document=inline_policy,
                     is_resource_based_policy=False,
@@ -370,7 +363,7 @@ class PtrpAllowedLinesBuilder:
             self._insert_attached_policies_and_inline_policies(
                 node_connect_to_policy=path_role_node,
                 attached_policies_arn=iam_role.get_attached_policies_arn(),
-                inline_policies_and_names=iam_role.get_inline_policies_and_names(),
+                inline_policies_arns_and_names=iam_role.get_inline_policies_arns_and_names(),
                 identity_principal_for_resolver=iam_role.get_stmt_principal(),
             )
 
@@ -446,7 +439,7 @@ class PtrpAllowedLinesBuilder:
             self._insert_attached_policies_and_inline_policies(
                 node_connect_to_policy=iam_user_node,
                 attached_policies_arn=iam_user.get_attached_policies_arn(),
-                inline_policies_and_names=iam_user.get_inline_policies_and_names(),
+                inline_policies_arns_and_names=iam_user.get_inline_policies_arns_and_names(),
                 identity_principal_for_resolver=iam_user.identity_principal,
             )
 
@@ -457,7 +450,7 @@ class PtrpAllowedLinesBuilder:
                 self._insert_attached_policies_and_inline_policies(
                     node_connect_to_policy=path_user_group_node,
                     attached_policies_arn=iam_group.get_attached_policies_arn(),
-                    inline_policies_and_names=iam_group.get_inline_policies_and_names(),
+                    inline_policies_arns_and_names=iam_group.get_inline_policies_arns_and_names(),
                     identity_principal_for_resolver=iam_user.identity_principal,
                 )
 
