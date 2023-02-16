@@ -1,4 +1,5 @@
 [![codecov](https://codecov.io/gh/SatoriCyber/authz-analyzer/branch/main/graph/badge.svg?token=8S85Z0CAEU)](https://codecov.io/gh/SatoriCyber/authz-analyzer)
+
 authz-analyzer (AKA Authorization Analyzer) helps DevOps and data engineers quickly understand who has access to what data and how.
 
 DevOps and data engineers are often tasked with managing the security of the databases, data lakes or warehouses they operate. This usually involves setting permissions to enable users to query the data they need. However, as the number of users and use-cases increase, complexity explodes. It's no longer humanly possible to remember who had access to what, how and why, which makes meeting security and compliance requirements impossible.
