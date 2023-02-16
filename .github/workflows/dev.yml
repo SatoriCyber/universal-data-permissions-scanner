@@ -54,6 +54,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-test-results-
   publish_test_results:
+    needs: test
     runs-on: ubuntu-22.04
     steps:
       - name: Restore from Cache
