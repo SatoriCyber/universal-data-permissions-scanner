@@ -21,8 +21,7 @@ jobs:
     strategy:
       matrix:
         python-versions: [3.8, 3.9, "3.10"]
-        # os: [ubuntu-22.04, macos-latest, windows-latest]
-        os: [ubuntu-22.04]
+        os: [ubuntu-22.04, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
@@ -42,14 +41,31 @@ jobs:
 
       - name: list files
         run: ls -l .
+      - name: Code Coverage
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+          files: coverage.xml
+      - name: Cache test Results
+        uses: actions/cache@v2
+        with:
+          path: .test_results
+          key: ${{ runner.os }}-test-results-${{ hashFiles('**/test_*.py') }}
+          restore-keys: |
+            ${{ runner.os }}-test-results-
+  publish_test_results:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Restore from Cache
+        uses: actions/cache@v2
+        with:
+          path: .test_results
+          key: ${{ runner.os }}-test-results-${{ hashFiles('**/test_*.py') }}
+          restore-keys: |
+            ${{ runner.os }}-test-results-
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
           files: |
             .test_results/*.xml
-      - name: Code Coverage
-        uses: codecov/codecov-action@v1
-        with:
-          fail_ci_if_error: true
-          files: coverage.xml
