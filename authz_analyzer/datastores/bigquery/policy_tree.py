@@ -87,6 +87,7 @@ class Member:
     role: str
     name: str
     type: IdentityType
+    original_identity_type: str
     db_permissions: List[str] = field(default_factory=list)
 
 
@@ -180,7 +181,11 @@ class PolicyNode:
         if db_permissions is None:
             db_permissions = []
         parsed_member = Member(
-            role=role, name=member, type=IDENTITY_TYPE_MAP[member_type], db_permissions=db_permissions
+            role=role,
+            name=member,
+            type=IDENTITY_TYPE_MAP[member_type],
+            db_permissions=db_permissions,
+            original_identity_type=member_type,
         )
         self.permissions[permission].append(parsed_member)
 
@@ -196,7 +201,9 @@ class PolicyNode:
         return self.permissions[permission]
 
     def add_reference(self, reference: str, permission: PermissionLevel, role: str, role_type: str):
-        parsed_member = Member(role=role, name=reference, type=IDENTITY_TYPE_MAP[role_type])
+        parsed_member = Member(
+            role=role, name=reference, type=IDENTITY_TYPE_MAP[role_type], original_identity_type=role_type
+        )
         self.references[permission].append(parsed_member)
 
     def get_references(self, permission: PermissionLevel):
