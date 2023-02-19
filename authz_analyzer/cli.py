@@ -177,7 +177,7 @@ def mongodb(ctx: click.Context, username: str, password: str, port: int, host: s
 @click.option('--public_key', '-pk', required=True, type=str, help="Atlas API public key from access manager")
 @click.option('--private_key', '-k', required=True, type=str, help="Atlas API private key from access manager")
 @click.option(
-    'user',
+    '--username',
     '-u',
     required=True,
     type=str,
@@ -190,8 +190,8 @@ def mongodb(ctx: click.Context, username: str, password: str, port: int, host: s
     type=str,
     help="MongoDB password the analyzer should use to connect to each cluster",
 )
-@click.option('--project', 'j', required=True, type=str, help="Atlas project name")
-@click.option('--cluster', 'c', required=True, type=str, help="Atlas cluster name")
+@click.option('--project', '-j', required=True, type=str, help="Atlas project name")
+@click.option('--cluster', '-c', required=True, type=str, help="Atlas cluster name")
 def atlas(
     ctx: click.Context, public_key: str, private_key: str, username: str, password: str, project: str, cluster: str
 ):
