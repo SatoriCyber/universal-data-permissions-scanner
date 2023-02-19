@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum, auto
 from logging import Logger
@@ -76,7 +78,7 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
     @classmethod
     def load_with_object_regex_list(
         cls, actions: Set[S3Action], stmt_relative_id_objects_regex: List[str], not_resource_annotated: bool
-    ) -> 'ResolvedS3BucketActions':
+    ) -> ResolvedS3BucketActions:
         stmt_relative_id_objects_regexes = []
         if stmt_relative_id_objects_regex:
             stmt_relative_id_objects_regexes.extend(stmt_relative_id_objects_regex)
@@ -86,7 +88,7 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
             _not_resource_annotated=not_resource_annotated,
         )
 
-    def are_all_object_regexes_full_subset_of_any_regex_in_other(self, other: 'ResolvedActionsSingleStmt') -> bool:
+    def are_all_object_regexes_full_subset_of_any_regex_in_other(self, other: ResolvedS3BucketActions) -> bool:
         for s_regex in self.stmt_relative_id_objects_regexes:
             if (
                 any(is_aws_regex_full_subset(o_regex, s_regex) for o_regex in other.stmt_relative_id_objects_regexes)
@@ -95,7 +97,7 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
                 return False
         return True
 
-    def difference(self, other: 'ResolvedActionsSingleStmt'):
+    def difference(self, other: ResolvedActionsSingleStmt):
         """
         This functions differs the s3 actions between 'self' and 'other'
         Bucket actions will always be removed. In case of object actions, it is depends on the relative object regexes in each one
