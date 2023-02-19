@@ -2,6 +2,7 @@ from logging import Logger
 from typing import Dict, Optional, Set, Type
 
 from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument
+from aws_ptrp.ptrp_models import AwsPrincipalType
 from aws_ptrp.services import (
     ServiceActionBase,
     ServiceActionsResolverBase,
@@ -36,6 +37,9 @@ class FederatedUserService(ServiceResourceType):
 
     def get_resource_service_prefix(self) -> str:
         return FEDERATED_USER_RESOURCE_SERVICE_PREFIX
+
+    def get_resource_based_policy_irrelevant_principal_types(self) -> Optional[Set[AwsPrincipalType]]:
+        return None
 
     @classmethod
     def get_service_resources_resolver_type(cls) -> Type[ServiceResourcesResolverBase]:

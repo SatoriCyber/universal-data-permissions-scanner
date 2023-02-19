@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set
 
-from aws_ptrp.iam.policy import GroupPolicy, PolicyDocument
+from aws_ptrp.iam.policy import GroupPolicy, PolicyDocumentCtx
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PathUserGroupNodeBase
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
 from aws_ptrp.utils.pagination import paginate_response_list
@@ -29,6 +29,9 @@ class IAMGroup(PathUserGroupNodeBase):
     def __repr__(self):
         return self.arn
 
+    def _extract_aws_account_id_from_arn_of_iam_entity(self) -> str:
+        return self.arn[self.arn.find(":iam::") + 6 : self.arn.find(":group/")]
+
     # PathNodeBase
     def get_path_type(self) -> AwsPtrpPathNodeType:
         return AwsPtrpPathNodeType.IAM_GROUP
@@ -44,8 +47,19 @@ class IAMGroup(PathUserGroupNodeBase):
     def get_attached_policies_arn(self) -> List[str]:
         return self.attached_policies_arn
 
-    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
-        return list(map(lambda x: (x.policy_document, self.arn, x.policy_name), self.group_policies))
+    def get_inline_policies_ctx(self) -> List[PolicyDocumentCtx]:
+        aws_account_id = self._extract_aws_account_id_from_arn_of_iam_entity()
+        return list(
+            map(
+                lambda x: PolicyDocumentCtx(
+                    policy_document=x.policy_document,
+                    parent_arn=self.arn,
+                    policy_name=x.policy_name,
+                    parent_aws_account_id=aws_account_id,
+                ),
+                self.group_policies,
+            )
+        )
 
 
 def get_iam_groups(session: Session) -> Dict[str, IAMGroup]:

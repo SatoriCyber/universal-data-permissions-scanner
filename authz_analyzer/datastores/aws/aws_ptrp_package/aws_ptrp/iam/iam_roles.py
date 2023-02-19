@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-from aws_ptrp.iam.policy import PolicyDocument
+from aws_ptrp.iam.policy import PolicyDocument, PolicyDocumentCtx
 from aws_ptrp.iam.role.role_policy import RolePolicy
 from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PathRoleNodeBase
@@ -49,8 +49,8 @@ class RoleSession(PathRoleNodeBase):
     def get_attached_policies_arn(self) -> List[str]:
         return self.iam_role.get_attached_policies_arn()
 
-    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
-        return self.iam_role.get_inline_policies_arns_and_names()
+    def get_inline_policies_ctx(self) -> List[PolicyDocumentCtx]:
+        return self.iam_role.get_inline_policies_ctx()
 
 
 @serde
@@ -58,7 +58,6 @@ class RoleSession(PathRoleNodeBase):
 class IAMRole(PathRoleNodeBase, ServiceResourceBase):
     role_id: str
     role_name: str
-    aws_account_id: str
     arn: str
     path: str
     assume_role_policy_document: PolicyDocument
@@ -74,6 +73,9 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
     def __hash__(self):
         return hash(self.role_id)
 
+    def _extract_aws_account_id_from_arn_of_iam_entity(self) -> str:
+        return self.arn[self.arn.find(":iam::") + 6 : self.arn.find(":role/")]
+
     # impl ServiceResourceBase
     def get_resource_arn(self) -> str:
         return self.arn
@@ -85,7 +87,7 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
         return self.assume_role_policy_document
 
     def get_resource_account_id(self) -> str:
-        return self.aws_account_id
+        return self._extract_aws_account_id_from_arn_of_iam_entity()
 
     # # impl PrincipalAndPoliciesNodeBase
     # def get_permission_boundary(self) -> Optional[PolicyDocument]:
@@ -117,8 +119,19 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
     def get_attached_policies_arn(self) -> List[str]:
         return self.attached_policies_arn
 
-    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
-        return list(map(lambda x: (x.policy_document, self.arn, x.policy_name), self.role_policies))
+    def get_inline_policies_ctx(self) -> List[PolicyDocumentCtx]:
+        aws_account_id = self._extract_aws_account_id_from_arn_of_iam_entity()
+        return list(
+            map(
+                lambda x: PolicyDocumentCtx(
+                    policy_document=x.policy_document,
+                    parent_arn=self.arn,
+                    policy_name=x.policy_name,
+                    parent_aws_account_id=aws_account_id,
+                ),
+                self.role_policies,
+            )
+        )
 
 
 def get_iam_roles(session: Session) -> Dict[str, IAMRole]:
@@ -153,12 +166,8 @@ def get_iam_roles(session: Session) -> Dict[str, IAMRole]:
             )
 
             attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
-            aws_account_id_start_index = arn.find(":iam::")
-            aws_account_id_end_index = arn.find(":role/")
-            aws_account_id = arn[aws_account_id_start_index + 6 : aws_account_id_end_index]
             ret[arn] = IAMRole(
                 role_name=role_name,
-                aws_account_id=aws_account_id,
                 role_id=role_id,
                 arn=arn,
                 path=path,

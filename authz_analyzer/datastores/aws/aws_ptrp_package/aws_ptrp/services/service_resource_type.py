@@ -2,6 +2,7 @@ from abc import abstractmethod
 from logging import Logger
 from typing import Dict, Optional, Set, Type
 
+from aws_ptrp.ptrp_models import AwsPrincipalType
 from aws_ptrp.services.resolved_stmt import StmtResourcesToResolveCtx
 from aws_ptrp.services.service_action_type import ServiceActionType
 from aws_ptrp.services.service_resource_base import ServiceResourceBase
@@ -40,6 +41,10 @@ class ServiceResourceType(ServiceActionType):
     @classmethod
     @abstractmethod
     def get_service_resources_resolver_type(cls) -> Type[ServiceResourcesResolverBase]:
+        pass
+
+    @abstractmethod
+    def get_resource_based_policy_irrelevant_principal_types(self) -> Optional[Set[AwsPrincipalType]]:
         pass
 
     @classmethod

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List
 
-from aws_ptrp.iam.policy.policy_document import PolicyDocument
+from aws_ptrp.iam.policy.policy_document import PolicyDocumentCtx
 from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PrincipalAndPoliciesNodeBase
 
@@ -41,5 +41,5 @@ class NoEntityPrincipal(PrincipalAndPoliciesNodeBase):
     def get_attached_policies_arn(self) -> List[str]:
         return []
 
-    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
+    def get_inline_policies_ctx(self) -> List[PolicyDocumentCtx]:
         return []

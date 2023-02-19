@@ -1,3 +1,1 @@
-{%
-  include-markdown "../CONTRIBUTING.md"
-%}
+For more information on how to contribute to authz-analzer, visit [this Github page](https://github.com/SatoriCyber/authz-analyzer/blob/main/CONTRIBUTING.md).
