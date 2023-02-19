@@ -1,0 +1,387 @@
+{
+    "input": {
+        "iam_entities": {
+            "iam_users": {
+                "arn:aws:iam::105246067165:user/iam_user_1": {
+                    "user_name": "iam_user_1",
+                    "user_id": "iam_user_1",
+                    "path": "/",
+                    "user_policies": [
+                        {
+                            "UserName": "iam_user_1",
+                            "PolicyName": "inline-policy-allow",
+                            "PolicyDocument": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "all_get_actions",
+                                        "Action": "s3:Get*",
+                                        "Resource": "arn:aws:s3:::bucket_1*"
+                                    },
+                                    {
+                                        "Effect": "Deny",
+                                        "Sid": "deny_get_object",
+                                        "_comment": "actions are case insensitive",
+                                        "Action": "s3:getobject",
+                                        "Resource": "arn:aws:s3:::bucket_1*"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "attached_policies_arn": [],
+                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_1"
+                },
+                "arn:aws:iam::105246067165:user/iam_user_2": {
+                    "user_name": "iam_user_2",
+                    "user_id": "iam_user_2",
+                    "path": "/",
+                    "user_policies": [
+                        {
+                            "UserName": "iam_user_2",
+                            "PolicyName": "inline-policy-allow",
+                            "PolicyDocument": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "wildcard_service",
+                                        "Action": "s3:*",
+                                        "Resource": "arn:aws:s3:::bucket_1*"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "attached_policies_arn": [],
+                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_2"
+                },
+                "arn:aws:iam::105246067165:user/iam_user_3": {
+                    "user_name": "iam_user_3",
+                    "user_id": "iam_user_3",
+                    "path": "/",
+                    "user_policies": [
+                        {
+                            "UserName": "iam_user_3",
+                            "PolicyName": "inline-policy-allow",
+                            "PolicyDocument": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "wildcard_all_services",
+                                        "Action": "*",
+                                        "Resource": "arn:aws:s3:::bucket_1*"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "attached_policies_arn": [],
+                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_3"
+                }
+            },
+            "iam_roles": {},
+            "iam_groups": {},
+            "iam_policies": {}
+        },
+        "target_account_resources": {
+            "account_resources": {
+                "s3": [
+                    {
+                        "name": "bucket_1",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": []
+                        }
+                    },
+                    {
+                        "name": "bucket_2",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": []
+                        }
+                    },
+                    {
+                        "name": "bucket_3",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": []
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObjectAttributes",
+                "GetObjectTagging",
+                "GetObjectVersion",
+                "GetObjectVersionAttributes",
+                "GetObjectVersionTagging"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_2",
+                "name": "iam_user_2",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_2",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject",
+                "GetObjectAttributes",
+                "GetObjectTagging",
+                "GetObjectVersion",
+                "GetObjectVersionAttributes",
+                "GetObjectVersionTagging",
+                "ListBucket",
+                "ListBucketVersions"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_2",
+                "name": "iam_user_2",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "WRITE",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_2",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "DeleteObject",
+                "DeleteObjectTagging",
+                "DeleteObjectVersion",
+                "DeleteObjectVersionTagging",
+                "PutObject",
+                "RestoreObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_2",
+                "name": "iam_user_2",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "FULL",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_2",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "BypassGovernanceRetention",
+                "CreateBucket",
+                "DeleteBucket",
+                "DeleteBucketPolicy",
+                "DeleteBucketWebsite",
+                "ObjectOwnerOverrideToBucketOwner",
+                "PutAccelerateConfiguration",
+                "PutAnalyticsConfiguration",
+                "PutBucketAcl",
+                "PutBucketCORS",
+                "PutBucketLogging",
+                "PutBucketNotification",
+                "PutBucketObjectLockConfiguration",
+                "PutBucketOwnershipControls",
+                "PutBucketPolicy",
+                "PutBucketPublicAccessBlock",
+                "PutBucketRequestPayment",
+                "PutBucketTagging",
+                "PutBucketVersioning",
+                "PutBucketWebsite",
+                "PutEncryptionConfiguration",
+                "PutIntelligentTieringConfiguration",
+                "PutInventoryConfiguration",
+                "PutLifecycleConfiguration",
+                "PutMetricsConfiguration",
+                "PutObjectAcl",
+                "PutObjectLegalHold",
+                "PutObjectRetention",
+                "PutObjectTagging",
+                "PutObjectVersionAcl",
+                "PutObjectVersionTagging",
+                "PutReplicationConfiguration",
+                "ReplicateDelete",
+                "ReplicateObject",
+                "ReplicateTags"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_3",
+                "name": "iam_user_3",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_3",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject",
+                "GetObjectAttributes",
+                "GetObjectTagging",
+                "GetObjectVersion",
+                "GetObjectVersionAttributes",
+                "GetObjectVersionTagging",
+                "ListBucket",
+                "ListBucketVersions"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_3",
+                "name": "iam_user_3",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "WRITE",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_3",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "DeleteObject",
+                "DeleteObjectTagging",
+                "DeleteObjectVersion",
+                "DeleteObjectVersionTagging",
+                "PutObject",
+                "RestoreObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_3",
+                "name": "iam_user_3",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "FULL",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_3",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "BypassGovernanceRetention",
+                "CreateBucket",
+                "DeleteBucket",
+                "DeleteBucketPolicy",
+                "DeleteBucketWebsite",
+                "ObjectOwnerOverrideToBucketOwner",
+                "PutAccelerateConfiguration",
+                "PutAnalyticsConfiguration",
+                "PutBucketAcl",
+                "PutBucketCORS",
+                "PutBucketLogging",
+                "PutBucketNotification",
+                "PutBucketObjectLockConfiguration",
+                "PutBucketOwnershipControls",
+                "PutBucketPolicy",
+                "PutBucketPublicAccessBlock",
+                "PutBucketRequestPayment",
+                "PutBucketTagging",
+                "PutBucketVersioning",
+                "PutBucketWebsite",
+                "PutEncryptionConfiguration",
+                "PutIntelligentTieringConfiguration",
+                "PutInventoryConfiguration",
+                "PutLifecycleConfiguration",
+                "PutMetricsConfiguration",
+                "PutObjectAcl",
+                "PutObjectLegalHold",
+                "PutObjectRetention",
+                "PutObjectTagging",
+                "PutObjectVersionAcl",
+                "PutObjectVersionTagging",
+                "PutReplicationConfiguration",
+                "ReplicateDelete",
+                "ReplicateObject",
+                "ReplicateTags"
+            ]
+        }
+    ]
+}
