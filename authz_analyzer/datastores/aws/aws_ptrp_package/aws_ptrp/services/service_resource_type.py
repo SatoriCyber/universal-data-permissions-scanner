@@ -52,8 +52,9 @@ class ServiceResourceType(ServiceActionType):
         cls,
         logger: Logger,
         stmt_ctx: StmtResourcesToResolveCtx,
+        not_resource_annotated: bool,
     ) -> ServiceResourcesResolverBase:
-        return cls.get_service_resources_resolver_type().load_from_single_stmt(logger, stmt_ctx)
+        return cls.get_service_resources_resolver_type().load_from_single_stmt(logger, stmt_ctx, not_resource_annotated)
 
     @classmethod
     def load_service_resources_from_session(

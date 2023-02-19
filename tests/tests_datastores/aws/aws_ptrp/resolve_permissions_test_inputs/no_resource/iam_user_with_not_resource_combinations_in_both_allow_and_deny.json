@@ -1,0 +1,258 @@
+{
+    "input": {
+        "iam_entities": {
+            "iam_users": {
+                "arn:aws:iam::105246067165:user/iam_user_1": {
+                    "user_name": "iam_user_1",
+                    "user_id": "AIDA6JM62QPID6GVAJJUK",
+                    "path": "/",
+                    "user_policies": [
+                        {
+                            "UserName": "iam_user_1",
+                            "PolicyName": "inline-policy-1",
+                            "PolicyDocument": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor1",
+                                        "Action": [
+                                            "s3:GetObject"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/a.json"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Deny",
+                                        "Sid": "VisualEditor2",
+                                        "Action": [
+                                            "s3:GetObject"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/?.json"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor3",
+                                        "Action": [
+                                            "s3:PutObject"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/?.json",
+                                            "arn:aws:s3:::bucket_1/abc.json"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Deny",
+                                        "Sid": "VisualEditor4",
+                                        "Action": [
+                                            "s3:PutObject"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/*.txt"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor5",
+                                        "Action": [
+                                            "s3:DeleteObject"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/?.json"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Deny",
+                                        "Sid": "VisualEditor6",
+                                        "Action": [
+                                            "s3:DeleteObject"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/a.json"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Deny",
+                                        "Sid": "VisualEditor4",
+                                        "Action": [
+                                            "s3:PutObject"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/*.txt"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor5",
+                                        "Action": [
+                                            "s3:DeleteObject"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/?.json"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Deny",
+                                        "Sid": "VisualEditor6",
+                                        "Action": [
+                                            "s3:DeleteObject"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/a.json"
+                                        ]
+                                    },
+                                    {
+                                        "_comment": "Since the deny has a wildcard, we will deny the s3:GetObjectAcl action",
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor7",
+                                        "Action": [
+                                            "s3:GetObjectAcl"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/?.json"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Deny",
+                                        "Sid": "VisualEditor8",
+                                        "Action": [
+                                            "s3:GetObjectAcl"
+                                        ],
+                                        "Resource": [
+                                            "arn:aws:s3:::bucket_1/*"
+                                        ]
+                                    },
+                                    {
+                                        "_comment": "Since the Deny is annotated with NotResource, we can't tell if to deny or not so we will allow",
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor9",
+                                        "Action": [
+                                            "s3:GetObjectAttributes"
+                                        ],
+                                        "Resource": [
+                                            "arn:aws:s3:::bucket_1/?.json",
+                                            "arn:aws:s3:::bucket_1/something.*"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Deny",
+                                        "Sid": "VisualEditor10",
+                                        "Action": [
+                                            "s3:GetObjectAttributes"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/a",
+                                            "arn:aws:s3:::bucket_1/bla?*.json"
+                                        ]
+                                    },
+                                    {
+                                        "_comment": "Verify that GetObjectLegalHold will be denied",
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor11",
+                                        "Action": [
+                                            "s3:GetObjectLegalHold"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/?.json",
+                                            "arn:aws:s3:::bucket_1/something.*"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Deny",
+                                        "Sid": "VisualEditor12",
+                                        "Action": [
+                                            "s3:GetObjectLegalHold"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_2/*"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "attached_policies_arn": [],
+                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_1"
+                }
+            },
+            "iam_groups": {},
+            "iam_roles": {},
+            "iam_policies": {}
+        },
+        "target_account_resources": {
+            "account_resources": {
+                "s3": [
+                    {
+                        "name": "bucket_1",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": []
+                        }
+                    },
+                    {
+                        "name": "bucket_2",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": []
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-1",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject",
+                "GetObjectAttributes"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "WRITE",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-1",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "PutObject"
+            ]
+        }
+    ]
+}

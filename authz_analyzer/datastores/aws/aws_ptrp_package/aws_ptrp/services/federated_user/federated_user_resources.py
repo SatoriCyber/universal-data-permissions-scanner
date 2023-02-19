@@ -137,9 +137,7 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
 
     @classmethod
     def load_from_single_stmt(
-        cls,
-        _logger: Logger,
-        stmt_ctx: StmtResourcesToResolveCtx,
+        cls, _logger: Logger, stmt_ctx: StmtResourcesToResolveCtx, not_resource_annotated: bool
     ) -> ServiceResourcesResolverBase:
         resolved_federated_users_actions: Dict[FederatedUserPrincipal, ResolvedFederatedUserActions] = {}
         federated_user_actions = set(
@@ -160,6 +158,18 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
                 resolved_federated_users_actions[yield_federated_user] = ResolvedFederatedUserActions.load(
                     federated_user_actions.copy()
                 )
+
+        if not_resource_annotated:
+            federated_users = [
+                resource for resource in stmt_ctx.service_resources if isinstance(resource, FederatedUserPrincipal)
+            ]
+            for federated_user in federated_users:
+                if federated_user not in resolved_federated_users_actions:
+                    resolved_federated_users_actions[federated_user] = ResolvedFederatedUserActions.load(
+                        federated_user_actions.copy()
+                    )
+                else:
+                    resolved_federated_users_actions.pop(federated_user)
 
         resolved_stmt: ResolvedSingleStmt = ResolvedSingleStmt.load(stmt_ctx, resolved_federated_users_actions)  # type: ignore
         return cls(resolved_stmts=[FederatedUserResolvedStmt(resolved_stmt=resolved_stmt)])

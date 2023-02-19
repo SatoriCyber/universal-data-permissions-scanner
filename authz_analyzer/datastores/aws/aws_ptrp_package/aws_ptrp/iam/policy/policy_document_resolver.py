@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set
 
 from aws_ptrp.actions.actions_resolver import ActionsResolver
 from aws_ptrp.actions.aws_actions import AwsActions
@@ -196,14 +196,14 @@ def _services_resolver_for_policy_document(
                 "Invalid principal input both statement.principal & outer param identity_principal are None"
             )
 
-        if statement.resource:
-            statement_resource: Union[str, List[str]] = statement.resource
-        elif parent_arn:
-            statement_resource = parent_arn
-        else:
-            raise Exception(
-                f"Invalid resource input, both statement.resource & outer param parent_resource_arn are None - {statement}"
-            )
+        statement_resource: Optional[List[str]] = statement.get_resources()
+        if not statement_resource:
+            if parent_arn:
+                statement_resource = [parent_arn]
+            else:
+                raise Exception(
+                    f"Invalid resource input, both statement.resource & outer param parent_resource_arn are None - {statement}"
+                )
 
         single_stmt_service_actions_resolvers: Optional[
             Dict[ServiceActionType, ServiceActionsResolverBase]
@@ -233,6 +233,7 @@ def _services_resolver_for_policy_document(
                 policy_name=policy_name,
                 is_condition_stmt_exists=is_condition_stmt_exists,
                 stmt_resource=statement_resource,
+                not_resource_annotated=statement.is_not_resource_in_statement(),
                 account_resources=account_resources,
                 resolved_stmt_principals=statement_principals,
                 resolved_stmt_services_action_types=resolved_services_action,

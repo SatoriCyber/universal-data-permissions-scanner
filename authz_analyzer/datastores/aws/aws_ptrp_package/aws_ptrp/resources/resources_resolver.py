@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set
 
 from aws_ptrp.principals import Principal
 from aws_ptrp.resources.account_resources import AwsAccountResources
@@ -48,7 +48,8 @@ class ResourcesResolver:
         stmt_parent_arn: str,
         policy_name: Optional[str],
         is_condition_stmt_exists: bool,
-        stmt_resource: Union[str, List[str]],
+        stmt_resource: List[str],
+        not_resource_annotated: bool,
         account_resources: AwsAccountResources,
         resolved_stmt_principals: List[Principal],
         resolved_stmt_services_action_types: Set[ServiceActionType],
@@ -60,9 +61,7 @@ class ResourcesResolver:
             account_resources.account_resources.keys()
         ).intersection(resolved_stmt_services_action_types)
 
-        if isinstance(stmt_resource, str):
-            stmt_resource_regexes: List[str] = [stmt_resource]
-        elif isinstance(stmt_resource, list):
+        if isinstance(stmt_resource, list):
             stmt_resource_regexes = stmt_resource
         else:
             raise Exception(f"Unexpected type of stmt_resource, type: {type(stmt_resource)}")
@@ -89,7 +88,9 @@ class ResourcesResolver:
                     policy_name=policy_name,
                 )
                 service_resource_resolver: ServiceResourcesResolverBase = (
-                    service_type.load_resolver_service_resources_from_single_stmt(logger, stmt_ctx)
+                    service_type.load_resolver_service_resources_from_single_stmt(
+                        logger, stmt_ctx, not_resource_annotated
+                    )
                 )
                 if not service_resource_resolver.is_empty():
                     services_resource_resolver[service_type] = service_resource_resolver
