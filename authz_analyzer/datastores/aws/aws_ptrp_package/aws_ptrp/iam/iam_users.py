@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
-from aws_ptrp.iam.policy import PolicyDocument, UserPolicy
+from aws_ptrp.iam.policy import PolicyDocumentCtx, UserPolicy
 from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PrincipalAndPoliciesNodeBase
 from aws_ptrp.utils.pagination import paginate_response_list
@@ -14,7 +14,6 @@ from serde import field, from_dict, serde
 class IAMUser(PrincipalAndPoliciesNodeBase):
     user_name: str
     user_id: str
-    aws_account_id: str
     path: str
     user_policies: List[UserPolicy]
     attached_policies_arn: List[str]
@@ -31,6 +30,10 @@ class IAMUser(PrincipalAndPoliciesNodeBase):
 
     def __hash__(self):
         return hash(self.user_id)
+
+    @staticmethod
+    def _extract_aws_account_id_from_arn_of_iam_entity(arn: str) -> str:
+        return arn[arn.find(":iam::") + 6 : arn.find(":user/")]
 
     # # impl PrincipalAndPoliciesNodeBase
     # def get_permission_boundary(self) -> Optional[PolicyDocument]:
@@ -54,9 +57,20 @@ class IAMUser(PrincipalAndPoliciesNodeBase):
     def get_attached_policies_arn(self) -> List[str]:
         return self.attached_policies_arn
 
-    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
+    def get_inline_policies_ctx(self) -> List[PolicyDocumentCtx]:
         arn = self.identity_principal.get_arn()
-        return list(map(lambda x: (x.policy_document, arn, x.policy_name), self.user_policies))
+        aws_account_id = IAMUser._extract_aws_account_id_from_arn_of_iam_entity(arn)
+        return list(
+            map(
+                lambda x: PolicyDocumentCtx(
+                    policy_document=x.policy_document,
+                    parent_arn=arn,
+                    policy_name=x.policy_name,
+                    parent_aws_account_id=aws_account_id,
+                ),
+                self.user_policies,
+            )
+        )
 
 
 def get_iam_users(session: Session) -> Dict[str, IAMUser]:
@@ -84,13 +98,9 @@ def get_iam_users(session: Session) -> Dict[str, IAMUser]:
         )
         attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
         user_principal_arn = Principal.load_from_iam_user(arn)
-        aws_account_id_start_index = arn.find(":iam::")
-        aws_account_id_end_index = arn.find(":user/")
-        aws_account_id = arn[aws_account_id_start_index + 6 : aws_account_id_end_index]
         ret[arn] = IAMUser(
             user_name=user_name,
             user_id=user_id,
-            aws_account_id=aws_account_id,
             identity_principal=user_principal_arn,
             path=path,
             user_policies=user_policies,

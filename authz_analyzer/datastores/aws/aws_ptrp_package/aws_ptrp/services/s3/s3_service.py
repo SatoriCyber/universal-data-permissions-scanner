@@ -1,6 +1,7 @@
 from logging import Logger
 from typing import Optional, Set, Type
 
+from aws_ptrp.ptrp_models import AwsPrincipalType
 from aws_ptrp.services import (
     ServiceActionBase,
     ServiceActionsResolverBase,
@@ -27,6 +28,9 @@ class S3Service(ServiceResourceType):
 
     def get_service_name(self) -> str:
         return S3_SERVICE_NAME
+
+    def get_resource_based_policy_irrelevant_principal_types(self) -> Optional[Set[AwsPrincipalType]]:
+        return {AwsPrincipalType.SAML_SESSION, AwsPrincipalType.WEB_IDENTITY_SESSION}
 
     @classmethod
     def get_service_resources_resolver_type(cls) -> Type[ServiceResourcesResolverBase]:

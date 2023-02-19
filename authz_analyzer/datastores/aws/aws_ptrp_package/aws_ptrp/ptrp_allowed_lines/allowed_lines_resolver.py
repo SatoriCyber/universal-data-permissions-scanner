@@ -12,6 +12,7 @@ from aws_ptrp.iam.policy.policy_document_resolver import (
     get_identity_based_resolver,
     get_resource_based_resolver,
     get_role_trust_resolver,
+    is_stmt_principal_relevant_to_resource,
 )
 from aws_ptrp.principals import Principal
 from aws_ptrp.principals.no_entity_principal import NoEntityPrincipal
@@ -36,6 +37,7 @@ from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services import ServiceResourceBase, ServiceResourcesResolverBase, ServiceResourceType
 from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
+from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
 from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserPrincipal
 from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
 
@@ -100,6 +102,12 @@ class PtrpAllowedLines:
                 )
             path_role_identity_nodes: List[PathRoleNode] = graph_path[start_index_path_role_identity_nodes:-2]
 
+            # path must not be with non-empty list of roles path_federated_nodes
+            if path_role_identity_nodes and path_federated_nodes:
+                raise Exception(
+                    f"Got invalid simple path in graph, both roles and federated nodes exists: {path_role_identity_nodes}, {path_federated_nodes}"
+                )
+
             if not isinstance(graph_path[-2], PathPolicyNode):
                 raise Exception(
                     f"Got invalid simple path in graph, last_node-1 is not impl PathPolicyNode: {graph_path[-2]}"
@@ -153,7 +161,10 @@ class PtrpAllowedLinesBuilder:
             role_session_role_name = stmt_principal.get_role_name()
             role_session_account_id = stmt_principal.get_account_id()
             for iam_role in self.iam_entities.iam_roles.values():
-                if iam_role.role_name == role_session_role_name and iam_role.aws_account_id == role_session_account_id:
+                if (
+                    iam_role.role_name == role_session_role_name
+                    and iam_role.get_resource_account_id() == role_session_account_id
+                ):
                     role_session = RoleSession(iam_role=iam_role, role_session_principal=stmt_principal)
                     return [role_session]
         return []
@@ -239,11 +250,10 @@ class PtrpAllowedLinesBuilder:
             yield no_entity_principal_node
 
     def _yield_resolved_service_resources_for_identity_based_policy(
-        self, identity_principal: Principal, policy_document: PolicyDocument, parent_policy_arn: str, policy_name: str
+        self,
+        identity_principal: Principal,
+        policy_document_ctx: PolicyDocumentCtx,
     ) -> Generator[Tuple[ServiceResourceType, ServiceResourceBase], None, None,]:
-        policy_document_ctx = PolicyDocumentCtx(
-            policy_document=policy_document, policy_name=policy_name, parent_arn=parent_policy_arn
-        )
         service_resources_resolver: Optional[
             Dict[ServiceResourceType, ServiceResourcesResolverBase]
         ] = get_identity_based_resolver(
@@ -262,8 +272,8 @@ class PtrpAllowedLinesBuilder:
                         "For %s, got resolved resource %s in: %s: %s",
                         identity_principal,
                         service_resource,
-                        parent_policy_arn,
-                        policy_name,
+                        policy_document_ctx.parent_arn,
+                        policy_document_ctx.policy_name,
                     )
                     yield service_type, service_resource
 
@@ -294,22 +304,19 @@ class PtrpAllowedLinesBuilder:
         self,
         node_connect_to_policy: Union[PrincipalNodeBase, PathNodeBase],
         attached_policies_arn: List[str],
-        inline_policies_arns_and_names: List[Tuple[PolicyDocument, str, str]],
+        inline_policies_ctx: List[PolicyDocumentCtx],
         identity_principal_for_resolver: Principal,
     ):
         for attached_policy_arn in attached_policies_arn:
             iam_policy = self.iam_entities.iam_policies[attached_policy_arn]
+            iam_policy_document_ctx = iam_policy.to_policy_document_ctx()
             for service_type, service_resource in self._yield_resolved_service_resources_for_identity_based_policy(
                 identity_principal=identity_principal_for_resolver,
-                policy_document=iam_policy.policy_document,
-                parent_policy_arn=iam_policy.policy.arn,
-                policy_name=iam_policy.policy.policy_name,
+                policy_document_ctx=iam_policy_document_ctx,
             ):
                 path_policy_node = PathPolicyNode(
                     path_element_type=AwsPtrpPathNodeType.IAM_POLICY,
-                    path_arn=iam_policy.policy.arn,
-                    path_name=iam_policy.policy.policy_name,
-                    policy_document=iam_policy.policy_document,
+                    policy_document_ctx=iam_policy_document_ctx,
                     is_resource_based_policy=False,
                 )
                 self.graph.add_edge(node_connect_to_policy, path_policy_node)
@@ -319,18 +326,13 @@ class PtrpAllowedLinesBuilder:
                     service_resource_type=service_type,
                     service_resource=service_resource,
                 )
-        for inline_policy, parent_policy_arn, policy_name in inline_policies_arns_and_names:
+        for inline_policy_ctx in inline_policies_ctx:
             for service_type, service_resource in self._yield_resolved_service_resources_for_identity_based_policy(
-                identity_principal=identity_principal_for_resolver,
-                policy_document=inline_policy,
-                parent_policy_arn=parent_policy_arn,
-                policy_name=policy_name,
+                identity_principal=identity_principal_for_resolver, policy_document_ctx=inline_policy_ctx
             ):
                 path_policy_node = PathPolicyNode(
                     path_element_type=AwsPtrpPathNodeType.IAM_INLINE_POLICY,
-                    path_arn=parent_policy_arn,
-                    path_name=policy_name,
-                    policy_document=inline_policy,
+                    policy_document_ctx=inline_policy_ctx,
                     is_resource_based_policy=False,
                 )
                 self.graph.add_edge(node_connect_to_policy, path_policy_node)
@@ -342,6 +344,7 @@ class PtrpAllowedLinesBuilder:
                 )
 
     def _insert_iam_roles_and_trusted_entities(self):
+        irrelevant_principal_types = AssumeRoleService().get_resource_based_policy_irrelevant_principal_types()
         for iam_role in self.iam_entities.iam_roles.values():
             # Check the role's trusted entities
             role_trust_service_principal_resolver: Optional[
@@ -350,6 +353,7 @@ class PtrpAllowedLinesBuilder:
                 logger=self.logger,
                 role_trust_policy=iam_role.assume_role_policy_document,
                 iam_role_arn=iam_role.arn,
+                iam_role_aws_account_id=iam_role.get_resource_account_id(),
                 effect=Effect.Allow,
                 aws_actions=self.aws_actions,
                 account_resources=self.account_resources,
@@ -363,7 +367,7 @@ class PtrpAllowedLinesBuilder:
             self._insert_attached_policies_and_inline_policies(
                 node_connect_to_policy=path_role_node,
                 attached_policies_arn=iam_role.get_attached_policies_arn(),
-                inline_policies_arns_and_names=iam_role.get_inline_policies_arns_and_names(),
+                inline_policies_ctx=iam_role.get_inline_policies_ctx(),
                 identity_principal_for_resolver=iam_role.get_stmt_principal(),
             )
 
@@ -377,6 +381,20 @@ class PtrpAllowedLinesBuilder:
                 )
                 for resolved_principal_node in self._yield_resolved_principal_nodes(trusted_principal_to_resolve):
                     assert isinstance(resolved_principal_node, PrincipalNodeBase)
+                    if (
+                        is_stmt_principal_relevant_to_resource(
+                            resolved_principal_node.get_stmt_principal(),
+                            iam_role.get_resource_account_id(),
+                            irrelevant_principal_types,
+                        )
+                        is False
+                    ):
+                        self.logger.info(
+                            "irrelevant %s to %s in role trust policy",
+                            resolved_principal_node.get_stmt_principal(),
+                            iam_role,
+                        )
+                        continue
 
                     self.graph.add_edge(resolved_principal_node, path_role_node)
 
@@ -397,6 +415,7 @@ class PtrpAllowedLinesBuilder:
                     policy_document=service_resource_policy,
                     service_resource_type=service_resources_type,
                     resource_arn=service_resource.get_resource_arn(),
+                    resource_aws_account_id=service_resource.get_resource_account_id(),
                     effect=Effect.Allow,
                     aws_actions=self.aws_actions,
                     account_resources=self.account_resources,
@@ -404,11 +423,18 @@ class PtrpAllowedLinesBuilder:
                 if service_resources_resolver is None:
                     continue
 
+                irrelevant_principal_types = (
+                    service_resources_type.get_resource_based_policy_irrelevant_principal_types()
+                )
+                policy_document_ctx = PolicyDocumentCtx(
+                    policy_document=service_resource_policy,
+                    policy_name=service_resource.get_resource_name(),
+                    parent_arn=service_resource.get_resource_arn(),
+                    parent_aws_account_id=service_resource.get_resource_account_id(),
+                )
                 target_policy_node = PathPolicyNode(
                     path_element_type=AwsPtrpPathNodeType.RESOURCE_POLICY,
-                    path_arn=service_resource.get_resource_arn(),
-                    path_name=service_resource.get_resource_name(),
-                    policy_document=service_resource_policy,
+                    policy_document_ctx=policy_document_ctx,
                     is_resource_based_policy=True,
                 )
                 self.graph.add_edge(target_policy_node, resource_node)
@@ -422,6 +448,20 @@ class PtrpAllowedLinesBuilder:
 
                     for resolved_principal_node in self._yield_resolved_principal_nodes(stmt_principal):
                         assert isinstance(resolved_principal_node, PrincipalNodeBase)
+                        if (
+                            is_stmt_principal_relevant_to_resource(
+                                resolved_principal_node.get_stmt_principal(),
+                                service_resource.get_resource_account_id(),
+                                irrelevant_principal_types,
+                            )
+                            is False
+                        ):
+                            self.logger.info(
+                                "irrelevant %s to %s in resource based policy",
+                                resolved_principal_node.get_stmt_principal(),
+                                service_resource,
+                            )
+                            continue
                         self.logger.debug("connecting %s -> %s", resolved_principal_node, target_policy_node)
                         self.graph.add_edge(resolved_principal_node, target_policy_node)
 
@@ -439,7 +479,7 @@ class PtrpAllowedLinesBuilder:
             self._insert_attached_policies_and_inline_policies(
                 node_connect_to_policy=iam_user_node,
                 attached_policies_arn=iam_user.get_attached_policies_arn(),
-                inline_policies_arns_and_names=iam_user.get_inline_policies_arns_and_names(),
+                inline_policies_ctx=iam_user.get_inline_policies_ctx(),
                 identity_principal_for_resolver=iam_user.identity_principal,
             )
 
@@ -450,7 +490,7 @@ class PtrpAllowedLinesBuilder:
                 self._insert_attached_policies_and_inline_policies(
                     node_connect_to_policy=path_user_group_node,
                     attached_policies_arn=iam_group.get_attached_policies_arn(),
-                    inline_policies_arns_and_names=iam_group.get_inline_policies_arns_and_names(),
+                    inline_policies_ctx=iam_group.get_inline_policies_ctx(),
                     identity_principal_for_resolver=iam_user.identity_principal,
                 )
 
