@@ -240,6 +240,7 @@ class PolicyEvaluation:
                 policy_document=resource_policy_ctx.policy_document,
                 service_resource_type=service_resource_type,
                 resource_arn=resource_policy_ctx.parent_arn,
+                resource_aws_account_id=resource_policy_ctx.parent_aws_account_id,
                 aws_actions=aws_actions,
                 account_resources=account_resources,
                 effect=effect,
@@ -286,7 +287,10 @@ class PolicyEvaluation:
         resource_policy: Optional[PolicyDocument] = service_resource.get_resource_policy()
         if resource_policy:
             resource_policy_ctx: Optional[PolicyDocumentCtx] = PolicyDocumentCtx(
-                policy_document=resource_policy, policy_name=None, parent_arn=service_resource.get_resource_arn()
+                policy_document=resource_policy,
+                policy_name=service_resource.get_resource_name(),
+                parent_arn=service_resource.get_resource_arn(),
+                parent_aws_account_id=service_resource.get_resource_account_id(),
             )
         else:
             resource_policy_ctx = None
@@ -324,7 +328,10 @@ class PolicyEvaluation:
             return policy_evaluations_result
 
         resource_policy_ctx: PolicyDocumentCtx = PolicyDocumentCtx(
-            policy_document=resource_policy, policy_name=None, parent_arn=target_service_resource.get_resource_arn()
+            policy_document=resource_policy,
+            policy_name=target_service_resource.get_resource_name(),
+            parent_arn=target_service_resource.get_resource_arn(),
+            parent_aws_account_id=target_service_resource.get_resource_account_id(),
         )
 
         target_policy_service_resolver: Optional[

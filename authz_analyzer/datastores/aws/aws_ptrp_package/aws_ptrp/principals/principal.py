@@ -102,10 +102,6 @@ class Principal:
         return bool(self.principal_type == AwsPrincipalType.ASSUMED_ROLE_SESSION)
 
     def contains(self, other: 'Principal') -> bool:
-        if other.principal_type == AwsPrincipalType.ALL_PRINCIPALS:
-            # any user/ anonymous user is contained by any type of self.principal
-            return True
-
         if self.principal_type == other.principal_type:
             if self.policy_principal_str == other.policy_principal_str:
                 return True
@@ -211,6 +207,16 @@ class Principal:
                 principal_metadata=None,
             )
 
+    @staticmethod
+    def _extract_name(path_and_name: str) -> str:
+        """return the name from the last part of the arn (path & name).
+        For example: path_and_name = '/path_to_role/nested_path/role_name_1' ->  role_name_1"""
+        index_last_slash = path_and_name.rfind('/')
+        if index_last_slash == -1:
+            return path_and_name
+        else:
+            return path_and_name[index_last_slash + 1 :]
+
     @classmethod
     def load_from_stmt_aws(cls, principal_str: str) -> "Principal":
         # don't change the order here. for optimization to load_from_iam_role, load_from_iam_user
@@ -219,7 +225,7 @@ class Principal:
         # should call these functions and not the load_from_stmt_aws
         result = regex_role_name.match(principal_str)
         if result:
-            name = result.groups()[1]
+            name = Principal._extract_name(result.groups()[1])
             metadata = {'account-id': result.groups()[0], 'role-name': name}
             return Principal(
                 principal_type=AwsPrincipalType.IAM_ROLE,
@@ -230,7 +236,7 @@ class Principal:
 
         result = regex_iam_user.match(principal_str)
         if result:
-            name = result.groups()[1]
+            name = Principal._extract_name(result.groups()[1])
             metadata = {'account-id': result.groups()[0], 'user-name': name}
             return Principal(
                 principal_type=AwsPrincipalType.IAM_USER,
@@ -265,7 +271,7 @@ class Principal:
         if result:
             metadata = {
                 'account-id': result.groups()[0],
-                'role-name': result.groups()[1],
+                'role-name': result.groups()[1],  # arn of role_session is without the role path
                 'role-session-name': result.groups()[2],
             }
             name = result.groups()[2]

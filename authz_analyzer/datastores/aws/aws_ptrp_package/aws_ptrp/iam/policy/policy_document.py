@@ -103,5 +103,6 @@ class PolicyDocument:
 @dataclass
 class PolicyDocumentCtx:
     policy_document: PolicyDocument
-    policy_name: Optional[str]
+    policy_name: str
     parent_arn: str
+    parent_aws_account_id: str

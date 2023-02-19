@@ -82,11 +82,7 @@ class PtrpAllowedLinesResolverResult:
             nodes_notes_all_services.extend(nodes_notes)
             return cls(target_resolver=target_resolver, nodes_notes=nodes_notes_all_services)
         else:
-            target_identity_policy_ctx = PolicyDocumentCtx(
-                policy_document=line.target_policy_node.policy_document,
-                policy_name=line.target_policy_node.path_name,
-                parent_arn=line.target_policy_node.path_arn,
-            )
+            target_identity_policy_ctx = line.target_policy_node.policy_document_ctx
             policy_evaluation_result: PolicyEvaluationResult = PolicyEvaluation.run_target_policies_identity_based(
                 logger=logger,
                 aws_actions=aws_actions,

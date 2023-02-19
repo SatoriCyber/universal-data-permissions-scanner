@@ -95,7 +95,7 @@ class AssumeRoleServiceResourcesResolver(ServiceResourcesResolverBase):
 
     def is_trusted_principal(self, iam_role: IAMRole, principal: Principal) -> bool:
         for trusted_principal in self.yield_trusted_principals(iam_role):
-            if trusted_principal == principal:
+            if trusted_principal.contains(principal):
                 return True
         return False
 

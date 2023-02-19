@@ -23,9 +23,16 @@ class IAMPolicy:
     def __repr__(self):
         return self.policy.arn
 
+    def _extract_aws_account_id_from_arn_of_iam_entity(self) -> str:
+        return self.policy.arn[self.policy.arn.find(":iam::") + 6 : self.policy.arn.find(":policy/")]
+
     def to_policy_document_ctx(self) -> PolicyDocumentCtx:
+        aws_account_id = self._extract_aws_account_id_from_arn_of_iam_entity()
         return PolicyDocumentCtx(
-            policy_document=self.policy_document, policy_name=self.policy.policy_name, parent_arn=self.policy.arn
+            policy_document=self.policy_document,
+            policy_name=self.policy.policy_name,
+            parent_arn=self.policy.arn,
+            parent_aws_account_id=aws_account_id,
         )
 
 

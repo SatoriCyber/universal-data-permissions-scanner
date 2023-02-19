@@ -92,11 +92,11 @@ def _update_nodes_notes(
             node_base_to_add = resource_node_note
         else:
             # check if the resolved_stmt with the deny condition coming from inline policy or attached iam policy (which doesn't appear as a node in the allowed line nodes)
-            for _, policy_arn, _ in principal_policies_node_base.get_inline_policies_arns_and_names():
-                if policy_arn == resolved_stmt.stmt_parent_arn:
+            for inline_policy_ctx in principal_policies_node_base.get_inline_policies_ctx():
+                if inline_policy_ctx.parent_arn == resolved_stmt.stmt_parent_arn:
                     node_base_to_add = principal_policies_node_base
                     # if the arn of the node is not the same as the inline policy arn (can happen for iam user that attached to iam group which has inline policy)
-                    if principal_policies_node_base.get_node_arn() != policy_arn:
+                    if principal_policies_node_base.get_node_arn() != inline_policy_ctx.parent_arn:
                         attached_to_other_node_arn = f" ({resolved_stmt.stmt_parent_arn})"
                     break
             if node_base_to_add is None:
