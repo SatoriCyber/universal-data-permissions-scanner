@@ -103,7 +103,6 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
         If some(or both) of the statements are annotated with NotResource, in some cases we can solve the problem with the complements of each group
         """
         difference_also_on_object_actions = False
-        difference_also_on_object_actions = False
         if isinstance(other, ResolvedS3BucketActions):
             self_not_resource_annotated = self.is_not_resource_annotated()
             other_not_resource_annotated = other.is_not_resource_annotated()
