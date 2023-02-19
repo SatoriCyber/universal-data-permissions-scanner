@@ -65,7 +65,7 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
     @classmethod
     def load(
         cls, actions: Set[S3Action], stmt_relative_id_objects_regex: Optional[str], not_resource_annotated: bool
-    ) -> 'ResolvedS3BucketActions':
+    ) -> ResolvedS3BucketActions:
         stmt_relative_id_objects_regexes = []
         if stmt_relative_id_objects_regex is not None:
             stmt_relative_id_objects_regexes.append(stmt_relative_id_objects_regex)
@@ -147,8 +147,8 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
 
     @staticmethod
     def resolve_not_resource_difference(
-        other: 'ResolvedS3BucketActions', all_actions: Set[S3Action]
-    ) -> 'ResolvedS3BucketActions':
+        other: ResolvedS3BucketActions, all_actions: Set[S3Action]
+    ) -> ResolvedS3BucketActions:
         # We make the difference while evaluating the resources in the policy with NotResource annotated,
         # so if the bucket relative object regex list has a '*', we want to remove the object actions as well
         difference_also_on_object_actions = any(
