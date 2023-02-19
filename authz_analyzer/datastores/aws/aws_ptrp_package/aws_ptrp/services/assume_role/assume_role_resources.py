@@ -112,9 +112,7 @@ class AssumeRoleServiceResourcesResolver(ServiceResourcesResolverBase):
 
     @classmethod
     def load_from_single_stmt(
-        cls,
-        _logger: Logger,
-        stmt_ctx: StmtResourcesToResolveCtx,
+        cls, _logger: Logger, stmt_ctx: StmtResourcesToResolveCtx, not_resource_annotated: bool
     ) -> ServiceResourcesResolverBase:
         resolved_iam_roles_actions: Dict[IAMRole, ResolvedAssumeRoleActions] = dict()
         assume_role_actions = set(
@@ -133,6 +131,14 @@ class AssumeRoleServiceResourcesResolver(ServiceResourcesResolverBase):
                 resolved_iam_roles_actions[resolved_iam_role] = ResolvedAssumeRoleActions.load(
                     assume_role_actions.copy()
                 )
+
+        if not_resource_annotated:
+            assumed_roles = [resource for resource in stmt_ctx.service_resources if isinstance(resource, IAMRole)]
+            for role in assumed_roles:
+                if role not in resolved_iam_roles_actions:
+                    resolved_iam_roles_actions[role] = ResolvedAssumeRoleActions.load(assume_role_actions.copy())
+                else:
+                    resolved_iam_roles_actions.pop(role)
 
         resolved_stmt: ResolvedSingleStmt = ResolvedSingleStmt.load(stmt_ctx, resolved_iam_roles_actions)  # type: ignore
         return cls(resolved_stmts=[AssumeRoleResolvedStmt(resolved_stmt=resolved_stmt)])
