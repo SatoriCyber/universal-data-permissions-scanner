@@ -66,6 +66,37 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
         regex = re.compile(fix_stmt_regex_to_valid_regex(stmt_relative_id_buckets_regex, with_case_sensitive=True))
         return set(filter(lambda bucket: regex.match(bucket.get_resource_name()) is not None, service_resources))
 
+    @staticmethod
+    def add_resolved_actions_to_matched_buckets(
+        resolved_buckets: Dict[S3Bucket, ResolvedS3BucketActions],
+        resolved_actions: Set[S3Action],
+        stmt_relative_id_objects_regex: Optional[str],
+        matched_buckets: Set[S3Bucket],
+    ):
+        for bucket in matched_buckets:
+            resolved_bucket_actions: Optional[ResolvedS3BucketActions] = resolved_buckets.get(bucket)
+            if resolved_bucket_actions:
+                resolved_bucket_actions.add(resolved_actions, stmt_relative_id_objects_regex)
+            else:
+                resolved_buckets[bucket] = ResolvedS3BucketActions.load(
+                    resolved_actions.copy(), stmt_relative_id_objects_regex, False
+                )
+
+    @staticmethod
+    def resolved_difference_for_not_resource_annotated_buckets(
+        resolved_buckets: Dict[S3Bucket, ResolvedS3BucketActions],
+        resolved_actions: Set[S3Action],
+        s3_buckets: List[S3Bucket],
+    ):
+        for bucket in s3_buckets:
+            to_differ = resolved_buckets.get(bucket)
+            if to_differ:
+                resolved_buckets[bucket] = ResolvedS3BucketActions.load_from_not_resource_difference(
+                    to_differ, resolved_actions
+                )
+            else:
+                resolved_buckets[bucket] = ResolvedS3BucketActions.load(resolved_actions.copy(), "*", False)
+
     @classmethod
     def load_from_single_stmt(
         cls, _logger: Logger, stmt_ctx: StmtResourcesToResolveCtx, not_resource_annotated: bool
@@ -109,26 +140,16 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
                 s3_buckets,
             )
 
-            for bucket in matched_buckets:
-                resolved_bucket_actions: Optional[ResolvedS3BucketActions] = resolved_buckets.get(bucket)
-                if resolved_bucket_actions:
-                    resolved_bucket_actions.add(resolved_actions, stmt_relative_id_objects_regex)
-                else:
-                    resolved_buckets[bucket] = ResolvedS3BucketActions.load(
-                        resolved_actions.copy(), stmt_relative_id_objects_regex, False
-                    )
+            S3ServiceResourcesResolver.add_resolved_actions_to_matched_buckets(
+                resolved_buckets, resolved_actions, stmt_relative_id_objects_regex, matched_buckets
+            )
 
         if not_resource_annotated:
             # Resolving actions for each buckets, and evaluate the difference between the previously resolved actions
             # resolved_buckets[bucket] currently holds the actions that matches the resources inside the NotResource section.
-            for bucket in s3_buckets:
-                to_differ = resolved_buckets.get(bucket)
-                if to_differ:
-                    resolved_buckets[bucket] = ResolvedS3BucketActions.resolve_not_resource_difference(
-                        to_differ, resolved_stmt_s3_actions
-                    )
-                else:
-                    resolved_buckets[bucket] = ResolvedS3BucketActions.load(resolved_stmt_s3_actions.copy(), "*", False)
+            S3ServiceResourcesResolver.resolved_difference_for_not_resource_annotated_buckets(
+                resolved_buckets, resolved_stmt_s3_actions, s3_buckets
+            )
 
         resolved_stmt: ResolvedSingleStmt = ResolvedSingleStmt.load(stmt_ctx, resolved_buckets)  # type: ignore
         s3_resolved_stmt = S3ResolvedStmt(

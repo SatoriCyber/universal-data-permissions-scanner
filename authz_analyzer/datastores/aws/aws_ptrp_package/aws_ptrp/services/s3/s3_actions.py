@@ -145,9 +145,9 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
     def is_not_resource_annotated(self) -> bool:
         return self._not_resource_annotated
 
-    @staticmethod
-    def resolve_not_resource_difference(
-        other: ResolvedS3BucketActions, all_actions: Set[S3Action]
+    @classmethod
+    def load_from_not_resource_difference(
+        cls, other: ResolvedS3BucketActions, all_actions: Set[S3Action]
     ) -> ResolvedS3BucketActions:
         # We make the difference while evaluating the resources in the policy with NotResource annotated,
         # so if the bucket relative object regex list has a '*', we want to remove the object actions as well
@@ -158,14 +158,16 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
         if difference_also_on_object_actions is True:
             actions_to_difference = other.actions
             stmt_relative_id_objects_regexes = []
+            not_resource_annotated = False
         else:
             # We remove only the bucket actions
             actions_to_difference = set(filter(lambda a: a.action_type == S3ActionType.BUCKET, other.actions))
             stmt_relative_id_objects_regexes = other.stmt_relative_id_objects_regexes
+            not_resource_annotated = True
 
         resolved_actions = all_actions.difference(actions_to_difference)
-        ret = ResolvedS3BucketActions.load_with_object_regex_list(
-            resolved_actions, stmt_relative_id_objects_regexes, True
+        ret = cls.load_with_object_regex_list(
+            resolved_actions, stmt_relative_id_objects_regexes, not_resource_annotated
         )
         return ret
 

@@ -5,7 +5,6 @@
                 "arn:aws:iam::105246067165:user/iam_user_1": {
                     "user_name": "iam_user_1",
                     "user_id": "AIDA6JM62QPID6GVAJJUK",
-                    "aws_account_id": "105246067165",
                     "path": "/",
                     "user_policies": [
                         {
