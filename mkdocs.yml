@@ -3,19 +3,7 @@ site_url: https://satoricyber.github.io/authz-analyzer
 repo_url: https://github.com/satoricyber/authz-analyzer
 repo_name: satoricyber/authz-analyzer
 #strict: true
-nav:
-  - Introduction: index.md
-  - Installation: installation.md
-  - Usage: usage.md
-  - Data Stores:
-    - Amazon Redshift: datastores/redshift.md
-    - Amazon S3: datastores/s3.md
-    - Google BigQuery: datastores/bigquery.md
-    - MongoDB: datastores/mongodb.md
-    - PostgreSQL: datastores/postgresql.md
-    - Snowflake: datastores/snowflake.md
-  - Contributing: contributing.md
-  - Changelog: changelog.md
+
 theme:
   name: material
   language: en
@@ -28,6 +16,7 @@ theme:
     - navigation.indexes
     - navigation.instant
     - navigation.tabs.sticky
+
 markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
@@ -56,14 +45,12 @@ plugins:
   - search:
       lang: en
 extra:
-  homepage: https://satoricyber.com
+  homepage: https://satoricyber.github.io/authz-analyzer
   social:
     - icon: fontawesome/brands/twitter
-      # replace with your own tweet link below
       link: https://twitter.com/SatoriCyber
       name: Tweet
     - icon: fontawesome/brands/facebook
-      # replace with your own facebook link below
       link: https://www.facebook.com/SatoriCyber
       name: Facebook
     - icon: fontawesome/brands/github
@@ -71,9 +58,19 @@ extra:
       name: Github
     - icon: material/email
       link: "mailto:contact@satoricyber.com"
-  # to enable disqus, uncomment the following and put your disqus id below
-  # disqus: disqus_id
-# uncomment the following and put your google tracking id below to enable GA
-#google_analytics:
-  #- UA-xxx
-  #- auto
+  google_analytics:
+    - UA-154128939
+    - auto
+
+nav:
+  - Introduction: index.md
+  - Installation: installation.md
+  - Data Stores:
+    - Amazon Redshift: datastores/redshift.md
+    - Amazon S3: datastores/s3.md
+    - Google BigQuery: datastores/bigquery.md
+    - MongoDB: datastores/mongodb.md
+    - PostgreSQL: datastores/postgresql.md
+    - Snowflake: datastores/snowflake.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md

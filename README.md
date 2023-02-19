@@ -8,20 +8,12 @@ The root cause of this problem is that permissions to data are usually stored in
 
 Identifying this was an issue for many of our customers, the team at [Satori](https://satoricyber.com) decided to build *Authorization Analytics*, a service that helps admins to better manage their data store permissions. We believe no one should have to sift through DB system tables to get a clear picture of who can do what with data.
 
-## Using Authorization Analytics
-Authz Analytics is available in two ways:
+Authz Analytics is available in two forms:
 1. authz-analyzer open source CLI - scan the permissions structure of a database to get the list of all users and data assets they can access.
 2. Satori Authorization Analytics - a fully managed SaaS solution to periodically scan, store and visualize all users and data assets they can access. Learn more [here](https://satoricyber.com).
 
-## Supported Data Stores
-Authz Analytics support the following data stores, with more on the way:
-
-* [Amazon Redshift](docs/datastores/redshift.md)
-* [Amazon S3](docs/datastores/s3.md)
-* [Google BigQuery](docs/datastores/bigquery.md)
-* [MongoDB](docs/datastores/mongodb.md)
-* [PostgreSQL](docs/datastores/postgresql.md)
-* [Snowflake](docs/datastores/snowflake.md)
+## Documentation
+For more information on the authz-analyzer open-source, [go to the docs](https://satoricyber.github.io/authz-analyzer/).
 
 ## Contributing
 Please follow the [contributing guidelines](CONTRIBUTING.md).
