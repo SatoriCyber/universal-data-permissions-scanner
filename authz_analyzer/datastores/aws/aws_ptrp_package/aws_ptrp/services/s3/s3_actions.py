@@ -70,7 +70,7 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
         """
         the function checks that each object regex in self is a 'full subset' of any regex in other, and if so, it removes the object actions (in addition to the bucket actions)
         """
-        difference_also_on_object_actions = True
+        difference_also_on_object_actions = False
         if isinstance(other, ResolvedS3BucketActions):
             if other.stmt_relative_id_objects_regexes:
                 for s_regex in self.stmt_relative_id_objects_regexes:
