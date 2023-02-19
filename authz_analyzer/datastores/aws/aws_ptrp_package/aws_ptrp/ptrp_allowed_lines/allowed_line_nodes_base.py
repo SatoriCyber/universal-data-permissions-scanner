@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
-from aws_ptrp.iam.policy.policy_document import PolicyDocument
+from aws_ptrp.iam.policy.policy_document import PolicyDocument, PolicyDocumentCtx
 from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_models.ptrp_model import (
     AwsPrincipal,
@@ -89,7 +89,7 @@ class PoliciesNodeBase(NodeBase):
         pass
 
     @abstractmethod
-    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
+    def get_inline_policies_ctx(self) -> List[PolicyDocumentCtx]:
         pass
 
 
@@ -167,10 +167,10 @@ class PrincipalAndPoliciesNode(PrincipalAndPoliciesNodeBase):
             ret.extend(additional_policies_base.get_attached_policies_arn())
         return ret
 
-    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
-        ret = self.base.get_inline_policies_arns_and_names()
+    def get_inline_policies_ctx(self) -> List[PolicyDocumentCtx]:
+        ret = self.base.get_inline_policies_ctx()
         for additional_policies_base in self.additional_policies_bases:
-            ret.extend(additional_policies_base.get_inline_policies_arns_and_names())
+            ret.extend(additional_policies_base.get_inline_policies_ctx())
         return ret
 
 
@@ -251,8 +251,8 @@ class PathRoleNode(PathRoleNodeBase):
     def get_attached_policies_arn(self) -> List[str]:
         return self.base.get_attached_policies_arn()
 
-    def get_inline_policies_arns_and_names(self) -> List[Tuple[PolicyDocument, str, str]]:
-        return self.base.get_inline_policies_arns_and_names()
+    def get_inline_policies_ctx(self) -> List[PolicyDocumentCtx]:
+        return self.base.get_inline_policies_ctx()
 
     # PathNodeBase
     def get_path_type(self) -> AwsPtrpPathNodeType:
@@ -303,15 +303,13 @@ class PathFederatedPrincipalNode(PathFederatedPrincipalNodeBase):
 @dataclass
 class PathPolicyNode(PathPolicyNodeBase):
     path_element_type: AwsPtrpPathNodeType
-    path_arn: str
-    path_name: str
-    policy_document: PolicyDocument
+    policy_document_ctx: PolicyDocumentCtx
     is_resource_based_policy: bool
 
     def get_ptrp_path_node(self, nodes_notes_getter: NodeNotesGetter) -> AwsPtrpPathNode:
         return AwsPtrpPathNode(
-            arn=self.path_arn,
-            name=self.path_name,
+            arn=self.policy_document_ctx.parent_arn,
+            name=self.policy_document_ctx.policy_name,
             type=self.path_element_type,
             notes=nodes_notes_getter.get_aws_ptrp_node_notes(self),
         )
@@ -321,24 +319,27 @@ class PathPolicyNode(PathPolicyNodeBase):
             policy_type = "resource-based"
         else:
             policy_type = "identity-based"
-        return f"PathPolicyNode(Arn: {self.path_arn}, Name: {self.path_name}, PolicyType: {policy_type})"
+        return f"PathPolicyNode(Arn: {self.policy_document_ctx.parent_arn}, Name: {self.policy_document_ctx.policy_name}, PolicyType: {policy_type})"
 
     def __eq__(self, other):
-        return self.path_arn == other.path_arn and self.path_name == other.path_name
+        return (
+            self.policy_document_ctx.parent_arn == other.policy_document_ctx.parent_arn
+            and self.policy_document_ctx.policy_name == other.policy_document_ctx.policy_name
+        )
 
     def __hash__(self):
-        return hash(self.path_arn) + hash(self.path_name)
+        return hash(self.policy_document_ctx.parent_arn) + hash(self.policy_document_ctx.policy_name)
 
     # NodeBase
     def get_node_arn(self) -> str:
-        return self.path_arn
+        return self.policy_document_ctx.parent_arn
 
     def get_node_name(self) -> str:
-        return self.path_name
+        return self.policy_document_ctx.policy_name
 
     # PathPolicyNodeBase
     def get_policy(self) -> PolicyDocument:
-        return self.policy_document
+        return self.policy_document_ctx.policy_document
 
     # PathNodeBase
     def get_path_type(self) -> AwsPtrpPathNodeType:

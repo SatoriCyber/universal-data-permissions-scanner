@@ -6,6 +6,7 @@ from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.policy.effect import Effect
 from aws_ptrp.iam.policy.policy_document import PolicyDocument, PolicyDocumentCtx
 from aws_ptrp.principals import Principal
+from aws_ptrp.ptrp_models import AwsPrincipalType
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.resources.resources_resolver import ResourcesResolver
 from aws_ptrp.services import (
@@ -22,27 +23,32 @@ def get_role_trust_resolver(
     logger: Logger,
     role_trust_policy: PolicyDocument,
     iam_role_arn: str,
+    iam_role_aws_account_id: str,
     effect: Effect,
     aws_actions: AwsActions,
     account_resources: AwsAccountResources,
 ) -> Optional[AssumeRoleServiceResourcesResolver]:
     all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase] = {}
+    service_resource_type: ServiceResourceType = AssumeRoleService()
+
     _services_resolver_for_policy_document(
         logger=logger,
         all_stmts_service_resources_resolvers=all_stmts_service_resources_resolvers,
         policy_document=role_trust_policy,
         parent_arn=iam_role_arn,
+        parent_aws_account_id=iam_role_aws_account_id,
         policy_name=None,
-        identity_principal=None,
+        identity_based_policy_principal=None,
+        resource_based_policy_service_resource_type=service_resource_type,
         aws_actions=aws_actions,
         account_resources=account_resources,
         effect=effect,
-        allowed_service_action_types=set([AssumeRoleService()]),
+        allowed_service_action_types=set([service_resource_type]),
     )
     if all_stmts_service_resources_resolvers:
         ret_service_resources_resolver: Optional[
             ServiceResourcesResolverBase
-        ] = all_stmts_service_resources_resolvers.get(AssumeRoleService())
+        ] = all_stmts_service_resources_resolvers.get(service_resource_type)
         if ret_service_resources_resolver and isinstance(
             ret_service_resources_resolver, AssumeRoleServiceResourcesResolver
         ):
@@ -55,6 +61,7 @@ def get_resource_based_resolver(
     policy_document: PolicyDocument,
     service_resource_type: ServiceResourceType,
     resource_arn: str,
+    resource_aws_account_id: str,
     effect: Effect,
     aws_actions: AwsActions,
     account_resources: AwsAccountResources,
@@ -65,8 +72,10 @@ def get_resource_based_resolver(
         all_stmts_service_resources_resolvers=all_stmts_service_resources_resolvers,
         policy_document=policy_document,
         parent_arn=resource_arn,
+        parent_aws_account_id=resource_aws_account_id,
         policy_name=None,
-        identity_principal=None,
+        resource_based_policy_service_resource_type=service_resource_type,
+        identity_based_policy_principal=None,
         aws_actions=aws_actions,
         account_resources=account_resources,
         effect=effect,
@@ -93,8 +102,10 @@ def get_identity_based_resolver(
             all_stmts_service_resources_resolvers=all_stmts_service_resources_resolvers,
             policy_document=policy_document_ctx.policy_document,
             parent_arn=policy_document_ctx.parent_arn,
+            parent_aws_account_id=policy_document_ctx.parent_aws_account_id,
             policy_name=policy_document_ctx.policy_name,
-            identity_principal=identity_principal,
+            resource_based_policy_service_resource_type=None,
+            identity_based_policy_principal=identity_principal,
             aws_actions=aws_actions,
             account_resources=account_resources,
             effect=effect,
@@ -106,26 +117,80 @@ def get_identity_based_resolver(
         return None
 
 
+def is_stmt_principal_relevant_to_resource(
+    stmt_principal: Principal,
+    resource_aws_account_id: str,
+    resource_based_irrelevant_principal_types: Optional[Set[AwsPrincipalType]],
+) -> bool:
+    if (
+        resource_based_irrelevant_principal_types
+        and stmt_principal.principal_type in resource_based_irrelevant_principal_types
+    ):
+        return False
+    # The below is unclear, seems like principal of AWS_ACCOUNT (like arn:aws:iam::([0-9]+):root) works only in cross-account access
+    # although not clear evidence for that in the AWS docs, I couldn't makes it work for single account access
+    # need to verify with AWS support
+    if (
+        stmt_principal.principal_type == AwsPrincipalType.AWS_ACCOUNT
+        and resource_aws_account_id == stmt_principal.get_account_id()
+    ):
+        return False
+    return True
+
+
+def _filter_resource_based_stmt_principals(
+    stmt_principals: List[Principal],
+    resource_aws_account_id: str,
+    resource_based_irrelevant_principal_types: Optional[Set[AwsPrincipalType]],
+) -> List[Principal]:
+    ret: List[Principal] = []
+    for stmt_principal in stmt_principals:
+        if is_stmt_principal_relevant_to_resource(
+            stmt_principal, resource_aws_account_id, resource_based_irrelevant_principal_types
+        ):
+            ret.append(stmt_principal)
+    return ret
+
+
 def _services_resolver_for_policy_document(
     logger: Logger,
     all_stmts_service_resources_resolvers: Dict[ServiceResourceType, ServiceResourcesResolverBase],
     policy_document: PolicyDocument,
     parent_arn: str,
+    parent_aws_account_id: str,
     policy_name: Optional[str],
-    identity_principal: Optional[Principal],
+    resource_based_policy_service_resource_type: Optional[ServiceResourceType],
+    identity_based_policy_principal: Optional[Principal],
     aws_actions: AwsActions,
     account_resources: AwsAccountResources,
     effect: Effect,
     allowed_service_action_types: Optional[Set[ServiceActionType]] = None,
 ):
+
+    # must be either resource_based_policy_service_resource_type is not None or identity_based_policy_principal is not None (not both)
+    if (resource_based_policy_service_resource_type is None and identity_based_policy_principal is None) or (
+        resource_based_policy_service_resource_type is not None and identity_based_policy_principal is not None
+    ):
+        raise Exception("Invalid input of resource_based_policy_service_resource_type, identity_based_policy_principal")
+
+    if resource_based_policy_service_resource_type:
+        resource_based_irrelevant_principal_types: Optional[
+            Set[AwsPrincipalType]
+        ] = resource_based_policy_service_resource_type.get_resource_based_policy_irrelevant_principal_types()
+
+    else:
+        resource_based_irrelevant_principal_types = None
+
     for statement in policy_document.statement:
         if statement.effect != effect:
             continue
 
         if statement.principal:
-            statement_principals: List[Principal] = statement.principal.principals
-        elif identity_principal:
-            statement_principals = [identity_principal]
+            statement_principals: List[Principal] = _filter_resource_based_stmt_principals(
+                statement.principal.principals, parent_aws_account_id, resource_based_irrelevant_principal_types
+            )
+        elif identity_based_policy_principal:
+            statement_principals = [identity_based_policy_principal]
         else:
             raise Exception(
                 "Invalid principal input both statement.principal & outer param identity_principal are None"
