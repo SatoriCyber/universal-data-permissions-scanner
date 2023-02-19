@@ -60,10 +60,10 @@ def main(ctx: click.Context, debug: bool, out: str, out_format: str):
 @click.option('--account', '-a', required=True, type=str, help="Account")
 @click.option('--host', '-t', required=False, type=str, help="Hostname")
 @click.option('--warehouse', '-w', required=False, type=str, help="Warehouse")
-def snowflake(ctx: click.Context, user: str, password: str, account: str, host: str, warehouse: str):
+def snowflake(ctx: click.Context, username: str, password: str, account: str, host: str, warehouse: str):
     """Analyze Snowflake Authorization"""
     output_path = Path(ctx.obj['OUT'])
-    run_snowflake(ctx.obj['LOGGER'], user, password, account, host, warehouse, ctx.obj["FORMAT"], output_path)
+    run_snowflake(ctx.obj['LOGGER'], username, password, account, host, warehouse, ctx.obj["FORMAT"], output_path)
 
 
 @main.command()
@@ -116,13 +116,13 @@ def aws_s3(
 @click.option('--port', required=False, type=int, help="Postgres port", default=5432)
 @click.option('--host', '-t', required=True, type=str, help="Postgres host, FQDN or IP")
 @click.option('--dbname', '-d', required=False, type=str, help="Postgres database name", default="postgres")
-def postgres(ctx: click.Context, user: str, password: str, port: int, host: str, dbname: str):
+def postgres(ctx: click.Context, username: str, password: str, port: int, host: str, dbname: str):
     """Analyze Postgres Authorization"""
     run_postgres(
         logger=ctx.obj['LOGGER'],
         output_format=ctx.obj['FORMAT'],
         output_path=ctx.obj['OUT'],
-        username=user,
+        username=username,
         password=password,
         port=port,
         host=host,
@@ -137,13 +137,13 @@ def postgres(ctx: click.Context, user: str, password: str, port: int, host: str,
 @click.option('--port', required=False, type=int, help="Redshift port", default=5439)
 @click.option('--host', '-t', required=True, type=str, help="Redshift host, FQDN or IP")
 @click.option('--dbname', '-d', required=False, type=str, help="Redshift database name", default="dev")
-def redshift(ctx: click.Context, user: str, password: str, port: int, host: str, dbname: str):
+def redshift(ctx: click.Context, username: str, password: str, port: int, host: str, dbname: str):
     """Analyze Redshift Authorization"""
     run_redshift(
         logger=ctx.obj['LOGGER'],
         output_format=ctx.obj['FORMAT'],
         output_path=ctx.obj['OUT'],
-        username=user,
+        username=username,
         password=password,
         port=port,
         host=host,
@@ -177,7 +177,7 @@ def mongodb(ctx: click.Context, username: str, password: str, port: int, host: s
 @click.option('--public_key', '-pk', required=True, type=str, help="Atlas API public key from access manager")
 @click.option('--private_key', '-k', required=True, type=str, help="Atlas API private key from access manager")
 @click.option(
-    'user',
+    '--username',
     '-u',
     required=True,
     type=str,
@@ -190,8 +190,8 @@ def mongodb(ctx: click.Context, username: str, password: str, port: int, host: s
     type=str,
     help="MongoDB password the analyzer should use to connect to each cluster",
 )
-@click.option('--project', 'j', required=True, type=str, help="Atlas project name")
-@click.option('--cluster', 'c', required=True, type=str, help="Atlas cluster name")
+@click.option('--project', '-j', required=True, type=str, help="Atlas project name")
+@click.option('--cluster', '-c', required=True, type=str, help="Atlas cluster name")
 def atlas(
     ctx: click.Context, public_key: str, private_key: str, username: str, password: str, project: str, cluster: str
 ):
