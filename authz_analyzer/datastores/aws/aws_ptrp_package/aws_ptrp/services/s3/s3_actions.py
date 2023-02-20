@@ -189,7 +189,7 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
             ret = None
         else:
             ret = cls.load_with_object_regex_list(
-                resolved_actions.copy(), stmt_relative_id_objects_regexes, not_resource_annotated
+                resolved_actions, stmt_relative_id_objects_regexes, not_resource_annotated
             )
         return ret
 

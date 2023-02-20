@@ -35,7 +35,7 @@ class NodeBase(ABC):
 
 class NodeNoteType(Enum):
     POLICY_STMT_DENY_WITH_CONDITION = auto()
-    POLICY_STMT_SKIPPING_DENY_WITH_NOT_RESOURCE = auto()
+    POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE = auto()
 
     def __str__(self) -> str:
         return self.name
@@ -58,8 +58,10 @@ class NodeNote:
     def to_ptrp_node_note(self) -> AwsPtrpNodeNote:
         if self.note_type == NodeNoteType.POLICY_STMT_DENY_WITH_CONDITION:
             return AwsPtrpNodeNote(note=self.note, note_type=AwsPtrpNoteType.POLICY_STMT_DENY_WITH_CONDITION)
-        elif self.note_type == NodeNoteType.POLICY_STMT_SKIPPING_DENY_WITH_NOT_RESOURCE:
-            return AwsPtrpNodeNote(note=self.note, note_type=AwsPtrpNoteType.POLICY_STMT_SKIPPING_DENY_WITH_NOT_RESOURCE)
+        elif self.note_type == NodeNoteType.POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE:
+            return AwsPtrpNodeNote(
+                note=self.note, note_type=AwsPtrpNoteType.POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE
+            )
         else:
             assert False  # should not get here, unknown enum value
 

@@ -135,7 +135,7 @@ class AuthzNoteType(Enum):
 
     GENERIC = auto()
     AWS_POLICY_STMT_DENY_WITH_CONDITION = auto()
-    AWS_POLICY_STMT_SKIPPING_DENY_WITH_NOT_RESOURCE = auto()
+    AWS_POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE = auto()
 
     def __str__(self) -> str:
         return self.name

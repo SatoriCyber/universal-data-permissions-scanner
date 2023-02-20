@@ -133,7 +133,7 @@ def _update_nodes_notes(
             ):
                 node_notes.add_node_note(
                     NodeNote(
-                        NodeNoteType.POLICY_STMT_SKIPPING_DENY_WITH_NOT_RESOURCE,
+                        NodeNoteType.POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE,
                         f"{stmt_name}{policy_name}{attached_to_other_node_arn} has deny which might not applied for {service_name} service, due to the use of 'NotResource' with the object regex",
                     )
                 )
