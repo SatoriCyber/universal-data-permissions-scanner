@@ -158,6 +158,29 @@
                                         "NotResource": [
                                             "arn:aws:s3:::bucket_2/*"
                                         ]
+                                    },
+                                    {
+                                        "_comment": "Verify that DeleteObjectVersionTagging will be denied for both buckets",
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor15",
+                                        "Action": [
+                                            "s3:DeleteObjectVersionTagging"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/?.json",
+                                            "arn:aws:s3:::bucket_1/something.*",
+                                            "arn:aws:s3:::bucket_2/bla*.txt"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Deny",
+                                        "Sid": "VisualEditor16",
+                                        "Action": [
+                                            "s3:DeleteObjectVersionTagging"
+                                        ],
+                                        "Resource": [
+                                            "arn:aws:s3:::bucket_*/*"
+                                        ]
                                     }
                                 ]
                             }
