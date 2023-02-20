@@ -59,7 +59,7 @@ mkdocs-include-markdown-plugin = {version = "^4.0.3", optional=true}
 
 [tool.poetry.extras]
 test = ["pytest", "pytest-cov", "black", "isort", "twine", "mypy", "types-psycopg2", 
-        "google-api-python-client-stubs", "types-requests", "pylint", "pyright"]
+        "google-api-python-client-stubs", "types-requests", "pylint", "pyright", "bump2version"]
 release = ["twine", "mkdocs", "mkdocs-material", "mkdocs-include-markdown-plugin"]
 
 [tool.poetry.scripts]
