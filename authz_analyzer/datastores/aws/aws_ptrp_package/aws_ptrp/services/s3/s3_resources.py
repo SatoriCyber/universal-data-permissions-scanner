@@ -91,9 +91,14 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
         for bucket in s3_buckets:
             to_differ = resolved_buckets.get(bucket)
             if to_differ:
-                resolved_buckets[bucket] = ResolvedS3BucketActions.load_from_not_resource_difference(
+                resolved_action_for_bucket = ResolvedS3BucketActions.load_from_not_resource_difference(
                     to_differ, resolved_actions
                 )
+                # After difference, no actions are left for the bucket
+                if resolved_action_for_bucket is None:
+                    resolved_buckets.pop(bucket)
+                else:
+                    resolved_buckets[bucket] = resolved_action_for_bucket
             else:
                 resolved_buckets[bucket] = ResolvedS3BucketActions.load(resolved_actions.copy(), "*", False)
 
