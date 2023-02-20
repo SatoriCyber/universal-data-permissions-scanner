@@ -169,9 +169,7 @@ class ServiceResourcesResolverBase(ABC):
     @classmethod
     @abstractmethod
     def load_from_single_stmt(
-        cls,
-        logger: Logger,
-        stmt_ctx: StmtResourcesToResolveCtx,
+        cls, logger: Logger, stmt_ctx: StmtResourcesToResolveCtx, not_resource_annotated: bool
     ) -> 'ServiceResourcesResolverBase':
         pass
 

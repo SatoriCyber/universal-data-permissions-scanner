@@ -63,11 +63,21 @@ class Statement:
     )
     _action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True, rename="Action")
     _not_action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True, rename="NotAction")
-    resource: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
-    not_resource: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True)
+    _resource: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True, rename="Resource")
+    _not_resource: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True, rename="NotResource")
     # just to verify if condition exists (To ignore Deny stmts with condition, to be on the strict side for the allowed permissions)
     # to revisit, once we will start to support condition
     condition: Optional[Dict[str, Any]] = field(default=None, skip_if_default=True)
+
+    def get_resources(self) -> Optional[List[str]]:
+        if self._resource:
+            return self._resource if isinstance(self._resource, list) else [self._resource]
+        elif self._not_resource:
+            return self._not_resource if isinstance(self._not_resource, list) else [self._not_resource]
+        return None
+
+    def is_not_resource_in_statement(self) -> bool:
+        return self._not_resource is not None
 
     def get_actions(self) -> List[str]:
         actions: List[str] = []
