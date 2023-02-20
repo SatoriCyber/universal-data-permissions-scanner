@@ -100,7 +100,7 @@ def _update_nodes_notes(
         elif resource_node_note.get_node_arn() == resolved_stmt.stmt_parent_arn:
             node_base_to_add = resource_node_note
         else:
-            # check if the resolved_stmt with coming from inline policy or attached iam policy (which doesn't appear as a node in the allowed line nodes)
+            # check if the resolved_stmt coming from inline policy or attached iam policy (which doesn't appear as a node in the allowed line nodes)
             for inline_policy_ctx in principal_policies_node_base.get_inline_policies_ctx():
                 if inline_policy_ctx.parent_arn == resolved_stmt.stmt_parent_arn:
                     node_base_to_add = principal_policies_node_base
