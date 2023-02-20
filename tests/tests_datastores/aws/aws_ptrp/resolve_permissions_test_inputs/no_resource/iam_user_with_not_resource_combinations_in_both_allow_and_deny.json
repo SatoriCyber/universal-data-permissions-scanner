@@ -75,9 +75,9 @@
                                     },
                                     {
                                         "Effect": "Deny",
-                                        "Sid": "VisualEditor4",
+                                        "Sid": "VisualEditor7",
                                         "Action": [
-                                            "s3:PutObject"
+                                            "s3:GetObjectTagging"
                                         ],
                                         "NotResource": [
                                             "arn:aws:s3:::bucket_1/*.txt"
@@ -85,40 +85,30 @@
                                     },
                                     {
                                         "Effect": "Allow",
-                                        "Sid": "VisualEditor5",
-                                        "Action": [
-                                            "s3:DeleteObject"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/?.json"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor6",
-                                        "Action": [
-                                            "s3:DeleteObject"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/a.json"
-                                        ]
-                                    },
-                                    {
-                                        "_comment": "Since the deny has a wildcard, we will deny the s3:GetObjectAcl action",
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor7",
-                                        "Action": [
-                                            "s3:GetObjectAcl"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/?.json"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
                                         "Sid": "VisualEditor8",
                                         "Action": [
-                                            "s3:GetObjectAcl"
+                                            "s3:GetObjectTagging"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/?.json"
+                                        ]
+                                    },
+                                    {
+                                        "_comment": "Since the deny has a wildcard, we will deny the s3:GetObjectVersion action for bucket_1",
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor9",
+                                        "Action": [
+                                            "s3:GetObjectVersion"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/?.json"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Deny",
+                                        "Sid": "VisualEditor10",
+                                        "Action": [
+                                            "s3:GetObjectVersion"
                                         ],
                                         "Resource": [
                                             "arn:aws:s3:::bucket_1/*"
@@ -127,7 +117,7 @@
                                     {
                                         "_comment": "Since the Deny is annotated with NotResource, we can't tell if to deny or not so we will allow",
                                         "Effect": "Allow",
-                                        "Sid": "VisualEditor9",
+                                        "Sid": "VisualEditor11",
                                         "Action": [
                                             "s3:GetObjectAttributes"
                                         ],
@@ -138,7 +128,7 @@
                                     },
                                     {
                                         "Effect": "Deny",
-                                        "Sid": "VisualEditor10",
+                                        "Sid": "VisualEditor12",
                                         "Action": [
                                             "s3:GetObjectAttributes"
                                         ],
@@ -148,11 +138,11 @@
                                         ]
                                     },
                                     {
-                                        "_comment": "Verify that GetObjectLegalHold will be denied",
+                                        "_comment": "Verify that GetObjectLegalHold will be denied for bucket_1",
                                         "Effect": "Allow",
-                                        "Sid": "VisualEditor11",
+                                        "Sid": "VisualEditor13",
                                         "Action": [
-                                            "s3:GetObjectLegalHold"
+                                            "s3:RestoreObject"
                                         ],
                                         "NotResource": [
                                             "arn:aws:s3:::bucket_1/?.json",
@@ -161,9 +151,9 @@
                                     },
                                     {
                                         "Effect": "Deny",
-                                        "Sid": "VisualEditor12",
+                                        "Sid": "VisualEditor14",
                                         "Action": [
-                                            "s3:GetObjectLegalHold"
+                                            "s3:RestoreObject"
                                         ],
                                         "NotResource": [
                                             "arn:aws:s3:::bucket_2/*"
@@ -226,7 +216,8 @@
             ],
             "action_permissions": [
                 "GetObject",
-                "GetObjectAttributes"
+                "GetObjectAttributes",
+                "GetObjectTagging"
             ]
         },
         {
@@ -252,6 +243,56 @@
             ],
             "action_permissions": [
                 "PutObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_2",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-1",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObjectVersion"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_2",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "WRITE",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-1",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "RestoreObject"
             ]
         }
     ]
