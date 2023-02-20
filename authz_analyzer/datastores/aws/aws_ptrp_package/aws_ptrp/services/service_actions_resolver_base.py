@@ -1,11 +1,46 @@
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum, auto
 from logging import Logger
 from typing import List, Set
 
 from aws_ptrp.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
 from aws_ptrp.services.service_action_base import ServiceActionBase
+
+
+class MethodOnStmtActionsType(Enum):
+    DIFFERENCE = auto()
+    INTERSECTION = auto()
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name
+
+    def __hash__(self) -> int:
+        return hash(self.value)
+
+
+class MethodOnStmtActionsResultType(Enum):
+    APPLIED = auto()
+    IGNORE_NO_OVERLAPS_TARGET_RESOURCE = auto()
+    IGNORE_NO_OVERLAPS_TARGET_PRINCIPAL = auto()
+    IGNORE_METHOD_DIFFERENCE_CONDITION_EXISTS = auto()
+    IGNORE_METHOD_DIFFERENCE_WITH_NOT_RESOURCE_OBJECT_REGEX = auto()
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name
+
+    def __hash__(self) -> int:
+        return hash(self.value)
+
+    def __eq__(self, other):
+        return self.value == other.value
 
 
 @dataclass
@@ -15,11 +50,13 @@ class ResolvedActionsSingleStmt(ABC):
     def resolved_stmt_actions(self) -> Set[ServiceActionBase]:
         pass
 
-    def difference(self, other: 'ResolvedActionsSingleStmt'):
+    def difference(self, other: 'ResolvedActionsSingleStmt') -> MethodOnStmtActionsResultType:
         self.resolved_stmt_actions.difference_update(other.resolved_stmt_actions)
+        return MethodOnStmtActionsResultType.APPLIED
 
-    def intersection(self, other: 'ResolvedActionsSingleStmt'):
+    def intersection(self, other: 'ResolvedActionsSingleStmt') -> MethodOnStmtActionsResultType:
         self.resolved_stmt_actions.intersection_update(other.resolved_stmt_actions)
+        return MethodOnStmtActionsResultType.APPLIED
 
 
 @dataclass

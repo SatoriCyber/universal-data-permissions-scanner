@@ -1,47 +1,17 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum, auto
 from logging import Logger
 from typing import Generator, List, Optional, Set
 
 from aws_ptrp.principals import Principal
 from aws_ptrp.services.resolved_stmt import ResolvedSingleStmt, ResolvedSingleStmtGetter, StmtResourcesToResolveCtx
 from aws_ptrp.services.service_action_base import ServiceActionBase
-from aws_ptrp.services.service_actions_resolver_base import ResolvedActionsSingleStmt
+from aws_ptrp.services.service_actions_resolver_base import (
+    MethodOnStmtActionsResultType,
+    MethodOnStmtActionsType,
+    ResolvedActionsSingleStmt,
+)
 from aws_ptrp.services.service_resource_base import ServiceResourceBase
-
-
-class MethodOnStmtActionsType(Enum):
-    DIFFERENCE = auto()
-    INTERSECTION = auto()
-
-    def __str__(self) -> str:
-        return self.name
-
-    def __repr__(self) -> str:
-        return self.name
-
-    def __hash__(self) -> int:
-        return hash(self.value)
-
-
-class MethodOnStmtActionsResultType(Enum):
-    APPLIED = auto()
-    IGNORE_NO_OVERLAPS_TARGET_RESOURCE = auto()
-    IGNORE_NO_OVERLAPS_TARGET_PRINCIPAL = auto()
-    IGNORE_METHOD_DIFFERENCE_CONDITION_EXISTS = auto()
-
-    def __str__(self) -> str:
-        return self.name
-
-    def __repr__(self) -> str:
-        return self.name
-
-    def __hash__(self) -> int:
-        return hash(self.value)
-
-    def __eq__(self, other):
-        return self.value == other.value
 
 
 @dataclass
@@ -146,16 +116,16 @@ class ServiceResourcesResolverBase(ABC):
 
                     # found same resolved resource, both in 'self' stmt & 'other stmt
                     if method_on_stmt_actions_type == MethodOnStmtActionsType.DIFFERENCE:
-                        resolved_action_single_stmt.difference(other_resolved_action_single_stmt)
+                        result = resolved_action_single_stmt.difference(other_resolved_action_single_stmt)
                     elif method_on_stmt_actions_type == MethodOnStmtActionsType.INTERSECTION:
-                        resolved_action_single_stmt.intersection(other_resolved_action_single_stmt)
+                        result = resolved_action_single_stmt.intersection(other_resolved_action_single_stmt)
                     else:
                         assert False  # should not get here, unknown enum value
 
                     res.resolved_stmt_results.add(
                         MethodOnStmtActionsResult(
                             resolved_single_stmt=other_resolved_stmt,
-                            result=MethodOnStmtActionsResultType.APPLIED,
+                            result=result,
                         )
                     )
 

@@ -19,6 +19,7 @@ class AwsPtrpNoteType(Enum):
     """Types of note"""
 
     POLICY_STMT_DENY_WITH_CONDITION = auto()
+    POLICY_STMT_SKIPPING_DENY_WITH_NOT_RESOURCE = auto()
 
     def __str__(self) -> str:
         return self.name

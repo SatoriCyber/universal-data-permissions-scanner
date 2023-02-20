@@ -67,8 +67,17 @@ def _update_nodes_notes(
     resource_node_note: NodeBase,
 ):
     # For each resolved_stmt in the policy evaluation result, explicit deny result: check if there are stmt with Deny + condition
-    for resolved_stmt in policy_apply_result.explicit_deny_result.yield_resolved_stmts(
-        MethodOnStmtActionsType.DIFFERENCE, MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_CONDITION_EXISTS
+    for (
+        resolved_stmt,
+        method_on_stmt_actions_result_type,
+    ) in policy_apply_result.explicit_deny_result.yield_resolved_stmts(
+        MethodOnStmtActionsType.DIFFERENCE,
+        list(
+            [
+                MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_CONDITION_EXISTS,
+                MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_WITH_NOT_RESOURCE_OBJECT_REGEX,
+            ]
+        ),
     ):
         # build the node note params
         stmt_name = f"statement '{resolved_stmt.stmt_name}' in " if resolved_stmt.stmt_name else ''
@@ -91,7 +100,7 @@ def _update_nodes_notes(
         elif resource_node_note.get_node_arn() == resolved_stmt.stmt_parent_arn:
             node_base_to_add = resource_node_note
         else:
-            # check if the resolved_stmt with the deny condition coming from inline policy or attached iam policy (which doesn't appear as a node in the allowed line nodes)
+            # check if the resolved_stmt with coming from inline policy or attached iam policy (which doesn't appear as a node in the allowed line nodes)
             for inline_policy_ctx in principal_policies_node_base.get_inline_policies_ctx():
                 if inline_policy_ctx.parent_arn == resolved_stmt.stmt_parent_arn:
                     node_base_to_add = principal_policies_node_base
@@ -108,12 +117,26 @@ def _update_nodes_notes(
 
         if node_base_to_add:
             node_notes = nodes_notes.nodes_notes.setdefault(node_base_to_add, NodeNotes())
-            node_notes.add_node_note(
-                NodeNote(
-                    NodeNoteType.POLICY_STMT_DENY_WITH_CONDITION,
-                    f"{stmt_name}{policy_name}{attached_to_other_node_arn} has deny with condition for {service_name} service",
+            if (
+                method_on_stmt_actions_result_type
+                == MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_CONDITION_EXISTS
+            ):
+                node_notes.add_node_note(
+                    NodeNote(
+                        NodeNoteType.POLICY_STMT_DENY_WITH_CONDITION,
+                        f"{stmt_name}{policy_name}{attached_to_other_node_arn} has deny with condition for {service_name} service",
+                    )
                 )
-            )
+            elif (
+                method_on_stmt_actions_result_type
+                == MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_WITH_NOT_RESOURCE_OBJECT_REGEX
+            ):
+                node_notes.add_node_note(
+                    NodeNote(
+                        NodeNoteType.POLICY_STMT_SKIPPING_DENY_WITH_NOT_RESOURCE,
+                        f"{stmt_name}{policy_name}{attached_to_other_node_arn} has deny which might not applied for {service_name} service, due to the use of 'NotResource' with the object regex",
+                    )
+                )
 
 
 def get_nodes_notes_from_target_policy_resource_based(

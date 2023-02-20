@@ -234,7 +234,12 @@
                     "arn": "arn:aws:iam::105246067165:user/iam_user_1",
                     "name": "inline-policy-1",
                     "type": "IAM_INLINE_POLICY",
-                    "notes": []
+                    "notes": [
+                        {
+                            "note": "statement 'VisualEditor12' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
+                            "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_NOT_RESOURCE"
+                        }
+                    ]
                 }
             ],
             "action_permissions": [
@@ -261,7 +266,12 @@
                     "arn": "arn:aws:iam::105246067165:user/iam_user_1",
                     "name": "inline-policy-1",
                     "type": "IAM_INLINE_POLICY",
-                    "notes": []
+                    "notes": [
+                        {
+                            "note": "statement 'VisualEditor12' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
+                            "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_NOT_RESOURCE"
+                        }
+                    ]
                 }
             ],
             "action_permissions": [
@@ -286,7 +296,12 @@
                     "arn": "arn:aws:iam::105246067165:user/iam_user_1",
                     "name": "inline-policy-1",
                     "type": "IAM_INLINE_POLICY",
-                    "notes": []
+                    "notes": [
+                        {
+                            "note": "statement 'VisualEditor12' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
+                            "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_NOT_RESOURCE"
+                        }
+                    ]
                 }
             ],
             "action_permissions": [
@@ -311,7 +326,12 @@
                     "arn": "arn:aws:iam::105246067165:user/iam_user_1",
                     "name": "inline-policy-1",
                     "type": "IAM_INLINE_POLICY",
-                    "notes": []
+                    "notes": [
+                        {
+                            "note": "statement 'VisualEditor12' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
+                            "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_NOT_RESOURCE"
+                        }
+                    ]
                 }
             ],
             "action_permissions": [
