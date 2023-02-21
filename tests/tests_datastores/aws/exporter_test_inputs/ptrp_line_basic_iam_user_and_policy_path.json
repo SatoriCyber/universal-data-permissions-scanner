@@ -1,0 +1,54 @@
+    {
+        "ptrp_line": {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067166:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy",
+                    "name": "policy",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        "authz_entry": {
+            "asset": {
+                "name": [
+                    "bucket_1"
+                ],
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "path": [
+                {
+                    "id": "arn:aws:iam::105246067165:policy/policy",
+                    "name": "policy",
+                    "type": "IAM_POLICY",
+                    "notes": [],
+                    "db_permissions": [
+                        "GetObject"
+                    ]
+                }
+            ],
+            "identity": {
+                "id": "arn:aws:iam::105246067166:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "permission": "READ"
+        }
+    }

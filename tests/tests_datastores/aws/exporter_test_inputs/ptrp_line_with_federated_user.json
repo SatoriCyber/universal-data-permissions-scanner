@@ -1,0 +1,80 @@
+{
+    "ptrp_line": {
+        "resource": {
+            "name": "bucket_1",
+            "type": "S3_BUCKET",
+            "notes": []
+        },
+        "principal": {
+            "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+            "name": "iam_user_1",
+            "type": "IAM_USER",
+            "notes": []
+        },
+        "action_permission_level": "WRITE",
+        "path_nodes": [
+            {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "inline-policy-allow",
+                "type": "IAM_INLINE_POLICY",
+                "notes": []
+            },
+            {
+                "arn": "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                "name": "federated_user_1",
+                "type": "FEDERATED_USER",
+                "notes": []
+            },
+            {
+                "arn": "arn:aws:s3:::bucket_1",
+                "name": "bucket_1",
+                "type": "RESOURCE_POLICY",
+                "notes": []
+            }
+        ],
+        "action_permissions": [
+            "PutObject"
+        ]
+    },
+    "authz_entry": {
+        "asset": {
+            "name": [
+                "bucket_1"
+            ],
+            "type": "S3_BUCKET",
+            "notes": []
+        },
+        "path": [
+            {
+                "id": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "inline-policy-allow",
+                "type": "IAM_INLINE_POLICY",
+                "notes": [],
+                "db_permissions": []
+            },
+            {
+                "id": "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                "name": "federated_user_1",
+                "type": "FEDERATED_USER",
+                "notes": [],
+                "db_permissions": []
+            },
+            {
+                "id": "arn:aws:s3:::bucket_1",
+                "name": "bucket_1",
+                "type": "RESOURCE_POLICY",
+                "notes": [],
+                "db_permissions": [
+                    "PutObject"
+                ]
+            }
+        ],
+        "identity": {
+            "id": "arn:aws:iam::105246067165:user/iam_user_1",
+            "name": "iam_user_1",
+            "type": "IAM_USER",
+            "notes": []
+        },
+        "permission": "WRITE"
+    }
+}
