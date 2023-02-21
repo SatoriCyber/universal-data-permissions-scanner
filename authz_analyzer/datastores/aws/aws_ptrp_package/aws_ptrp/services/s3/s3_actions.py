@@ -6,7 +6,12 @@ from logging import Logger
 from typing import List, Optional, Set
 
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpActionPermissionLevel
-from aws_ptrp.services import ResolvedActionsSingleStmt, ServiceActionBase, ServiceActionsResolverBase
+from aws_ptrp.services import (
+    MethodOnStmtActionsResultType,
+    ResolvedActionsSingleStmt,
+    ServiceActionBase,
+    ServiceActionsResolverBase,
+)
 from aws_ptrp.utils.regex_subset import is_aws_regex_full_subset
 from aws_ptrp.utils.serde import serde_enum_field
 from serde import serde
@@ -97,7 +102,7 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
                 return False
         return True
 
-    def difference(self, other: ResolvedActionsSingleStmt):
+    def difference(self, other: ResolvedActionsSingleStmt) -> MethodOnStmtActionsResultType:
         """
         This functions differs the s3 actions between 'self' and 'other'
         Bucket actions will always be removed. In case of object actions, it is depends on the relative object regexes in each one
@@ -105,9 +110,15 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
         If some(or both) of the statements are annotated with NotResource, in some cases we can solve the problem with the complements of each group
         """
         difference_also_on_object_actions = False
+        ret = MethodOnStmtActionsResultType.APPLIED
         if isinstance(other, ResolvedS3BucketActions):
             self_not_resource_annotated = self.is_not_resource_annotated()
             other_not_resource_annotated = other.is_not_resource_annotated()
+            object_actions_intersected = any(
+                action
+                for action in self.actions.intersection(other.actions)
+                if action.action_type == S3ActionType.OBJECT
+            )
             if self_not_resource_annotated is False and other_not_resource_annotated is False:
                 if other.stmt_relative_id_objects_regexes:
                     difference_also_on_object_actions = self.are_all_object_regexes_full_subset_of_any_regex_in_other(
@@ -128,11 +139,17 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
                 difference_also_on_object_actions = any(
                     o_regex == "*" for o_regex in other.stmt_relative_id_objects_regexes
                 )
+                # We will report about ignoring the difference if the object actions have a common in both statements
+                if not difference_also_on_object_actions and object_actions_intersected:
+                    ret = MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_WITH_S3_NOT_RESOURCE_OBJECT_REGEX
 
-            else:
+            elif self_not_resource_annotated is False and other_not_resource_annotated is True:
                 # If only other is annotated with NotResource, we don't want to remove the object actions, since we
                 # don't know if the object regexes are full subsets of each other
                 difference_also_on_object_actions = False
+                # We will report about ignoring the difference if the object actions have a common in both statements
+                if object_actions_intersected:
+                    ret = MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_WITH_S3_NOT_RESOURCE_OBJECT_REGEX
 
             if difference_also_on_object_actions is True:
                 actions_to_difference = other.actions
@@ -141,6 +158,8 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
                 actions_to_difference = set(filter(lambda a: a.action_type == S3ActionType.BUCKET, other.actions))
 
             self.resolved_stmt_actions.difference_update(actions_to_difference)
+
+        return ret
 
     def is_not_resource_annotated(self) -> bool:
         return self._not_resource_annotated

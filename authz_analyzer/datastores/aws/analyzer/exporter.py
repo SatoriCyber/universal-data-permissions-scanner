@@ -124,6 +124,8 @@ class AWSPtrpModelConvertor:
     def _get_note_type(note_type: AwsPtrpNoteType) -> AuthzNoteType:
         if note_type == AwsPtrpNoteType.POLICY_STMT_DENY_WITH_CONDITION:
             return AuthzNoteType.AWS_POLICY_STMT_DENY_WITH_CONDITION
+        if note_type == AwsPtrpNoteType.POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE:
+            return AuthzNoteType.AWS_POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE
         raise Exception(f"unable to convert from {note_type} to AuthzNoteType")  # pylint disable=broad-exception-raised
 
     @staticmethod

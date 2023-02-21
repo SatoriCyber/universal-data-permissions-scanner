@@ -14,7 +14,7 @@ from aws_ptrp.ptrp_models.ptrp_model import (
     AwsPtrpResource,
     AwsPtrpResourceType,
 )
-from aws_ptrp.services import ServiceResourceBase, ServiceResourceType
+from aws_ptrp.services import MethodOnStmtActionsResultType, ServiceResourceBase, ServiceResourceType
 
 
 class NodeBase(ABC):
@@ -35,6 +35,7 @@ class NodeBase(ABC):
 
 class NodeNoteType(Enum):
     POLICY_STMT_DENY_WITH_CONDITION = auto()
+    POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE = auto()
 
     def __str__(self) -> str:
         return self.name
@@ -57,6 +58,10 @@ class NodeNote:
     def to_ptrp_node_note(self) -> AwsPtrpNodeNote:
         if self.note_type == NodeNoteType.POLICY_STMT_DENY_WITH_CONDITION:
             return AwsPtrpNodeNote(note=self.note, note_type=AwsPtrpNoteType.POLICY_STMT_DENY_WITH_CONDITION)
+        elif self.note_type == NodeNoteType.POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE:
+            return AwsPtrpNodeNote(
+                note=self.note, note_type=AwsPtrpNoteType.POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE
+            )
         else:
             assert False  # should not get here, unknown enum value
 
@@ -65,6 +70,31 @@ class NodeNote:
 
     def __eq__(self, other):
         return self.note_type == other.note_type and self.note == other.note
+
+    @classmethod
+    def from_stmt_info_and_action_stmt_result_type(
+        cls,
+        stmt_name: str,
+        policy_name: str,
+        attached_to_other_node_arn: str,
+        service_name: str,
+        action_stmt_result_type: MethodOnStmtActionsResultType,
+    ) -> Optional['NodeNote']:
+        if action_stmt_result_type == MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_CONDITION_EXISTS:
+            return cls(
+                note_type=NodeNoteType.POLICY_STMT_DENY_WITH_CONDITION,
+                note=f"{stmt_name}{policy_name}{attached_to_other_node_arn} has deny with condition for {service_name} service",
+            )
+        elif (
+            action_stmt_result_type
+            == MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_WITH_S3_NOT_RESOURCE_OBJECT_REGEX
+        ):
+            return cls(
+                note_type=NodeNoteType.POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE,
+                note=f"{stmt_name}{policy_name}{attached_to_other_node_arn} has deny which might not applied for {service_name} service, due to the use of 'NotResource' with the object regex",
+            )
+        else:
+            return None
 
 
 class NodeNotesGetter(ABC):

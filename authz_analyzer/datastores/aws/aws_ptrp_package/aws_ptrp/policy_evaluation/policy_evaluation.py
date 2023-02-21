@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, Generator, List, Optional, Set
+from typing import Dict, Generator, List, Optional, Set, Tuple
 
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument, PolicyDocumentCtx
@@ -29,28 +29,29 @@ class PolicyEvaluationExplicitDenyResult:
         difference_stmts_results: Optional[MethodOnStmtsActionsResult],
         method_on_stmt_actions_type: MethodOnStmtActionsType,
         method_on_stmt_actions_result_type: MethodOnStmtActionsResultType,
-    ) -> Generator[ResolvedSingleStmt, None, None]:
+    ) -> Generator[Tuple[ResolvedSingleStmt, MethodOnStmtActionsResultType], None, None]:
         if method_on_stmt_actions_type == MethodOnStmtActionsType.DIFFERENCE:
             if difference_stmts_results:
                 for resolved_stmt_result in difference_stmts_results.resolved_stmt_results:
                     if resolved_stmt_result.result == method_on_stmt_actions_result_type:
-                        yield resolved_stmt_result.resolved_single_stmt
+                        yield (resolved_stmt_result.resolved_single_stmt, method_on_stmt_actions_result_type)
 
     def yield_resolved_stmts(
         self,
         method_on_stmt_actions_type: MethodOnStmtActionsType,
-        method_on_stmt_actions_result_type: MethodOnStmtActionsResultType,
-    ) -> Generator[ResolvedSingleStmt, None, None]:
-        yield from PolicyEvaluationExplicitDenyResult._yield_resolved_stmts(
-            self.difference_stmts_result_from_resource_policy,
-            method_on_stmt_actions_type,
-            method_on_stmt_actions_result_type,
-        )
-        yield from PolicyEvaluationExplicitDenyResult._yield_resolved_stmts(
-            self.difference_stmts_result_from_identity_policies,
-            method_on_stmt_actions_type,
-            method_on_stmt_actions_result_type,
-        )
+        method_on_stmt_actions_result_type_list: List[MethodOnStmtActionsResultType],
+    ) -> Generator[Tuple[ResolvedSingleStmt, MethodOnStmtActionsResultType], None, None]:
+        for method_on_stmt_actions_result_type in method_on_stmt_actions_result_type_list:
+            yield from PolicyEvaluationExplicitDenyResult._yield_resolved_stmts(
+                self.difference_stmts_result_from_resource_policy,
+                method_on_stmt_actions_type,
+                method_on_stmt_actions_result_type,
+            )
+            yield from PolicyEvaluationExplicitDenyResult._yield_resolved_stmts(
+                self.difference_stmts_result_from_identity_policies,
+                method_on_stmt_actions_type,
+                method_on_stmt_actions_result_type,
+            )
 
 
 @dataclass
