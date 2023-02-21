@@ -28,7 +28,7 @@ class MethodOnStmtActionsResultType(Enum):
     IGNORE_NO_OVERLAPS_TARGET_RESOURCE = auto()
     IGNORE_NO_OVERLAPS_TARGET_PRINCIPAL = auto()
     IGNORE_METHOD_DIFFERENCE_CONDITION_EXISTS = auto()
-    IGNORE_METHOD_DIFFERENCE_WITH_NOT_RESOURCE_OBJECT_REGEX = auto()
+    IGNORE_METHOD_DIFFERENCE_WITH_S3_NOT_RESOURCE_OBJECT_REGEX = auto()
 
     def __str__(self) -> str:
         return self.name

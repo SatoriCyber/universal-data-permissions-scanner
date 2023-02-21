@@ -181,6 +181,29 @@
                                         "Resource": [
                                             "arn:aws:s3:::bucket_*/*"
                                         ]
+                                    },
+                                    {
+                                        "_comment": "Verify that we do not know whether to deny or allow the action, since Deny has no wildcard",
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor17",
+                                        "Action": [
+                                            "s3:BypassGovernanceRetention"
+                                        ],
+                                        "NotResource": [
+                                            "arn:aws:s3:::bucket_1/?.json",
+                                            "arn:aws:s3:::bucket_1/something.*",
+                                            "arn:aws:s3:::bucket_2/bla*.txt"
+                                        ]
+                                    },
+                                    {
+                                        "Effect": "Deny",
+                                        "Sid": "VisualEditor18",
+                                        "Action": [
+                                            "s3:BypassGovernanceRetention"
+                                        ],
+                                        "Resource": [
+                                            "arn:aws:s3:::bucket_*/abc"
+                                        ]
                                     }
                                 ]
                             }
@@ -238,6 +261,10 @@
                         {
                             "note": "statement 'VisualEditor12' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
                             "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE"
+                        },
+                        {
+                            "note": "statement 'VisualEditor18' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
+                            "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE"
                         }
                     ]
                 }
@@ -270,12 +297,50 @@
                         {
                             "note": "statement 'VisualEditor12' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
                             "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE"
+                        },
+                        {
+                            "note": "statement 'VisualEditor18' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
+                            "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE"
                         }
                     ]
                 }
             ],
             "action_permissions": [
                 "PutObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "FULL",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-1",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": [
+                        {
+                            "note": "statement 'VisualEditor12' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
+                            "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE"
+                        },
+                        {
+                            "note": "statement 'VisualEditor18' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
+                            "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE"
+                        }
+                    ]
+                }
+            ],
+            "action_permissions": [
+                "BypassGovernanceRetention"
             ]
         },
         {
@@ -299,6 +364,10 @@
                     "notes": [
                         {
                             "note": "statement 'VisualEditor12' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
+                            "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE"
+                        },
+                        {
+                            "note": "statement 'VisualEditor18' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
                             "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE"
                         }
                     ]
@@ -330,12 +399,50 @@
                         {
                             "note": "statement 'VisualEditor12' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
                             "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE"
+                        },
+                        {
+                            "note": "statement 'VisualEditor18' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
+                            "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE"
                         }
                     ]
                 }
             ],
             "action_permissions": [
                 "RestoreObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_2",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "FULL",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-1",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": [
+                        {
+                            "note": "statement 'VisualEditor12' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
+                            "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE"
+                        },
+                        {
+                            "note": "statement 'VisualEditor18' in policy 'inline-policy-1' has deny which might not applied for s3 service, due to the use of 'NotResource' with the object regex",
+                            "note_type": "POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE"
+                        }
+                    ]
+                }
+            ],
+            "action_permissions": [
+                "BypassGovernanceRetention"
             ]
         }
     ]

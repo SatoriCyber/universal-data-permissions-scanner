@@ -75,7 +75,7 @@ def _update_nodes_notes(
         list(
             [
                 MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_CONDITION_EXISTS,
-                MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_WITH_NOT_RESOURCE_OBJECT_REGEX,
+                MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_WITH_S3_NOT_RESOURCE_OBJECT_REGEX,
             ]
         ),
     ):
@@ -117,26 +117,11 @@ def _update_nodes_notes(
 
         if node_base_to_add:
             node_notes = nodes_notes.nodes_notes.setdefault(node_base_to_add, NodeNotes())
-            if (
-                method_on_stmt_actions_result_type
-                == MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_CONDITION_EXISTS
-            ):
-                node_notes.add_node_note(
-                    NodeNote(
-                        NodeNoteType.POLICY_STMT_DENY_WITH_CONDITION,
-                        f"{stmt_name}{policy_name}{attached_to_other_node_arn} has deny with condition for {service_name} service",
-                    )
-                )
-            elif (
-                method_on_stmt_actions_result_type
-                == MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_WITH_NOT_RESOURCE_OBJECT_REGEX
-            ):
-                node_notes.add_node_note(
-                    NodeNote(
-                        NodeNoteType.POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE,
-                        f"{stmt_name}{policy_name}{attached_to_other_node_arn} has deny which might not applied for {service_name} service, due to the use of 'NotResource' with the object regex",
-                    )
-                )
+            note = NodeNote.from_stmt_info_and_action_stmt_result_type(
+                stmt_name, policy_name, attached_to_other_node_arn, service_name, method_on_stmt_actions_result_type
+            )
+            if note:
+                node_notes.add_node_note(note)
 
 
 def get_nodes_notes_from_target_policy_resource_based(

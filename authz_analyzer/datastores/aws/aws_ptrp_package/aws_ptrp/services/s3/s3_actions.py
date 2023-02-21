@@ -141,7 +141,7 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
                 )
                 # We will report about ignoring the difference if the object actions have a common in both statements
                 if not difference_also_on_object_actions and object_actions_intersected:
-                    ret = MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_WITH_NOT_RESOURCE_OBJECT_REGEX
+                    ret = MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_WITH_S3_NOT_RESOURCE_OBJECT_REGEX
 
             elif self_not_resource_annotated is False and other_not_resource_annotated is True:
                 # If only other is annotated with NotResource, we don't want to remove the object actions, since we
@@ -149,7 +149,7 @@ class ResolvedS3BucketActions(ResolvedActionsSingleStmt):
                 difference_also_on_object_actions = False
                 # We will report about ignoring the difference if the object actions have a common in both statements
                 if object_actions_intersected:
-                    ret = MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_WITH_NOT_RESOURCE_OBJECT_REGEX
+                    ret = MethodOnStmtActionsResultType.IGNORE_METHOD_DIFFERENCE_WITH_S3_NOT_RESOURCE_OBJECT_REGEX
 
             if difference_also_on_object_actions is True:
                 actions_to_difference = other.actions
