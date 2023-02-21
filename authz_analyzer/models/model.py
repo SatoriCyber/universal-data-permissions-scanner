@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import List
 
+from aws_ptrp.utils.serde import serde_enum_field
 from serde import field as serde_field  # pylint: disable=import-error #type: ignore
 from serde import serde  # pylint: disable=import-error #type: ignore
 
@@ -166,6 +167,7 @@ class AuthzNote:
         return AuthzNote(note=note, type=AuthzNoteType.GENERIC)
 
 
+@serde
 @dataclass
 class AuthzPathElement:
     """Element of the authorization entry path which grants access.
@@ -174,7 +176,7 @@ class AuthzPathElement:
 
     id: str  # pylint: disable=invalid-name
     name: str
-    type: AuthzPathElementType
+    type: AuthzPathElementType = serde_enum_field(AuthzPathElementType)
     notes: List[AuthzNote] = field(default_factory=list)
     db_permissions: List[str] = field(default_factory=list)
 
@@ -190,6 +192,7 @@ class AuthzPathElement:
         return result
 
 
+@serde
 @dataclass
 class Asset:
     """Datastore asset.
@@ -198,7 +201,7 @@ class Asset:
     """
 
     name: List[str]
-    type: AssetType
+    type: AssetType = serde_enum_field(AssetType)
     notes: List[AuthzNote] = field(default_factory=list)
 
     def __str__(self) -> str:
@@ -208,6 +211,7 @@ class Asset:
         return result
 
 
+@serde
 @dataclass
 class Identity:
     """An identity which has access to an asset.
@@ -215,8 +219,8 @@ class Identity:
     """
 
     id: str  # pylint: disable=invalid-name
-    type: IdentityType
     name: str
+    type: IdentityType = serde_enum_field(IdentityType)
     notes: List[AuthzNote] = field(default_factory=list)
 
     def __str__(self) -> str:
@@ -226,6 +230,7 @@ class Identity:
         return result
 
 
+@serde
 @dataclass
 class AuthzEntry:
     """A single entry which describe access to an asset.
@@ -235,7 +240,7 @@ class AuthzEntry:
     asset: Asset
     path: List[AuthzPathElement]
     identity: Identity
-    permission: PermissionLevel
+    permission: PermissionLevel = serde_enum_field(PermissionLevel)
 
     def __repr__(self):
         return f"{self.identity} {self.permission} {self.asset} {self.path}"

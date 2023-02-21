@@ -1,0 +1,86 @@
+{
+    "ptrp_line": {
+        "resource": {
+            "name": "bucket_1",
+            "type": "S3_BUCKET",
+            "notes": []
+        },
+        "principal": {
+            "arn": "*",
+            "name": "All principals",
+            "type": "ALL_PRINCIPALS",
+            "notes": []
+        },
+        "action_permission_level": "FULL",
+        "path_nodes": [
+            {
+                "arn": "arn:aws:iam::105246067165:role/iam_role_all",
+                "name": "iam_role_all",
+                "type": "IAM_ROLE",
+                "notes": []
+            },
+            {
+                "arn": "arn:aws:sts::105246067165:assumed-role/iam_role_all/session_name",
+                "name": "session_name",
+                "type": "ROLE_SESSION",
+                "notes": []
+            },
+            {
+                "arn": "arn:aws:s3:::bucket_1",
+                "name": "bucket_1",
+                "type": "RESOURCE_POLICY",
+                "notes": []
+            }
+        ],
+        "action_permissions": [
+            "PutBucketObjectLockConfiguration",
+            "PutBucketOwnershipControls",
+            "PutEncryptionConfiguration",
+            "PutIntelligentTieringConfiguration"
+        ]
+    },
+    "authz_entry": {
+        "asset": {
+            "name": [
+                "bucket_1"
+            ],
+            "type": "S3_BUCKET",
+            "notes": []
+        },
+        "path": [
+            {
+                "id": "arn:aws:iam::105246067165:role/iam_role_all",
+                "name": "iam_role_all",
+                "type": "IAM_ROLE",
+                "notes": [],
+                "db_permissions": []
+            },
+            {
+                "id": "arn:aws:sts::105246067165:assumed-role/iam_role_all/session_name",
+                "name": "session_name",
+                "type": "ROLE_SESSION",
+                "notes": [],
+                "db_permissions": []
+            },
+            {
+                "id": "arn:aws:s3:::bucket_1",
+                "name": "bucket_1",
+                "type": "RESOURCE_POLICY",
+                "notes": [],
+                "db_permissions": [
+                    "PutBucketObjectLockConfiguration",
+                    "PutBucketOwnershipControls",
+                    "PutEncryptionConfiguration",
+                    "PutIntelligentTieringConfiguration"
+                ]
+            }
+        ],
+        "identity": {
+            "id": "*",
+            "name": "All principals",
+            "type": "ALL_USERS",
+            "notes": []
+        },
+        "permission": "FULL"
+    }
+}
