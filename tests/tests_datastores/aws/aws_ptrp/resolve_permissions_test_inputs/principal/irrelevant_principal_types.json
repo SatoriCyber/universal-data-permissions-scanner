@@ -1,115 +1,128 @@
 {
     "input": {
         "iam_entities": {
-            "iam_users": {
-                "arn:aws:iam::105246067165:user/iam_user_1": {
-                    "user_name": "iam_user_1",
-                    "user_id": "iam_user_1",
-                    "path": "/",
-                    "user_policies": [
-                        {
-                            "UserName": "iam_user_1",
-                            "PolicyName": "inline-policy-allow",
-                            "PolicyDocument": {
-                                "Statement": [
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor1",
-                                        "Action": [
-                                            "sts:*"
-                                        ],
-                                        "Resource": [
-                                            "*"
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067165:user/iam_user_1": {
+                            "user_name": "iam_user_1",
+                            "user_id": "iam_user_1",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_1",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "sts:*"
+                                                ],
+                                                "Resource": [
+                                                    "*"
+                                                ]
+                                            }
                                         ]
                                     }
-                                ]
-                            }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_1"
                         }
-                    ],
-                    "attached_policies_arn": [],
-                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_1"
-                },
-                "arn:aws:iam::105246067166:user/iam_user_2": {
-                    "user_name": "iam_user_2",
-                    "user_id": "iam_user_2",
-                    "path": "/",
-                    "user_policies": [
-                        {
-                            "UserName": "iam_user_2",
-                            "PolicyName": "inline-policy-allow",
-                            "PolicyDocument": {
-                                "Statement": [
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor1",
-                                        "Action": [
-                                            "sts:*",
-                                            "s3:GetObject"
-                                        ],
-                                        "Resource": [
-                                            "*"
-                                        ]
-                                    }
-                                ]
-                            }
-                        }
-                    ],
-                    "attached_policies_arn": [],
-                    "identity_principal": "arn:aws:iam::105246067166:user/iam_user_2"
-                }
-            },
-            "iam_roles": {
-                "arn:aws:iam::105246067165:role/iam_role": {
-                    "role_id": "iam_role",
-                    "role_name": "iam_role",
-                    "arn": "arn:aws:iam::105246067165:role/iam_role",
-                    "path": "/",
-                    "assume_role_policy_document": {
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Sid": "IamRoleTrustAllow",
-                                "_comment_1": "irrelevant for assume role is: FEDERATED-USER",
-                                "_comment_2": "in addition, check that principal of AWS account only matches on cross-account access",
-                                "Principal": {
-                                    "AWS": [
-                                        "105246067165",
-                                        "105246067166",
-                                        "arn:aws:sts::105246067165:federated-user/federated_user_1",
-                                        "arn:aws:sts::105246067166:federated-user/federated_user_2"
-                                    ]
-                                },
-                                "Action": "sts:AssumeRole"
-                            }
-                        ]
                     },
-                    "role_policies": [
-                        {
-                            "RoleName": "iam_role",
-                            "PolicyName": "inline-policy-allow",
-                            "PolicyDocument": {
+                    "iam_roles": {
+                        "arn:aws:iam::105246067165:role/iam_role": {
+                            "role_id": "iam_role",
+                            "role_name": "iam_role",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role",
+                            "path": "/",
+                            "assume_role_policy_document": {
                                 "Statement": [
                                     {
                                         "Effect": "Allow",
-                                        "Sid": "VisualEditor1",
-                                        "Action": [
-                                            "s3:GetObject"
-                                        ],
-                                        "Resource": [
-                                            "*"
-                                        ]
+                                        "Sid": "IamRoleTrustAllow",
+                                        "_comment_1": "irrelevant for assume role is: FEDERATED-USER",
+                                        "_comment_2": "in addition, check that principal of AWS account only matches on cross-account access",
+                                        "Principal": {
+                                            "AWS": [
+                                                "105246067165",
+                                                "105246067166",
+                                                "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                                                "arn:aws:sts::105246067166:federated-user/federated_user_2"
+                                            ]
+                                        },
+                                        "Action": "sts:AssumeRole"
                                     }
                                 ]
-                            }
+                            },
+                            "role_policies": [
+                                {
+                                    "RoleName": "iam_role",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:GetObject"
+                                                ],
+                                                "Resource": [
+                                                    "*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": []
                         }
-                    ],
-                    "attached_policies_arn": []
+                    },
+                    "iam_groups": {},
+                    "iam_policies": {}
+                },
+                "105246067166": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067166:user/iam_user_2": {
+                            "user_name": "iam_user_2",
+                            "user_id": "iam_user_2",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_2",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "sts:*",
+                                                    "s3:GetObject"
+                                                ],
+                                                "Resource": [
+                                                    "*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067166:user/iam_user_2"
+                        }
+                    },
+                    "iam_roles": {},
+                    "iam_groups": {},
+                    "iam_policies": {}
                 }
-            },
-            "iam_groups": {},
-            "iam_policies": {}
+            }
         },
         "target_account_resources": {
+            "aws_account_id": "105246067165",
             "account_resources": {
                 "s3": [
                     {

@@ -6,6 +6,7 @@ from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.iam.policy.policy_document import PolicyDocumentCtx
 from aws_ptrp.policy_evaluation import PolicyEvaluation, PolicyEvaluationResult, PolicyEvaluationsResult
+from aws_ptrp.principals.aws_principals import AwsPrincipals
 from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
 from aws_ptrp.ptrp_allowed_lines.allowed_line_node_notes import (
     NodesNotes,
@@ -28,6 +29,7 @@ class PtrpAllowedLinesResolverResult:
         logger: Logger,
         iam_entities: IAMEntities,
         aws_actions: AwsActions,
+        aws_principals: AwsPrincipals,
         target_account_resources: AwsAccountResources,
         line: PtrpAllowedLine,
     ) -> Optional['PtrpAllowedLinesResolverResult']:
@@ -36,22 +38,32 @@ class PtrpAllowedLinesResolverResult:
         principal_to_policy: PrincipalNodeBase = line.get_principal_makes_the_request_to_resource()
         principal_policies_node_base: PoliciesNodeBase = line.get_principal_policies_base()
         principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
-            principal_policies_node_base, iam_entities.iam_policies
+            principal_policies_node_base, iam_entities
         )
 
         nodes_notes_all_services = NodesNotes()
         if (
             line.is_assuming_roles_allowed(
-                logger, nodes_notes_all_services, aws_actions, target_account_resources, iam_entities.iam_policies
+                logger,
+                nodes_notes_all_services,
+                aws_actions,
+                aws_principals,
+                target_account_resources,
+                iam_entities,
             )
             is False
         ):
-            logger.info("line %s has roles nodes that are not allowed to be assumed", line)
+            logger.debug("line %s has roles nodes that are not allowed to be assumed", line)
             return None
 
         if (
             line.is_assuming_federated_user_allowed(
-                logger, nodes_notes_all_services, aws_actions, target_account_resources, iam_entities.iam_policies
+                logger,
+                nodes_notes_all_services,
+                aws_actions,
+                aws_principals,
+                target_account_resources,
+                iam_entities,
             )
             is False
         ):
@@ -62,6 +74,7 @@ class PtrpAllowedLinesResolverResult:
             policy_evaluations_result: PolicyEvaluationsResult = PolicyEvaluation.run_target_policy_resource_based(
                 logger=logger,
                 aws_actions=aws_actions,
+                aws_principals=aws_principals,
                 account_resources=target_account_resources,
                 identity_principal=principal_to_policy.get_stmt_principal(),
                 target_service_resource=resource_node.base,
@@ -86,6 +99,7 @@ class PtrpAllowedLinesResolverResult:
             policy_evaluation_result: PolicyEvaluationResult = PolicyEvaluation.run_target_policies_identity_based(
                 logger=logger,
                 aws_actions=aws_actions,
+                aws_principals=aws_principals,
                 account_resources=target_account_resources,
                 identity_principal=principal_to_policy.get_stmt_principal(),
                 target_identity_policies_ctx=[target_identity_policy_ctx],

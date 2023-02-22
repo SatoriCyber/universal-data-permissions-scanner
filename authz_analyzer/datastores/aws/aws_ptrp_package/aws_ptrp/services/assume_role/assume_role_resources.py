@@ -5,7 +5,7 @@ from typing import Dict, Generator, List, Optional, Set
 
 from aws_ptrp.iam.iam_roles import IAMRole
 from aws_ptrp.iam.policy.policy_document_utils import fix_stmt_regex_to_valid_regex
-from aws_ptrp.principals import Principal
+from aws_ptrp.principals import Principal, PrincipalBase
 from aws_ptrp.ptrp_models.ptrp_model import AwsPrincipalType
 from aws_ptrp.services import (
     ResolvedActionsSingleStmt,
@@ -59,11 +59,13 @@ class AssumeRoleResolvedStmt(ResolvedSingleStmtGetter):
         else:
             return AssumeRoleActionType.ASSUME_ROLE
 
-    def yield_trusted_principals(self, iam_role: IAMRole) -> Generator[Principal, None, None]:
-        for resolved_principal in self.resolved_stmt.resolved_stmt_principals:
+    def yield_trusted_principals(self, iam_role: IAMRole) -> Generator[PrincipalBase, None, None]:
+        for resolved_principal_base in self.resolved_stmt.resolved_stmt_principals:
             relevant_assume_role: Optional[
                 AssumeRoleActionType
-            ] = AssumeRoleResolvedStmt.get_relevant_assume_action_by_principal_type(resolved_principal.principal_type)
+            ] = AssumeRoleResolvedStmt.get_relevant_assume_action_by_principal_type(
+                resolved_principal_base.get_principal().principal_type
+            )
             if relevant_assume_role is None:
                 continue
 
@@ -79,7 +81,7 @@ class AssumeRoleResolvedStmt(ResolvedSingleStmtGetter):
             ):
                 continue
 
-            yield resolved_principal
+            yield resolved_principal_base
 
 
 @dataclass
@@ -89,13 +91,13 @@ class AssumeRoleServiceResourcesResolver(ServiceResourcesResolverBase):
     def get_resolved_stmts(self) -> List[ResolvedSingleStmtGetter]:
         return self.resolved_stmts  # type: ignore[return-value]
 
-    def yield_trusted_principals(self, iam_role: IAMRole) -> Generator[Principal, None, None]:
+    def yield_trusted_principals(self, iam_role: IAMRole) -> Generator[PrincipalBase, None, None]:
         for resolved_stmt in self.resolved_stmts:
             yield from resolved_stmt.yield_trusted_principals(iam_role)
 
     def is_trusted_principal(self, iam_role: IAMRole, principal: Principal) -> bool:
-        for trusted_principal in self.yield_trusted_principals(iam_role):
-            if trusted_principal.contains(principal):
+        for trusted_principal_base in self.yield_trusted_principals(iam_role):
+            if trusted_principal_base.get_principal().contains(principal):
                 return True
         return False
 

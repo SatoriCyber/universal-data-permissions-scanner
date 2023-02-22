@@ -11,13 +11,13 @@ class NoEntityPrincipal(PrincipalAndPoliciesNodeBase):
     stmt_principal: Principal
 
     def __repr__(self):
-        return self.stmt_principal.__repr__()
+        return self.get_node_arn()
 
     def __eq__(self, other):
-        return self.stmt_principal == other.stmt_principal
+        return self.get_node_arn() == other.get_node_arn()
 
     def __hash__(self):
-        return hash(self.stmt_principal.__hash__())
+        return hash(self.get_node_arn())
 
     # # impl PrincipalAndPoliciesNodeBase
     # def get_permission_boundary(self) -> Optional[PolicyDocument]:

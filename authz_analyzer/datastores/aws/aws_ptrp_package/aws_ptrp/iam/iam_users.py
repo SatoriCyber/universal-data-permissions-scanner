@@ -6,7 +6,7 @@ from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PrincipalAndPoliciesNodeBase
 from aws_ptrp.utils.pagination import paginate_response_list
 from boto3 import Session
-from serde import field, from_dict, serde
+from serde import from_dict, serde
 
 
 @serde
@@ -17,16 +17,13 @@ class IAMUser(PrincipalAndPoliciesNodeBase):
     path: str
     user_policies: List[UserPolicy]
     attached_policies_arn: List[str]
-    identity_principal: Principal = field(
-        deserializer=Principal.from_policy_principal_str,
-        serializer=Principal.to_policy_principal_str,
-    )
+    arn: str
 
     def __eq__(self, other):
         return self.user_id == other.user_id
 
     def __repr__(self):
-        return self.identity_principal.get_arn()
+        return self.arn
 
     def __hash__(self):
         return hash(self.user_id)
@@ -34,6 +31,9 @@ class IAMUser(PrincipalAndPoliciesNodeBase):
     @staticmethod
     def _extract_aws_account_id_from_arn_of_iam_entity(arn: str) -> str:
         return arn[arn.find(":iam::") + 6 : arn.find(":user/")]
+
+    def get_account_id(self) -> str:
+        return IAMUser._extract_aws_account_id_from_arn_of_iam_entity(self.arn)
 
     # # impl PrincipalAndPoliciesNodeBase
     # def get_permission_boundary(self) -> Optional[PolicyDocument]:
@@ -44,27 +44,26 @@ class IAMUser(PrincipalAndPoliciesNodeBase):
 
     # NodeBase
     def get_node_arn(self) -> str:
-        return self.identity_principal.get_arn()
+        return self.arn
 
     def get_node_name(self) -> str:
-        return self.identity_principal.get_name()
+        return self.user_name
 
     # impl PrincipalNodeBase
     def get_stmt_principal(self) -> Principal:
-        return self.identity_principal
+        return Principal.load_from_iam_user(self.arn)
 
     # PoliciesNodeBase
     def get_attached_policies_arn(self) -> List[str]:
         return self.attached_policies_arn
 
     def get_inline_policies_ctx(self) -> List[PolicyDocumentCtx]:
-        arn = self.identity_principal.get_arn()
-        aws_account_id = IAMUser._extract_aws_account_id_from_arn_of_iam_entity(arn)
+        aws_account_id = IAMUser._extract_aws_account_id_from_arn_of_iam_entity(self.arn)
         return list(
             map(
                 lambda x: PolicyDocumentCtx(
                     policy_document=x.policy_document,
-                    parent_arn=arn,
+                    parent_arn=self.arn,
                     policy_name=x.policy_name,
                     parent_aws_account_id=aws_account_id,
                 ),
@@ -97,11 +96,10 @@ def get_iam_users(session: Session) -> Dict[str, IAMUser]:
             iam_client.list_attached_user_policies, 'AttachedPolicies', UserName=user_name
         )
         attached_policies_arn = [attached_policy['PolicyArn'] for attached_policy in attached_policies]
-        user_principal_arn = Principal.load_from_iam_user(arn)
         ret[arn] = IAMUser(
             user_name=user_name,
             user_id=user_id,
-            identity_principal=user_principal_arn,
+            arn=arn,
             path=path,
             user_policies=user_policies,
             attached_policies_arn=attached_policies_arn,

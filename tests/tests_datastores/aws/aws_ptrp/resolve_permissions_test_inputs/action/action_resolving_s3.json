@@ -1,89 +1,95 @@
 {
     "input": {
         "iam_entities": {
-            "iam_users": {
-                "arn:aws:iam::105246067165:user/iam_user_1": {
-                    "user_name": "iam_user_1",
-                    "user_id": "iam_user_1",
-                    "path": "/",
-                    "user_policies": [
-                        {
-                            "UserName": "iam_user_1",
-                            "PolicyName": "inline-policy-allow",
-                            "PolicyDocument": {
-                                "Statement": [
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "all_get_actions",
-                                        "Action": "s3:Get*",
-                                        "Resource": "arn:aws:s3:::bucket_1*"
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "deny_get_object",
-                                        "_comment": "actions are case insensitive",
-                                        "Action": "s3:getobject",
-                                        "Resource": "arn:aws:s3:::bucket_1*"
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067165:user/iam_user_1": {
+                            "user_name": "iam_user_1",
+                            "user_id": "iam_user_1",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_1",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "all_get_actions",
+                                                "Action": "s3:Get*",
+                                                "Resource": "arn:aws:s3:::bucket_1*"
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "deny_get_object",
+                                                "_comment": "actions are case insensitive",
+                                                "Action": "s3:getobject",
+                                                "Resource": "arn:aws:s3:::bucket_1*"
+                                            }
+                                        ]
                                     }
-                                ]
-                            }
-                        }
-                    ],
-                    "attached_policies_arn": [],
-                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_1"
-                },
-                "arn:aws:iam::105246067165:user/iam_user_2": {
-                    "user_name": "iam_user_2",
-                    "user_id": "iam_user_2",
-                    "path": "/",
-                    "user_policies": [
-                        {
-                            "UserName": "iam_user_2",
-                            "PolicyName": "inline-policy-allow",
-                            "PolicyDocument": {
-                                "Statement": [
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "wildcard_service",
-                                        "Action": "s3:*",
-                                        "Resource": "arn:aws:s3:::bucket_1*"
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_1"
+                        },
+                        "arn:aws:iam::105246067165:user/iam_user_2": {
+                            "user_name": "iam_user_2",
+                            "user_id": "iam_user_2",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_2",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "wildcard_service",
+                                                "Action": "s3:*",
+                                                "Resource": "arn:aws:s3:::bucket_1*"
+                                            }
+                                        ]
                                     }
-                                ]
-                            }
-                        }
-                    ],
-                    "attached_policies_arn": [],
-                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_2"
-                },
-                "arn:aws:iam::105246067165:user/iam_user_3": {
-                    "user_name": "iam_user_3",
-                    "user_id": "iam_user_3",
-                    "path": "/",
-                    "user_policies": [
-                        {
-                            "UserName": "iam_user_3",
-                            "PolicyName": "inline-policy-allow",
-                            "PolicyDocument": {
-                                "Statement": [
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "wildcard_all_services",
-                                        "Action": "*",
-                                        "Resource": "arn:aws:s3:::bucket_1*"
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_2"
+                        },
+                        "arn:aws:iam::105246067165:user/iam_user_3": {
+                            "user_name": "iam_user_3",
+                            "user_id": "iam_user_3",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_3",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "wildcard_all_services",
+                                                "Action": "*",
+                                                "Resource": "arn:aws:s3:::bucket_1*"
+                                            }
+                                        ]
                                     }
-                                ]
-                            }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_3"
                         }
-                    ],
-                    "attached_policies_arn": [],
-                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_3"
+                    },
+                    "iam_roles": {},
+                    "iam_groups": {},
+                    "iam_policies": {}
                 }
-            },
-            "iam_roles": {},
-            "iam_groups": {},
-            "iam_policies": {}
+            }
         },
         "target_account_resources": {
+            "aws_account_id": "105246067165",
             "account_resources": {
                 "s3": [
                     {

@@ -6,11 +6,8 @@ from typing import Any, List, Set
 
 import pytest
 from aws_ptrp import AwsPtrp
-from aws_ptrp.actions.aws_actions import AwsActions
-from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.iam.iam_roles import IAMRole
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpLine
-from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services import (
     ServiceResourceType,
     register_service_action_by_name,
@@ -26,10 +23,10 @@ from aws_ptrp.services.federated_user.federated_user_service import FEDERATED_US
 from aws_ptrp.services.s3.bucket import S3Bucket
 from aws_ptrp.services.s3.s3_actions import S3Action
 from aws_ptrp.services.s3.s3_service import S3_SERVICE_NAME, S3Service
-from serde.de import from_dict
 from serde.se import to_dict
 
 from authz_analyzer.utils.logger import get_logger
+from tests.tests_datastores.aws.aws_ptrp.utils.aws_ptrp_load_from_dict import load_aws_ptrp_from_dict
 
 RESOURCES_INPUT_DIR = pathlib.Path().joinpath(os.path.dirname(__file__), 'resolve_permissions_test_inputs')
 
@@ -89,15 +86,10 @@ def test_aws_ptrp_resolve_permissions_flows(
         resource_service_types_to_load: Set[ServiceResourceType] = set(
             [AssumeRoleService(), FederatedUserService(), S3Service()]
         )
-        aws_actions = AwsActions.load(get_logger(False), resource_service_types_to_load)  # type: ignore
-        iam_entities: IAMEntities = from_dict(IAMEntities, json_loaded['input']['iam_entities'])  # type: ignore
-        target_account_resources: AwsAccountResources = from_dict(AwsAccountResources, json_loaded['input']['target_account_resources'])  # type: ignore
-        target_account_resources.update_services_from_iam_entities(
-            get_logger(False), iam_entities, resource_service_types_to_load
-        )
-
-        ptrp = AwsPtrp(
-            aws_actions=aws_actions, iam_entities=iam_entities, target_account_resources=target_account_resources
+        ptrp: AwsPtrp = load_aws_ptrp_from_dict(
+            json_loaded['input']['iam_entities'],
+            json_loaded['input']['target_account_resources'],
+            resource_service_types_to_load,
         )
 
         expected_output: List[Any] = json_loaded['output']

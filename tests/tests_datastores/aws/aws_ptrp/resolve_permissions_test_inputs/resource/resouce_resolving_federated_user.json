@@ -1,90 +1,96 @@
 {
     "input": {
         "iam_entities": {
-            "iam_users": {
-                "arn:aws:iam::105246067165:user/iam_user_1": {
-                    "user_name": "iam_user_1",
-                    "user_id": "iam_user_1",
-                    "path": "/",
-                    "user_policies": [
-                        {
-                            "UserName": "iam_user_1",
-                            "PolicyName": "inline-policy-allow",
-                            "PolicyDocument": {
-                                "Statement": [
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "federated_1",
-                                        "Action": "sts:GetFederationToken",
-                                        "Resource": [
-                                            "arn:aws:sts::105246067165:federated-user/federated_user_1"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "federated_2",
-                                        "Action": "sts:GetFederationToken",
-                                        "Resource": [
-                                            "arn:aws:sts::105246067165:federated-user/federated_user_2"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "_comment": "resource are case sensitive, stmt shouldn't match",
-                                        "Sid": "federated_not_relevant",
-                                        "Action": "sts:GetFederationToken",
-                                        "Resource": [
-                                            "arn:aws:sts::105246067165:federated-user/federated_USER_1"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "federated_regex",
-                                        "Action": "sts:GetFederationToken",
-                                        "Resource": [
-                                            "arn:aws:sts::105246067165:federated-user/federate?_user_?"
-                                        ]
-                                    }
-                                ]
-                            }
-                        }
-                    ],
-                    "attached_policies_arn": [],
-                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_1"
-                },
-                "arn:aws:iam::105246067165:user/iam_user_2": {
-                    "user_name": "iam_user_2",
-                    "user_id": "iam_user_2",
-                    "path": "/",
-                    "user_policies": [
-                        {
-                            "UserName": "iam_user_2",
-                            "PolicyName": "inline-policy-allow",
-                            "PolicyDocument": {
-                                "Statement": [
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "federated_all",
-                                        "Action": "sts:GetFederationToken",
-                                        "Resource": [
-                                            "arn:aws:sts::105246067165:federated-user/federated_user_1",
-                                            "arn:aws:sts::105246067165:federated-user/federated_user_2",
-                                            "arn:aws:sts::105246067165:federated-user/federated_user_3"
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067165:user/iam_user_1": {
+                            "user_name": "iam_user_1",
+                            "user_id": "iam_user_1",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_1",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "federated_1",
+                                                "Action": "sts:GetFederationToken",
+                                                "Resource": [
+                                                    "arn:aws:sts::105246067165:federated-user/federated_user_1"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "federated_2",
+                                                "Action": "sts:GetFederationToken",
+                                                "Resource": [
+                                                    "arn:aws:sts::105246067165:federated-user/federated_user_2"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "_comment": "resource are case sensitive, stmt shouldn't match",
+                                                "Sid": "federated_not_relevant",
+                                                "Action": "sts:GetFederationToken",
+                                                "Resource": [
+                                                    "arn:aws:sts::105246067165:federated-user/federated_USER_1"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "federated_regex",
+                                                "Action": "sts:GetFederationToken",
+                                                "Resource": [
+                                                    "arn:aws:sts::105246067165:federated-user/federate?_user_?"
+                                                ]
+                                            }
                                         ]
                                     }
-                                ]
-                            }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_1"
+                        },
+                        "arn:aws:iam::105246067165:user/iam_user_2": {
+                            "user_name": "iam_user_2",
+                            "user_id": "iam_user_2",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_2",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "federated_all",
+                                                "Action": "sts:GetFederationToken",
+                                                "Resource": [
+                                                    "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                                                    "arn:aws:sts::105246067165:federated-user/federated_user_2",
+                                                    "arn:aws:sts::105246067165:federated-user/federated_user_3"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_2"
                         }
-                    ],
-                    "attached_policies_arn": [],
-                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_2"
+                    },
+                    "iam_roles": {},
+                    "iam_groups": {},
+                    "iam_policies": {}
                 }
-            },
-            "iam_roles": {},
-            "iam_groups": {},
-            "iam_policies": {}
+            }
         },
         "target_account_resources": {
+            "aws_account_id": "105246067165",
             "account_resources": {
                 "s3": [
                     {

@@ -1,73 +1,78 @@
 {
     "input": {
         "iam_entities": {
-            "iam_users": {
-                "arn:aws:iam::105246067165:user/iam_user_1": {
-                    "user_name": "iam_user_1",
-                    "user_id": "AIDA6JM62QPID6GVAJJUK",
-                    "aws_account_id": "105246067165",
-                    "path": "/",
-                    "user_policies": [
-                        {
-                            "UserName": "iam_user_1",
-                            "PolicyName": "inline-policy-1",
-                            "PolicyDocument": {
-                                "Statement": [
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor1",
-                                        "Action": [
-                                            "s3:GetObject"
-                                        ],
-                                        "Resource": [
-                                            "arn:aws:s3:::bucket_1/a.json"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor2",
-                                        "Action": [
-                                            "s3:GetObject"
-                                        ],
-                                        "Comment": "any ?.json objects should be denied, and since the allowed one is a.json, this should be denied",
-                                        "Resource": [
-                                            "arn:aws:s3:::bucket_1/?.json"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor3",
-                                        "Action": [
-                                            "s3:GetObjectAttributes"
-                                        ],
-                                        "Resource": [
-                                            "arn:aws:s3:::bucket_1/*.json"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor4",
-                                        "Action": [
-                                            "s3:GetObjectAttributes"
-                                        ],
-                                        "Comment": "any ?.json objects should be denied, and since the allowed one is *.json, this should be allowed",
-                                        "Resource": [
-                                            "arn:aws:s3:::bucket_1/?.json"
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067165:user/iam_user_1": {
+                            "user_name": "iam_user_1",
+                            "user_id": "AIDA6JM62QPID6GVAJJUK",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_1",
+                                    "PolicyName": "inline-policy-1",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:GetObject"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/a.json"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualEditor2",
+                                                "Action": [
+                                                    "s3:GetObject"
+                                                ],
+                                                "Comment": "any ?.json objects should be denied, and since the allowed one is a.json, this should be denied",
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/?.json"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor3",
+                                                "Action": [
+                                                    "s3:GetObjectAttributes"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/*.json"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualEditor4",
+                                                "Action": [
+                                                    "s3:GetObjectAttributes"
+                                                ],
+                                                "Comment": "any ?.json objects should be denied, and since the allowed one is *.json, this should be allowed",
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/?.json"
+                                                ]
+                                            }
                                         ]
                                     }
-                                ]
-                            }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_1"
                         }
-                    ],
-                    "attached_policies_arn": [],
-                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_1"
+                    },
+                    "iam_groups": {},
+                    "iam_roles": {},
+                    "iam_policies": {}
                 }
-            },
-            "iam_groups": {},
-            "iam_roles": {},
-            "iam_policies": {}
+            }
         },
         "target_account_resources": {
+            "aws_account_id": "105246067165",
             "account_resources": {
                 "s3": [
                     {

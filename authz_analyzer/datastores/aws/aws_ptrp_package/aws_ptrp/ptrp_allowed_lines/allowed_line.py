@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Generator, List, Optional, Tuple
 
 from aws_ptrp.actions.aws_actions import AwsActions
-from aws_ptrp.iam.iam_policies import IAMPolicy
+from aws_ptrp.iam.iam_entities import IAMEntities
 from aws_ptrp.iam.iam_roles import IAMRole, RoleSession
 from aws_ptrp.iam.policy.policy_document import PolicyDocumentCtx
-from aws_ptrp.iam.policy.policy_document_resolver import is_stmt_principal_relevant_to_resource
 from aws_ptrp.policy_evaluation import PolicyEvaluation, PolicyEvaluationResult, PolicyEvaluationsResult
 from aws_ptrp.principals import Principal
+from aws_ptrp.principals.aws_principals import AwsPrincipals
 from aws_ptrp.ptrp_allowed_lines.allowed_line_node_notes import (
     NodesNotes,
     get_nodes_notes_from_target_policies_identity_based,
@@ -50,19 +50,18 @@ class PtrpAllowedLine:
         logger: Logger,
         nodes_notes: NodesNotes,
         aws_actions: AwsActions,
+        aws_principals: AwsPrincipals,
         account_resources: AwsAccountResources,
-        iam_policies: Dict[str, IAMPolicy],
+        iam_entities: IAMEntities,
     ) -> bool:
         service_resource_type = AssumeRoleService()
-        irrelevant_principal_types = service_resource_type.get_resource_based_policy_irrelevant_principal_types()
-
         for yield_res in self.yield_principal_and_its_assumed_role():
             principal_node: PrincipalNodeBase = yield_res[0]
             principal: Principal = principal_node.get_stmt_principal()
             policies_node_base: PoliciesNodeBase = yield_res[1]
             path_role_node: PathRoleNode = yield_res[2]
             principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
-                policies_node_base, iam_policies
+                policies_node_base, iam_entities
             )
             iam_role = path_role_node.get_service_resource()
             assert isinstance(iam_role, IAMRole)
@@ -70,6 +69,7 @@ class PtrpAllowedLine:
             policy_evaluations_result: PolicyEvaluationsResult = PolicyEvaluation.run_target_policy_resource_based(
                 logger=logger,
                 aws_actions=aws_actions,
+                aws_principals=aws_principals,
                 account_resources=account_resources,
                 principal_policies_ctx=principal_policies_ctx,
                 target_service_resource=iam_role,
@@ -92,14 +92,6 @@ class PtrpAllowedLine:
             ):
                 return False
 
-            if (
-                is_stmt_principal_relevant_to_resource(
-                    principal, iam_role.get_resource_account_id(), irrelevant_principal_types
-                )
-                is False
-            ):
-                return False
-
             assert isinstance(assume_role_service_resolver, AssumeRoleServiceResourcesResolver)
             if (
                 assume_role_service_resolver.is_trusted_principal(  # pylint: disable=E1101:no-member
@@ -116,8 +108,9 @@ class PtrpAllowedLine:
         logger: Logger,
         nodes_notes: NodesNotes,
         aws_actions: AwsActions,
+        aws_principals: AwsPrincipals,
         account_resources: AwsAccountResources,
-        iam_policies: Dict[str, IAMPolicy],
+        iam_entities: IAMEntities,
     ) -> bool:
         res = self.get_principal_and_its_assumed_federated_user()
         if res is None:
@@ -132,12 +125,13 @@ class PtrpAllowedLine:
         federated_user_resource: ServiceResourceBase = federated_principal_node.get_service_resource()
         assert isinstance(federated_user_resource, FederatedUserPrincipal)
         principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
-            policies_node_base, iam_policies
+            policies_node_base, iam_entities
         )
 
         policy_evaluation_result: PolicyEvaluationResult = PolicyEvaluation.run_target_policies_identity_based(
             logger=logger,
             aws_actions=aws_actions,
+            aws_principals=aws_principals,
             account_resources=account_resources,
             target_identity_policies_ctx=[target_identity_policy_ctx],
             principal_policies_ctx=principal_policies_ctx,
@@ -231,15 +225,13 @@ class PtrpAllowedLine:
         return None
 
     @staticmethod
-    def get_policies_ctx(
-        policies_node_base: PoliciesNodeBase, iam_policies: Dict[str, IAMPolicy]
-    ) -> List[PolicyDocumentCtx]:
+    def get_policies_ctx(policies_node_base: PoliciesNodeBase, iam_entities: IAMEntities) -> List[PolicyDocumentCtx]:
         policies_ctx: List[PolicyDocumentCtx] = []
         # Extract all principal policies (inline & attached)
         policies_ctx.extend(
             list(
                 map(
-                    lambda arn: iam_policies[arn].to_policy_document_ctx(),
+                    lambda arn: iam_entities.get_iam_policy(arn).to_policy_document_ctx(),
                     policies_node_base.get_attached_policies_arn(),
                 )
             )

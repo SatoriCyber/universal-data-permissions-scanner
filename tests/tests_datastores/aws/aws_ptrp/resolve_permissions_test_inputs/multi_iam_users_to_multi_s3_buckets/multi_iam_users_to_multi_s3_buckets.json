@@ -1,193 +1,196 @@
 {
     "input": {
         "iam_entities": {
-            "iam_users": {
-                "arn:aws:iam::105246067165:user/iam_user_1": {
-                    "user_name": "iam_user_1",
-                    "user_id": "iam_user_1",
-                    "aws_account_id": "105246067165",
-                    "path": "/",
-                    "user_policies": [
-                        {
-                            "UserName": "iam_user_1",
-                            "PolicyName": "inline-policy-1",
-                            "PolicyDocument": {
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067165:user/iam_user_1": {
+                            "user_name": "iam_user_1",
+                            "user_id": "iam_user_1",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_1",
+                                    "PolicyName": "inline-policy-1",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:GetObject",
+                                                    "s3:Put*"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1*"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualEditor2",
+                                                "Action": [
+                                                    "s3:PutObject"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy_1"
+                            ],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_1"
+                        },
+                        "arn:aws:iam::105246067165:user/iam_user_2": {
+                            "user_name": "iam_user_2",
+                            "user_id": "iam_user_2",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_2",
+                                    "PolicyName": "inline-policy-2",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:putobJECT"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_2*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy_2"
+                            ],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_2"
+                        },
+                        "arn:aws:iam::105246067165:user/iam_user_3": {
+                            "user_name": "iam_user_3",
+                            "user_id": "iam_user_3",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_3",
+                                    "PolicyName": "inline-policy-3",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:delete*"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_3*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy_3"
+                            ],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_3"
+                        }
+                    },
+                    "iam_groups": {},
+                    "iam_roles": {},
+                    "iam_policies": {
+                        "arn:aws:iam::105246067165:policy/policy_1": {
+                            "policy": {
+                                "PolicyName": "policy_1",
+                                "PolicyId": "policy_1",
+                                "Arn": "arn:aws:iam::105246067165:policy/policy_1",
+                                "DefaultVersionId": "v1",
+                                "Path": "/",
+                                "AttachmentCount": 1,
+                                "PermissionsBoundaryUsageCount": 0,
+                                "IsAttachable": true
+                            },
+                            "policy_document": {
                                 "Statement": [
                                     {
                                         "Effect": "Allow",
-                                        "Sid": "VisualEditor1",
                                         "Action": [
-                                            "s3:GetObject",
-                                            "s3:Put*"
+                                            "s3:List*"
                                         ],
                                         "Resource": [
-                                            "arn:aws:s3:::bucket_1*"
+                                            "arn:aws:s3:::bucket_1/*",
+                                            "arn:aws:s3:::bucket_1"
                                         ]
-                                    },
+                                    }
+                                ]
+                            }
+                        },
+                        "arn:aws:iam::105246067165:policy/policy_2": {
+                            "policy": {
+                                "PolicyName": "policy_2",
+                                "PolicyId": "policy_2",
+                                "Arn": "arn:aws:iam::105246067165:policy/policy_2",
+                                "DefaultVersionId": "v1",
+                                "Path": "/",
+                                "AttachmentCount": 1,
+                                "PermissionsBoundaryUsageCount": 0,
+                                "IsAttachable": true
+                            },
+                            "policy_document": {
+                                "Statement": [
                                     {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor2",
+                                        "Effect": "Allow",
                                         "Action": [
-                                            "s3:PutObject"
+                                            "s3:*tObje*"
                                         ],
                                         "Resource": [
-                                            "arn:aws:s3:::bucket_1*"
+                                            "arn:aws:s3:::bucket_2/*",
+                                            "arn:aws:s3:::bucket_2"
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        "arn:aws:iam::105246067165:policy/policy_3": {
+                            "policy": {
+                                "PolicyName": "policy_3",
+                                "PolicyId": "policy_3",
+                                "Arn": "arn:aws:iam::105246067165:policy/policy_3",
+                                "DefaultVersionId": "v1",
+                                "Path": "/",
+                                "AttachmentCount": 1,
+                                "PermissionsBoundaryUsageCount": 0,
+                                "IsAttachable": true
+                            },
+                            "policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Action": [
+                                            "s3:PutObjectAcl"
+                                        ],
+                                        "Resource": [
+                                            "arn:aws:s3:::bucket_3/*",
+                                            "arn:aws:s3:::bucket_3"
                                         ]
                                     }
                                 ]
                             }
                         }
-                    ],
-                    "attached_policies_arn": [
-                        "arn:aws:iam::105246067165:policy/policy_1"
-                    ],
-                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_1"
-                },
-                "arn:aws:iam::105246067165:user/iam_user_2": {
-                    "user_name": "iam_user_2",
-                    "user_id": "iam_user_2",
-                    "aws_account_id": "105246067165",
-                    "path": "/",
-                    "user_policies": [
-                        {
-                            "UserName": "iam_user_2",
-                            "PolicyName": "inline-policy-2",
-                            "PolicyDocument": {
-                                "Statement": [
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor1",
-                                        "Action": [
-                                            "s3:putobJECT"
-                                        ],
-                                        "Resource": [
-                                            "arn:aws:s3:::bucket_2*"
-                                        ]
-                                    }
-                                ]
-                            }
-                        }
-                    ],
-                    "attached_policies_arn": [
-                        "arn:aws:iam::105246067165:policy/policy_2"
-                    ],
-                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_2"
-                },
-                "arn:aws:iam::105246067165:user/iam_user_3": {
-                    "user_name": "iam_user_3",
-                    "user_id": "iam_user_3",
-                    "aws_account_id": "105246067165",
-                    "path": "/",
-                    "user_policies": [
-                        {
-                            "UserName": "iam_user_3",
-                            "PolicyName": "inline-policy-3",
-                            "PolicyDocument": {
-                                "Statement": [
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor1",
-                                        "Action": [
-                                            "s3:delete*"
-                                        ],
-                                        "Resource": [
-                                            "arn:aws:s3:::bucket_3*"
-                                        ]
-                                    }
-                                ]
-                            }
-                        }
-                    ],
-                    "attached_policies_arn": [
-                        "arn:aws:iam::105246067165:policy/policy_3"
-                    ],
-                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_3"
-                }
-            },
-            "iam_groups": {},
-            "iam_roles": {},
-            "iam_policies": {
-                "arn:aws:iam::105246067165:policy/policy_1": {
-                    "policy": {
-                        "PolicyName": "policy_1",
-                        "PolicyId": "policy_1",
-                        "Arn": "arn:aws:iam::105246067165:policy/policy_1",
-                        "DefaultVersionId": "v1",
-                        "Path": "/",
-                        "AttachmentCount": 1,
-                        "PermissionsBoundaryUsageCount": 0,
-                        "IsAttachable": true
-                    },
-                    "policy_document": {
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "s3:List*"
-                                ],
-                                "Resource": [
-                                    "arn:aws:s3:::bucket_1/*",
-                                    "arn:aws:s3:::bucket_1"
-                                ]
-                            }
-                        ]
-                    }
-                },
-                "arn:aws:iam::105246067165:policy/policy_2": {
-                    "policy": {
-                        "PolicyName": "policy_2",
-                        "PolicyId": "policy_2",
-                        "Arn": "arn:aws:iam::105246067165:policy/policy_2",
-                        "DefaultVersionId": "v1",
-                        "Path": "/",
-                        "AttachmentCount": 1,
-                        "PermissionsBoundaryUsageCount": 0,
-                        "IsAttachable": true
-                    },
-                    "policy_document": {
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "s3:*tObje*"
-                                ],
-                                "Resource": [
-                                    "arn:aws:s3:::bucket_2/*",
-                                    "arn:aws:s3:::bucket_2"
-                                ]
-                            }
-                        ]
-                    }
-                },
-                "arn:aws:iam::105246067165:policy/policy_3": {
-                    "policy": {
-                        "PolicyName": "policy_3",
-                        "PolicyId": "policy_3",
-                        "Arn": "arn:aws:iam::105246067165:policy/policy_3",
-                        "DefaultVersionId": "v1",
-                        "Path": "/",
-                        "AttachmentCount": 1,
-                        "PermissionsBoundaryUsageCount": 0,
-                        "IsAttachable": true
-                    },
-                    "policy_document": {
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "s3:PutObjectAcl"
-                                ],
-                                "Resource": [
-                                    "arn:aws:s3:::bucket_3/*",
-                                    "arn:aws:s3:::bucket_3"
-                                ]
-                            }
-                        ]
                     }
                 }
             }
         },
         "target_account_resources": {
+            "aws_account_id": "105246067165",
             "account_resources": {
                 "s3": [
                     {

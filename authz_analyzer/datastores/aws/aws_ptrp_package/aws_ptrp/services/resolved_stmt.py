@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Set
 
-from aws_ptrp.principals import Principal
+from aws_ptrp.principals import PrincipalBase
 from aws_ptrp.services.service_action_base import ServiceActionBase
 from aws_ptrp.services.service_actions_resolver_base import ResolvedActionsSingleStmt
 from aws_ptrp.services.service_resource_base import ServiceResourceBase
@@ -11,7 +11,7 @@ from aws_ptrp.services.service_resource_base import ServiceResourceBase
 @dataclass
 class StmtResourcesToResolveCtx:
     service_resources: Set[ServiceResourceBase]
-    resolved_stmt_principals: List[Principal]
+    resolved_stmt_principals: Set[PrincipalBase]
     resolved_stmt_actions: Set[ServiceActionBase]
     stmt_relative_id_resource_regexes: List[str]
     is_condition_exists: bool
@@ -22,7 +22,7 @@ class StmtResourcesToResolveCtx:
 
 @dataclass
 class ResolvedSingleStmt:
-    resolved_stmt_principals: List[Principal]
+    resolved_stmt_principals: Set[PrincipalBase]
     resolved_stmt_resources: Dict[ServiceResourceBase, ResolvedActionsSingleStmt]
     is_condition_exists: bool
     stmt_name: Optional[str]

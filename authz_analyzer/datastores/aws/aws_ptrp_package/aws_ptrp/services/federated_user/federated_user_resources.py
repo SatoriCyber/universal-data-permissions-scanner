@@ -25,7 +25,7 @@ from serde import field, serde
 @dataclass
 class FederatedUserPrincipal(PathFederatedPrincipalNodeBase, ServiceResourceBase):
     federated_principal: Principal = field(
-        deserializer=Principal.from_policy_principal_str,
+        deserializer=Principal.load_from_stmt_aws,
         serializer=Principal.to_policy_principal_str,
     )
 

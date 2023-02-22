@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from logging import Logger
 from typing import Generator, List, Optional, Set
 
-from aws_ptrp.principals import Principal
+from aws_ptrp.principals import Principal, PrincipalBase
 from aws_ptrp.services.resolved_stmt import ResolvedSingleStmt, ResolvedSingleStmtGetter, StmtResourcesToResolveCtx
 from aws_ptrp.services.service_action_base import ServiceActionBase
 from aws_ptrp.services.service_actions_resolver_base import (
@@ -68,15 +68,15 @@ class ServiceResourcesResolverBase(ABC):
         res = MethodOnStmtsActionsResult()
         for resolved_stmt in self.yield_resolved_stmts():
             if not any(
-                resolved_stmt_principal.contains(principal)
-                for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals
+                resolved_stmt_principal_base.get_principal().contains(principal)
+                for resolved_stmt_principal_base in resolved_stmt.resolved_stmt_principals
             ):
                 continue
             # self stmt relevant to this principal
             for other_resolved_stmt in other.yield_resolved_stmts():
                 if not any(
-                    other_resolved_stmt_principal.contains(principal)
-                    for other_resolved_stmt_principal in other_resolved_stmt.resolved_stmt_principals
+                    other_resolved_stmt_principal_base.get_principal().contains(principal)
+                    for other_resolved_stmt_principal_base in other_resolved_stmt.resolved_stmt_principals
                 ):
                     res.resolved_stmt_results.add(
                         MethodOnStmtActionsResult(
@@ -151,7 +151,7 @@ class ServiceResourcesResolverBase(ABC):
 
     def yield_resolved_stmt_principals(
         self,
-    ) -> Generator[Principal, None, None]:
+    ) -> Generator[PrincipalBase, None, None]:
         for resolved_stmt in self.yield_resolved_stmts():
             for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals:
                 yield resolved_stmt_principal
@@ -163,8 +163,8 @@ class ServiceResourcesResolverBase(ABC):
         aggregate_resources: Set[ServiceResourceBase] = set()
         for resolved_stmt in self.yield_resolved_stmts():
             if not any(
-                resolved_stmt_principal.contains(principal)
-                for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals
+                resolved_stmt_principal_base.get_principal().contains(principal)
+                for resolved_stmt_principal_base in resolved_stmt.resolved_stmt_principals
             ):
                 continue
             for resource in resolved_stmt.resolved_stmt_resources.keys():
@@ -181,8 +181,8 @@ class ServiceResourcesResolverBase(ABC):
         aggregate_actions: Set[ServiceActionBase] = set()
         for resolved_stmt in self.yield_resolved_stmts():
             if not any(
-                resolved_stmt_principal.contains(principal)
-                for resolved_stmt_principal in resolved_stmt.resolved_stmt_principals
+                resolved_stmt_principal_base.get_principal().contains(principal)
+                for resolved_stmt_principal_base in resolved_stmt.resolved_stmt_principals
             ):
                 continue
 
