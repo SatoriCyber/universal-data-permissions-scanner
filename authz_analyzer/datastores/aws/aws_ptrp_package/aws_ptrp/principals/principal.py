@@ -1,6 +1,7 @@
 import re
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, Set
 
 from aws_ptrp.ptrp_models.ptrp_model import AwsPrincipalType
 from serde import field, serde
@@ -15,6 +16,33 @@ regex_arn_account_id = re.compile(r"arn:aws:iam::([0-9]+):root$")
 
 
 IAM_USER_ARN_ORIGINATED_FOR_FEDERATED_USER_KEY = "iam-user-arn-originated-for-federated-user"
+
+
+def is_stmt_principal_relevant_to_resource(
+    stmt_principal: 'Principal',
+    resource_aws_account_id: str,
+    resource_based_irrelevant_principal_types: Optional[Set[AwsPrincipalType]],
+) -> bool:
+    if (
+        resource_based_irrelevant_principal_types
+        and stmt_principal.principal_type in resource_based_irrelevant_principal_types
+    ):
+        return False
+    # The below is unclear, seems like principal of AWS_ACCOUNT (like arn:aws:iam::([0-9]+):root) works only in cross-account access
+    # although not clear evidence for that in the AWS docs, I couldn't makes it work for single account access
+    # need to verify with AWS support
+    if (
+        stmt_principal.principal_type == AwsPrincipalType.AWS_ACCOUNT
+        and resource_aws_account_id == stmt_principal.get_account_id()
+    ):
+        return False
+    return True
+
+
+class PrincipalBase(ABC):
+    @abstractmethod
+    def get_principal(self) -> 'Principal':
+        pass
 
 
 @serde
@@ -33,10 +61,6 @@ class Principal:
 
     def __hash__(self):
         return hash(self.get_arn())
-
-    @classmethod
-    def from_policy_principal_str(cls, policy_principal_str: str) -> "Principal":
-        return Principal.load_from_stmt_aws(policy_principal_str)
 
     def to_policy_principal_str(self) -> str:
         return self.policy_principal_str
@@ -86,7 +110,7 @@ class Principal:
     def is_iam_user_principal(self) -> bool:
         return bool(self.principal_type == AwsPrincipalType.IAM_USER)
 
-    def is_iam_user_account(self) -> bool:
+    def is_aws_account(self) -> bool:
         return bool(
             self.principal_type == AwsPrincipalType.AWS_ACCOUNT
             or self.principal_type == AwsPrincipalType.CANONICAL_USER
@@ -129,11 +153,11 @@ class Principal:
                         f"Unable to check contains {self} with {other}, missing the originated iam_user of the federated principal"
                     )
                 return self.policy_principal_str == other_originated_iam_user_arn
-            elif self.is_iam_user_account():
+            elif self.is_aws_account():
                 if self_account_id == other_account_id:
                     return True
 
-        elif self.is_iam_user_account():
+        elif self.is_aws_account():
             if self_account_id == other_account_id:
                 return True
 

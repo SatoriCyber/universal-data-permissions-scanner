@@ -6,6 +6,7 @@ from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument, PolicyDocumentCtx
 from aws_ptrp.iam.policy.policy_document_resolver import get_identity_based_resolver, get_resource_based_resolver
 from aws_ptrp.principals import Principal
+from aws_ptrp.principals.aws_principals import AwsPrincipals
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services import (
     MethodOnStmtActionsResultType,
@@ -104,6 +105,7 @@ class PolicyEvaluation:
     # session_policies_service_resolver: List[ServiceResourcesResolverBase]
     # permission_boundary_policy_service_resolver: Optional[Dict[ServiceResourcesResolverBase]]
     aws_actions: AwsActions
+    aws_principals: AwsPrincipals
     account_resources: AwsAccountResources
 
     def _apply_explicit_deny(
@@ -160,12 +162,14 @@ class PolicyEvaluation:
         resource_policy_ctx: Optional[PolicyDocumentCtx],
         service_resource_type: ServiceResourceType,
         aws_actions: AwsActions,
+        aws_principals: AwsPrincipals,
         account_resources: AwsAccountResources,
         principal_policies_ctx: List[PolicyDocumentCtx],
     ) -> 'PolicyEvaluation':
         identity_policies_service_resolver = cls._get_identity_policies_service_resolver(
             logger=logger,
             aws_actions=aws_actions,
+            aws_principals=aws_principals,
             account_resources=account_resources,
             identity_principal=identity_principal,
             service_resource_type=service_resource_type,
@@ -175,6 +179,7 @@ class PolicyEvaluation:
         resource_policy_service_resolver = cls._get_resource_policy_service_resolver(
             logger=logger,
             aws_actions=aws_actions,
+            aws_principals=aws_principals,
             account_resources=account_resources,
             service_resource_type=service_resource_type,
             resource_policy_ctx=resource_policy_ctx,
@@ -188,6 +193,7 @@ class PolicyEvaluation:
             identity_policies_service_resolver=identity_policies_service_resolver,
             resource_policy_service_resolver=resource_policy_service_resolver,
             aws_actions=aws_actions,
+            aws_principals=aws_principals,
             account_resources=account_resources,
         )
         return policy_evaluation
@@ -197,6 +203,7 @@ class PolicyEvaluation:
         cls,
         logger: Logger,
         aws_actions: AwsActions,
+        aws_principals: AwsPrincipals,
         account_resources: AwsAccountResources,
         identity_principal: Principal,
         service_resource_type: ServiceResourceType,
@@ -211,6 +218,7 @@ class PolicyEvaluation:
             policy_documents_ctx=principal_policies_ctx,
             identity_principal=identity_principal,
             aws_actions=aws_actions,
+            aws_principals=aws_principals,
             account_resources=account_resources,
             effect=effect,
             allowed_service_action_types=allowed_service_action_types,
@@ -230,6 +238,7 @@ class PolicyEvaluation:
         cls,
         logger: Logger,
         aws_actions: AwsActions,
+        aws_principals: AwsPrincipals,
         account_resources: AwsAccountResources,
         service_resource_type: ServiceResourceType,
         resource_policy_ctx: Optional[PolicyDocumentCtx],
@@ -243,6 +252,7 @@ class PolicyEvaluation:
                 resource_arn=resource_policy_ctx.parent_arn,
                 resource_aws_account_id=resource_policy_ctx.parent_aws_account_id,
                 aws_actions=aws_actions,
+                aws_principals=aws_principals,
                 account_resources=account_resources,
                 effect=effect,
             )
@@ -255,6 +265,7 @@ class PolicyEvaluation:
         cls,
         logger: Logger,
         aws_actions: AwsActions,
+        aws_principals: AwsPrincipals,
         account_resources: AwsAccountResources,
         identity_principal: Principal,
         target_identity_policies_ctx: List[PolicyDocumentCtx],
@@ -275,6 +286,7 @@ class PolicyEvaluation:
         target_policies_service_resolver = cls._get_identity_policies_service_resolver(
             logger,
             aws_actions,
+            aws_principals,
             account_resources,
             identity_principal,
             service_resource_type,
@@ -302,6 +314,7 @@ class PolicyEvaluation:
             resource_policy_ctx=resource_policy_ctx,
             service_resource_type=service_resource_type,
             aws_actions=aws_actions,
+            aws_principals=aws_principals,
             account_resources=account_resources,
             principal_policies_ctx=principal_policies_ctx,
         )
@@ -315,6 +328,7 @@ class PolicyEvaluation:
         cls,
         logger: Logger,
         aws_actions: AwsActions,
+        aws_principals: AwsPrincipals,
         account_resources: AwsAccountResources,
         identity_principal: Principal,
         target_service_resource: ServiceResourceBase,
@@ -342,6 +356,7 @@ class PolicyEvaluation:
             resource_policy_ctx=resource_policy_ctx,
             service_resource_type=service_resource_type,
             aws_actions=aws_actions,
+            aws_principals=aws_principals,
             account_resources=account_resources,
             effect=Effect.Allow,
         )
@@ -356,6 +371,7 @@ class PolicyEvaluation:
             resource_policy_ctx=resource_policy_ctx,
             service_resource_type=service_resource_type,
             aws_actions=aws_actions,
+            aws_principals=aws_principals,
             account_resources=account_resources,
             principal_policies_ctx=principal_policies_ctx,
         )
@@ -381,6 +397,7 @@ class PolicyEvaluation:
         policy_evaluations_result.result_cross_account = cls.run_target_policies_identity_based(
             logger=logger,
             aws_actions=aws_actions,
+            aws_principals=aws_principals,
             account_resources=account_resources,
             identity_principal=identity_principal,
             target_identity_policies_ctx=principal_policies_ctx,

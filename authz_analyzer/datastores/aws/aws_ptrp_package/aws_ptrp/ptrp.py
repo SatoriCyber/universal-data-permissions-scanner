@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Callable, List, Optional, Set
+from typing import Callable, Dict, List, Optional, Set
 
 from aws_ptrp.actions.aws_actions import AwsActions
-from aws_ptrp.iam.iam_entities import IAMEntities
+from aws_ptrp.iam.iam_entities import IAMAccountEntities, IAMEntities
+from aws_ptrp.principals.aws_principals import AwsPrincipals
 from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PrincipalNodeBase
 from aws_ptrp.ptrp_allowed_lines.allowed_lines_resolver import PtrpAllowedLines, PtrpAllowedLinesBuilder
@@ -21,15 +22,16 @@ from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
 from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
 from aws_ptrp.utils.create_session import create_session_with_assume_role
 from boto3 import Session
-from serde import serde
+from serde import field, serde
 
 
 @serde
 @dataclass
 class AwsPtrp:
-    aws_actions: AwsActions
     iam_entities: IAMEntities
     target_account_resources: AwsAccountResources
+    aws_actions: AwsActions = field(skip=True)
+    aws_principals: AwsPrincipals = field(skip=True)
 
     @classmethod
     def load_from_role(
@@ -41,33 +43,30 @@ class AwsPtrp:
         target_account_id: str,
         additional_account_ids: Optional[Set[str]] = None,
     ):
+        iam_entities_for_accounts: Dict[str, IAMAccountEntities] = {}
         if additional_account_ids:
             if target_account_id in additional_account_ids:
                 additional_account_ids.remove(target_account_id)
-            iam_entities: IAMEntities = cls._load_iam_entities_for_additional_account(
-                logger, role_name, external_id, additional_account_ids
-            )
-        else:
-            iam_entities = IAMEntities()
-        return cls._load_for_target_account(
-            logger, role_name, external_id, target_account_id, iam_entities, resource_service_types_to_load
-        )
 
-    @classmethod
-    def _load_iam_entities_for_additional_account(
-        cls, logger: Logger, role_name: str, external_id: Optional[str], additional_account_ids: Set[str]
-    ) -> IAMEntities:
-        iam_entities = IAMEntities()
-        for additional_account_id in additional_account_ids:
-            session: Session = create_session_with_assume_role(additional_account_id, role_name, external_id)
-            logger.info(
-                "Successfully assume the role %s (external id: %s) for additional account id %s",
-                role_name,
-                external_id,
-                additional_account_id,
-            )
-            iam_entities.update_for_account(logger, additional_account_id, session)
-        return iam_entities
+            for additional_account_id in additional_account_ids:
+                session: Session = create_session_with_assume_role(additional_account_id, role_name, external_id)
+                logger.info(
+                    "Successfully assume the role %s (external id: %s) for additional account id %s",
+                    role_name,
+                    external_id,
+                    additional_account_id,
+                )
+                iam_entities_for_account = IAMAccountEntities.load_for_account(logger, additional_account_id, session)
+                iam_entities_for_accounts[additional_account_id] = iam_entities_for_account
+
+        return cls._load_for_target_account(
+            logger,
+            role_name,
+            external_id,
+            target_account_id,
+            iam_entities_for_accounts,
+            resource_service_types_to_load,
+        )
 
     @classmethod
     def _load_for_target_account(
@@ -76,13 +75,14 @@ class AwsPtrp:
         role_name: str,
         external_id: Optional[str],
         target_account_id: str,
-        iam_entities: IAMEntities,
+        iam_entities_for_accounts: Dict[str, IAMAccountEntities],
         resource_service_types_to_load: Set[ServiceResourceType],
     ) -> 'AwsPtrp':
         # update the iam_entities from the target account
         target_session: Session = create_session_with_assume_role(target_account_id, role_name, external_id)
         logger.info("Successfully assume the role %s for target account id %s", role_name, target_account_id)
-        iam_entities.update_for_account(logger, target_account_id, target_session)
+        iam_entities_target_account = IAMAccountEntities.load_for_account(logger, target_account_id, target_session)
+        iam_entities_for_accounts[target_account_id] = iam_entities_target_account
 
         # aws actions
         resource_service_types_to_load.add(AssumeRoleService())  # out of the box resource
@@ -92,14 +92,19 @@ class AwsPtrp:
         )
         aws_actions = AwsActions.load(logger, action_service_types_to_load)
 
+        iam_entities = IAMEntities.load(iam_accounts_entities=iam_entities_for_accounts)
         # target account resources
         account_resources = AwsAccountResources.load_services_from_session(
             logger, target_account_id, target_session, resource_service_types_to_load
         )
         account_resources.update_services_from_iam_entities(logger, iam_entities, resource_service_types_to_load)
 
+        # aws principals
+        aws_principals = AwsPrincipals.load(logger, iam_entities, account_resources)
+
         return cls(
             aws_actions=aws_actions,
+            aws_principals=aws_principals,
             target_account_resources=account_resources,
             iam_entities=iam_entities,
         )
@@ -156,7 +161,7 @@ class AwsPtrp:
 
     def resolve_permissions(self, logger: Logger, cb_line: Callable[[AwsPtrpLine], None]):
         allowed_lines: PtrpAllowedLines = PtrpAllowedLinesBuilder(
-            logger, self.iam_entities, self.aws_actions, self.target_account_resources
+            logger, self.iam_entities, self.aws_actions, self.aws_principals, self.target_account_resources
         ).build()
 
         for line in allowed_lines.yield_principal_to_resource_lines():
@@ -165,6 +170,7 @@ class AwsPtrp:
                 logger=logger,
                 iam_entities=self.iam_entities,
                 aws_actions=self.aws_actions,
+                aws_principals=self.aws_principals,
                 target_account_resources=self.target_account_resources,
                 line=line,
             )

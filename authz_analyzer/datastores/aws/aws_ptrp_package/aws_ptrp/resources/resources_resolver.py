@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Dict, List, Optional, Set
 
-from aws_ptrp.principals import Principal
+from aws_ptrp.principals import PrincipalBase
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services import (
     ServiceActionsResolverBase,
@@ -51,7 +51,7 @@ class ResourcesResolver:
         stmt_resource: List[str],
         not_resource_annotated: bool,
         account_resources: AwsAccountResources,
-        resolved_stmt_principals: List[Principal],
+        resolved_stmt_principals: Set[PrincipalBase],
         resolved_stmt_services_action_types: Set[ServiceActionType],
         service_action_stmt_resolvers: Dict[ServiceActionType, ServiceActionsResolverBase],
     ) -> Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]]:

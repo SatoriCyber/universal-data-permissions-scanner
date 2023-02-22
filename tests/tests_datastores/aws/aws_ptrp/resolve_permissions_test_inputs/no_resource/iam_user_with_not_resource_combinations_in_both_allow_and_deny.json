@@ -1,223 +1,229 @@
 {
     "input": {
         "iam_entities": {
-            "iam_users": {
-                "arn:aws:iam::105246067165:user/iam_user_1": {
-                    "user_name": "iam_user_1",
-                    "user_id": "AIDA6JM62QPID6GVAJJUK",
-                    "path": "/",
-                    "user_policies": [
-                        {
-                            "UserName": "iam_user_1",
-                            "PolicyName": "inline-policy-1",
-                            "PolicyDocument": {
-                                "Statement": [
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor1",
-                                        "Action": [
-                                            "s3:GetObject"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/a.json"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor2",
-                                        "Action": [
-                                            "s3:GetObject"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/?.json"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor3",
-                                        "Action": [
-                                            "s3:PutObject"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/?.json",
-                                            "arn:aws:s3:::bucket_1/abc.json"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor4",
-                                        "Action": [
-                                            "s3:PutObject"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/*.txt"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor5",
-                                        "Action": [
-                                            "s3:DeleteObject"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/?.json"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor6",
-                                        "Action": [
-                                            "s3:DeleteObject"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/a.json"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor7",
-                                        "Action": [
-                                            "s3:GetObjectTagging"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/*.txt"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor8",
-                                        "Action": [
-                                            "s3:GetObjectTagging"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/?.json"
-                                        ]
-                                    },
-                                    {
-                                        "_comment": "Since the deny has a wildcard, we will deny the s3:GetObjectVersion action for bucket_1",
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor9",
-                                        "Action": [
-                                            "s3:GetObjectVersion"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/?.json"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor10",
-                                        "Action": [
-                                            "s3:GetObjectVersion"
-                                        ],
-                                        "Resource": [
-                                            "arn:aws:s3:::bucket_1/*"
-                                        ]
-                                    },
-                                    {
-                                        "_comment": "Since the Deny is annotated with NotResource, we can't tell if to deny or not so we will allow",
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor11",
-                                        "Action": [
-                                            "s3:GetObjectAttributes"
-                                        ],
-                                        "Resource": [
-                                            "arn:aws:s3:::bucket_1/?.json",
-                                            "arn:aws:s3:::bucket_1/something.*"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor12",
-                                        "Action": [
-                                            "s3:GetObjectAttributes"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/a",
-                                            "arn:aws:s3:::bucket_1/bla?*.json"
-                                        ]
-                                    },
-                                    {
-                                        "_comment": "Verify that GetObjectLegalHold will be denied for bucket_1",
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor13",
-                                        "Action": [
-                                            "s3:RestoreObject"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/?.json",
-                                            "arn:aws:s3:::bucket_1/something.*"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor14",
-                                        "Action": [
-                                            "s3:RestoreObject"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_2/*"
-                                        ]
-                                    },
-                                    {
-                                        "_comment": "Verify that DeleteObjectVersionTagging will be denied for both buckets",
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor15",
-                                        "Action": [
-                                            "s3:DeleteObjectVersionTagging"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/?.json",
-                                            "arn:aws:s3:::bucket_1/something.*",
-                                            "arn:aws:s3:::bucket_2/bla*.txt"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor16",
-                                        "Action": [
-                                            "s3:DeleteObjectVersionTagging"
-                                        ],
-                                        "Resource": [
-                                            "arn:aws:s3:::bucket_*/*"
-                                        ]
-                                    },
-                                    {
-                                        "_comment": "Verify that we do not know whether to deny or allow the action, since Deny has no wildcard",
-                                        "Effect": "Allow",
-                                        "Sid": "VisualEditor17",
-                                        "Action": [
-                                            "s3:BypassGovernanceRetention"
-                                        ],
-                                        "NotResource": [
-                                            "arn:aws:s3:::bucket_1/?.json",
-                                            "arn:aws:s3:::bucket_1/something.*",
-                                            "arn:aws:s3:::bucket_2/bla*.txt"
-                                        ]
-                                    },
-                                    {
-                                        "Effect": "Deny",
-                                        "Sid": "VisualEditor18",
-                                        "Action": [
-                                            "s3:BypassGovernanceRetention"
-                                        ],
-                                        "Resource": [
-                                            "arn:aws:s3:::bucket_*/abc"
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067165:user/iam_user_1": {
+                            "user_name": "iam_user_1",
+                            "user_id": "AIDA6JM62QPID6GVAJJUK",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_1",
+                                    "PolicyName": "inline-policy-1",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:GetObject"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/a.json"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualEditor2",
+                                                "Action": [
+                                                    "s3:GetObject"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/?.json"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor3",
+                                                "Action": [
+                                                    "s3:PutObject"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/?.json",
+                                                    "arn:aws:s3:::bucket_1/abc.json"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualEditor4",
+                                                "Action": [
+                                                    "s3:PutObject"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/*.txt"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor5",
+                                                "Action": [
+                                                    "s3:DeleteObject"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/?.json"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualEditor6",
+                                                "Action": [
+                                                    "s3:DeleteObject"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/a.json"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualEditor7",
+                                                "Action": [
+                                                    "s3:GetObjectTagging"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/*.txt"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor8",
+                                                "Action": [
+                                                    "s3:GetObjectTagging"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/?.json"
+                                                ]
+                                            },
+                                            {
+                                                "_comment": "Since the deny has a wildcard, we will deny the s3:GetObjectVersion action for bucket_1",
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor9",
+                                                "Action": [
+                                                    "s3:GetObjectVersion"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/?.json"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualEditor10",
+                                                "Action": [
+                                                    "s3:GetObjectVersion"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/*"
+                                                ]
+                                            },
+                                            {
+                                                "_comment": "Since the Deny is annotated with NotResource, we can't tell if to deny or not so we will allow",
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor11",
+                                                "Action": [
+                                                    "s3:GetObjectAttributes"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/?.json",
+                                                    "arn:aws:s3:::bucket_1/something.*"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualEditor12",
+                                                "Action": [
+                                                    "s3:GetObjectAttributes"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/a",
+                                                    "arn:aws:s3:::bucket_1/bla?*.json"
+                                                ]
+                                            },
+                                            {
+                                                "_comment": "Verify that GetObjectLegalHold will be denied for bucket_1",
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor13",
+                                                "Action": [
+                                                    "s3:RestoreObject"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/?.json",
+                                                    "arn:aws:s3:::bucket_1/something.*"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualEditor14",
+                                                "Action": [
+                                                    "s3:RestoreObject"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_2/*"
+                                                ]
+                                            },
+                                            {
+                                                "_comment": "Verify that DeleteObjectVersionTagging will be denied for both buckets",
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor15",
+                                                "Action": [
+                                                    "s3:DeleteObjectVersionTagging"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/?.json",
+                                                    "arn:aws:s3:::bucket_1/something.*",
+                                                    "arn:aws:s3:::bucket_2/bla*.txt"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualEditor16",
+                                                "Action": [
+                                                    "s3:DeleteObjectVersionTagging"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_*/*"
+                                                ]
+                                            },
+                                            {
+                                                "_comment": "Verify that we do not know whether to deny or allow the action, since Deny has no wildcard",
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor17",
+                                                "Action": [
+                                                    "s3:BypassGovernanceRetention"
+                                                ],
+                                                "NotResource": [
+                                                    "arn:aws:s3:::bucket_1/?.json",
+                                                    "arn:aws:s3:::bucket_1/something.*",
+                                                    "arn:aws:s3:::bucket_2/bla*.txt"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualEditor18",
+                                                "Action": [
+                                                    "s3:BypassGovernanceRetention"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_*/abc"
+                                                ]
+                                            }
                                         ]
                                     }
-                                ]
-                            }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_1"
                         }
-                    ],
-                    "attached_policies_arn": [],
-                    "identity_principal": "arn:aws:iam::105246067165:user/iam_user_1"
+                    },
+                    "iam_groups": {},
+                    "iam_roles": {},
+                    "iam_policies": {}
                 }
-            },
-            "iam_groups": {},
-            "iam_roles": {},
-            "iam_policies": {}
+            }
         },
         "target_account_resources": {
+            "aws_account_id": "105246067165",
             "account_resources": {
                 "s3": [
                     {

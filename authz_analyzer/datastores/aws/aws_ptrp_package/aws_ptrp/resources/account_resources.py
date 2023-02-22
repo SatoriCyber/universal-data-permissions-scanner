@@ -1,8 +1,11 @@
 from dataclasses import dataclass
 from logging import Logger
-from typing import Any, Dict, List, Optional, Set, Type
+from typing import Any, Dict, Generator, List, Optional, Set, Type
 
 from aws_ptrp.iam.iam_entities import IAMEntities
+from aws_ptrp.iam.policy.policy_document import Effect, PolicyDocument
+from aws_ptrp.principals import Principal, is_stmt_principal_relevant_to_resource
+from aws_ptrp.ptrp_models import AwsPrincipalType
 from aws_ptrp.services import (
     ServiceResourceBase,
     ServiceResourceType,
@@ -36,6 +39,7 @@ def from_dict_deserializer(
 @serde
 @dataclass
 class AwsAccountResources:
+    aws_account_id: str
     account_resources: Dict[ServiceResourceType, Set[ServiceResourceBase]] = field(
         serializer=to_dict_serializer, deserializer=from_dict_deserializer
     )
@@ -52,10 +56,29 @@ class AwsAccountResources:
                 f"Loading AWS account resources (from iam_entities) for type {service_type_to_load.get_service_name()}"
             )
             ret: Optional[Set[ServiceResourceBase]] = service_type_to_load.load_service_resources(
-                logger, self.account_resources, iam_entities
+                logger, self, iam_entities
             )
             if ret:
                 self.account_resources[service_type_to_load] = ret
+
+    def yield_stmt_principals_from_resource_based_policy(
+        self, principal_type: AwsPrincipalType
+    ) -> Generator[Principal, None, None]:
+        for service_resource_type, account_resources_service in self.account_resources.items():
+            resource_based_irrelevant_principal_types: Optional[
+                Set[AwsPrincipalType]
+            ] = service_resource_type.get_resource_based_policy_irrelevant_principal_types()
+
+            for account_resource_service in account_resources_service:
+                bucket_policy: Optional[PolicyDocument] = account_resource_service.get_resource_policy()
+                if bucket_policy:
+                    for principal in bucket_policy.yield_resource_based_stmt_principals(Effect.Allow, principal_type):
+                        if is_stmt_principal_relevant_to_resource(
+                            principal,
+                            account_resource_service.get_resource_account_id(),
+                            resource_based_irrelevant_principal_types,
+                        ):
+                            yield principal
 
     @classmethod
     def load_services_from_session(
@@ -78,4 +101,4 @@ class AwsAccountResources:
             if ret_from_session:
                 account_resources[service_type_to_load] = ret_from_session
 
-        return cls(account_resources=account_resources)
+        return cls(account_resources=account_resources, aws_account_id=aws_account_id)

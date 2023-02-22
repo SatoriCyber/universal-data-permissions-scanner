@@ -4,7 +4,7 @@ from enum import Enum, auto
 from typing import List, Optional
 
 from aws_ptrp.iam.policy.policy_document import PolicyDocument, PolicyDocumentCtx
-from aws_ptrp.principals import Principal
+from aws_ptrp.principals import Principal, PrincipalBase
 from aws_ptrp.ptrp_models.ptrp_model import (
     AwsPrincipal,
     AwsPtrpNodeNote,
@@ -123,10 +123,14 @@ class PoliciesNodeBase(NodeBase):
         pass
 
 
-class PrincipalNodeBase(NodeBase):
+class PrincipalNodeBase(PrincipalBase, NodeBase):
     @abstractmethod
     def get_stmt_principal(self) -> Principal:
         pass
+
+    # PrincipalBase
+    def get_principal(self) -> Principal:
+        return self.get_stmt_principal()
 
 
 class PrincipalAndPoliciesNodeBase(PrincipalNodeBase, PoliciesNodeBase):

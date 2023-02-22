@@ -66,7 +66,7 @@ class ServiceResourceType(ServiceActionType):
     def load_service_resources(
         cls,
         _logger: Logger,
-        _resources_loaded_from_session: Dict['ServiceResourceType', Set[ServiceResourceBase]],
+        _aws_account_resources,
         _iam_entities,
     ) -> Optional[Set[ServiceResourceBase]]:
         return None

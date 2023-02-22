@@ -3,6 +3,7 @@ from typing import Any, Dict, Generator, List, Optional, Union
 
 from aws_ptrp.iam.policy.effect import Effect
 from aws_ptrp.principals.principal import Principal
+from aws_ptrp.ptrp_models import AwsPrincipalType
 from serde import field, serde
 
 
@@ -55,11 +56,12 @@ class StmtPrincipals:
 class Statement:
     effect: Effect
     sid: Optional[str] = field(default=None, skip_if_default=True)
-    principal: Optional[StmtPrincipals] = field(
+    _principal: Optional[StmtPrincipals] = field(
         default=None,
         skip_if_default=True,
         deserializer=StmtPrincipals.from_stmt_document_principal,
         serializer=StmtPrincipals.to_stmt_document_principal,
+        rename="Principal",
     )
     _action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True, rename="Action")
     _not_action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True, rename="NotAction")
@@ -68,6 +70,11 @@ class Statement:
     # just to verify if condition exists (To ignore Deny stmts with condition, to be on the strict side for the allowed permissions)
     # to revisit, once we will start to support condition
     condition: Optional[Dict[str, Any]] = field(default=None, skip_if_default=True)
+
+    def get_principals(self) -> Optional[List[Principal]]:
+        if self._principal:
+            return self._principal.principals
+        return None
 
     def get_resources(self) -> Optional[List[str]]:
         if self._resource:
@@ -103,11 +110,15 @@ class Statement:
 class PolicyDocument:
     statement: List[Statement]
 
-    def yield_stmt_principals(self, effect: Effect) -> Generator[Principal, None, None]:
+    def yield_resource_based_stmt_principals(
+        self, effect: Effect, principal_type: AwsPrincipalType
+    ) -> Generator[Principal, None, None]:
         for stmt in self.statement:
-            if stmt.principal and stmt.effect == effect:
-                for principal in stmt.principal.principals:
-                    yield principal
+            principals = stmt.get_principals()
+            if principals and stmt.effect == effect:
+                for principal in principals:
+                    if principal.principal_type == principal_type:
+                        yield principal
 
 
 @dataclass
