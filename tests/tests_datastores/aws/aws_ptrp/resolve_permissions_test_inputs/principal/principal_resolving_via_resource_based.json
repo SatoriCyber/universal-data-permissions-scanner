@@ -248,9 +248,9 @@
                 "notes": []
             },
             "principal": {
-                "arn": "*",
-                "name": "All principals",
-                "type": "ALL_PRINCIPALS",
+                "arn": "Anonymous user",
+                "name": "Anonymous user",
+                "type": "ANONYMOUS_USER",
                 "notes": []
             },
             "action_permission_level": "FULL",
@@ -281,9 +281,9 @@
                 "notes": []
             },
             "principal": {
-                "arn": "*",
-                "name": "All principals",
-                "type": "ALL_PRINCIPALS",
+                "arn": "Anonymous user",
+                "name": "Anonymous user",
+                "type": "ANONYMOUS_USER",
                 "notes": []
             },
             "action_permission_level": "FULL",
@@ -321,9 +321,9 @@
                 "notes": []
             },
             "principal": {
-                "arn": "*",
-                "name": "All principals",
-                "type": "ALL_PRINCIPALS",
+                "arn": "Anonymous user",
+                "name": "Anonymous user",
+                "type": "ANONYMOUS_USER",
                 "notes": []
             },
             "action_permission_level": "FULL",

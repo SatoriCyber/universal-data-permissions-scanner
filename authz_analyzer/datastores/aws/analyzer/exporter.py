@@ -61,10 +61,10 @@ class AWSPtrpModelConvertor:
             return IdentityType.FEDERATED_USER
         if aws_principal_type == AwsPrincipalType.AWS_SERVICE:
             return IdentityType.AWS_SERVICE
-        if aws_principal_type == AwsPrincipalType.ALL_PRINCIPALS:
-            return IdentityType.ALL_USERS
+        if aws_principal_type == AwsPrincipalType.ANONYMOUS_USER:
+            return IdentityType.ANONYMOUS_USER
         raise Exception(  # pylint disable=broad-exception-raised
-            f"unable to convert from {aws_principal_type} to IdentityType"
+            f"unable to convert from {aws_principal_type} to IdentityType. {self}"
         )
 
     def _get_identity(self) -> Identity:
@@ -116,8 +116,8 @@ class AWSPtrpModelConvertor:
             return AuthzPathElementType.SAML_SESSION
         if node_type == AwsPtrpPathNodeType.FEDERATED_USER:
             return AuthzPathElementType.FEDERATED_USER
-        if node_type == AwsPtrpPathNodeType.ALL_USERS:
-            return AuthzPathElementType.ALL_USERS
+        if node_type == AwsPtrpPathNodeType.ANONYMOUS_USER:
+            return AuthzPathElementType.ANONYMOUS_USER
         raise Exception(f"unable to convert from {node_type} to AuthzPathElementType")
 
     @staticmethod
