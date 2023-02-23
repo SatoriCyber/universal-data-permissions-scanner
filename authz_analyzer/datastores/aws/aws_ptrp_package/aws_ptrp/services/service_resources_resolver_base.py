@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from logging import Logger
-from typing import Generator, List, Optional, Set
+from typing import Dict, Generator, List, Optional, Set
 
 from aws_ptrp.principals import Principal, PrincipalBase
 from aws_ptrp.services.resolved_stmt import ResolvedSingleStmt, ResolvedSingleStmtGetter, StmtResourcesToResolveCtx
@@ -73,6 +73,7 @@ class ServiceResourcesResolverBase(ABC):
             ):
                 continue
             # self stmt relevant to this principal
+            resolved_actions_resources_for_intersection: Dict[ServiceResourceBase, Set[ServiceActionBase]] = {}
             for other_resolved_stmt in other.yield_resolved_stmts():
                 if not any(
                     other_resolved_stmt_principal_base.get_principal().contains(principal)
@@ -118,7 +119,14 @@ class ServiceResourcesResolverBase(ABC):
                     if method_on_stmt_actions_type == MethodOnStmtActionsType.DIFFERENCE:
                         result = resolved_action_single_stmt.difference(other_resolved_action_single_stmt)
                     elif method_on_stmt_actions_type == MethodOnStmtActionsType.INTERSECTION:
-                        result = resolved_action_single_stmt.intersection(other_resolved_action_single_stmt)
+                        # for intersection, first needs to union all other stmts actions and do the intersection on that
+                        resolved_actions_resource_for_intersection = (
+                            resolved_actions_resources_for_intersection.setdefault(service_resource, set())
+                        )
+                        resolved_actions_resource_for_intersection.update(
+                            other_resolved_action_single_stmt.resolved_stmt_actions
+                        )
+                        result = MethodOnStmtActionsResultType.APPLIED
                     else:
                         assert False  # should not get here, unknown enum value
 
@@ -128,6 +136,17 @@ class ServiceResourcesResolverBase(ABC):
                             result=result,
                         )
                     )
+
+            if method_on_stmt_actions_type == MethodOnStmtActionsType.INTERSECTION:
+                # done aggregate all other stmts, possible now to intersects the results
+                for service_resource, resolved_action_single_stmt in resolved_stmt.resolved_stmt_resources.items():
+                    resolved_actions_resource: Optional[
+                        Set[ServiceActionBase]
+                    ] = resolved_actions_resources_for_intersection.get(service_resource)
+                    if resolved_actions_resource:
+                        resolved_action_single_stmt.resolved_stmt_actions.intersection_update(resolved_actions_resource)
+                    else:
+                        resolved_action_single_stmt.resolved_stmt_actions.clear()
 
             # remove all resolved resources which left with no resolved actions (after the method action)
             resolved_stmt.retain_resolved_stmt_resources()

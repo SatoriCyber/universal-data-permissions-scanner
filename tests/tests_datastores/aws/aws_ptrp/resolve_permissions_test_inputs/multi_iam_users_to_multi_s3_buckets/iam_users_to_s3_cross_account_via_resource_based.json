@@ -158,5 +158,32 @@
             }
         }
     },
-    "output": []
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_cross_accounts",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_3",
+                "name": "iam_user_3",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:s3:::bucket_cross_accounts",
+                    "name": "bucket_cross_accounts",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject",
+                "GetObjectTagging"
+            ]
+        }
+    ]
 }
