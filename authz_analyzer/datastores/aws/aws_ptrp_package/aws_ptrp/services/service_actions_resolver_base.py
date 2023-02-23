@@ -54,10 +54,6 @@ class ResolvedActionsSingleStmt(ABC):
         self.resolved_stmt_actions.difference_update(other.resolved_stmt_actions)
         return MethodOnStmtActionsResultType.APPLIED
 
-    def intersection(self, other: 'ResolvedActionsSingleStmt') -> MethodOnStmtActionsResultType:
-        self.resolved_stmt_actions.intersection_update(other.resolved_stmt_actions)
-        return MethodOnStmtActionsResultType.APPLIED
-
 
 @dataclass
 class ServiceActionsResolverBase(ABC):
