@@ -57,8 +57,8 @@ class AwsPrincipals:
 
     def _get_all_principals(self) -> Set[PrincipalBase]:
         if self._all_principals is None:
-            # For all principals, create principal of no_entity with type ALL_PRINCIPALS for anonymous users
-            self._all_principals = {NoEntityPrincipal(stmt_principal=Principal.load_from_stmt_all())}
+            # For all principals, create principal of no_entity with type ANONYMOUS_USER
+            self._all_principals = {NoEntityPrincipal(stmt_principal=Principal.load_anonymous_user())}
             for account_principals in self.accounts_principals.values():
                 self._all_principals.update(account_principals.get_account_principals())
         return self._all_principals

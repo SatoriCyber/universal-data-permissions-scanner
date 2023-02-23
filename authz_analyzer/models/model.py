@@ -53,7 +53,7 @@ class IdentityType(Enum):
     WEB_IDENTITY_SESSION = auto()  # AWS
     SAML_SESSION = auto()  # AWS
     FEDERATED_USER = auto()  # AWS
-    ALL_USERS = auto()  # AWS
+    ANONYMOUS_USER = auto()  # AWS
     ACCOUNT = auto()  # Snowflake
     DB_USER = auto()  # MongoDB Atlas
     ORG_USER = auto()  # MongoDB Atlas
@@ -92,7 +92,7 @@ class AuthzPathElementType(Enum):
     WEB_IDENTITY_SESSION = auto()  # AWS
     SAML_SESSION = auto()  # AWS
     FEDERATED_USER = auto()  # AWS
-    ALL_USERS = auto()  # AWS
+    ANONYMOUS_USER = auto()  # AWS
     CLUSTER = auto()  # Mongo Atlas
     RESOURCE_POLICY = auto()  # AWS
     SHARE = auto()  # Snowflake

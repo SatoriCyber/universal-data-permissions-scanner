@@ -98,6 +98,7 @@ class AwsPrincipalType(Enum):
     AWS_STS_FEDERATED_USER_SESSION = auto()
     AWS_SERVICE = auto()
     ALL_PRINCIPALS = auto()
+    ANONYMOUS_USER = auto()
 
     def __str__(self) -> str:
         return self.name
@@ -133,7 +134,7 @@ class AwsPtrpPathNodeType(Enum):
     WEB_IDENTITY_SESSION = auto()
     SAML_SESSION = auto()
     FEDERATED_USER = auto()
-    ALL_USERS = auto()
+    ANONYMOUS_USER = auto()
 
     def __str__(self) -> str:
         return self.name

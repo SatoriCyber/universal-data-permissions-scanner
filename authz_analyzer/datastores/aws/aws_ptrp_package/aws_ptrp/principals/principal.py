@@ -100,7 +100,7 @@ class Principal:
             or self.principal_type == AwsPrincipalType.CANONICAL_USER
             # real no entity principal
             or self.principal_type == AwsPrincipalType.AWS_SERVICE
-            or self.principal_type == AwsPrincipalType.ALL_PRINCIPALS
+            or self.principal_type == AwsPrincipalType.ANONYMOUS_USER
         )
         return is_no_entity
 
@@ -126,11 +126,14 @@ class Principal:
         return bool(self.principal_type == AwsPrincipalType.ASSUMED_ROLE_SESSION)
 
     def contains(self, other: 'Principal') -> bool:
+        # must not be ALL_PRINCIPALS (due to resolving all principal to other users)
+        assert self.principal_type != AwsPrincipalType.ALL_PRINCIPALS
+
         if self.principal_type == other.principal_type:
             if self.policy_principal_str == other.policy_principal_str:
                 return True
 
-        if self.principal_type == AwsPrincipalType.ALL_PRINCIPALS:
+        if self.principal_type == AwsPrincipalType.ANONYMOUS_USER:
             return True
 
         self_account_id = self.get_account_id()
@@ -190,6 +193,15 @@ class Principal:
             principal_type=AwsPrincipalType.ALL_PRINCIPALS,
             name="All principals",
             policy_principal_str="*",
+            principal_metadata=None,
+        )
+
+    @classmethod
+    def load_anonymous_user(cls) -> "Principal":
+        return Principal(
+            principal_type=AwsPrincipalType.ANONYMOUS_USER,
+            name="Anonymous user",
+            policy_principal_str="Anonymous user",
             principal_metadata=None,
         )
 
