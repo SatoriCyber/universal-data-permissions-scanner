@@ -1,0 +1,179 @@
+{
+    "input": {
+        "iam_entities": {
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067165:user/iam_user_1": {
+                            "user_name": "iam_user_1",
+                            "user_id": "iam_user_1",
+                            "aws_account_id": "105246067165",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_1",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "_comment": "s3:GetObjectVersion will be denied because of group 2 policy",
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:GetObject",
+                                                    "s3:GetObjectVersion"
+                                                ],
+                                                "Resource": [
+                                                    "*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_1"
+                        }
+                    },
+                    "iam_groups": {
+                        "arn:aws:iam::105246067165:group/iam_group_1": {
+                            "group_name": "iam_group_1",
+                            "group_id": "iam_group_1",
+                            "arn": "arn:aws:iam::105246067165:group/iam_group_1",
+                            "path": "/",
+                            "group_user_ids": [
+                                "iam_user_1"
+                            ],
+                            "group_policies": [
+                                {
+                                    "GroupName": "iam_group_1",
+                                    "PolicyName": "inline-policy-iam-group-1",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "IamGroup1InlineAllow1",
+                                                "Action": [
+                                                    "s3:GetObject"
+                                                ],
+                                                "Resource": [
+                                                    "*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": []
+                        },
+                        "arn:aws:iam::105246067165:group/iam_group_2": {
+                            "group_name": "iam_group_2",
+                            "group_id": "iam_group_2",
+                            "arn": "arn:aws:iam::105246067165:group/iam_group_2",
+                            "path": "/",
+                            "group_user_ids": [
+                                "iam_user_1"
+                            ],
+                            "group_policies": [
+                                {
+                                    "GroupName": "iam_group_2",
+                                    "PolicyName": "inline-policy-iam-group-2",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "IamGroup2InlineDeny",
+                                                "Action": [
+                                                    "s3:GetObjectVersion"
+                                                ],
+                                                "Resource": [
+                                                    "*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": []
+                        }
+                    },
+                    "iam_roles": {},
+                    "iam_policies": {}
+                }
+            }
+        },
+        "target_account_resources": {
+            "aws_account_id": "105246067165",
+            "account_resources": {
+                "s3": [
+                    {
+                        "name": "bucket_1",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": []
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:group/iam_group_1",
+                    "name": "iam_group_1",
+                    "type": "IAM_GROUP",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:group/iam_group_1",
+                    "name": "inline-policy-iam-group-1",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        }
+    ]
+}
