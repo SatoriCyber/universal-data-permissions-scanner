@@ -3,13 +3,12 @@ from logging import Logger
 from typing import Dict, Optional, Set
 
 from aws_ptrp.iam.iam_entities import IAMAccountEntities, IAMEntities
-from aws_ptrp.iam.iam_roles import RoleSession
-from aws_ptrp.iam.policy.policy_document import Effect
+from aws_ptrp.iam.iam_roles import IAMRole, RoleSession
+from aws_ptrp.iam.iam_users import IAMUser
 from aws_ptrp.principals.no_entity_principal import NoEntityPrincipal
 from aws_ptrp.principals.principal import Principal, PrincipalBase
 from aws_ptrp.ptrp_models import AwsPrincipalType
 from aws_ptrp.resources.account_resources import AwsAccountResources
-from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserPrincipal
 
 
 @dataclass
@@ -17,29 +16,59 @@ class AwsAccountPrincipals:
     iam_user_principals: Dict[str, PrincipalBase] = field(default_factory=dict)
     iam_role_principals: Dict[str, PrincipalBase] = field(default_factory=dict)
     role_session_principals: Dict[str, PrincipalBase] = field(default_factory=dict)
-    federated_user_principals: Dict[str, PrincipalBase] = field(default_factory=dict)
     _all_principals: Optional[Set[PrincipalBase]] = None  # lazy initialization
 
-    def get_iam_user_principal(self, arn: str) -> Optional[PrincipalBase]:
-        return self.iam_user_principals.get(arn)
+    def resolve_from_iam_user_principal(self, arn: str) -> Set[PrincipalBase]:
+        # return the iam_user and its all federated users
+        iam_user: Optional[PrincipalBase] = self.iam_user_principals.get(arn)
+        if iam_user is None:
+            return set()
 
-    def get_iam_role_principal(self, arn: str) -> Optional[PrincipalBase]:
-        return self.iam_role_principals.get(arn)
+        ret: Set[PrincipalBase] = {iam_user}
+        assert isinstance(iam_user, IAMUser)
+        federated_users = iam_user.get_federated_user_principals()
+        if federated_users:
+            ret.update(federated_users)
+        return ret
+
+    def resolve_from_iam_role_principal(self, arn: str) -> Set[PrincipalBase]:
+        # return the iam_role and its all role sessions
+        iam_role: Optional[PrincipalBase] = self.iam_role_principals.get(arn)
+        if iam_role is None:
+            return set()
+
+        ret: Set[PrincipalBase] = {iam_role}
+        assert isinstance(iam_role, IAMRole)
+        role_sessions = iam_role.get_role_sessions()
+        if role_sessions:
+            ret.update(role_sessions)
+        return ret
 
     def get_role_session_principal(self, arn: str) -> Optional[PrincipalBase]:
         return self.role_session_principals.get(arn)
 
-    def get_federated_user_principal(self, arn: str) -> Optional[PrincipalBase]:
-        return self.federated_user_principals.get(arn)
+    def resolve_federated_user_principals(self, federated_user_arn: str) -> Set[PrincipalBase]:
+        # return federated users from every iam_user which resolves the 'federated_user_arn'
+        ret: Set[PrincipalBase] = set()
+        for iam_user in self.iam_user_principals.values():
+            assert isinstance(iam_user, IAMUser)
+            for federated_user_principal in iam_user.get_federated_user_principals():
+                if federated_user_principal.federated_resource.federated_principal.get_arn() == federated_user_arn:
+                    ret.add(federated_user_principal)
+                    break
+        return ret
 
-    def get_account_principals(self) -> Set[PrincipalBase]:
+    def resolver_account_principals(self) -> Set[PrincipalBase]:
         if self._all_principals is None:
             self._all_principals = set()
+            iam_users_and_its_federated_users = set()
+            for iam_user_arn in self.iam_user_principals:
+                iam_users_and_its_federated_users.update(self.resolve_from_iam_user_principal(iam_user_arn))
+
             self._all_principals.update(
-                self.iam_user_principals.values(),
+                iam_users_and_its_federated_users,
                 self.iam_role_principals.values(),
                 self.role_session_principals.values(),
-                self.federated_user_principals.values(),
             )
         return self._all_principals
 
@@ -49,18 +78,18 @@ class AwsPrincipals:
     accounts_principals: Dict[str, AwsAccountPrincipals]
     _all_principals: Optional[Set[PrincipalBase]] = None  # lazy initialization
 
-    def _get_all_account_principals(self, aws_account_id: str) -> Set[PrincipalBase]:
+    def _resolve_all_account_principals(self, aws_account_id: str) -> Set[PrincipalBase]:
         ret: Optional[AwsAccountPrincipals] = self.accounts_principals.get(aws_account_id)
         if ret:
-            return ret.get_account_principals()
+            return ret.resolver_account_principals()
         return set()
 
-    def _get_all_principals(self) -> Set[PrincipalBase]:
+    def _resolve_all_principals(self) -> Set[PrincipalBase]:
         if self._all_principals is None:
             # For all principals, create principal of no_entity with type ANONYMOUS_USER
             self._all_principals = {NoEntityPrincipal(stmt_principal=Principal.load_anonymous_user())}
             for account_principals in self.accounts_principals.values():
-                self._all_principals.update(account_principals.get_account_principals())
+                self._all_principals.update(account_principals.resolver_account_principals())
         return self._all_principals
 
     def get_resolved_principals(
@@ -72,7 +101,7 @@ class AwsPrincipals:
     ) -> Optional[Set[PrincipalBase]]:
 
         if stmt_principal.is_all_principals():
-            return self._get_all_principals()
+            return self._resolve_all_principals()
         if stmt_principal.is_no_entity_principal():
             return {NoEntityPrincipal(stmt_principal=stmt_principal)}
 
@@ -86,21 +115,21 @@ class AwsPrincipals:
         account_principals: Optional[AwsAccountPrincipals] = self.accounts_principals.get(account_id)
         if account_principals:
             if stmt_principal.is_iam_user_principal():
-                ret: Optional[PrincipalBase] = account_principals.get_iam_user_principal(stmt_principal.get_arn())
+                return account_principals.resolve_from_iam_user_principal(stmt_principal.get_arn())
             elif stmt_principal.is_iam_role_principal():
-                ret = account_principals.get_iam_role_principal(stmt_principal.get_arn())
-            elif stmt_principal.is_role_session_principal():
-                ret = account_principals.get_role_session_principal(stmt_principal.get_arn())
+                return account_principals.resolve_from_iam_role_principal(stmt_principal.get_arn())
             elif stmt_principal.is_federated_user_principal():
-                ret = account_principals.get_federated_user_principal(stmt_principal.get_arn())
+                return account_principals.resolve_federated_user_principals(stmt_principal.get_arn())
+            elif stmt_principal.is_role_session_principal():
+                ret: Optional[PrincipalBase] = account_principals.get_role_session_principal(stmt_principal.get_arn())
+                if ret:
+                    return {ret}
             elif stmt_principal.is_aws_account():
-                return self._get_all_account_principals(account_id)
+                return self._resolve_all_account_principals(account_id)
             else:
                 raise Exception(
                     f"Failed to resolve principal {stmt_principal} for parent arn {stmt_parent_arn}, policy {policy_name}, stmt {stmt_name} (unknown type)"
                 )
-            if ret:
-                return {ret}
         return None
 
     @staticmethod
@@ -135,9 +164,11 @@ class AwsPrincipals:
                 account_principals_to_add_role_session: AwsAccountPrincipals = accounts_principals.setdefault(
                     role_session_account_id, AwsAccountPrincipals()
                 )
+                role_session = RoleSession(iam_role=iam_role_of_session, role_session_principal=role_session_principal)
                 account_principals_to_add_role_session.role_session_principals[
                     role_session_principal.get_arn()
-                ] = RoleSession(iam_role=iam_role_of_session, role_session_principal=role_session_principal)
+                ] = role_session
+                iam_role_of_session.add_role_session(role_session)
         return None
 
     @classmethod
@@ -146,25 +177,6 @@ class AwsPrincipals:
     ) -> 'AwsPrincipals':
         logger.info("Loading AWS principals")
         accounts_principals: Dict[str, AwsAccountPrincipals] = {}
-
-        # Handle from aws_account_resources
-        # from the services resources policy, yield federated-user & role-session principals
-        for stmt_principal in aws_account_resources.yield_stmt_principals_from_resource_based_policy(
-            AwsPrincipalType.AWS_STS_FEDERATED_USER_SESSION
-        ):
-            stmt_principal_account_id = stmt_principal.get_account_id()
-            assert stmt_principal_account_id is not None
-            account_principals_to_add_federated_user: AwsAccountPrincipals = accounts_principals.setdefault(
-                stmt_principal_account_id, AwsAccountPrincipals()
-            )
-            account_principals_to_add_federated_user.federated_user_principals[
-                stmt_principal.get_arn()
-            ] = FederatedUserPrincipal(federated_principal=stmt_principal)
-
-        for role_session_principal in aws_account_resources.yield_stmt_principals_from_resource_based_policy(
-            AwsPrincipalType.ASSUMED_ROLE_SESSION
-        ):
-            AwsPrincipals._update_role_session_from_principal(role_session_principal, accounts_principals, iam_entities)
 
         # Handle from iam_entities
         for aws_account_id, iam_entities_for_account in iam_entities.iam_accounts_entities.items():
@@ -179,12 +191,11 @@ class AwsPrincipals:
                 assert iam_role.get_resource_account_id() == aws_account_id
                 account_principals.iam_role_principals[arn] = iam_role
 
-            for iam_role in iam_entities_for_account.iam_roles.values():
-                for role_session_principal in iam_role.assume_role_policy_document.yield_resource_based_stmt_principals(
-                    effect=Effect.Allow, principal_type=AwsPrincipalType.ASSUMED_ROLE_SESSION
-                ):
-                    AwsPrincipals._update_role_session_from_principal(
-                        role_session_principal, accounts_principals, iam_entities
-                    )
+        # Handle role session from aws_account_resources
+
+        for role_session_principal in aws_account_resources.yield_stmt_principals_from_resource_based_policy(
+            AwsPrincipalType.ASSUMED_ROLE_SESSION
+        ):
+            AwsPrincipals._update_role_session_from_principal(role_session_principal, accounts_principals, iam_entities)
 
         return cls(accounts_principals=accounts_principals)

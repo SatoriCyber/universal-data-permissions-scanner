@@ -61,6 +61,14 @@ class AwsAccountResources:
             if ret:
                 self.account_resources[service_type_to_load] = ret
 
+    def yield_service_resources(
+        self, service_resource_type: ServiceResourceType
+    ) -> Generator[ServiceResourceBase, None, None]:
+        service_resources: Optional[Set[ServiceResourceBase]] = self.account_resources.get(service_resource_type)
+        if service_resources:
+            for service_resource in service_resources:
+                yield service_resource
+
     def yield_stmt_principals_from_resource_based_policy(
         self, principal_type: AwsPrincipalType
     ) -> Generator[Principal, None, None]:

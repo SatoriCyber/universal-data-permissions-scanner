@@ -1,0 +1,375 @@
+{
+    "input": {
+        "iam_entities": {
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067165:user/iam_user_1": {
+                            "user_name": "iam_user_1",
+                            "user_id": "iam_user_1",
+                            "path": "/",
+                            "user_policies": [],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_1"
+                        }
+                    },
+                    "iam_groups": {},
+                    "iam_roles": {
+                        "arn:aws:iam::105246067165:role/iam_role_for_iam_user": {
+                            "role_id": "iam_role_for_iam_user",
+                            "role_name": "iam_role_for_iam_user",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role_for_iam_user",
+                            "path": "/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow",
+                                        "Principal": {
+                                            "AWS": [
+                                                "arn:aws:iam::105246067165:user/iam_user_1"
+                                            ]
+                                        },
+                                        "Action": "sts:AssumeRole"
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy"
+                            ]
+                        },
+                        "arn:aws:iam::105246067165:role/iam_role_for_service": {
+                            "role_id": "iam_role_for_service",
+                            "role_name": "iam_role_for_service",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role_for_service",
+                            "path": "/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow",
+                                        "Principal": {
+                                            "Service": [
+                                                "ecs.amazonaws.com",
+                                                "elasticloadbalancing.amazonaws.com"
+                                            ]
+                                        },
+                                        "Action": "sts:AssumeRole"
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy"
+                            ]
+                        },
+                        "arn:aws:iam::105246067165:role/iam_role_for_web_federated": {
+                            "role_id": "iam_role_for_web_federated",
+                            "role_name": "iam_role_for_web_federated",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role_for_web_federated",
+                            "path": "/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow",
+                                        "Principal": {
+                                            "Federated": "www.amazon.com"
+                                        },
+                                        "Action": "sts:AssumeRoleWithWebIdentity"
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy"
+                            ]
+                        },
+                        "arn:aws:iam::105246067165:role/iam_role_for_saml": {
+                            "role_id": "iam_role_for_saml",
+                            "role_name": "iam_role_for_saml",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role_for_saml",
+                            "path": "/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow",
+                                        "Principal": {
+                                            "Federated": "arn:aws:iam::105246067165:saml-provider/provider_1"
+                                        },
+                                        "Action": "sts:AssumeRoleWithSAML"
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy"
+                            ]
+                        },
+                        "arn:aws:iam::105246067165:role/iam_role_not_right_action": {
+                            "role_id": "iam_role_not_right_action",
+                            "role_name": "iam_role_not_right_action",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role_not_right_action",
+                            "path": "/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow1",
+                                        "Principal": {
+                                            "AWS": [
+                                                "*"
+                                            ]
+                                        },
+                                        "NotAction": "sts:*"
+                                    },
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow2",
+                                        "Principal": {
+                                            "AWS": [
+                                                "arn:aws:iam::105246067165:user/iam_user_1"
+                                            ]
+                                        },
+                                        "NotAction": "sts:AssumeRole"
+                                    },
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow3",
+                                        "Principal": {
+                                            "Service": [
+                                                "ecs.amazonaws.com",
+                                                "elasticloadbalancing.amazonaws.com"
+                                            ]
+                                        },
+                                        "NotAction": "sts:AssumeRole"
+                                    },
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow4",
+                                        "Principal": {
+                                            "Federated": "www.amazon.com"
+                                        },
+                                        "NotAction": "sts:AssumeRoleWithWebIdentity"
+                                    },
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow5",
+                                        "Principal": {
+                                            "Federated": "arn:aws:iam::105246067165:saml-provider/provider_1"
+                                        },
+                                        "NotAction": "sts:AssumeRoleWithSAML"
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy"
+                            ]
+                        }
+                    },
+                    "iam_policies": {
+                        "arn:aws:iam::105246067165:policy/policy": {
+                            "policy": {
+                                "PolicyName": "policy",
+                                "PolicyId": "policy",
+                                "Arn": "arn:aws:iam::105246067165:policy/policy",
+                                "DefaultVersionId": "v1",
+                                "Path": "/",
+                                "AttachmentCount": 1,
+                                "PermissionsBoundaryUsageCount": 0,
+                                "IsAttachable": true
+                            },
+                            "policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "Policy1Allow",
+                                        "Action": [
+                                            "s3:GetObject"
+                                        ],
+                                        "Resource": "*"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "target_account_resources": {
+            "aws_account_id": "105246067165",
+            "account_resources": {
+                "s3": [
+                    {
+                        "name": "bucket_1",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": []
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:saml-provider/provider_1",
+                "name": "provider_1",
+                "type": "SAML_SESSION",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_for_saml",
+                    "name": "iam_role_for_saml",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy",
+                    "name": "policy",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_for_iam_user",
+                    "name": "iam_role_for_iam_user",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy",
+                    "name": "policy",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "ecs.amazonaws.com",
+                "name": "ecs.amazonaws.com",
+                "type": "AWS_SERVICE",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_for_service",
+                    "name": "iam_role_for_service",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy",
+                    "name": "policy",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "elasticloadbalancing.amazonaws.com",
+                "name": "elasticloadbalancing.amazonaws.com",
+                "type": "AWS_SERVICE",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_for_service",
+                    "name": "iam_role_for_service",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy",
+                    "name": "policy",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "www.amazon.com",
+                "name": "www.amazon.com",
+                "type": "WEB_IDENTITY_SESSION",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_for_web_federated",
+                    "name": "iam_role_for_web_federated",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy",
+                    "name": "policy",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        }
+    ]
+}

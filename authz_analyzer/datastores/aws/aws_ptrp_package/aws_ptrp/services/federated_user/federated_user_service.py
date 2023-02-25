@@ -15,7 +15,7 @@ from aws_ptrp.services.federated_user.federated_user_actions import (
     FederatedUserServiceActionsResolver,
 )
 from aws_ptrp.services.federated_user.federated_user_resources import (
-    FederatedUserPrincipal,
+    FederatedUserResource,
     FederatedUserServiceResourcesResolver,
 )
 from serde import serde
@@ -62,5 +62,5 @@ class FederatedUserService(ServiceResourceType):
         for stmt_principal in aws_account_resources.yield_stmt_principals_from_resource_based_policy(
             AwsPrincipalType.AWS_STS_FEDERATED_USER_SESSION
         ):
-            ret.add(FederatedUserPrincipal(federated_principal=stmt_principal))
+            ret.add(FederatedUserResource(federated_principal=stmt_principal))
         return ret

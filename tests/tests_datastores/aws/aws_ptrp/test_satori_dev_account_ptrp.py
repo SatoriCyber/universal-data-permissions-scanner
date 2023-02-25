@@ -16,7 +16,7 @@ from aws_ptrp.services import (
 from aws_ptrp.services.assume_role.assume_role_actions import AssumeRoleAction
 from aws_ptrp.services.assume_role.assume_role_service import ROLE_TRUST_SERVICE_NAME, AssumeRoleService
 from aws_ptrp.services.federated_user.federated_user_actions import FederatedUserAction
-from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserPrincipal
+from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserResource
 from aws_ptrp.services.federated_user.federated_user_service import FEDERATED_USER_SERVICE_NAME, FederatedUserService
 from aws_ptrp.services.s3.bucket import S3Bucket
 from aws_ptrp.services.s3.s3_actions import S3Action
@@ -45,7 +45,7 @@ def register_services_for_deserialize_from_file():
     register_service_action_by_name(ROLE_TRUST_SERVICE_NAME, AssumeRoleAction)
     register_service_resource_by_name(ROLE_TRUST_SERVICE_NAME, IAMRole)
     register_service_action_by_name(FEDERATED_USER_SERVICE_NAME, FederatedUserAction)
-    register_service_resource_by_name(FEDERATED_USER_SERVICE_NAME, FederatedUserPrincipal)
+    register_service_resource_by_name(FEDERATED_USER_SERVICE_NAME, FederatedUserResource)
     register_service_action_type_by_name(S3_SERVICE_NAME, S3Service)
     register_service_resource_type_by_name(S3_SERVICE_NAME, S3Service)
     register_service_action_type_by_name(ROLE_TRUST_SERVICE_NAME, AssumeRoleService)

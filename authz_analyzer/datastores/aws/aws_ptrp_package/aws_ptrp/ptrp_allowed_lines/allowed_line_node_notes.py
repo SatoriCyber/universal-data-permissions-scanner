@@ -2,13 +2,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from aws_ptrp.policy_evaluation import PolicyEvaluationApplyResult, PolicyEvaluationResult, PolicyEvaluationsResult
-from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
-    NodeBase,
-    NodeNote,
-    NodeNotesGetter,
-    NodeNoteType,
-    PoliciesNodeBase,
-)
+from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import NodeBase, NodeNote, NodeNotesGetter, PoliciesNodeBase
 from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpNodeNote
 from aws_ptrp.services import MethodOnStmtActionsResultType, MethodOnStmtActionsType
 

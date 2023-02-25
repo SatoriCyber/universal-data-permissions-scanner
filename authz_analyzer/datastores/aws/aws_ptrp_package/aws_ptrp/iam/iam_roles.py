@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 from aws_ptrp.iam.policy import PolicyDocument, PolicyDocumentCtx
 from aws_ptrp.iam.role.role_policy import RolePolicy
@@ -9,12 +9,12 @@ from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
 from aws_ptrp.services.service_resource_base import ServiceResourceBase
 from aws_ptrp.utils.pagination import paginate_response_list
 from boto3 import Session
-from serde import from_dict, serde
+from serde import field, from_dict, serde
 
 
 @dataclass
 class RoleSession(PathRoleNodeBase):
-    iam_role: 'IAMRole'
+    iam_role: PathRoleNodeBase
     role_session_principal: Principal
 
     def __repr__(self):
@@ -39,6 +39,7 @@ class RoleSession(PathRoleNodeBase):
 
     # impl PathRoleNodeBase
     def get_service_resource(self) -> ServiceResourceBase:
+        assert isinstance(self.iam_role, ServiceResourceBase)
         return self.iam_role
 
     # impl PrincipalNodeBase
@@ -63,6 +64,7 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
     assume_role_policy_document: PolicyDocument
     role_policies: List[RolePolicy]
     attached_policies_arn: List[str]
+    _role_sessions: Set[RoleSession] = field(skip=True, default_factory=set)
 
     def __repr__(self):
         return self.arn
@@ -72,6 +74,12 @@ class IAMRole(PathRoleNodeBase, ServiceResourceBase):
 
     def __hash__(self):
         return hash(self.role_id)
+
+    def get_role_sessions(self) -> Set[RoleSession]:
+        return self._role_sessions
+
+    def add_role_session(self, role_session: RoleSession):
+        self._role_sessions.add(role_session)
 
     def _extract_aws_account_id_from_arn_of_iam_entity(self) -> str:
         return self.arn[self.arn.find(":iam::") + 6 : self.arn.find(":role/")]

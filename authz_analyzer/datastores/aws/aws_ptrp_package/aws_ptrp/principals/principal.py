@@ -15,9 +15,6 @@ regex_account_id = re.compile(r"([0-9]+)$")
 regex_arn_account_id = re.compile(r"arn:aws:iam::([0-9]+):root$")
 
 
-IAM_USER_ARN_ORIGINATED_FOR_FEDERATED_USER_KEY = "iam-user-arn-originated-for-federated-user"
-
-
 def is_stmt_principal_relevant_to_resource(
     stmt_principal: 'Principal',
     resource_aws_account_id: str,
@@ -85,10 +82,6 @@ class Principal:
         else:
             return self.policy_principal_str
 
-    def set_iam_user_originated_for_principal_federated(self, iam_user_arn: str):
-        assert self.is_federated_user_principal() and self.principal_metadata is not None
-        self.principal_metadata[IAM_USER_ARN_ORIGINATED_FOR_FEDERATED_USER_KEY] = iam_user_arn
-
     def is_no_entity_principal(
         self,
     ) -> bool:
@@ -129,39 +122,12 @@ class Principal:
         # must not be ALL_PRINCIPALS (due to resolving all principal to other users)
         assert self.principal_type != AwsPrincipalType.ALL_PRINCIPALS
 
-        if self.principal_type == other.principal_type:
-            if self.policy_principal_str == other.policy_principal_str:
-                return True
-
         if self.principal_type == AwsPrincipalType.ANONYMOUS_USER:
+            # to cover the resolving of no_entity principals (like AWS_SERVICE)
             return True
 
-        self_account_id = self.get_account_id()
-        other_account_id = other.get_account_id()
-
-        if self.is_iam_role_principal() and other.is_role_session_principal():
-            return self.get_role_name() == other.get_role_name() and self_account_id == other_account_id
-
-        elif other.is_federated_user_principal():
-            if self.is_iam_user_principal():
-                if other.principal_metadata:
-                    other_originated_iam_user_arn: Optional[str] = other.principal_metadata.get(
-                        IAM_USER_ARN_ORIGINATED_FOR_FEDERATED_USER_KEY, None
-                    )
-                else:
-                    other_originated_iam_user_arn = None
-
-                if other_originated_iam_user_arn is None:
-                    raise Exception(
-                        f"Unable to check contains {self} with {other}, missing the originated iam_user of the federated principal"
-                    )
-                return self.policy_principal_str == other_originated_iam_user_arn
-            elif self.is_aws_account():
-                if self_account_id == other_account_id:
-                    return True
-
-        elif self.is_aws_account():
-            if self_account_id == other_account_id:
+        if self.principal_type == other.principal_type:
+            if self.policy_principal_str == other.policy_principal_str:
                 return True
 
         return False
