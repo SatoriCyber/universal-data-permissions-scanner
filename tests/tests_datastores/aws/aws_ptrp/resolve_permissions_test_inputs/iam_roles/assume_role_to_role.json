@@ -1,0 +1,324 @@
+{
+    "input": {
+        "iam_entities": {
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067165:user/iam_user_1": {
+                            "user_name": "iam_user_1",
+                            "user_id": "iam_user_1",
+                            "path": "/",
+                            "user_policies": [],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_1"
+                        }
+                    },
+                    "iam_groups": {},
+                    "iam_roles": {
+                        "arn:aws:iam::105246067165:role/iam_role_1": {
+                            "role_id": "iam_role_1",
+                            "role_name": "iam_role_1",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role_1",
+                            "path": "/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow",
+                                        "Principal": {
+                                            "AWS": [
+                                                "arn:aws:iam::105246067165:user/iam_user_1"
+                                            ]
+                                        },
+                                        "Action": "sts:AssumeRole"
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy"
+                            ]
+                        },
+                        "arn:aws:iam::105246067165:role/iam_role_with_path": {
+                            "role_id": "iam_role_with_path",
+                            "role_name": "iam_role_with_path",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role_with_path",
+                            "path": "/path_name/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow",
+                                        "Principal": {
+                                            "AWS": [
+                                                "arn:aws:iam::105246067165:user/iam_user_1"
+                                            ]
+                                        },
+                                        "Action": "sts:AssumeRole"
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy"
+                            ]
+                        },
+                        "arn:aws:iam::105246067165:role/iam_role_to_role": {
+                            "role_id": "iam_role_to_role",
+                            "role_name": "iam_role_to_role",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role_to_role",
+                            "path": "/path_name_2/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow",
+                                        "__comment1": "principal of role (not the role_session) should be with the path",
+                                        "Principal": {
+                                            "AWS": [
+                                                "arn:aws:iam::105246067165:role/path_name/iam_role_with_path",
+                                                "arn:aws:sts::105246067165:assumed-role/iam_role_with_path/session_name"
+                                            ]
+                                        },
+                                        "Action": "sts:AssumeRole"
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy"
+                            ]
+                        },
+                        "arn:aws:iam::105246067165:role/iam_role_to_role_to_role": {
+                            "role_id": "iam_role_to_role_to_role",
+                            "role_name": "iam_role_to_role_to_role",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role_to_role_to_role",
+                            "path": "/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow",
+                                        "Principal": {
+                                            "AWS": [
+                                                "arn:aws:sts::105246067165:assumed-role/iam_role_to_role/session_name"
+                                            ]
+                                        },
+                                        "Action": "sts:AssumeRole"
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy"
+                            ]
+                        }
+                    },
+                    "iam_policies": {
+                        "arn:aws:iam::105246067165:policy/policy": {
+                            "policy": {
+                                "PolicyName": "policy",
+                                "PolicyId": "policy",
+                                "Arn": "arn:aws:iam::105246067165:policy/policy",
+                                "DefaultVersionId": "v1",
+                                "Path": "/",
+                                "AttachmentCount": 1,
+                                "PermissionsBoundaryUsageCount": 0,
+                                "IsAttachable": true
+                            },
+                            "policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "Policy1Allow",
+                                        "Action": [
+                                            "s3:GetObject"
+                                        ],
+                                        "Resource": "*"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "target_account_resources": {
+            "aws_account_id": "105246067165",
+            "account_resources": {
+                "s3": [
+                    {
+                        "name": "bucket_1",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": []
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_1",
+                    "name": "iam_role_1",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy",
+                    "name": "policy",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_with_path",
+                    "name": "iam_role_with_path",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy",
+                    "name": "policy",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_with_path",
+                    "name": "iam_role_with_path",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:assumed-role/iam_role_with_path/session_name",
+                    "name": "session_name",
+                    "type": "ROLE_SESSION",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_to_role",
+                    "name": "iam_role_to_role",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy",
+                    "name": "policy",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_with_path",
+                    "name": "iam_role_with_path",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:assumed-role/iam_role_with_path/session_name",
+                    "name": "session_name",
+                    "type": "ROLE_SESSION",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_to_role",
+                    "name": "iam_role_to_role",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:assumed-role/iam_role_to_role/session_name",
+                    "name": "session_name",
+                    "type": "ROLE_SESSION",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_to_role_to_role",
+                    "name": "iam_role_to_role_to_role",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy",
+                    "name": "policy",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        }
+    ]
+}

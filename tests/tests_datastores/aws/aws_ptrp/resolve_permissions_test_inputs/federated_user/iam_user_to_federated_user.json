@@ -1,0 +1,400 @@
+{
+    "input": {
+        "iam_entities": {
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067165:user/iam_user_without_action": {
+                            "user_name": "iam_user_without_action",
+                            "user_id": "iam_user_without_action",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_without_action",
+                                    "PolicyName": "get-token",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "NotAction": [
+                                                    "sts:GetFederationToken"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:sts::105246067165:federated-user/federated_user_1"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_without_action"
+                        },
+                        "arn:aws:iam::105246067165:user/iam_user_inline_policy": {
+                            "user_name": "iam_user_inline_policy",
+                            "user_id": "iam_user_inline_policy",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_inline_policy",
+                                    "PolicyName": "get-token",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "sts:GetFederationToken"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:sts::105246067165:federated-user/federated_user_1"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_inline_policy"
+                        },
+                        "arn:aws:iam::105246067165:user/iam_user_inline_policy_and_deny_s3": {
+                            "user_name": "iam_user_inline_policy_and_deny_s3",
+                            "user_id": "iam_user_inline_policy_and_deny_s3",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_inline_policy_and_deny_s3",
+                                    "PolicyName": "get-token",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "sts:GetFederationToken"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:sts::105246067165:federated-user/federated_user_1"
+                                                ]
+                                            },
+                                            {
+                                                "Effect": "Deny",
+                                                "Sid": "VisualES3ditor2",
+                                                "__comment1": "Expecting not to have this action",
+                                                "Action": [
+                                                    "s3:PutBucketAcl"
+                                                ],
+                                                "Resource": [
+                                                    "*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_inline_policy_and_deny_s3"
+                        },
+                        "arn:aws:iam::105246067165:user/iam_user_attached_policy": {
+                            "user_name": "iam_user_attached_policy",
+                            "user_id": "iam_user_attached_policy",
+                            "path": "/",
+                            "user_policies": [],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::105246067165:policy/policy_federated_2"
+                            ],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_attached_policy"
+                        }
+                    },
+                    "iam_groups": {},
+                    "iam_roles": {},
+                    "iam_policies": {
+                        "arn:aws:iam::105246067165:policy/policy_federated_2": {
+                            "policy": {
+                                "PolicyName": "policy_federated_2",
+                                "PolicyId": "policy_federated_2",
+                                "Arn": "arn:aws:iam::105246067165:policy/policy_federated_2",
+                                "DefaultVersionId": "v1",
+                                "Path": "/",
+                                "AttachmentCount": 1,
+                                "PermissionsBoundaryUsageCount": 0,
+                                "IsAttachable": true
+                            },
+                            "policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "VisualEditor1",
+                                        "Action": [
+                                            "sts:GetFederationToken"
+                                        ],
+                                        "Resource": [
+                                            "arn:aws:sts::105246067165:federated-user/federated_user_2"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "target_account_resources": {
+            "aws_account_id": "105246067165",
+            "account_resources": {
+                "s3": [
+                    {
+                        "name": "bucket_1",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Sid": "BucketPolicyAllow1",
+                                    "Principal": {
+                                        "AWS": [
+                                            "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                                            "arn:aws:sts::105246067165:federated-user/federated_user_2",
+                                            "arn:aws:sts::105246067165:federated-user/federated_user_3"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:PutBucketAcl",
+                                        "s3:PutBucketCORS"
+                                    ],
+                                    "Resource": "arn:aws:s3:::bucket_1"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "bucket_iam_user_inline_policy",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Sid": "BucketPolicyAllow1",
+                                    "Principal": {
+                                        "AWS": [
+                                            "arn:aws:iam::105246067165:user/iam_user_inline_policy"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:PutBucketAcl",
+                                        "s3:PutBucketCORS"
+                                    ],
+                                    "Resource": "arn:aws:s3:::bucket_iam_user_inline_policy"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "bucket_aws_account",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Sid": "BucketPolicyAllow1",
+                                    "__comment1": "no cross-account access, expecting nothing here",
+                                    "Principal": {
+                                        "AWS": [
+                                            "105246067165"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:PutBucketAcl",
+                                        "s3:PutBucketCORS"
+                                    ],
+                                    "Resource": "arn:aws:s3:::bucket_aws_account"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_attached_policy",
+                "name": "iam_user_attached_policy",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "FULL",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:policy/policy_federated_2",
+                    "name": "policy_federated_2",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:federated-user/federated_user_2",
+                    "name": "federated_user_2",
+                    "type": "FEDERATED_USER",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "PutBucketAcl",
+                "PutBucketCORS"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_inline_policy",
+                "name": "iam_user_inline_policy",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "FULL",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_inline_policy",
+                    "name": "get-token",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                    "name": "federated_user_1",
+                    "type": "FEDERATED_USER",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "PutBucketAcl",
+                "PutBucketCORS"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_inline_policy_and_deny_s3",
+                "name": "iam_user_inline_policy_and_deny_s3",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "FULL",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_inline_policy_and_deny_s3",
+                    "name": "get-token",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                    "name": "federated_user_1",
+                    "type": "FEDERATED_USER",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "PutBucketCORS"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_iam_user_inline_policy",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_inline_policy",
+                "name": "iam_user_inline_policy",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "FULL",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_inline_policy",
+                    "name": "get-token",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                    "name": "federated_user_1",
+                    "type": "FEDERATED_USER",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_iam_user_inline_policy",
+                    "name": "bucket_iam_user_inline_policy",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "PutBucketAcl",
+                "PutBucketCORS"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_iam_user_inline_policy",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_inline_policy",
+                "name": "iam_user_inline_policy",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "FULL",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:s3:::bucket_iam_user_inline_policy",
+                    "name": "bucket_iam_user_inline_policy",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "PutBucketAcl",
+                "PutBucketCORS"
+            ]
+        }
+    ]
+}

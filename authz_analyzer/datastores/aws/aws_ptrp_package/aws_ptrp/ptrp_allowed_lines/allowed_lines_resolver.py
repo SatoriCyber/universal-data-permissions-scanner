@@ -37,7 +37,7 @@ from aws_ptrp.ptrp_models.ptrp_model import AwsPtrpPathNodeType
 from aws_ptrp.resources.account_resources import AwsAccountResources
 from aws_ptrp.services import ServiceResourceBase, ServiceResourcesResolverBase, ServiceResourceType
 from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
-from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserPrincipal
+from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserPrincipal, FederatedUserResource
 from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
 
 START_NODE = "START_NODE"
@@ -76,10 +76,6 @@ class PtrpAllowedLines:
                     start_index_path_role_identity_nodes + 1
                 ]
 
-                # add the iam user for the federated principal (to be use later by the principal contains function)
-                path_federated_principal_node.get_stmt_principal().set_iam_user_originated_for_principal_federated(
-                    principal_node.get_stmt_principal().get_arn()
-                )
                 path_federated_nodes: Optional[Tuple[PathPolicyNode, PathFederatedPrincipalNode]] = (
                     path_federated_policy_node,
                     path_federated_principal_node,
@@ -215,7 +211,7 @@ class PtrpAllowedLinesBuilder:
 
     def _connect_path_policy_node_with_resolved_service_resource(
         self,
-        identity_principal: Principal,
+        principal_base: PrincipalBase,
         path_policy_node: PathPolicyNode,
         service_resource_type: ServiceResourceType,
         service_resource: ServiceResourceBase,
@@ -224,15 +220,20 @@ class PtrpAllowedLinesBuilder:
             resource_node = ResourceNode(base=service_resource, service_resource_type=service_resource_type)
             self.graph.add_edge(path_policy_node, resource_node)
         elif (
-            (identity_principal.is_iam_user_principal() or identity_principal.is_aws_account())
+            isinstance(principal_base, IAMUser)
             and path_policy_node.is_resource_based_policy is False
             and isinstance(service_resource_type, FederatedUserService)
-            and isinstance(service_resource, FederatedUserPrincipal)
+            and isinstance(service_resource, FederatedUserResource)
         ):
             # special handling for federated user
             # connect the path policy node to the federated principal node
-            assert isinstance(service_resource, PathFederatedPrincipalNodeBase)
-            federated_principal_node = PathFederatedPrincipalNode(base=service_resource)
+            # add the federated user to the iam_user (for resolving principals in the resource based policy)
+            federated_user_principal = FederatedUserPrincipal(
+                federated_resource=service_resource, parent_iam_user_arn=principal_base.arn
+            )
+            principal_base.add_federated_user_principal(federated_user_principal)
+            assert isinstance(federated_user_principal, PathFederatedPrincipalNodeBase)
+            federated_principal_node = PathFederatedPrincipalNode(base=federated_user_principal)
             self.logger.debug("connecting %s -> %s", path_policy_node, federated_principal_node)
             self.graph.add_edge(path_policy_node, federated_principal_node)
 
@@ -241,13 +242,13 @@ class PtrpAllowedLinesBuilder:
         node_connect_to_policy: Union[PrincipalNodeBase, PathNodeBase],
         attached_policies_arn: List[str],
         inline_policies_ctx: List[PolicyDocumentCtx],
-        identity_principal_for_resolver: Principal,
+        principal_base_for_resolver: PrincipalBase,
     ):
         for attached_policy_arn in attached_policies_arn:
             iam_policy = self.iam_entities.get_iam_policy(attached_policy_arn)
             iam_policy_document_ctx = iam_policy.to_policy_document_ctx()
             for service_type, service_resource in self._yield_resolved_service_resources_for_identity_based_policy(
-                identity_principal=identity_principal_for_resolver,
+                identity_principal=principal_base_for_resolver.get_principal(),
                 policy_document_ctx=iam_policy_document_ctx,
             ):
                 path_policy_node = PathPolicyNode(
@@ -257,14 +258,15 @@ class PtrpAllowedLinesBuilder:
                 )
                 self.graph.add_edge(node_connect_to_policy, path_policy_node)
                 self._connect_path_policy_node_with_resolved_service_resource(
-                    identity_principal=identity_principal_for_resolver,
+                    principal_base=principal_base_for_resolver,
                     path_policy_node=path_policy_node,
                     service_resource_type=service_type,
                     service_resource=service_resource,
                 )
         for inline_policy_ctx in inline_policies_ctx:
             for service_type, service_resource in self._yield_resolved_service_resources_for_identity_based_policy(
-                identity_principal=identity_principal_for_resolver, policy_document_ctx=inline_policy_ctx
+                identity_principal=principal_base_for_resolver.get_principal(),
+                policy_document_ctx=inline_policy_ctx,
             ):
                 path_policy_node = PathPolicyNode(
                     path_element_type=AwsPtrpPathNodeType.IAM_INLINE_POLICY,
@@ -273,7 +275,7 @@ class PtrpAllowedLinesBuilder:
                 )
                 self.graph.add_edge(node_connect_to_policy, path_policy_node)
                 self._connect_path_policy_node_with_resolved_service_resource(
-                    identity_principal=identity_principal_for_resolver,
+                    principal_base=principal_base_for_resolver,
                     path_policy_node=path_policy_node,
                     service_resource_type=service_type,
                     service_resource=service_resource,
@@ -304,7 +306,7 @@ class PtrpAllowedLinesBuilder:
                 node_connect_to_policy=path_role_node,
                 attached_policies_arn=iam_role.get_attached_policies_arn(),
                 inline_policies_ctx=iam_role.get_inline_policies_ctx(),
-                identity_principal_for_resolver=iam_role.get_stmt_principal(),
+                principal_base_for_resolver=iam_role,
             )
 
             for trusted_principal_to_resolve in role_trust_service_principal_resolver.yield_trusted_principals(
@@ -377,7 +379,6 @@ class PtrpAllowedLinesBuilder:
     def _insert_iam_users_and_iam_groups(self):
         for iam_user in self.iam_entities.yield_iam_users():
             assert isinstance(iam_user, PrincipalAndPoliciesNodeBase)
-            iam_user_principal = Principal.load_from_iam_user(iam_user.arn)
             attached_iam_groups = self.iam_entities.get_attached_iam_groups_for_iam_user(iam_user)
             additional_policies_bases: List[PoliciesNodeBase] = [
                 attached_iam_group
@@ -390,7 +391,7 @@ class PtrpAllowedLinesBuilder:
                 node_connect_to_policy=iam_user_node,
                 attached_policies_arn=iam_user.get_attached_policies_arn(),
                 inline_policies_ctx=iam_user.get_inline_policies_ctx(),
-                identity_principal_for_resolver=iam_user_principal,
+                principal_base_for_resolver=iam_user,
             )
 
             for iam_group in attached_iam_groups:
@@ -401,7 +402,7 @@ class PtrpAllowedLinesBuilder:
                     node_connect_to_policy=path_user_group_node,
                     attached_policies_arn=iam_group.get_attached_policies_arn(),
                     inline_policies_ctx=iam_group.get_inline_policies_ctx(),
-                    identity_principal_for_resolver=iam_user_principal,
+                    principal_base_for_resolver=iam_user,
                 )
 
     def build(self) -> 'PtrpAllowedLines':
@@ -409,11 +410,12 @@ class PtrpAllowedLinesBuilder:
         self.graph.add_node(START_NODE)
         self.graph.add_node(END_NODE)
 
+        # must runt first, due to the resolving of federated users in the identity policy
+        self._insert_iam_users_and_iam_groups()
+
         self._insert_resources()
 
         self._insert_iam_roles_and_trusted_entities()
-
-        self._insert_iam_users_and_iam_groups()
 
         self.logger.info("Finish to build the iam graph: %s", self.graph)
 

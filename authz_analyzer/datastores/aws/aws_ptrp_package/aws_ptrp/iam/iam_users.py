@@ -1,12 +1,13 @@
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Set
 
 from aws_ptrp.iam.policy import PolicyDocumentCtx, UserPolicy
 from aws_ptrp.principals import Principal
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PrincipalAndPoliciesNodeBase
+from aws_ptrp.services.federated_user.federated_user_resources import FederatedUserPrincipal
 from aws_ptrp.utils.pagination import paginate_response_list
 from boto3 import Session
-from serde import from_dict, serde
+from serde import field, from_dict, serde
 
 
 @serde
@@ -18,6 +19,7 @@ class IAMUser(PrincipalAndPoliciesNodeBase):
     user_policies: List[UserPolicy]
     attached_policies_arn: List[str]
     arn: str
+    _federated_user_principals: Set[FederatedUserPrincipal] = field(skip=True, default_factory=set)
 
     def __eq__(self, other):
         return self.user_id == other.user_id
@@ -27,6 +29,12 @@ class IAMUser(PrincipalAndPoliciesNodeBase):
 
     def __hash__(self):
         return hash(self.user_id)
+
+    def get_federated_user_principals(self) -> Set[FederatedUserPrincipal]:
+        return self._federated_user_principals
+
+    def add_federated_user_principal(self, federated_user_principal: FederatedUserPrincipal):
+        self._federated_user_principals.add(federated_user_principal)
 
     @staticmethod
     def _extract_aws_account_id_from_arn_of_iam_entity(arn: str) -> str:

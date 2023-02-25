@@ -21,22 +21,61 @@ from aws_ptrp.services.federated_user.federated_user_actions import FederatedUse
 from serde import field, serde
 
 
+@dataclass
+class FederatedUserPrincipal(PathFederatedPrincipalNodeBase):
+    """FederatedUserPrincipal includes the principal arn of the federated user and its parent iam_user arn"""
+
+    federated_resource: 'FederatedUserResource'
+    parent_iam_user_arn: str
+
+    def __repr__(self):
+        return f"FederatedUserPrincipal({self.federated_resource.__repr__()} parent_iam_user_arn: {self.parent_iam_user_arn})"
+
+    def __eq__(self, other):
+        return (
+            self.federated_resource == other.federated_resource
+            and self.parent_iam_user_arn == other.parent_iam_user_arn
+        )
+
+    def __hash__(self):
+        return hash(self.federated_resource) + hash(self.parent_iam_user_arn)
+
+    # impl PathFederatedPrincipalNodeBase
+    def get_service_resource(self) -> ServiceResourceBase:
+        return self.federated_resource
+
+    # impl NodeBase
+    def get_node_name(self) -> str:
+        return self.federated_resource.get_resource_name()
+
+    def get_node_arn(self) -> str:
+        return self.federated_resource.get_resource_arn()
+
+    # impl PathNodeBase
+    def get_path_type(self) -> AwsPtrpPathNodeType:
+        return AwsPtrpPathNodeType.FEDERATED_USER
+
+    # impl PrincipalNodeBase
+    def get_stmt_principal(self) -> Principal:
+        return self.federated_resource.federated_principal
+
+
 @serde
 @dataclass
-class FederatedUserPrincipal(PathFederatedPrincipalNodeBase, ServiceResourceBase):
+class FederatedUserResource(ServiceResourceBase):
     federated_principal: Principal = field(
         deserializer=Principal.load_from_stmt_aws,
         serializer=Principal.to_policy_principal_str,
     )
 
     def __repr__(self):
-        return self.get_node_arn()
+        return self.get_resource_arn()
 
     def __eq__(self, other):
-        return self.get_node_arn() == other.get_node_arn()
+        return self.get_resource_arn() == other.get_resource_arn()
 
     def __hash__(self):
-        return hash(self.get_node_arn())
+        return hash(self.get_resource_arn())
 
     # impl ServiceResourceBase
     def get_resource_arn(self) -> str:
@@ -54,25 +93,6 @@ class FederatedUserPrincipal(PathFederatedPrincipalNodeBase, ServiceResourceBase
         # principal from type federated user must have account-id
         assert account_id is not None
         return account_id
-
-    # impl PathFederatedPrincipalNodeBase
-    def get_service_resource(self) -> ServiceResourceBase:
-        return self
-
-    # impl NodeBase
-    def get_node_name(self) -> str:
-        return self.get_stmt_principal().get_name()
-
-    def get_node_arn(self) -> str:
-        return self.get_stmt_principal().get_arn()
-
-    # impl PathNodeBase
-    def get_path_type(self) -> AwsPtrpPathNodeType:
-        return AwsPtrpPathNodeType.FEDERATED_USER
-
-    # impl PrincipalNodeBase
-    def get_stmt_principal(self) -> Principal:
-        return self.federated_principal
 
 
 @dataclass
@@ -109,11 +129,11 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
     def get_resolved_stmts(self) -> List[ResolvedSingleStmtGetter]:
         return self.resolved_stmts  # type: ignore[return-value]
 
-    def is_principal_allowed_to_assume_federated_user(
-        self, federated_user: FederatedUserPrincipal, principal: Principal
+    def is_principal_allowed_to_assume_federated_user_resource(
+        self, federated_user_resource: FederatedUserResource, principal: Principal
     ) -> bool:
         resolved_actions: Optional[Set[ServiceActionBase]] = self.get_resolved_actions_per_resource_and_principal(
-            federated_user, principal
+            federated_user_resource, principal
         )
         if not resolved_actions:
             return False
@@ -126,12 +146,12 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
     def _yield_resolve_resources_from_stmt_relative_id_regex(
         stmt_relative_id_regex: str,
         service_resources: Set[ServiceResourceBase],
-    ) -> Generator[FederatedUserPrincipal, None, None]:
+    ) -> Generator[FederatedUserResource, None, None]:
         regex = re.compile(fix_stmt_regex_to_valid_regex(stmt_relative_id_regex, with_case_sensitive=True))
         for service_resource in service_resources:
             # not using the regex match fn, stmt_relative_id_regex is without the prefix: "arn:aws:sts::"
             if regex.search(service_resource.get_resource_arn()) is not None and isinstance(
-                service_resource, FederatedUserPrincipal
+                service_resource, FederatedUserResource
             ):
                 yield service_resource
 
@@ -139,7 +159,7 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
     def load_from_single_stmt(
         cls, _logger: Logger, stmt_ctx: StmtResourcesToResolveCtx, not_resource_annotated: bool
     ) -> ServiceResourcesResolverBase:
-        resolved_federated_users_actions: Dict[FederatedUserPrincipal, ResolvedFederatedUserActions] = {}
+        resolved_federated_users_actions: Dict[FederatedUserResource, ResolvedFederatedUserActions] = {}
         federated_user_actions = set(
             [
                 resolved_stmt_action
@@ -161,7 +181,7 @@ class FederatedUserServiceResourcesResolver(ServiceResourcesResolverBase):
 
         if not_resource_annotated:
             federated_users = [
-                resource for resource in stmt_ctx.service_resources if isinstance(resource, FederatedUserPrincipal)
+                resource for resource in stmt_ctx.service_resources if isinstance(resource, FederatedUserResource)
             ]
             for federated_user in federated_users:
                 if federated_user not in resolved_federated_users_actions:

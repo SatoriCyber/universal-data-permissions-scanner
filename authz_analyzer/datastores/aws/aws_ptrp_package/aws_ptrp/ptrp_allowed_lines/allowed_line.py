@@ -30,7 +30,7 @@ from aws_ptrp.services import ServiceResourceBase
 from aws_ptrp.services.assume_role.assume_role_resources import AssumeRoleServiceResourcesResolver
 from aws_ptrp.services.assume_role.assume_role_service import AssumeRoleService
 from aws_ptrp.services.federated_user.federated_user_resources import (
-    FederatedUserPrincipal,
+    FederatedUserResource,
     FederatedUserServiceResourcesResolver,
 )
 from aws_ptrp.services.federated_user.federated_user_service import FederatedUserService
@@ -123,7 +123,7 @@ class PtrpAllowedLine:
         target_identity_policy_ctx = target_identity_node.policy_document_ctx
         federated_principal_node: PathFederatedPrincipalNode = res[3]
         federated_user_resource: ServiceResourceBase = federated_principal_node.get_service_resource()
-        assert isinstance(federated_user_resource, FederatedUserPrincipal)
+        assert isinstance(federated_user_resource, FederatedUserResource)
         principal_policies_ctx: List[PolicyDocumentCtx] = PtrpAllowedLine.get_policies_ctx(
             policies_node_base, iam_entities
         )
@@ -158,7 +158,7 @@ class PtrpAllowedLine:
 
         assert isinstance(federated_user_service_resources_resolver, FederatedUserServiceResourcesResolver)
         if (
-            federated_user_service_resources_resolver.is_principal_allowed_to_assume_federated_user(  # pylint: disable=E1101:no-member
+            federated_user_service_resources_resolver.is_principal_allowed_to_assume_federated_user_resource(  # pylint: disable=E1101:no-member
                 federated_user_resource, principal.get_stmt_principal()
             )
             is False

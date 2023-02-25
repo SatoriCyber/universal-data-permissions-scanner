@@ -1,0 +1,215 @@
+{
+    "input": {
+        "iam_entities": {
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {},
+                    "iam_groups": {},
+                    "iam_roles": {
+                        "arn:aws:iam::105246067165:role/iam_role_1": {
+                            "role_id": "iam_role_1",
+                            "role_name": "iam_role_1",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role_1",
+                            "path": "/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow",
+                                        "Principal": {
+                                            "Federated": "arn:aws:iam::105246067165:saml-provider/provider_1"
+                                        },
+                                        "Action": "sts:AssumeRoleWithSAML"
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": []
+                        }
+                    },
+                    "iam_policies": {}
+                }
+            }
+        },
+        "target_account_resources": {
+            "aws_account_id": "105246067165",
+            "account_resources": {
+                "s3": [
+                    {
+                        "name": "bucket_role_and_session",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Sid": "BucketPolicyAllow1",
+                                    "__comment1": "Expecting both the iam_role & the iam role session",
+                                    "Principal": {
+                                        "AWS": [
+                                            "arn:aws:iam::105246067165:role/iam_role_1"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:GetObject"
+                                    ],
+                                    "Resource": "arn:aws:s3:::bucket_role_and_session*"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "bucket_session_only",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Sid": "BucketPolicyAllow1",
+                                    "Principal": {
+                                        "AWS": [
+                                            "arn:aws:sts::105246067165:assumed-role/iam_role_1/session_name"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:GetObject"
+                                    ],
+                                    "Resource": "arn:aws:s3:::bucket_session_only*"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "bucket_account",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Sid": "BucketPolicyAllow1",
+                                    "__comment1": "not relevant, because principal is aws account, and this is not cross-account access",
+                                    "Principal": {
+                                        "AWS": [
+                                            "105246067165"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:GetObject"
+                                    ],
+                                    "Resource": "arn:aws:s3:::bucket_account*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_role_and_session",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:saml-provider/provider_1",
+                "name": "provider_1",
+                "type": "SAML_SESSION",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_1",
+                    "name": "iam_role_1",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_role_and_session",
+                    "name": "bucket_role_and_session",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_role_and_session",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:saml-provider/provider_1",
+                "name": "provider_1",
+                "type": "SAML_SESSION",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_1",
+                    "name": "iam_role_1",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:assumed-role/iam_role_1/session_name",
+                    "name": "session_name",
+                    "type": "ROLE_SESSION",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_role_and_session",
+                    "name": "bucket_role_and_session",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_session_only",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:saml-provider/provider_1",
+                "name": "provider_1",
+                "type": "SAML_SESSION",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_1",
+                    "name": "iam_role_1",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:assumed-role/iam_role_1/session_name",
+                    "name": "session_name",
+                    "type": "ROLE_SESSION",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_session_only",
+                    "name": "bucket_session_only",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        }
+    ]
+}
