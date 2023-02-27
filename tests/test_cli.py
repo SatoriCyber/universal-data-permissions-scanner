@@ -36,7 +36,11 @@ def test_bigquery(additional_args: List[str]):
 
 @pytest.mark.parametrize(
     'additional_args',
-    [[], ['--additional-account-id', 'account2'], ['--additional-account-id', 'id123']],
+    [
+        [],
+        ['--additional-account-id', 'account2', '--additional-account-id', 'account3'],
+        ['--external-id', 'id123'],
+    ],
     ids=['no-args', 'additional_account', 'external-id'],
 )
 @patch('authz_analyzer.cli.run_aws_s3', MagicMock())

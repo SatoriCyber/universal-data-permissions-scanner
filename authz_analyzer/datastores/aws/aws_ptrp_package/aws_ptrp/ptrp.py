@@ -42,7 +42,7 @@ class AwsPtrp:
         resource_service_types_to_load: Set[ServiceResourceType],
         target_account_id: str,
         additional_account_ids: Optional[Set[str]] = None,
-    ):
+    ) -> 'AwsPtrp':
         iam_entities_for_accounts: Dict[str, IAMAccountEntities] = {}
         if additional_account_ids:
             if target_account_id in additional_account_ids:
