@@ -99,8 +99,7 @@ def valid_aws_account_params(_ctx, _param, value: str) -> AwsAssumeRoleInput:
         external_id = match.group(3) if match.group(3) else None
         ret = AwsAssumeRoleInput(role_arn=role_arn, external_id=external_id)
         return ret
-    else:
-        raise click.BadParameter("bad format")
+    raise click.BadParameter("bad format")
 
 
 @main.command()
