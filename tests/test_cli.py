@@ -5,6 +5,7 @@ import pytest
 from click.testing import CliRunner
 
 from authz_analyzer import cli
+from authz_analyzer.datastores.aws.analyzer import AwsAssumeRoleInput
 
 
 @patch('authz_analyzer.cli.run_snowflake', MagicMock())
@@ -34,18 +35,54 @@ def test_bigquery(additional_args: List[str]):
     invoke(cli.bigquery, args)
 
 
+def test_valid_aws_account_params():
+    assert AwsAssumeRoleInput(
+        role_arn='arn:aws:iam::105246067165:role/SatoriScanner', external_id=None
+    ) == cli.valid_aws_account_params(None, None, 'role_arn: arn:aws:iam::105246067165:role/SatoriScanner  ')
+    assert AwsAssumeRoleInput(
+        role_arn='arn:aws:iam::105246067165:role/SatoriScanner', external_id='1234'
+    ) == cli.valid_aws_account_params(
+        None, None, 'role_arn: arn:aws:iam::105246067165:role/SatoriScanner,  external_id: 1234'
+    )
+    assert AwsAssumeRoleInput(
+        role_arn='arn:aws:iam::105246067165:role/__+---==SatoriScanner',
+        external_id='sdfdsfknsdal43+-@',
+    ) == cli.valid_aws_account_params(
+        None,
+        None,
+        '    role_arn:arn:aws:iam::105246067165:role/__+---==SatoriScanner,external_id: sdfdsfknsdal43+-@',
+    )
+    with pytest.raises(Exception):
+        cli.valid_aws_account_params(  # role_name includes '?'
+            None,
+            None,
+            ' role_arn:arn:aws:ia???m::105246067165:role/__+---==SatoriScanner,external_id: sdfdsfknsdal43+-@',
+        )
+    with pytest.raises(Exception):
+        cli.valid_aws_account_params(  # missing ','
+            None,
+            None,
+            'role_arn:arn:aws:iam::105246067165:role/__+---==SatoriScanner external_id: sdfdsfknsdal43+-@',
+        )
+
+
 @pytest.mark.parametrize(
     'additional_args',
     [
         [],
-        ['--additional-account-id', 'account2', '--additional-account-id', 'account3'],
-        ['--external-id', 'id123'],
+        [
+            '--additional-account-params',
+            'role_arn: arn:aws:iam::105246067165:role/SatoriScanner,  external_id: 1234',
+        ],
     ],
-    ids=['no-args', 'additional_account', 'external-id'],
+    ids=['no-args', 'additional_account'],
 )
 @patch('authz_analyzer.cli.run_aws_s3', MagicMock())
 def test_aws_s3(additional_args: List[str]):
-    args = ['--target-account-id', 'account1', '--role-name', 'role1']
+    args = [
+        '--target-account-params',
+        'role_arn: arn:aws:iam::982269985744:role/SatoriScanner,  external_id: 4321',
+    ]
     args.extend(additional_args)
     invoke(cli.aws_s3, args)
 

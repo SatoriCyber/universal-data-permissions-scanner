@@ -4,6 +4,7 @@ from typing import Callable, Dict, List, Optional, Set
 
 from aws_ptrp.actions.aws_actions import AwsActions
 from aws_ptrp.iam.iam_entities import IAMAccountEntities, IAMEntities
+from aws_ptrp.principals import Principal
 from aws_ptrp.principals.aws_principals import AwsPrincipals
 from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PrincipalNodeBase
@@ -25,6 +26,19 @@ from boto3 import Session
 from serde import field, serde
 
 
+@dataclass
+class AwsAssumeRole:
+    role_arn: str
+    external_id: Optional[str]
+
+    def get_account_id(self) -> str:
+        principal = Principal.load_from_iam_role(self.role_arn)
+        account_id = principal.get_account_id()
+        if not account_id:
+            raise Exception(f"Unable to extract account id from role_arn {self.role_arn}")
+        return account_id
+
+
 @serde
 @dataclass
 class AwsPtrp:
@@ -37,23 +51,29 @@ class AwsPtrp:
     def load_from_role(
         cls,
         logger: Logger,
-        role_name: str,
-        external_id: Optional[str],
         resource_service_types_to_load: Set[ServiceResourceType],
-        target_account_id: str,
-        additional_account_ids: Optional[Set[str]] = None,
+        target_account: AwsAssumeRole,
+        additional_accounts: Optional[List[AwsAssumeRole]] = None,
     ) -> 'AwsPtrp':
         iam_entities_for_accounts: Dict[str, IAMAccountEntities] = {}
-        if additional_account_ids:
-            if target_account_id in additional_account_ids:
-                additional_account_ids.remove(target_account_id)
+        target_account_id = target_account.get_account_id()
+        if additional_accounts:
+            for additional_account in additional_accounts:
+                additional_account_id = additional_account.get_account_id()
+                if additional_account_id == target_account_id:
+                    continue
+                if additional_account_id in iam_entities_for_accounts:
+                    raise Exception(
+                        f"Invalid input, duplicate aws account ids in additional_accounts : {additional_accounts}"
+                    )
 
-            for additional_account_id in additional_account_ids:
-                session: Session = create_session_with_assume_role(additional_account_id, role_name, external_id)
+                session: Session = create_session_with_assume_role(
+                    additional_account.role_arn, additional_account.external_id
+                )
                 logger.info(
                     "Successfully assume the role %s (external id: %s) for additional account id %s",
-                    role_name,
-                    external_id,
+                    additional_account.role_arn,
+                    additional_account.external_id,
                     additional_account_id,
                 )
                 iam_entities_for_account = IAMAccountEntities.load_for_account(logger, additional_account_id, session)
@@ -61,9 +81,7 @@ class AwsPtrp:
 
         return cls._load_for_target_account(
             logger,
-            role_name,
-            external_id,
-            target_account_id,
+            target_account,
             iam_entities_for_accounts,
             resource_service_types_to_load,
         )
@@ -72,16 +90,22 @@ class AwsPtrp:
     def _load_for_target_account(
         cls,
         logger: Logger,
-        role_name: str,
-        external_id: Optional[str],
-        target_account_id: str,
+        target_account: AwsAssumeRole,
         iam_entities_for_accounts: Dict[str, IAMAccountEntities],
         resource_service_types_to_load: Set[ServiceResourceType],
     ) -> 'AwsPtrp':
         # update the iam_entities from the target account
-        target_session: Session = create_session_with_assume_role(target_account_id, role_name, external_id)
-        logger.info("Successfully assume the role %s for target account id %s", role_name, target_account_id)
-        iam_entities_target_account = IAMAccountEntities.load_for_account(logger, target_account_id, target_session)
+        target_account_id = target_account.get_account_id()
+        target_session: Session = create_session_with_assume_role(target_account.role_arn, target_account.external_id)
+        logger.info(
+            "Successfully assume the role %s (external id: %s) for target account id %s",
+            target_account.role_arn,
+            target_account.external_id,
+            target_account_id,
+        )
+        iam_entities_target_account: IAMAccountEntities = IAMAccountEntities.load_for_account(
+            logger, target_account_id, target_session
+        )
         iam_entities_for_accounts[target_account_id] = iam_entities_target_account
 
         # aws actions

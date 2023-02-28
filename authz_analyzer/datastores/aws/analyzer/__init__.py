@@ -1,5 +1,3 @@
-from .analyzer import AWSAuthzAnalyzer
+from .analyzer import AwsAssumeRoleInput, AWSAuthzAnalyzer
 
-__all__ = [
-    'AWSAuthzAnalyzer',
-]
+__all__ = ['AWSAuthzAnalyzer', 'AwsAssumeRoleInput']

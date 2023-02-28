@@ -5,11 +5,11 @@ from boto3 import Session
 
 
 def create_session_with_assume_role(
-    account_id: str, role_name: str, external_id: Optional[str], role_session_name="AwsPtrpSession"
+    role_arn: str, external_id: Optional[str], role_session_name: Optional[str] = "AwsPtrpSession"
 ) -> Session:
     # Create a session with the role you want to assume
     sts_client = boto3.client('sts')
-    params = {'RoleArn': f"arn:aws:iam::{account_id}:role/{role_name}", 'RoleSessionName': role_session_name}
+    params = {'RoleArn': role_arn, 'RoleSessionName': role_session_name}
     if external_id:
         params['ExternalId'] = external_id
 

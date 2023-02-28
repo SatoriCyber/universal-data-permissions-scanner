@@ -1,5 +1,3 @@
-from .ptrp import AwsPtrp
+from .ptrp import AwsAssumeRole, AwsPtrp
 
-__all__ = [
-    'AwsPtrp',
-]
+__all__ = ['AwsPtrp', 'AwsAssumeRole']
