@@ -4,7 +4,7 @@ import pathlib
 from typing import Set
 
 import pytest
-from aws_ptrp import AwsPtrp
+from aws_ptrp import AwsAssumeRole, AwsPtrp
 from aws_ptrp.iam.iam_roles import IAMRole
 from aws_ptrp.services import (
     ServiceResourceType,
@@ -59,13 +59,17 @@ def register_services_for_deserialize_from_file():
     reason="not really a test, just pull latest satori dev account config and write it to file",
 )
 def test_aws_ptrp_with_s3_write_satori_dev_account():
-    target_account_id = '105246067165'
-    additional_account_ids = set(['982269985744'])
-    role_name = 'SatoriScanner'
-    external_id = "766c940d1ce1bb63ee41ec1e64a5ddb820285ced"
-    ptrp = AwsPtrp.load_from_role(
-        get_logger(False), role_name, external_id, set([S3Service()]), target_account_id, additional_account_ids
+    target_account = AwsAssumeRole(
+        role_arn='arn:aws:iam::105246067165:role/SatoriScanner',
+        external_id='766c940d1ce1bb63ee41ec1e64a5ddb820285ced',
     )
+    additional_accounts = [
+        AwsAssumeRole(
+            role_arn='arn:aws:iam::982269985744:role/SatoriScanner',
+            external_id='766c940d1ce1bb63ee41ec1e64a5ddb820285ced',
+        )
+    ]
+    ptrp = AwsPtrp.load_from_role(get_logger(False), set([S3Service()]), target_account, additional_accounts)
 
     ptrp_json = to_json(ptrp)
     with open(AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE, "w", encoding="utf-8") as outfile:

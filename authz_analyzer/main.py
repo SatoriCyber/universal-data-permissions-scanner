@@ -1,9 +1,10 @@
 """Main module."""
 from logging import Logger
 from pathlib import Path
-from typing import Optional, Set
+from typing import List, Optional
 
 from authz_analyzer import (
+    AwsAssumeRoleInput,
     AWSAuthzAnalyzer,
     BigQueryAuthzAnalyzer,
     MongoDBAtlasAuthzAnalyzer,
@@ -55,20 +56,16 @@ def run_aws_s3(
     logger: Logger,
     output_format: OutputFormat,
     filename: str,
-    target_account_id: str,
-    additional_account_ids: Optional[Set[str]],
-    role_name: str,
-    external_id: Optional[str],
+    target_account: AwsAssumeRoleInput,
+    additional_accounts: Optional[List[AwsAssumeRoleInput]] = None,
 ):
     writer = get_writer(filename, output_format)
     analyzer = AWSAuthzAnalyzer.connect(
-        target_account_id=target_account_id,
-        additional_account_ids=additional_account_ids,
-        role_name=role_name,
-        external_id=external_id,
+        target_account=target_account,
+        additional_accounts=additional_accounts,
+        logger=logger,
         output_path=filename,
         output_format=output_format,
-        logger=logger,
     )
     analyzer.run_s3()
     writer.close()

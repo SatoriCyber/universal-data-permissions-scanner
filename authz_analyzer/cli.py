@@ -1,5 +1,6 @@
 """Console script for authz_analyzer."""
 import os
+import re
 import sys
 from pathlib import Path
 from typing import List, Optional
@@ -10,6 +11,7 @@ if sys.executable != sys.argv[0]:
     sys.path.insert(0, (os.path.join(os.path.dirname(__file__), "..")))
 
 
+from authz_analyzer import AwsAssumeRoleInput  # pylint: disable=wrong-import-position
 from authz_analyzer.main import (  # pylint: disable=wrong-import-position
     run_aws_s3,
     run_bigquery,
@@ -77,35 +79,59 @@ def bigquery(ctx: click.Context, project: str, key_file: Optional[str] = None):
     run_bigquery(ctx.obj['LOGGER'], project, ctx.obj['FORMAT'], ctx.obj['OUT'])
 
 
+def valid_multi_aws_account_params(ctx, param, values: Optional[List[str]]) -> Optional[List[AwsAssumeRoleInput]]:
+    if not values:
+        return None
+    return [valid_aws_account_params(ctx, param, value) for value in values]
+
+
+def valid_aws_account_params(_ctx, _param, value: str) -> AwsAssumeRoleInput:
+    # Use regular expression to parse the input string and extract values
+    # Valid examples:
+    # "role_arn=arn:aws:iam::123456789012:role/role_name"
+    # "role_arn=arn:aws:iam::123456789012:role/role_name, external_id: 12345sa43+-@"
+    pattern = r"\s*role_arn\s*:\s*([\w/:_\+=,.@\-]+)\s*(,\s*external_id\s*:\s*([\w_\+=,.@\-]+))?\s*$"
+    match = re.match(pattern, value)
+    if match:
+        role_arn = match.group(1)
+        if not role_arn:
+            raise click.BadParameter("missing 'role_arn'")
+        external_id = match.group(3) if match.group(3) else None
+        ret = AwsAssumeRoleInput(role_arn=role_arn, external_id=external_id)
+        return ret
+    raise click.BadParameter("bad format")
+
+
 @main.command()
 @click.pass_context
-@click.option('--target-account-id', required=True, type=str, help="AWS account to analyzed")
 @click.option(
-    '--additional-account-id',
+    '--target-account-params',
+    callback=valid_aws_account_params,
+    type=str,
+    required=True,
+    help='AWS target account parameters to analyzed, format: "role_arn: <ROLE_ARN>" format with external id: "role_arn: <ROLE_ARN>, external_id: <EXTERNAL_ID>',
+)
+@click.option(
+    '--additional-account-params',
+    callback=valid_multi_aws_account_params,
     required=False,
     default=None,
     multiple=True,
     type=str,
-    help="Additional AWS accounts to resolved",
+    help='Additional AWS accounts to resolved, format: "role_arn: <ROLE_ARN>" format with external id: "role_arn: <ROLE_ARN>, external_id: <EXTERNAL_ID>',
 )
-@click.option('--role-name', required=True, type=str, help="The AWS role name to assume")
-@click.option('--external-id', required=False, type=str, help="The external id to be used when assuming the AWS role")
 def aws_s3(
     ctx: click.Context,
-    target_account_id: str,
-    additional_account_id: Optional[List[str]],
-    role_name: str,
-    external_id: Optional[str],
+    target_account_params: AwsAssumeRoleInput,
+    additional_account_params: Optional[List[AwsAssumeRoleInput]],
 ):
     """Analyze AWS S3 buckets"""
     run_aws_s3(
         logger=ctx.obj['LOGGER'],
         output_format=ctx.obj['FORMAT'],
         filename=ctx.obj['OUT'],
-        target_account_id=target_account_id,
-        additional_account_ids=set(additional_account_id) if additional_account_id else None,
-        role_name=role_name,
-        external_id=external_id,
+        target_account=target_account_params,
+        additional_accounts=additional_account_params,
     )
 
 

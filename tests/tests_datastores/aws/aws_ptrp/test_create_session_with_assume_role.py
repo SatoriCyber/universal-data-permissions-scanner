@@ -2,25 +2,25 @@ from unittest.mock import MagicMock, patch
 
 from aws_ptrp.utils.create_session import create_session_with_assume_role
 
+TARGET_ACCOUNT_ID = 123456123465
+ADDITIONAL_ACCOUNT_ID = 654321654321
 target_account_session_params = {
-    'account_id': "123456",
-    "role_name": "RoleName",
+    "role_arn": f"arn:aws:iam::{TARGET_ACCOUNT_ID}:role/SatoriScanner",
     "external_id": "0000",
     "role_session_name": "RoleSessionName",
 }
 additional_account_session_params = {
-    'account_id': "654321",
-    "role_name": "RoleName",
+    "role_arn": f"arn:aws:iam::{TARGET_ACCOUNT_ID}:role/SatoriScanner",
     "external_id": "0000",
     "role_session_name": "RoleSessionName",
 }
 target_account_assume_role_called_with = {
-    'RoleArn': f"arn:aws:iam::{target_account_session_params['account_id']}:role/{target_account_session_params['role_name']}",
+    'RoleArn': target_account_session_params['role_arn'],
     'RoleSessionName': target_account_session_params['role_session_name'],
     'ExternalId': target_account_session_params['external_id'],
 }
 additional_account_assume_role_called_with = {
-    'RoleArn': f"arn:aws:iam::{additional_account_session_params['account_id']}:role/{additional_account_session_params['role_name']}",
+    'RoleArn': additional_account_session_params['role_arn'],
     'RoleSessionName': additional_account_session_params['role_session_name'],
     'ExternalId': additional_account_session_params['external_id'],
 }
