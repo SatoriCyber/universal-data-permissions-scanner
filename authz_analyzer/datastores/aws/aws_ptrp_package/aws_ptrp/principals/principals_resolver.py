@@ -34,6 +34,7 @@ class PrincipalsResolver:
         parent_aws_account_id: str,
         resource_based_policy_service_resource_type: Optional[ServiceResourceType],
         stmt_principals: List[Principal],
+        not_principal_annotated: bool,
         aws_principals: AwsPrincipals,
     ) -> Set[PrincipalBase]:
 
@@ -51,9 +52,14 @@ class PrincipalsResolver:
                 stmt_parent_arn=stmt_parent_arn,
                 policy_name=policy_name,
                 stmt_principal=stmt_principal,
+                all_stmt_principals=stmt_principals,
+                not_principal_annotated=not_principal_annotated,
             )
             if resolved_principals:
                 ret.update(resolved_principals)
+
+        if not_principal_annotated:
+            ret = aws_principals.get_all_principals_expect_given(ret)
 
         logger.debug(
             "Resolved principals for parent arn %s, policy %s, stmt %s: %s",

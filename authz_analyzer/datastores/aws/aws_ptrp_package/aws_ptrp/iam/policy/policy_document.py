@@ -63,6 +63,13 @@ class Statement:
         serializer=StmtPrincipals.to_stmt_document_principal,
         rename="Principal",
     )
+    _not_principal: Optional[StmtPrincipals] = field(
+        default=None,
+        skip_if_default=True,
+        deserializer=StmtPrincipals.from_stmt_document_principal,
+        serializer=StmtPrincipals.to_stmt_document_principal,
+        rename="NotPrincipal",
+    )
     _action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True, rename="Action")
     _not_action: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True, rename="NotAction")
     _resource: Optional[Union[str, List[str]]] = field(default=None, skip_if_default=True, rename="Resource")
@@ -74,7 +81,12 @@ class Statement:
     def get_principals(self) -> Optional[List[Principal]]:
         if self._principal:
             return self._principal.principals
+        elif self._not_principal:
+            return self._not_principal.principals
         return None
+
+    def is_not_principal_in_statement(self) -> bool:
+        return self._not_principal is not None
 
     def get_resources(self) -> Optional[List[str]]:
         if self._resource:

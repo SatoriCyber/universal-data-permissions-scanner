@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from logging import Logger
-from typing import Dict, Optional, Set
+from typing import Dict, List, Optional, Set
 
 from aws_ptrp.iam.iam_entities import IAMAccountEntities, IAMEntities
 from aws_ptrp.iam.iam_roles import IAMRole, RoleSession
@@ -18,7 +18,7 @@ class AwsAccountPrincipals:
     role_session_principals: Dict[str, PrincipalBase] = field(default_factory=dict)
     _all_principals: Optional[Set[PrincipalBase]] = None  # lazy initialization
 
-    def resolve_from_iam_user_principal(self, arn: str) -> Set[PrincipalBase]:
+    def resolve_from_iam_user_principal(self, arn: str, not_principal_annotated: bool) -> Set[PrincipalBase]:
         # return the iam_user and its all federated users
         iam_user: Optional[PrincipalBase] = self.iam_user_principals.get(arn)
         if iam_user is None:
@@ -26,12 +26,15 @@ class AwsAccountPrincipals:
 
         ret: Set[PrincipalBase] = {iam_user}
         assert isinstance(iam_user, IAMUser)
-        federated_users = iam_user.get_federated_user_principals()
-        if federated_users:
-            ret.update(federated_users)
+
+        # When 'NotPrincipal' is used, we need to resolve reach federated user individually, if he is in the principal list
+        if not not_principal_annotated:
+            federated_users = iam_user.get_federated_user_principals()
+            if federated_users:
+                ret.update(federated_users)
         return ret
 
-    def resolve_from_iam_role_principal(self, arn: str) -> Set[PrincipalBase]:
+    def resolve_from_iam_role_principal(self, arn: str, not_principal_annotated: bool) -> Set[PrincipalBase]:
         # return the iam_role and its all role sessions
         iam_role: Optional[PrincipalBase] = self.iam_role_principals.get(arn)
         if iam_role is None:
@@ -39,21 +42,45 @@ class AwsAccountPrincipals:
 
         ret: Set[PrincipalBase] = {iam_role}
         assert isinstance(iam_role, IAMRole)
-        role_sessions = iam_role.get_role_sessions()
-        if role_sessions:
-            ret.update(role_sessions)
+
+        # When 'NotPrincipal' is used, we need to resolve each role session individually, if he is in the principal list
+        if not not_principal_annotated:
+            role_sessions = iam_role.get_role_sessions()
+            if role_sessions:
+                ret.update(role_sessions)
         return ret
 
-    def get_role_session_principal(self, arn: str) -> Optional[PrincipalBase]:
-        return self.role_session_principals.get(arn)
+    def get_role_session_principal(
+        self, arn: str, not_principal_annotated: bool, all_stmt_principals: List[Principal]
+    ) -> Optional[PrincipalBase]:
+        role_session = self.role_session_principals.get(arn)
+        if not_principal_annotated and role_session:
+            assert isinstance(role_session, RoleSession)
+            # We don't want to add the role session if the statement includes 'NotPrincipal' and the iam role which resolves to the
+            # role session is not in the statement principals list
+            if not any(
+                stmt_principal.get_arn() == role_session.iam_role.get_principal().get_arn()
+                for stmt_principal in all_stmt_principals
+            ):
+                return None
+        return role_session
 
-    def resolve_federated_user_principals(self, federated_user_arn: str) -> Set[PrincipalBase]:
+    def resolve_federated_user_principals(
+        self, federated_user_arn: str, not_principal_annotated: bool, all_stmt_principals: List[Principal]
+    ) -> Set[PrincipalBase]:
         # return federated users from every iam_user which resolves the 'federated_user_arn'
         ret: Set[PrincipalBase] = set()
         for iam_user in self.iam_user_principals.values():
             assert isinstance(iam_user, IAMUser)
             for federated_user_principal in iam_user.get_federated_user_principals():
                 if federated_user_principal.federated_resource.federated_principal.get_arn() == federated_user_arn:
+                    # We don't want to add the federated user if the statement includes 'NotPrincipal' and the iam user which resolves to the
+                    # federated user is not in the statement principals list
+                    if not_principal_annotated and not any(
+                        stmt_principal.get_arn() == iam_user.get_principal().get_arn()
+                        for stmt_principal in all_stmt_principals
+                    ):
+                        break
                     ret.add(federated_user_principal)
                     break
         return ret
@@ -63,7 +90,7 @@ class AwsAccountPrincipals:
             self._all_principals = set()
             iam_users_and_its_federated_users = set()
             for iam_user_arn in self.iam_user_principals:
-                iam_users_and_its_federated_users.update(self.resolve_from_iam_user_principal(iam_user_arn))
+                iam_users_and_its_federated_users.update(self.resolve_from_iam_user_principal(iam_user_arn, False))
 
             self._all_principals.update(
                 iam_users_and_its_federated_users,
@@ -84,13 +111,19 @@ class AwsPrincipals:
             return ret.resolver_account_principals()
         return set()
 
-    def _resolve_all_principals(self) -> Set[PrincipalBase]:
+    def _resolve_all_principals(self, exclude_anonymous: bool) -> Set[PrincipalBase]:
         if self._all_principals is None:
-            # For all principals, create principal of no_entity with type ANONYMOUS_USER
-            self._all_principals = {NoEntityPrincipal(stmt_principal=Principal.load_anonymous_user())}
+            # TODO check with alon
+            if exclude_anonymous:
+                self._all_principals = set()
+            else:
+                self._all_principals = {NoEntityPrincipal(stmt_principal=Principal.load_anonymous_user())}
             for account_principals in self.accounts_principals.values():
                 self._all_principals.update(account_principals.resolver_account_principals())
         return self._all_principals
+
+    def get_all_principals_expect_given(self, principals_to_exclude: Set[PrincipalBase]) -> Set[PrincipalBase]:
+        return self._resolve_all_principals(True).difference(principals_to_exclude)
 
     def get_resolved_principals(
         self,
@@ -98,10 +131,12 @@ class AwsPrincipals:
         stmt_parent_arn: str,
         policy_name: Optional[str],
         stmt_principal: Principal,
+        all_stmt_principals: List[Principal],
+        not_principal_annotated: bool,
     ) -> Optional[Set[PrincipalBase]]:
 
         if stmt_principal.is_all_principals():
-            return self._resolve_all_principals()
+            return self._resolve_all_principals(exclude_anonymous=not_principal_annotated)
         if stmt_principal.is_no_entity_principal():
             return {NoEntityPrincipal(stmt_principal=stmt_principal)}
 
@@ -115,13 +150,21 @@ class AwsPrincipals:
         account_principals: Optional[AwsAccountPrincipals] = self.accounts_principals.get(account_id)
         if account_principals:
             if stmt_principal.is_iam_user_principal():
-                return account_principals.resolve_from_iam_user_principal(stmt_principal.get_arn())
+                return account_principals.resolve_from_iam_user_principal(
+                    stmt_principal.get_arn(), not_principal_annotated
+                )
             elif stmt_principal.is_iam_role_principal():
-                return account_principals.resolve_from_iam_role_principal(stmt_principal.get_arn())
+                return account_principals.resolve_from_iam_role_principal(
+                    stmt_principal.get_arn(), not_principal_annotated
+                )
             elif stmt_principal.is_federated_user_principal():
-                return account_principals.resolve_federated_user_principals(stmt_principal.get_arn())
+                return account_principals.resolve_federated_user_principals(
+                    stmt_principal.get_arn(), not_principal_annotated, all_stmt_principals
+                )
             elif stmt_principal.is_role_session_principal():
-                ret: Optional[PrincipalBase] = account_principals.get_role_session_principal(stmt_principal.get_arn())
+                ret: Optional[PrincipalBase] = account_principals.get_role_session_principal(
+                    stmt_principal.get_arn(), not_principal_annotated, all_stmt_principals
+                )
                 if ret:
                     return {ret}
             elif stmt_principal.is_aws_account():

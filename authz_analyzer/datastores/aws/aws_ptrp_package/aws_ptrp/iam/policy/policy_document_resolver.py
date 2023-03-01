@@ -165,10 +165,9 @@ def _services_resolver_for_policy_document(
             if identity_based_policy_principal:
                 stmt_principals = [identity_based_policy_principal]
             else:
-                continue
-                # raise Exception(
-                #     "Invalid principal input both statement.principal & outer param identity_principal are None"
-                # )
+                raise Exception(
+                    "Invalid principal input both statement.principal & outer param identity_principal are None"
+                )
 
         resolved_stmt_principals: Set[PrincipalBase] = PrincipalsResolver.resolve_stmt_principals(
             logger=logger,
@@ -178,6 +177,7 @@ def _services_resolver_for_policy_document(
             parent_aws_account_id=parent_aws_account_id,
             resource_based_policy_service_resource_type=resource_based_policy_service_resource_type,
             stmt_principals=stmt_principals,
+            not_principal_annotated=statement.is_not_principal_in_statement(),
             aws_principals=aws_principals,
         )
         if not resolved_stmt_principals:
