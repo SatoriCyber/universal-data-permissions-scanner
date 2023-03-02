@@ -86,10 +86,10 @@ class SnowflakeAuthzAnalyzer:
             logger = get_logger(False)
 
         writer = get_writer(filename=output_path, output_format=output_format)
-        
+
         # Handle case sensitive warehouse name, wrap with quotes
         warehouse = f'"{warehouse}"'
-        
+
         connector = snowflake.connector.connect(  # type: ignore
             user=username,
             password=password,
@@ -98,7 +98,7 @@ class SnowflakeAuthzAnalyzer:
             warehouse=warehouse,
             **snowflake_connection_kwargs,
         )
-        
+
         cursor = connector.cursor()
         service = SnowflakeService(cursor)
         return cls(service=service, logger=logger, writer=writer)
