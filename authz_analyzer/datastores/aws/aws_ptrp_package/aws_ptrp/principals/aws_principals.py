@@ -27,7 +27,7 @@ class AwsAccountPrincipals:
         ret: Set[PrincipalBase] = {iam_user}
         assert isinstance(iam_user, IAMUser)
 
-        # When 'NotPrincipal' is used, we need to resolve reach federated user individually, if he is in the principal list
+        # When 'NotPrincipal' is used, we need to resolve each federated user individually, if he is in the principal list
         if not not_principal_annotated:
             federated_users = iam_user.get_federated_user_principals()
             if federated_users:
@@ -111,19 +111,15 @@ class AwsPrincipals:
             return ret.resolver_account_principals()
         return set()
 
-    def _resolve_all_principals(self, exclude_anonymous: bool) -> Set[PrincipalBase]:
+    def _resolve_all_principals(self) -> Set[PrincipalBase]:
         if self._all_principals is None:
-            # TODO check with alon
-            if exclude_anonymous:
-                self._all_principals = set()
-            else:
-                self._all_principals = {NoEntityPrincipal(stmt_principal=Principal.load_anonymous_user())}
+            self._all_principals = {NoEntityPrincipal(stmt_principal=Principal.load_anonymous_user())}
             for account_principals in self.accounts_principals.values():
                 self._all_principals.update(account_principals.resolver_account_principals())
         return self._all_principals
 
     def get_all_principals_expect_given(self, principals_to_exclude: Set[PrincipalBase]) -> Set[PrincipalBase]:
-        return self._resolve_all_principals(True).difference(principals_to_exclude)
+        return self._resolve_all_principals().difference(principals_to_exclude)
 
     def get_resolved_principals(
         self,
@@ -136,7 +132,7 @@ class AwsPrincipals:
     ) -> Optional[Set[PrincipalBase]]:
 
         if stmt_principal.is_all_principals():
-            return self._resolve_all_principals(exclude_anonymous=not_principal_annotated)
+            return self._resolve_all_principals()
         if stmt_principal.is_no_entity_principal():
             return {NoEntityPrincipal(stmt_principal=stmt_principal)}
 

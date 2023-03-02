@@ -3,7 +3,12 @@ from logging import Logger
 from typing import List, Optional, Set
 
 from aws_ptrp.principals.aws_principals import AwsPrincipals
-from aws_ptrp.principals.principal import Principal, PrincipalBase, is_stmt_principal_relevant_to_resource
+from aws_ptrp.principals.principal import (
+    Principal,
+    PrincipalBase,
+    is_principal_root_account_id,
+    is_stmt_principal_relevant_to_resource,
+)
 from aws_ptrp.ptrp_models import AwsPrincipalType
 from aws_ptrp.services import ServiceResourceType
 
@@ -46,6 +51,14 @@ class PrincipalsResolver:
             stmt_principals = _filter_resource_based_stmt_principals(
                 stmt_principals, parent_aws_account_id, resource_based_irrelevant_principal_types
             )
+
+        if not_principal_annotated:
+            # Set will be used later to exclude cross account principals from "NotPrincipal" list,
+            # if the root principal of the account is not in the list
+            accounts_with_root_principal_in_stmt_principals = set(
+                principal.get_account_id() for principal in stmt_principals if is_principal_root_account_id(principal)
+            )
+
         for stmt_principal in stmt_principals:
             resolved_principals: Optional[Set[PrincipalBase]] = aws_principals.get_resolved_principals(
                 stmt_name=stmt_name,
@@ -59,6 +72,17 @@ class PrincipalsResolver:
                 ret.update(resolved_principals)
 
         if not_principal_annotated:
+            # Exclude all cross account principals from "NotPrincipal" list, if the root principal of the account is not in the list:
+            ret = set(
+                filter(
+                    lambda resolved_principal: not (
+                        resolved_principal.get_principal().get_account_id() != parent_aws_account_id
+                        and resolved_principal.get_principal().get_account_id()
+                        not in accounts_with_root_principal_in_stmt_principals
+                    ),
+                    ret,
+                )
+            )
             ret = aws_principals.get_all_principals_expect_given(ret)
 
         logger.debug(

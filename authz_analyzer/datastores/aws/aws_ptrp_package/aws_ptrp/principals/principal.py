@@ -15,6 +15,12 @@ regex_account_id = re.compile(r"([0-9]+)$")
 regex_arn_account_id = re.compile(r"arn:aws:iam::([0-9]+):root$")
 
 
+def is_principal_root_account_id(
+    stmt_principal: 'Principal',
+) -> bool:
+    return regex_arn_account_id.match(stmt_principal.get_arn()) is not None
+
+
 def is_stmt_principal_relevant_to_resource(
     stmt_principal: 'Principal',
     resource_aws_account_id: str,
@@ -122,7 +128,11 @@ class Principal:
         # must not be ALL_PRINCIPALS (due to resolving all principal to other users)
         assert self.principal_type != AwsPrincipalType.ALL_PRINCIPALS
 
-        if self.principal_type == AwsPrincipalType.ANONYMOUS_USER:
+        # currently we don't have good solution in principal resolving of wildcard (*)
+        # wildcard principal resolves to all possible entities (iam users, federated users, etc..) except for no_entity principals.
+        # so the below is kind of a hack for that, means if policy contains wildcard principal it should ALSO resolves to
+        # anonymous principal, and we want that a no entity principal will match by this anonymous principal
+        if self.principal_type == AwsPrincipalType.ANONYMOUS_USER and other.is_no_entity_principal():
             # to cover the resolving of no_entity principals (like AWS_SERVICE)
             return True
 
