@@ -87,6 +87,9 @@ class SnowflakeAuthzAnalyzer:
 
         writer = get_writer(filename=output_path, output_format=output_format)
 
+        # Handle case sensitive warehouse name, wrap with quotes
+        warehouse = f'"{warehouse}"'
+
         connector = snowflake.connector.connect(  # type: ignore
             user=username,
             password=password,
@@ -192,8 +195,7 @@ class SnowflakeAuthzAnalyzer:
                         table_name, privilege, granted_on
                     )
                 elif (
-                    current_resource_grant is not None
-                    and SnowflakeAuthzAnalyzer._is_the_same_resource(
+                    SnowflakeAuthzAnalyzer._is_the_same_resource(
                         table_name, permission_level, granted_on, current_resource_grant
                     )
                     and current_role == role
@@ -226,7 +228,7 @@ class SnowflakeAuthzAnalyzer:
             kind = DataShareKind(row[1])
             share_id: str = row[2]
             share_name = share_id.split(".")[-1]
-            share_to_accounts: str = row[4]
+            share_to_accounts: Optional[str] = row[4]
             splitted_share_to_accounts = share_to_accounts.split(",") if share_to_accounts is not None else []
             if kind is DataShareKind.OUTBOUND and share_to_accounts != "":
                 self.logger.debug("Found an outbound data share %s", share_name)
