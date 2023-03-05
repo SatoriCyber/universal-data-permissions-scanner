@@ -112,13 +112,14 @@ class AwsPrincipals:
         return set()
 
     def _resolve_all_principals(self) -> Set[PrincipalBase]:
+        # For all principals, create principal of no_entity with type ANONYMOUS_USER
         if self._all_principals is None:
             self._all_principals = {NoEntityPrincipal(stmt_principal=Principal.load_anonymous_user())}
             for account_principals in self.accounts_principals.values():
                 self._all_principals.update(account_principals.resolver_account_principals())
         return self._all_principals
 
-    def get_all_principals_expect_given(self, principals_to_exclude: Set[PrincipalBase]) -> Set[PrincipalBase]:
+    def get_all_principals_except_given(self, principals_to_exclude: Set[PrincipalBase]) -> Set[PrincipalBase]:
         return self._resolve_all_principals().difference(principals_to_exclude)
 
     def get_resolved_principals(

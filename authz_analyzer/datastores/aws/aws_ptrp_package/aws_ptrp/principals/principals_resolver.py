@@ -3,12 +3,7 @@ from logging import Logger
 from typing import List, Optional, Set
 
 from aws_ptrp.principals.aws_principals import AwsPrincipals
-from aws_ptrp.principals.principal import (
-    Principal,
-    PrincipalBase,
-    is_principal_root_account_id,
-    is_stmt_principal_relevant_to_resource,
-)
+from aws_ptrp.principals.principal import Principal, PrincipalBase, is_stmt_principal_relevant_to_resource
 from aws_ptrp.ptrp_models import AwsPrincipalType
 from aws_ptrp.services import ServiceResourceType
 
@@ -56,7 +51,7 @@ class PrincipalsResolver:
             # Set will be used later to exclude cross account principals from "NotPrincipal" list,
             # if the root principal of the account is not in the list
             accounts_with_root_principal_in_stmt_principals = set(
-                principal.get_account_id() for principal in stmt_principals if is_principal_root_account_id(principal)
+                principal.get_account_id() for principal in stmt_principals if principal.is_aws_account()
             )
 
         for stmt_principal in stmt_principals:
@@ -83,7 +78,7 @@ class PrincipalsResolver:
                     ret,
                 )
             )
-            ret = aws_principals.get_all_principals_expect_given(ret)
+            ret = aws_principals.get_all_principals_except_given(ret)
 
         logger.debug(
             "Resolved principals for parent arn %s, policy %s, stmt %s: %s",

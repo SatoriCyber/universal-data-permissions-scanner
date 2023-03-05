@@ -15,12 +15,6 @@ regex_account_id = re.compile(r"([0-9]+)$")
 regex_arn_account_id = re.compile(r"arn:aws:iam::([0-9]+):root$")
 
 
-def is_principal_root_account_id(
-    stmt_principal: 'Principal',
-) -> bool:
-    return regex_arn_account_id.match(stmt_principal.get_arn()) is not None
-
-
 def is_stmt_principal_relevant_to_resource(
     stmt_principal: 'Principal',
     resource_aws_account_id: str,
