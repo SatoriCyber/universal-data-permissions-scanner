@@ -1,0 +1,239 @@
+{
+    "input": {
+        "iam_entities": {
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067165:user/iam_user_1": {
+                            "user_name": "iam_user_1",
+                            "user_id": "AIDA6JM62QPID6GVAJJUK",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_1",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:GetObject"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_1"
+                        }
+                    },
+                    "iam_groups": {},
+                    "iam_roles": {},
+                    "iam_policies": {}
+                },
+                "105246067166": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067166:user/iam_user_2": {
+                            "user_name": "iam_user_2",
+                            "user_id": "AIDA6JM62QPID6GVAJJUL",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_2",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:GetObject"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067166:user/iam_user_2"
+                        }
+                    },
+                    "iam_groups": {},
+                    "iam_roles": {},
+                    "iam_policies": {}
+                },
+                "105246067167": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067167:user/iam_user_3": {
+                            "user_name": "iam_user_3",
+                            "user_id": "AIDA6JM62QPID6GVAJJUA",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_3",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:GetObject"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067167:user/iam_user_3"
+                        }
+                    },
+                    "iam_groups": {},
+                    "iam_roles": {},
+                    "iam_policies": {}
+                }
+            }
+        },
+        "target_account_resources": {
+            "aws_account_id": "105246067165",
+            "account_resources": {
+                "s3": [
+                    {
+                        "name": "bucket_1",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": [
+                                {
+                                    "Sid": "bucket_1-deny",
+                                    "Effect": "Deny",
+                                    "_comment": "Cross account access, iam_user_2 will get access since root id is in list but iam_user_3 will not",
+                                    "NotPrincipal": {
+                                        "AWS": [
+                                            "arn:aws:iam::105246067165:user/iam_user_1",
+                                            "arn:aws:iam::105246067166:user/iam_user_2",
+                                            "arn:aws:iam::105246067166:root",
+                                            "arn:aws:iam::105246067167:user/iam_user_3"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:GetObject"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::bucket_1/*"
+                                    ]
+                                },
+                                {
+                                    "Sid": "bucket_1-allow-all-users",
+                                    "Effect": "Allow",
+                                    "Principal": {
+                                        "AWS": [
+                                            "arn:aws:iam::105246067165:user/iam_user_1",
+                                            "arn:aws:iam::105246067166:user/iam_user_2",
+                                            "arn:aws:iam::105246067167:user/iam_user_3"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:GetObject"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::bucket_1/*"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_1",
+                "name": "iam_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067166:user/iam_user_2",
+                "name": "iam_user_2",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        }
+    ]
+}

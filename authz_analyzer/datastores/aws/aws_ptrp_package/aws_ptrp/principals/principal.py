@@ -122,7 +122,11 @@ class Principal:
         # must not be ALL_PRINCIPALS (due to resolving all principal to other users)
         assert self.principal_type != AwsPrincipalType.ALL_PRINCIPALS
 
-        if self.principal_type == AwsPrincipalType.ANONYMOUS_USER:
+        # currently we don't have good solution in principal resolving of wildcard (*)
+        # wildcard principal resolves to all possible entities (iam users, federated users, etc..) except for no_entity principals.
+        # so the below is kind of a hack for that, means if policy contains wildcard principal it should ALSO resolves to
+        # anonymous principal, and we want that a no entity principal will match by this anonymous principal
+        if self.principal_type == AwsPrincipalType.ANONYMOUS_USER and other.is_no_entity_principal():
             # to cover the resolving of no_entity principals (like AWS_SERVICE)
             return True
 

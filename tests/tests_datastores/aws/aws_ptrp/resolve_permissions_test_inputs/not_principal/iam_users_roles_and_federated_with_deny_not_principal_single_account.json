@@ -1,0 +1,569 @@
+{
+    "input": {
+        "iam_entities": {
+            "iam_aws_managed_policies": {},
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {
+                        "arn:aws:iam::105246067165:user/iam_user_with_federated_user_1": {
+                            "user_name": "iam_user_with_federated_user_1",
+                            "user_id": "AIDA6JM62QPID6GVAJJUK",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_with_federated_user_1",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:GetObject",
+                                                    "s3:GetObjectAttributes",
+                                                    "sts:GetFederationToken",
+                                                    "s3:GetObjectVersion"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/*",
+                                                    "arn:aws:sts::105246067165:federated-user/federated_user_1"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_with_federated_user_1"
+                        },
+                        "arn:aws:iam::105246067165:user/iam_user_with_federated_user_2_role_2": {
+                            "user_name": "iam_user_with_federated_user_2_role_2",
+                            "user_id": "AIDA6JM62QPID6GVAJJUL",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_with_federated_user_2_role_2",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:GetObject",
+                                                    "s3:GetObjectAttributes",
+                                                    "sts:GetFederationToken",
+                                                    "sts:AssumeRole",
+                                                    "s3:GetObjectVersion"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/*",
+                                                    "arn:aws:sts::105246067165:federated-user/federated_user_2",
+                                                    "arn:aws:iam::105246067165:role/iam_role_2"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_with_federated_user_2_role_2"
+                        },
+                        "arn:aws:iam::105246067165:user/iam_user_with_role_3": {
+                            "user_name": "iam_user_with_role_3",
+                            "user_id": "AIDA6JM62QPID6GVAJJUM",
+                            "path": "/",
+                            "user_policies": [
+                                {
+                                    "UserName": "iam_user_with_role_3",
+                                    "PolicyName": "inline-policy-allow",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "VisualEditor1",
+                                                "Action": [
+                                                    "s3:GetObject",
+                                                    "s3:GetObjectAttributes",
+                                                    "sts:AssumeRole",
+                                                    "s3:GetObjectVersion"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/*",
+                                                    "arn:aws:iam::105246067165:role/iam_role_3"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": [],
+                            "arn": "arn:aws:iam::105246067165:user/iam_user_with_role_3"
+                        }
+                    },
+                    "iam_groups": {},
+                    "iam_roles": {
+                        "arn:aws:iam::105246067165:role/iam_role_2": {
+                            "role_id": "iam_role_2",
+                            "role_name": "iam_role_2",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role_2",
+                            "path": "/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow",
+                                        "Principal": {
+                                            "AWS": [
+                                                "arn:aws:iam::105246067165:user/iam_user_with_federated_user_2_role_2",
+                                                "arn:aws:sts::105246067165:assumed-role/iam_role_2/session_name"
+                                            ]
+                                        },
+                                        "Action": "sts:AssumeRole"
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": []
+                        },
+                        "arn:aws:iam::105246067165:role/iam_role_3": {
+                            "role_id": "iam_role_3",
+                            "role_name": "iam_role_3",
+                            "arn": "arn:aws:iam::105246067165:role/iam_role_3",
+                            "path": "/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Sid": "IamRoleTrustAllow",
+                                        "Principal": {
+                                            "AWS": [
+                                                "arn:aws:iam::105246067165:user/iam_user_with_role_3",
+                                                "arn:aws:sts::105246067165:assumed-role/iam_role_3/session_name"
+                                            ]
+                                        },
+                                        "Action": "sts:AssumeRole"
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": []
+                        }
+                    },
+                    "iam_policies": {}
+                }
+            }
+        },
+        "target_account_resources": {
+            "aws_account_id": "105246067165",
+            "account_resources": {
+                "s3": [
+                    {
+                        "name": "bucket_1",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": [
+                                {
+                                    "Sid": "bucket_1-deny-get-object",
+                                    "Effect": "Deny",
+                                    "_comment1": "path with federated_user_2 to iam_user_with_federated_user_2_role_2 wont be allowed, since the federated_user_2 not in the list",
+                                    "_comment2": "path with role sessions to iam_user_with_role_3 with iam_role_3 wont be allowed, since the role itself not in the list",
+                                    "NotPrincipal": {
+                                        "AWS": [
+                                            "arn:aws:iam::105246067165:user/iam_user_with_federated_user_1",
+                                            "arn:aws:iam::105246067165:user/iam_user_with_federated_user_2_role_2",
+                                            "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                                            "arn:aws:iam::105246067165:role/iam_role_2",
+                                            "arn:aws:sts::105246067165:assumed-role/iam_role_2/session_name",
+                                            "arn:aws:sts::105246067165:assumed-role/iam_role_3/session_name"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:GetObject"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::bucket_1/*"
+                                    ]
+                                },
+                                {
+                                    "Sid": "bucket_1-deny-get-object-attributes",
+                                    "Effect": "Deny",
+                                    "_comment1": "federated_user_1 will get denied since its iam_user is not in the list",
+                                    "_comment2": "assumed-role/iam_role_2/session_name will get denied since its iam_role is not in the list",
+                                    "NotPrincipal": {
+                                        "AWS": [
+                                            "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                                            "arn:aws:iam::105246067165:user/iam_user_with_federated_user_2_role_2",
+                                            "arn:aws:sts::105246067165:federated-user/federated_user_2",
+                                            "arn:aws:sts::105246067165:assumed-role/iam_role_3/session_name",
+                                            "arn:aws:iam::105246067165:role/iam_role_3"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:GetObjectAttributes"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::bucket_1/*"
+                                    ]
+                                },
+                                {
+                                    "Sid": "bucket_1-deny-get-object-tagging",
+                                    "_comment": "Only iam_role_2, iam_user_with_role_3, iam_role_3 and its assumed session wont get denied",
+                                    "Effect": "Deny",
+                                    "NotPrincipal": {
+                                        "AWS": [
+                                            "arn:aws:iam::105246067165:role/iam_role_2",
+                                            "arn:aws:iam::105246067165:role/iam_role_3",
+                                            "arn:aws:iam::105246067165:user/iam_user_with_role_3",
+                                            "arn:aws:sts::105246067165:assumed-role/iam_role_3/session_name",
+                                            "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                                            "arn:aws:sts::105246067165:federated-user/federated_user_2"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:GetObjectTagging"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::bucket_1/*"
+                                    ]
+                                },
+                                {
+                                    "Sid": "bucket_1-deny-get-object-version",
+                                    "_comment": "Only the users wont get denied",
+                                    "Effect": "Deny",
+                                    "NotPrincipal": {
+                                        "AWS": [
+                                            "arn:aws:iam::105246067165:user/iam_user_with_federated_user_1",
+                                            "arn:aws:iam::105246067165:user/iam_user_with_federated_user_2_role_2",
+                                            "arn:aws:iam::105246067165:user/iam_user_with_role_3"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:GetObjectVersion"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::bucket_1/*"
+                                    ]
+                                },
+                                {
+                                    "Sid": "bucket_1-allow-federated-and-roles",
+                                    "Effect": "Allow",
+                                    "Principal": {
+                                        "AWS": [
+                                            "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                                            "arn:aws:sts::105246067165:federated-user/federated_user_2",
+                                            "arn:aws:iam::105246067165:role/iam_role_2",
+                                            "arn:aws:iam::105246067165:role/iam_role_3"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:GetObject",
+                                        "s3:GetObjectAttributes",
+                                        "s3:GetObjectTagging",
+                                        "s3:GetObjectVersion"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::bucket_1/*"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_with_federated_user_1",
+                "name": "iam_user_with_federated_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_with_federated_user_1",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject",
+                "GetObjectVersion"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_with_federated_user_1",
+                "name": "iam_user_with_federated_user_1",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_with_federated_user_1",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:federated-user/federated_user_1",
+                    "name": "federated_user_1",
+                    "type": "FEDERATED_USER",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_with_federated_user_2_role_2",
+                "name": "iam_user_with_federated_user_2_role_2",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_2",
+                    "name": "iam_role_2",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject",
+                "GetObjectTagging"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_with_federated_user_2_role_2",
+                "name": "iam_user_with_federated_user_2_role_2",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_2",
+                    "name": "iam_role_2",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:assumed-role/iam_role_2/session_name",
+                    "name": "session_name",
+                    "type": "ROLE_SESSION",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_with_federated_user_2_role_2",
+                "name": "iam_user_with_federated_user_2_role_2",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_with_federated_user_2_role_2",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject",
+                "GetObjectAttributes",
+                "GetObjectVersion"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_with_federated_user_2_role_2",
+                "name": "iam_user_with_federated_user_2_role_2",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_with_federated_user_2_role_2",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:federated-user/federated_user_2",
+                    "name": "federated_user_2",
+                    "type": "FEDERATED_USER",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObjectAttributes"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_with_role_3",
+                "name": "iam_user_with_role_3",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_3",
+                    "name": "iam_role_3",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObjectAttributes",
+                "GetObjectTagging"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_with_role_3",
+                "name": "iam_user_with_role_3",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:role/iam_role_3",
+                    "name": "iam_role_3",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sts::105246067165:assumed-role/iam_role_3/session_name",
+                    "name": "session_name",
+                    "type": "ROLE_SESSION",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObjectAttributes",
+                "GetObjectTagging"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "arn:aws:iam::105246067165:user/iam_user_with_role_3",
+                "name": "iam_user_with_role_3",
+                "type": "IAM_USER",
+                "notes": []
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:iam::105246067165:user/iam_user_with_role_3",
+                    "name": "inline-policy-allow",
+                    "type": "IAM_INLINE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObjectVersion"
+            ]
+        }
+    ]
+}
