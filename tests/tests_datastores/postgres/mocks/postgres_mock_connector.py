@@ -1,14 +1,36 @@
 from dataclasses import dataclass
 from types import TracebackType
-from typing import List, Optional, Tuple, Type
+from typing import List, NamedTuple, Optional, Type
 from unittest.mock import MagicMock
+
+
+class Role(NamedTuple):
+    username: str
+    superuser: bool
+    role: Optional[str]
+    login: bool
+
+
+class RoleGrant(NamedTuple):
+    grantor: str
+    grantee: str
+    table_catalog: str
+    table_schema: str
+    table_name: str
+    privilege_type: str
+
+
+class Table(NamedTuple):
+    table_catalog: str
+    table_schema: str
+    table_name: str
 
 
 @dataclass
 class PostgresMockCursor:
-    roles: List[Tuple[str, bool, Optional[str], bool]]
-    role_grants: List[Tuple[str, str, str, str, str, str]]
-    all_tables: List[Tuple[str, str, str]]
+    roles: List[Role]
+    role_grants: List[RoleGrant]
+    all_tables: List[Table]
 
     def get(self):
         postgres_mock = MagicMock(name="PostgresConnectionMock")
