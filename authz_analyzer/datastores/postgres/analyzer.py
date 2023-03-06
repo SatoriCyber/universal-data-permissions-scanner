@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union
 
 import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, cursor
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, cursor, connection
 
 from authz_analyzer.datastores.postgres import exporter
 from authz_analyzer.datastores.postgres.model import (
@@ -42,6 +42,7 @@ class PostgresAuthzAnalyzer:
     cursors: List[cursor]
     writer: BaseWriter
     logger: Logger
+    rds_deployment: bool
 
     @classmethod
     def connect(
@@ -71,24 +72,26 @@ class PostgresAuthzAnalyzer:
             logger = get_logger(False)
 
         writer = get_writer(filename=output_path, output_format=output_format)
+
+        rds_deployment = False
+
         connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
             user=username, password=password, host=host, dbname=dbname, **connection_kwargs
         )
         connector.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
-        postgres_cursor = connector.cursor()
-
         # We generate cursor one per database in order to fetch the table grants and the information schema
         postgres_cursors: List[cursor] = []
-        for database in PostgresAuthzAnalyzer._get_all_databases(postgres_cursor):
+        for database in PostgresAuthzAnalyzer._get_all_databases(connector):
             if database == "rdsadmin":
+                rds_deployment = True
                 logger.debug("Skipping rdsadmin database, internal use by AWS")
                 continue
             db_connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
                 user=username, password=password, host=host, dbname=database, **connection_kwargs
             )
             postgres_cursors.append(db_connector.cursor())
-        return cls(logger=logger, cursors=postgres_cursors, writer=writer)
+        return cls(logger=logger, cursors=postgres_cursors, writer=writer, rds_deployment=rds_deployment)
 
     def run(
         self,
@@ -102,7 +105,10 @@ class PostgresAuthzAnalyzer:
         self.writer.close()
 
     @staticmethod
-    def _get_all_databases(postgres_cursor: cursor):
+    def _get_all_databases(
+        connector: connection,
+    ):
+        postgres_cursor = connector.cursor()
         return {
             database[0]
             for database in PostgresAuthzAnalyzer._get_rows(
@@ -177,6 +183,8 @@ class PostgresAuthzAnalyzer:
                 table = row[2]  # type: ignore
                 all_tables.add(ResourceGrant([db, schema, table], PermissionLevel.FULL, db_permission="super_user"))
         role_to_grants["super_user"] = all_tables
+        if self.rds_deployment is True:
+            role_to_grants["rds_superuser"] = all_tables
 
     @staticmethod
     def _get_rows(postgres_cursor: cursor, command: str):

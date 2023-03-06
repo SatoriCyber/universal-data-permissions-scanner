@@ -168,7 +168,6 @@ def generate_authz_share(
     share_path: SharePath,
     extra_path: Optional[List[AuthzPathElement]] = None,
 ):
-
     authz_path = [
         AuthzPathElement(
             id=share_path.id,

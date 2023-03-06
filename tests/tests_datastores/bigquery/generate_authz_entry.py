@@ -87,7 +87,6 @@ def generate_authz_path_element_dataset(note: str) -> AuthzPathElement:
 
 
 def generate_authz_path_element_table(note: str) -> AuthzPathElement:
-
     return generate_authz_path_element("project1.dataset1.table1", "table1", AuthzPathElementType.TABLE, note, [])
 
 
