@@ -26,10 +26,10 @@ ALL_TABLES = [
     )
 ]
 USER_ONE_ROLE_ONE: List[Role] = [Role("user_1", False, "role_1", True)]
-USER_ONE_DIRECT_ACCESS = [RoleGrant("table1", "schema1", "t", "user_1", None)]
+USER_ONE_DIRECT_ACCESS = [RoleGrant("table1", "schema1", "r", "user_1", None)]
 NO_ROLES_GRANTS = [RoleGrant("", "", "", "", None)]
-ROLE_ONE_GRANT_TABLE_ONE = [RoleGrant("table1", "schema1", "t", "role_1", None)]
-ROLE_TWO_GRANT_TABLE_ONE = [RoleGrant("table1", "schema1", "t", "role_2", None)]
+ROLE_ONE_GRANT_TABLE_ONE = [RoleGrant("table1", "schema1", "r", "role_1", None)]
+ROLE_TWO_GRANT_TABLE_ONE = [RoleGrant("table1", "schema1", "r", "role_2", None)]
 USER_ONE_ROLE_ONE_ROLE_2: List[Role] = [
     Role("user_1", False, "role_1", True),
     Role("role_1", False, "role_2", False),
@@ -40,7 +40,7 @@ THREE_ROLES_GRANTS: List[Role] = [
     Role("role_1", False, "role_2", False),
     Role("role_2", False, "role_3", False),
 ]
-ROLE_THREE_GRANT_TABLE_ONE = [RoleGrant("table1", "schema1", "t", "role_3", None)]
+ROLE_THREE_GRANT_TABLE_ONE = [RoleGrant("table1", "schema1", "r", "role_3", None)]
 
 USER_ONE_SUPER: List[Role] = [Role("user_1", True, None, True)]
 USER_ONE_RDS_SUPER: List[Role] = [Role("user_1", False, "rds_superuser", True)]
