@@ -14,7 +14,7 @@ The database will not let you set up circular membership loops.
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Union
 
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, cursor, connection
@@ -22,24 +22,29 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, cursor, connection
 from authz_analyzer.datastores.postgres import exporter
 from authz_analyzer.datastores.postgres.model import (
     PERMISSION_LEVEL_MAP,
+    RESOURCE_TYPE_MAP,
     AuthorizationModel,
     DBRole,
     ResourceGrant,
     RoleName,
 )
-from authz_analyzer.models.model import PermissionLevel
+from authz_analyzer.models.model import AssetType, PermissionLevel
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 
+from authz_analyzer.datastores.postgres.database_query_results import DataBaseAcl, RoleGrant as DataBaseRoleGrant
+
 COMMANDS_DIR = Path(__file__).parent / "commands"
+
+DbName = str
 
 
 @dataclass
 class PostgresAuthzAnalyzer:
     """Analyze authorization for Postgres."""
 
-    cursors: List[cursor]
+    cursors: Dict[DbName, cursor]
     writer: BaseWriter
     logger: Logger
     rds_deployment: bool
@@ -81,7 +86,7 @@ class PostgresAuthzAnalyzer:
         connector.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
         # We generate cursor one per database in order to fetch the table grants and the information schema
-        postgres_cursors: List[cursor] = []
+        postgres_cursors: Dict[DbName, cursor] = {}
         for database in PostgresAuthzAnalyzer._get_all_databases(connector):
             if database == "rdsadmin":
                 rds_deployment = True
@@ -90,7 +95,7 @@ class PostgresAuthzAnalyzer:
             db_connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
                 user=username, password=password, host=host, dbname=database, **connection_kwargs
             )
-            postgres_cursors.append(db_connector.cursor())
+            postgres_cursors[database] = db_connector.cursor()
         return cls(logger=logger, cursors=postgres_cursors, writer=writer, rds_deployment=rds_deployment)
 
     def run(
@@ -133,7 +138,7 @@ class PostgresAuthzAnalyzer:
         results: Dict[DBRole, Set[DBRole]] = {}
 
         # For roles table, it is shared per cluster, there is no need to pull per DB
-        pg_cursor = self.cursors[0]
+        pg_cursor = next(iter(self.cursors.values()))
         rows = PostgresAuthzAnalyzer._get_rows(pg_cursor, command)
         for row in rows:
             role_name: str = row[0]
@@ -152,36 +157,71 @@ class PostgresAuthzAnalyzer:
         return results
 
     def _get_roles_grants(self) -> Dict[RoleName, Set[ResourceGrant]]:
-        command = (COMMANDS_DIR / "roles_grants.sql").read_text()
         results: Dict[RoleName, Set[ResourceGrant]] = {}
-        for pg_cursor in self.cursors:
-            rows = PostgresAuthzAnalyzer._get_rows(pg_cursor, command)
-            for row in rows:
-                _grantor = row[0]
-                role = row[1]
-                db: str = row[2]  # type: ignore #pylint: disable=invalid-name
-                schema: str = row[3]  # type: ignore
-                table: str = row[4]  # type: ignore
-                db_permission: str = row[5]
-                level = PERMISSION_LEVEL_MAP.get(db_permission, PermissionLevel.UNKNOWN)
-
+        for db_name, pg_cursor in self.cursors.items():
+            rows = PostgresAuthzAnalyzer._get_roles_grants_from_db(pg_cursor)
+            for role, resource_grant in self._yield_resource_grant_from_role_grants(
+                db_name=db_name, database_roles=rows
+            ):
                 role_grants = results.setdefault(role, set())
-                role_grants.add(ResourceGrant([db, schema, table], level, db_permission))
+                role_grants.add(resource_grant)
 
         return results
+
+    def _yield_resource_grant_from_role_grants(
+        self, db_name: str, database_roles: List[DataBaseRoleGrant]
+    ) -> Generator[Tuple[RoleName, ResourceGrant], None, None]:
+        for database_role in database_roles:
+            resource_name = [db_name, database_role.schema_name, database_role.resource_name]
+            try:
+                resource_type = RESOURCE_TYPE_MAP[database_role.resource_type]
+            except KeyError:
+                self.logger.debug("Skipping resource type %s", database_role.resource_type)
+                continue
+
+            yield database_role.owner, ResourceGrant(
+                name=resource_name,
+                permission_level=PermissionLevel.FULL,
+                db_permissions=["OWNERSHIP"],
+                type=resource_type,
+            )
+            if database_role.acl is not None:
+                acl_entry = DataBaseAcl.serialize_from_str(self.logger, database_role.acl)
+                for entry in acl_entry.entries:
+                    try:
+                        permission_level = PERMISSION_LEVEL_MAP.get(
+                            entry.max_permission().name, PermissionLevel.UNKNOWN
+                        )
+                    except ValueError:
+                        self.logger.warning("no relevant permissions found for role")
+                        continue
+                    yield entry.grantee, ResourceGrant(
+                        name=resource_name,
+                        permission_level=permission_level,
+                        db_permissions=[db_permission.name for db_permission in entry.permissions],
+                        type=resource_type,
+                    )
+
+    @staticmethod
+    def _get_high_permission_level() -> Set[RoleName]:
+        return {"super_user", "rds_superuser"}
 
     def _add_super_user(self, role_to_grants: Dict[RoleName, Set[ResourceGrant]]):
         self.logger.info("Fetching all tables")
         command = (COMMANDS_DIR / "all_tables.sql").read_text()
         all_tables: Set[ResourceGrant] = set()
-        for pg_cursor in self.cursors:
+        for pg_cursor in self.cursors.values():
             rows = PostgresAuthzAnalyzer._get_rows(pg_cursor, command)
 
             for row in rows:
                 db: str = row[0]  # type: ignore #pylint: disable=invalid-name
                 schema = row[1]  # type: ignore
                 table = row[2]  # type: ignore
-                all_tables.add(ResourceGrant([db, schema, table], PermissionLevel.FULL, db_permission="super_user"))
+                all_tables.add(
+                    ResourceGrant(
+                        [db, schema, table], PermissionLevel.FULL, db_permissions=["super_user"], type=AssetType.TABLE
+                    )
+                )
         role_to_grants["super_user"] = all_tables
         if self.rds_deployment is True:
             role_to_grants["rds_superuser"] = all_tables
@@ -190,3 +230,11 @@ class PostgresAuthzAnalyzer:
     def _get_rows(postgres_cursor: cursor, command: str):
         postgres_cursor.execute(command)
         return postgres_cursor.fetchall()
+
+    @staticmethod
+    def _get_roles_grants_from_db(postgres_cursor: cursor):
+        command = (COMMANDS_DIR / "roles_grants.sql").read_text()
+        return [
+            DataBaseRoleGrant(row[0], row[1], row[2], row[3], row[4])
+            for row in PostgresAuthzAnalyzer._get_rows(postgres_cursor, command)
+        ]

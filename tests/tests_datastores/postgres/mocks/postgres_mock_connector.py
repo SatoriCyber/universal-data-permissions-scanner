@@ -12,12 +12,11 @@ class Role(NamedTuple):
 
 
 class RoleGrant(NamedTuple):
-    grantor: str
-    grantee: str
-    table_catalog: str
-    table_schema: str
     table_name: str
-    privilege_type: str
+    schema: str
+    type: str
+    owner: str
+    relacl: Optional[str]
 
 
 class Table(NamedTuple):

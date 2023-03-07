@@ -22,9 +22,9 @@ def _yield_row(role_name: str, grant: ResourceGrant, roles: List[DBRole]):
         )
         for role in roles
     ]
-    auth_path_element[-1].db_permissions = [grant.db_permission]
+    auth_path_element[-1].db_permissions = grant.db_permissions
     identity = Identity(id=role_name, name=role_name, type=IdentityType.ROLE_LOGIN)
-    asset = Asset(name=grant.name, type=AssetType.TABLE)
+    asset = Asset(name=grant.name, type=grant.type)
     yield AuthzEntry(
         identity=identity,
         asset=asset,
