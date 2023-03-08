@@ -35,6 +35,8 @@ from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 
 from authz_analyzer.datastores.postgres.database_query_results import DataBaseAcl, RoleGrant as DataBaseRoleGrant
 
+from authz_analyzer.datastores.postgres.deployment import Deployment
+
 COMMANDS_DIR = Path(__file__).parent / "commands"
 
 DbName = str
@@ -47,7 +49,7 @@ class PostgresAuthzAnalyzer:
     cursors: Dict[DbName, cursor]
     writer: BaseWriter
     logger: Logger
-    rds_deployment: bool
+    deployment: Deployment
 
     @classmethod
     def connect(
@@ -78,8 +80,6 @@ class PostgresAuthzAnalyzer:
 
         writer = get_writer(filename=output_path, output_format=output_format)
 
-        rds_deployment = False
-
         connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
             user=username, password=password, host=host, dbname=dbname, **connection_kwargs
         )
@@ -87,16 +87,21 @@ class PostgresAuthzAnalyzer:
 
         # We generate cursor one per database in order to fetch the table grants and the information schema
         postgres_cursors: Dict[DbName, cursor] = {}
+        deployment = Deployment.other()
         for database in PostgresAuthzAnalyzer._get_all_databases(connector):
             if database == "rdsadmin":
-                rds_deployment = True
+                deployment = Deployment.aws_rds()
                 logger.debug("Skipping rdsadmin database, internal use by AWS")
+                continue
+            if database == "cloudsqladmin":
+                deployment = Deployment.gcp()
+                logger.debug("Skipping cloudsqladmin database, internal use by GCP")
                 continue
             db_connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
                 user=username, password=password, host=host, dbname=database, **connection_kwargs
             )
             postgres_cursors[database] = db_connector.cursor()
-        return cls(logger=logger, cursors=postgres_cursors, writer=writer, rds_deployment=rds_deployment)
+        return cls(logger=logger, cursors=postgres_cursors, writer=writer, deployment=deployment)
 
     def run(
         self,
@@ -222,9 +227,10 @@ class PostgresAuthzAnalyzer:
                         [db, schema, table], PermissionLevel.FULL, db_permissions=["super_user"], type=AssetType.TABLE
                     )
                 )
+        managed_super_user = self.deployment.get_cloud_super_user()
+        if managed_super_user is not None:
+            role_to_grants[managed_super_user] = all_tables
         role_to_grants["super_user"] = all_tables
-        if self.rds_deployment is True:
-            role_to_grants["rds_superuser"] = all_tables
 
     @staticmethod
     def _get_rows(postgres_cursor: cursor, command: str):

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from unittest.mock import MagicMock
 
 from authz_analyzer import PostgresAuthzAnalyzer
@@ -17,6 +17,8 @@ from tests.mocks.mock_writers import MockWriter
 from tests.tests_datastores.postgres.mocks.postgres_mock_connector import PostgresMockCursor, Role, RoleGrant, Table
 
 from authz_analyzer.datastores.postgres.model import RESOURCE_TYPE_MAP
+
+from authz_analyzer.datastores.postgres.deployment import Deployment
 
 ALL_TABLES = [
     Table(
@@ -44,6 +46,7 @@ ROLE_THREE_GRANT_TABLE_ONE = [RoleGrant("table1", "schema1", "r", "role_3", None
 
 USER_ONE_SUPER: List[Role] = [Role("user_1", True, None, True)]
 USER_ONE_RDS_SUPER: List[Role] = [Role("user_1", False, "rds_superuser", True)]
+USER_ONE_GCP_SUPER: List[Role] = [Role("user_1", False, "cloudsqlsuperuser", True)]
 
 
 def test_user_role_no_role_grants():
@@ -148,7 +151,7 @@ def test_rds_super_user():
     """Test user with super access role"""
     mocked_writer = MockWriter.new()
     with PostgresMockCursor(USER_ONE_RDS_SUPER, NO_ROLES_GRANTS, ALL_TABLES) as mocked_connector:
-        _call_analyzer(mocked_connector, mocked_writer, True)
+        _call_analyzer(mocked_connector, mocked_writer, Deployment.aws_rds())
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
             identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
@@ -156,6 +159,28 @@ def test_rds_super_user():
                 AuthzPathElement(
                     id="rds_superuser",
                     name="rds_superuser",
+                    type=AuthzPathElementType.ROLE,
+                    db_permissions=["super_user"],
+                ),
+            ],
+            permission=PermissionLevel.FULL,
+            asset=Asset(name=["db1", "schema1", "table3"], type=AssetType.TABLE),
+        )
+    )
+
+
+def test_gcp_super_user():
+    """Test user with super access role"""
+    mocked_writer = MockWriter.new()
+    with PostgresMockCursor(USER_ONE_GCP_SUPER, NO_ROLES_GRANTS, ALL_TABLES) as mocked_connector:
+        _call_analyzer(mocked_connector, mocked_writer, Deployment.gcp())
+    mocked_writer.assert_write_entry_called_once_with(
+        AuthzEntry(
+            identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
+            path=[
+                AuthzPathElement(
+                    id="cloudsqlsuperuser",
+                    name="cloudsqlsuperuser",
                     type=AuthzPathElementType.ROLE,
                     db_permissions=["super_user"],
                 ),
@@ -199,7 +224,7 @@ def test_relacl_single_user(relacl: str, permission: PermissionLevel, db_permiss
     role_grant: list[RoleGrant] = [RoleGrant("table1", "schema1", "r", "postgres", relacl)]
     mocked_writer = MockWriter.new()
     with PostgresMockCursor([Role("user_1", False, None, True)], role_grant, ALL_TABLES) as mocked_connector:
-        _call_analyzer(mocked_connector, mocked_writer, True)
+        _call_analyzer(mocked_connector, mocked_writer, Deployment.aws_rds())
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
             identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
@@ -235,7 +260,7 @@ def test_relacl_resource_type(resource_type_db_letter: str, resource_type: Asset
     ]
     mocked_writer = MockWriter.new()
     with PostgresMockCursor([Role("user_1", False, None, True)], role_grant, ALL_TABLES) as mocked_connector:
-        _call_analyzer(mocked_connector, mocked_writer, True)
+        _call_analyzer(mocked_connector, mocked_writer, Deployment.aws_rds())
     mocked_writer.assert_write_entry_called_once_with(
         AuthzEntry(
             identity=Identity(id="user_1", type=IdentityType.ROLE_LOGIN, name="user_1"),
@@ -258,7 +283,7 @@ def test_relacl_not_relevant_resource_type():
     role_grant: list[RoleGrant] = [RoleGrant("table1", "schema1", "s", "postgres", "{user_1=r/postgres}")]
     mocked_writer = MockWriter.new()
     with PostgresMockCursor([Role("user_1", False, None, True)], role_grant, ALL_TABLES) as mocked_connector:
-        _call_analyzer(mocked_connector, mocked_writer, True)
+        _call_analyzer(mocked_connector, mocked_writer, Deployment.aws_rds())
     mocked_writer.assert_write_entry_not_called()
 
 
@@ -266,12 +291,16 @@ def test_relacl_not_relevant():
     role_grant: list[RoleGrant] = [RoleGrant("table1", "schema1", "t", "postgres", "{user_1=t/postgres}")]
     mocked_writer = MockWriter.new()
     with PostgresMockCursor([Role("user_1", False, None, True)], role_grant, ALL_TABLES) as mocked_connector:
-        _call_analyzer(mocked_connector, mocked_writer, True)
+        _call_analyzer(mocked_connector, mocked_writer, Deployment.aws_rds())
     mocked_writer.assert_write_entry_not_called()
 
 
-def _call_analyzer(cursor: MagicMock, mocked_writer: MockWriter, rds_deployment: bool = False, db_name: str = "db1"):
+def _call_analyzer(
+    cursor: MagicMock, mocked_writer: MockWriter, deployment: Optional[Deployment] = None, db_name: str = "db1"
+):
+    if deployment is None:
+        deployment = Deployment.other()
     analyzer = PostgresAuthzAnalyzer(
-        cursors={db_name: cursor}, logger=MagicMock(), writer=mocked_writer.mocked_writer, rds_deployment=rds_deployment
+        cursors={db_name: cursor}, logger=MagicMock(), writer=mocked_writer.mocked_writer, deployment=deployment
     )
     analyzer.run()
