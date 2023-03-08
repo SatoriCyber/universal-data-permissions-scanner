@@ -54,7 +54,7 @@ class DataBaseAcl(NamedTuple):
         """
         entries: List[DataBaseAclEntry] = []
         # remove the curly brackets
-        src = src.removeprefix("{").removesuffix("}")
+        src = src[1:-1]
         for entry in src.split(","):
             grantee, suffix = entry.split("=")
             permission_list = suffix.split("/")[0]
