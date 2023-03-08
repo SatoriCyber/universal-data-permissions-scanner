@@ -3,7 +3,6 @@ from typing import Dict, Generator, List, Set
 from authz_analyzer.datastores.postgres.model import AuthorizationModel, DBRole, ResourceGrant
 from authz_analyzer.models.model import (
     Asset,
-    AssetType,
     AuthzEntry,
     AuthzPathElement,
     AuthzPathElementType,
