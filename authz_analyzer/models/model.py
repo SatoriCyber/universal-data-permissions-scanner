@@ -24,6 +24,9 @@ class AssetType(Enum):
     MATERIALIZED_VIEW = auto()
     S3_BUCKET = auto()  # AWS S3
     COLLECTION = auto()  # MongoDB collection
+    TOAST_TABLE = auto()  # Postgres
+    FOREIGN_TABLE = auto()  # Postgres
+    PARTITION_TABLE = auto()  # Postgres
 
     def __str__(self) -> str:
         return self.name
@@ -180,8 +183,8 @@ class AuthzPathElement:
     notes: List[AuthzNote] = field(default_factory=list)
     db_permissions: List[str] = field(default_factory=list)
 
-    def __repr__(self):
-        return f"{self.type} {self.id} {self.name} {self.notes}"
+    # def __repr__(self):
+    #     return f"{self.type} {self.id} {self.name} {self.notes}"
 
     def __str__(self) -> str:
         result = f"{self.type} {self.name}"

@@ -5,7 +5,18 @@ from typing import Dict, List, Set
 
 from authz_analyzer.models import PermissionLevel
 
+from authz_analyzer.models.model import AssetType
+
 RoleName = str
+
+RESOURCE_TYPE_MAP = {
+    "r": AssetType.TABLE,
+    "t": AssetType.TOAST_TABLE,
+    "v": AssetType.VIEW,
+    "m": AssetType.MATERIALIZED_VIEW,
+    "f": AssetType.FOREIGN_TABLE,
+    "p": AssetType.PARTITION_TABLE,
+}
 
 PERMISSION_LEVEL_MAP = {
     "SELECT": PermissionLevel.READ,
@@ -27,7 +38,8 @@ class ResourceGrant:
 
     name: List[str]
     permission_level: PermissionLevel
-    db_permission: str
+    db_permissions: list[str]
+    type: AssetType
 
     def __hash__(self) -> int:
         return hash(str(self.name))
