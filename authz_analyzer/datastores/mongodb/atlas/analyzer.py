@@ -111,9 +111,12 @@ class MongoDBAtlasAuthzAnalyzer:
         Tries to authenticate with the provided credentials to the base API.
         Because Atlas is REST API, there is no notion of a connection.
         """
-        writer = get_writer(filename=output_path, output_format=output_format)
         if logger is None:
             logger = get_logger(False)
+        logger.info("Starting to scan project %s, cluster %s", project_name, cluster_name)
+        
+        writer = get_writer(filename=output_path, output_format=output_format)            
+        
         service = AtlasService.connect(public_key, private_key)
         return cls(
             atlas_service=service,
