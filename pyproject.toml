@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "authz-analyzer"
-version = "0.1.8"
+version = "0.1.9"
 homepage = "https://github.com/satoricyber/authz-analyzer"
 description = "Analyze authorization."
 authors = ["SatoriCyber"]
@@ -57,6 +57,7 @@ pyright = {version="^1.1.293", optional=true}
 mkdocs-material = {version="^9.0.12", optional=true}
 mkdocs-include-markdown-plugin = {version = "^4.0.3", optional=true}
 markdown-it-py = {version = "^2.2.0", optional=true}
+databricks-cli = "^0.17.4"
 
 [tool.poetry.extras]
 test = ["pytest", "pytest-cov", "black", "isort", "twine", "mypy", "types-psycopg2", 

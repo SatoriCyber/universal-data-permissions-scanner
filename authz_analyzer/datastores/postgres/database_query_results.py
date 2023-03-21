@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from enum import Enum
 from logging import Logger
 from typing import List, NamedTuple, Optional

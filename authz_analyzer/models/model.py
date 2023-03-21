@@ -19,14 +19,17 @@ from serde import serde  # pylint: disable=import-error #type: ignore
 class AssetType(Enum):
     """Types of assets that are stored at the datastores."""
 
-    TABLE = auto()
-    VIEW = auto()
-    MATERIALIZED_VIEW = auto()
-    S3_BUCKET = auto()  # AWS S3
-    COLLECTION = auto()  # MongoDB collection
-    TOAST_TABLE = auto()  # Postgres
-    FOREIGN_TABLE = auto()  # Postgres
-    PARTITION_TABLE = auto()  # Postgres
+    TABLE = "TABLE"
+    VIEW = "VIEW"
+    MATERIALIZED_VIEW = "MATERIALIZED_VIEW"
+    S3_BUCKET = "S3_BUCKET"  # AWS S3
+    COLLECTION = "COLLECTION"  # MongoDB collection
+    TOAST_TABLE = "TOAST_TABLE"  # Postgres
+    FOREIGN_TABLE = "FOREIGN_TABLE"  # Postgres
+    PARTITION_TABLE = "PARTITION_TABLE"  # Postgres
+    EXTERNAL = "EXTERNAL"  # Databricks
+    MANAGED = "MANAGED"  # Databricks
+    STREAMING_TABLE = "STREAMING_TABLE"  # Databricks
 
     def __str__(self) -> str:
         return self.name
@@ -61,6 +64,7 @@ class IdentityType(Enum):
     DB_USER = auto()  # MongoDB Atlas
     ORG_USER = auto()  # MongoDB Atlas
     CLUSTER = auto()  # AWS Redshift Cluster
+    SERVICE_PRINCIPAL = auto()  # Databricks
 
     def __str__(self) -> str:
         return self.name
@@ -99,6 +103,9 @@ class AuthzPathElementType(Enum):
     CLUSTER = auto()  # Mongo Atlas
     RESOURCE_POLICY = auto()  # AWS
     SHARE = auto()  # Snowflake
+    CATALOG = auto()  # Databricks
+    SCHEMA = auto()  # Databricks
+    SERVICE_PRINCIPAL = auto()  # Databricks
 
     def __str__(self) -> str:
         return self.name

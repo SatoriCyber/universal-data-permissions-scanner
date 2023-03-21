@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import Dict, List, Set
 
 from authz_analyzer.models import PermissionLevel
-
 from authz_analyzer.models.model import AssetType
 
 RoleName = str

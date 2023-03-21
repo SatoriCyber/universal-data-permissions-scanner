@@ -1,7 +1,11 @@
 from typing import List, Optional
 from unittest.mock import MagicMock
 
+import pytest
+
 from authz_analyzer import PostgresAuthzAnalyzer
+from authz_analyzer.datastores.postgres.deployment import Deployment
+from authz_analyzer.datastores.postgres.model import RESOURCE_TYPE_MAP
 from authz_analyzer.models.model import (
     Asset,
     AssetType,
@@ -12,13 +16,8 @@ from authz_analyzer.models.model import (
     IdentityType,
     PermissionLevel,
 )
-import pytest
 from tests.mocks.mock_writers import MockWriter
 from tests.tests_datastores.postgres.mocks.postgres_mock_connector import PostgresMockCursor, Role, RoleGrant, Table
-
-from authz_analyzer.datastores.postgres.model import RESOURCE_TYPE_MAP
-
-from authz_analyzer.datastores.postgres.deployment import Deployment
 
 ALL_TABLES = [
     Table(
