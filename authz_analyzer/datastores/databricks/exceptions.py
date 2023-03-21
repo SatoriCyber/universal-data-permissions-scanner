@@ -1,0 +1,2 @@
+class IdentityNotFoundException(Exception):
+    pass

@@ -17,9 +17,12 @@ from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Union
 
 import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, cursor, connection
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, connection, cursor
 
 from authz_analyzer.datastores.postgres import exporter
+from authz_analyzer.datastores.postgres.database_query_results import DataBaseAcl
+from authz_analyzer.datastores.postgres.database_query_results import RoleGrant as DataBaseRoleGrant
+from authz_analyzer.datastores.postgres.deployment import Deployment
 from authz_analyzer.datastores.postgres.model import (
     PERMISSION_LEVEL_MAP,
     RESOURCE_TYPE_MAP,
@@ -32,10 +35,6 @@ from authz_analyzer.models.model import AssetType, PermissionLevel
 from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
-
-from authz_analyzer.datastores.postgres.database_query_results import DataBaseAcl, RoleGrant as DataBaseRoleGrant
-
-from authz_analyzer.datastores.postgres.deployment import Deployment
 
 COMMANDS_DIR = Path(__file__).parent / "commands"
 

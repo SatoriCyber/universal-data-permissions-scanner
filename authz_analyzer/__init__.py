@@ -7,6 +7,7 @@ __version__ = '0.1.8'
 from authz_analyzer.datastores.aws.analyzer import AwsAssumeRoleInput, AWSAuthzAnalyzer  # type: ignore
 from authz_analyzer.datastores.aws.analyzer.redshift.analyzer import RedshiftAuthzAnalyzer  # type: ignore
 from authz_analyzer.datastores.bigquery.analyzer import BigQueryAuthzAnalyzer  # type: ignore
+from authz_analyzer.datastores.databricks.analyzer import DatabricksAuthzAnalyzer  # type: ignore
 from authz_analyzer.datastores.mongodb.analyzer import MongoDBAuthzAnalyzer  # type: ignore
 from authz_analyzer.datastores.mongodb.atlas.analyzer import MongoDBAtlasAuthzAnalyzer  # type: ignore
 from authz_analyzer.datastores.postgres.analyzer import PostgresAuthzAnalyzer  # type: ignore
