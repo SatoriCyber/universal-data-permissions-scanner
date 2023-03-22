@@ -127,9 +127,7 @@ class TestTable(Entry):
                 privileges=[
                     Privilege(
                         privilege=privilege,
-                        inherited_from_name=None,
-                        inherited_from_type=None,
-                    )
+                    )  # type: ignore
                 ],
             )
         )

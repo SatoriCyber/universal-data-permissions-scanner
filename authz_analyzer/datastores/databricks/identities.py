@@ -161,16 +161,17 @@ class Identities:
             group = self.groups_by_name[identity]
         except KeyError as exc:
             raise IdentityNotFoundException from exc
-        groups.append(Identities._parse_group(group))
         for member in group["members"]:
             ref = _get_ref(member)
             if ref.type == RefType.USER:
+                groups.insert(0, Identities._parse_group(group))
                 yield self._get_user_from_ref(ref, groups)
             if ref.type == RefType.GROUP:
+                groups.insert(0, Identities._parse_group(group))
                 group = self.groups_by_id[ref.value]
-                groups.append(Identities._parse_group(group))
                 yield from self._resolve_group(group["displayName"], groups)
             if ref.type == RefType.SERVICE_PRINCIPAL:
+                groups.insert(0, Identities._parse_group(group))
                 service_principal = self.service_principals_by_id[ref.value]
                 yield Identities._parse_service_principal(service_principal, groups)
 

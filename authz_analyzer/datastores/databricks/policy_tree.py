@@ -10,7 +10,6 @@ from authz_analyzer.datastores.databricks.model import (
     DataBricksIdentityType,
     DatabricksParsedIdentity,
     DBPermissionLevel,
-    ParsedGroup,
     Permission,
 )
 from authz_analyzer.datastores.databricks.service.model import PrivilegeAssignments, TableType
@@ -91,38 +90,39 @@ class PolicyNode:
                         id=identity.id,
                         type=DATABRICKS_IDENTITY_TO_AUTHZ_IDENTITY_MAP[identity.type],
                     )
-                    pop_counter = 1
+                    pop_counter = 0
                     if len(identity.groups) == 0:
                         self._build_path_identity_direct(path, authz_identity, db_permissions, asset_name)
-                    else:
-                        self.handle_path_groups(path, identity, pop_counter, db_permissions, asset_name)
                         pop_counter += 1
+                    else:
+                        pop_counter = self.handle_path_groups(path, identity, pop_counter, db_permissions, asset_name)
                     revered_path = list(reversed(path))
                     yield AuthzEntry(
                         identity=authz_identity, path=revered_path, asset=asset, permission=permission_level
                     )
                     path = path[:-pop_counter]
         if self.parent is not None:
-            path.append(
-                _build_authz_path_element_permission_member_of(
-                    self.name,
-                    self.name,
-                    self.parent.name,
-                    NODE_TYPE_PATH_TYPE_MAP[self.node_type],
-                    str(self.parent.node_type),
-                )
+            element = _build_authz_path_element(
+                self.name,
+                self.name,
+                NODE_TYPE_PATH_TYPE_MAP[self.node_type],
+                note=build_note_member_of(self.name, str(self.parent.node_type), self.parent.name),
             )
+            path.append(element)
             yield from self.parent.iter_permissions_asset_name(asset, identity_resolver, path)
 
     def _build_path_identity_direct(
         self, path: List[AuthzPathElement], identity: Identity, db_permissions: List[str], asset_name: str
     ):
         str_db_permissions = ",".join(db_permissions)
-        element = _build_authz_path_element_no_note(
-            identity.name,
-            identity.id,
-            IDENTITY_TYPE_TO_ELEMENT_TYPE[identity.type],
-        )
+        if self.node_type == PolicyNodeType.TABLE:
+            element = _build_authz_path_element_no_note(
+                identity.name,
+                identity.id,
+                IDENTITY_TYPE_TO_ELEMENT_TYPE[identity.type],
+            )
+        else:
+            element = _build_authz_path_element_no_note(self.name, self.name, NODE_TYPE_PATH_TYPE_MAP[self.node_type])
         element.db_permissions = db_permissions
         element.notes = [
             AuthzNote(
@@ -141,28 +141,40 @@ class PolicyNode:
         asset_name: str,
     ):
         str_db_permissions = ",".join(db_permissions)
-        element = _build_authz_path_element_no_note(
-            identity.groups[-1].name, identity.groups[-1].id, AuthzPathElementType.GROUP
+        element = _build_authz_path_element(
+            identity.groups[-1].name,
+            identity.groups[-1].id,
+            AuthzPathElementType.GROUP,
+            note=build_note_permission_for(
+                "GROUP", identity.groups[-1].name, str_db_permissions, str(self.node_type), asset_name
+            ),
         )
-        element.notes = [
-            AuthzNote(
-                type=AuthzNoteType.GENERIC,
-                note=f"GROUP {identity.groups[-1].name} has {str_db_permissions} permissions for {self.node_type} {asset_name}",
-            )
-        ]
         element.db_permissions = db_permissions
         path.append(element)
-        group = identity.groups[-1]
-        if len(identity.groups) > 1:
-            for next_group in identity.groups[1:]:
-                path.append(
-                    _build_authz_path_element_permission_member_of(
-                        next_group.id, next_group.name, group.name, AuthzPathElementType.GROUP, "GROUP"
-                    )
+        group = identity.groups[0]
+        groups_path: List[AuthzPathElement] = []
+        for next_group in identity.groups[1:]:
+            groups_path.append(
+                _build_authz_path_element(
+                    next_group.name,
+                    next_group.id,
+                    AuthzPathElementType.GROUP,
+                    build_note_member_of(group.name, "GROUP", next_group.name),
                 )
-                pop_counter += 1
-                group = next_group
-        path.append(_build_path_identity_member_of_group(identity, identity.groups[0]))
+            )
+            pop_counter += 1
+            group = next_group
+        path.extend(reversed(groups_path))
+        path.append(
+            _build_authz_path_element(
+                identity.groups[0].name,
+                identity.groups[0].id,
+                AuthzPathElementType.GROUP,
+                build_note_member_of(identity.name, "GROUP", identity.groups[0].name),
+            )
+        )
+        pop_counter += 2
+        return pop_counter
 
 
 @dataclass
@@ -199,7 +211,7 @@ class ResourceNode(PolicyNode):
             try:
                 node_type = PolicyNodeType(str_node_type)
             except ValueError:
-                self.logger.debug("Unknown privilege level %s", privilege["inherited_from_type"])
+                self.logger.debug("Unknown element type %s", privilege["inherited_from_type"])
                 continue
             self.add_permission(
                 identity=privilege_assignments["principal"], permissions=[privilege["privilege"]], level=node_type
@@ -221,20 +233,14 @@ class ResourceNode(PolicyNode):
         yield from self.iter_permissions_asset_name(asset, identity_resolver, [])
 
 
-def _build_path_identity_member_of_group(identity: DatabricksParsedIdentity, group: ParsedGroup):
-    return _build_authz_path_element_permission_member_of(
-        identity.id, identity.name, group.name, AuthzPathElementType.GROUP, "GROUP"
-    )
-
-
-def _build_authz_path_element_permission_member_of(
-    member_id: str, name: str, group: str, path_type: AuthzPathElementType, note_path_type: str
-):
+def _build_authz_path_element(
+    name: str, element_id: str, path_element_type: AuthzPathElementType, note: AuthzNote
+) -> AuthzPathElement:
     return AuthzPathElement(
-        type=path_type,
+        type=path_element_type,
         name=name,
-        id=member_id,
-        notes=[AuthzNote(type=AuthzNoteType.GENERIC, note=f"{name} is member of {note_path_type} {group}")],
+        id=element_id,
+        notes=[note],
     )
 
 
@@ -253,6 +259,25 @@ def _build_authz_path_element_no_note(
                 note="",
             )
         ],
+    )
+
+
+def build_note_member_of(member_name: str, granted_on_type: str, granted_on_name: str):
+    return build_note(f"{member_name} is member of {granted_on_type} {granted_on_name}")
+
+
+def build_note_permission_for(
+    member_type: str, member_name: str, db_permissions: str, granted_on_type: str, granted_on_name: str
+):
+    return build_note(
+        f"{member_type} {member_name} has {db_permissions} permissions for {granted_on_type} {granted_on_name}"
+    )
+
+
+def build_note(note: str):
+    return AuthzNote(
+        type=AuthzNoteType.GENERIC,
+        note=note,
     )
 
 
