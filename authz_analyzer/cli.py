@@ -20,6 +20,7 @@ from authz_analyzer.main import (  # pylint: disable=wrong-import-position
     run_postgres,
     run_redshift,
     run_snowflake,
+    run_databricks,
 )
 from authz_analyzer.utils.logger import get_logger  # pylint: disable=wrong-import-position
 from authz_analyzer.writers import OutputFormat  # pylint: disable=wrong-import-position
@@ -232,6 +233,23 @@ def atlas(
         password=password,
         project_name=project,
         cluster_name=cluster,
+    )
+
+
+@main.command()
+@click.pass_context
+@click.option('--api_key', '-k', required=True, type=str, help="Databricks API key")
+@click.option(
+    '--host', '-h', required=True, type=str, help="workspace host, e.g. https://<workspace>.cloud.databricks.com"
+)
+def databricks(ctx: click.Context, host: str, api_key: str):
+    """Analyze databricks Authorization"""
+    run_databricks(
+        logger=ctx.obj['LOGGER'],
+        output_format=ctx.obj['FORMAT'],
+        output_path=ctx.obj['OUT'],
+        host=host,
+        token=api_key,
     )
 
 

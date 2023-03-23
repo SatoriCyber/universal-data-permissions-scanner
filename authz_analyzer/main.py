@@ -15,6 +15,8 @@ from authz_analyzer import (
 )
 from authz_analyzer.writers import OutputFormat, get_writer
 
+from authz_analyzer.datastores.databricks.analyzer import DatabricksAuthzAnalyzer
+
 
 def run_snowflake(
     logger: Logger,
@@ -220,6 +222,32 @@ def run_mongodb_atlas(
         db_password=password,
         project_name=project_name,
         cluster_name=cluster_name,
+        output_path=output_path,
+        output_format=output_format,
+        logger=logger,
+    )
+    analyzer.run()
+
+
+def run_databricks(
+    logger: Logger,
+    host: str,
+    token: str,
+    output_format: OutputFormat,
+    output_path: Path,
+):
+    """Run Databricks analyzer.
+
+    Args:
+        logger (Logger): Logger
+        host (str): workspace host, e.g. https://<workspace>.cloud.databricks.com
+        key (str): Databricks API key
+        output_format (OutputFormat): Output format, CSV or JSON
+        output_path (str): Where to write the output
+    """
+    analyzer = DatabricksAuthzAnalyzer.connect(
+        host=host,
+        token=token,
         output_path=output_path,
         output_format=output_format,
         logger=logger,

@@ -136,6 +136,17 @@ def test_atlas():
     invoke(cli.atlas, args)
 
 
+@patch('authz_analyzer.cli.run_databricks', MagicMock())
+def test_databricks():
+    args = [
+        '--api_key',
+        'key',
+        '--host',
+        'host',
+    ]
+    invoke(cli.databricks, args)
+
+
 def invoke(command: Callable[[List[str]], None], args: List[str]):
     runner = CliRunner()
     result = runner.invoke(command, args, obj=generate_obj())  # type: ignore
