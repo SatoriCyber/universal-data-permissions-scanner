@@ -17,7 +17,7 @@
         <link rel="next" href="../snowflake/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.13">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.3">
     
     
       
@@ -25,7 +25,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ffa9267a.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.c4a75a56.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
@@ -83,7 +83,7 @@
 
   
 
-<header class="md-header md-header--lifted" data-md-component="header">
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="https://satoricyber.github.io/authz-analyzer" title="authz-analyzer" class="md-header__button md-logo" aria-label="authz-analyzer" data-md-component="logo">
       
@@ -509,15 +509,21 @@
 <li>Create a role for authz-analyzer using the following command: 
 <div class="highlight"><pre><span></span><code>CREATE ROLE authz_analyzer NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN NOREPLICATION NOBYPASSRLS PASSWORD &#39;&lt;REPLACE_WITH_A_STRONG_PASSWORD&gt;&#39;;
 </code></pre></div></li>
-<li>For each database on the server, grant permissions for the authz-analyzer role using the following command:
-<div class="highlight"><pre><span></span><code>GRANT SELECT ON TABLE pg_database TO authz_analyzer;
-GRANT SELECT ON TABLE information_schema.tables TO authz_analyzer;
+<li>
+<p>For each database on the server, grant permissions for the authz-analyzer role using the following command:
+<div class="highlight"><pre><span></span><code>GRANT SELECT ON TABLE information_schema.tables TO authz_analyzer;
 GRANT SELECT ON TABLE information_schema.table_privileges TO authz_analyzer;
+</code></pre></div></p>
+</li>
+<li>
+<p>For deployments which are not AWS RDS add the following permissions:
+<div class="highlight"><pre><span></span><code>GRANT SELECT ON TABLE pg_database TO authz_analyzer;
 GRANT SELECT ON TABLE pg_catalog.pg_roles TO authz_analyzer;
-</code></pre></div></li>
+</code></pre></div></p>
+</li>
 </ol>
 <h3 id="scanning-a-postgresql-server">Scanning a PostgreSQL Server<a class="headerlink" href="#scanning-a-postgresql-server" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>authz-analyzer PostgreSQL \
+<div class="highlight"><pre><span></span><code>authz-analyzer postgres \
     --host &lt;HOST&gt; \
     --username &lt;USERNAME&gt; \
     --password &lt;PASSWORD&gt; \
@@ -599,7 +605,7 @@ GRANT SELECT ON TABLE pg_catalog.pg_roles TO authz_analyzer;
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.instant", "navigation.tabs.sticky"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.2a6f1dda.min.js"></script>
+      <script src="../../assets/javascripts/bundle.efa0ade1.min.js"></script>
       
     
   </body>

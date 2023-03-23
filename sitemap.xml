@@ -2,52 +2,52 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://satoricyber.github.io/authz-analyzer/</loc>
-         <lastmod>2023-02-19</lastmod>
+         <lastmod>2023-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/authz-analyzer/changelog/</loc>
-         <lastmod>2023-02-19</lastmod>
+         <lastmod>2023-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/authz-analyzer/contributing/</loc>
-         <lastmod>2023-02-19</lastmod>
+         <lastmod>2023-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/authz-analyzer/installation/</loc>
-         <lastmod>2023-02-19</lastmod>
+         <lastmod>2023-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/authz-analyzer/datastores/bigquery/</loc>
-         <lastmod>2023-02-19</lastmod>
+         <lastmod>2023-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/authz-analyzer/datastores/mongodb/</loc>
-         <lastmod>2023-02-19</lastmod>
+         <lastmod>2023-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/authz-analyzer/datastores/postgresql/</loc>
-         <lastmod>2023-02-19</lastmod>
+         <lastmod>2023-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/authz-analyzer/datastores/redshift/</loc>
-         <lastmod>2023-02-19</lastmod>
+         <lastmod>2023-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/authz-analyzer/datastores/s3/</loc>
-         <lastmod>2023-02-19</lastmod>
+         <lastmod>2023-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/authz-analyzer/datastores/snowflake/</loc>
-         <lastmod>2023-02-19</lastmod>
+         <lastmod>2023-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
