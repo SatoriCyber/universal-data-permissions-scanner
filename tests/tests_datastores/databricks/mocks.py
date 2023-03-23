@@ -29,6 +29,7 @@ class Entry:
     name: str
     owner: str
     parent: Optional[Entry]
+    metastore_id: str = "12345"
     permissions: List[PrivilegeAssignments] = field(default_factory=list)
 
     def __hash__(self) -> int:
@@ -61,7 +62,7 @@ class Entry:
 @dataclass
 class TestCatalog(Entry):
     def to_catalog(self):
-        return CatalogList(name=self.name, owner=self.owner)
+        return CatalogList(name=self.name, owner=self.owner, metastore_id=self.metastore_id)
 
     def add_permission(self, principal: str, privilege: str):
         self._add_permission(principal, privilege, "CATALOG")
@@ -127,9 +128,7 @@ class TestTable(Entry):
                 privileges=[
                     Privilege(
                         privilege=privilege,
-                        inherited_from_name=None,
-                        inherited_from_type=None,
-                    )
+                    )  # type: ignore
                 ],
             )
         )
@@ -149,12 +148,13 @@ class DatabricksMock:
     service_principals: List[ServicePrincipal] = field(default_factory=list)
     entities_catalog_to_tables: Dict[TestCatalog, SchemaTableDict] = field(default_factory=dict)
     entities_table_to_catalog: Dict[TableName, TestTable] = field(default_factory=dict)
+    metastore_id: Optional[str] = None
 
     @classmethod
-    def new(cls):
+    def new(cls, metastore_id: Optional[str] = None):
         scim_service_mock = MagicMock()
         unity_catalog_service_mock = MagicMock()
-        instance = cls(unity_catalog_service_mock, scim_service_mock)
+        instance = cls(unity_catalog_service_mock, scim_service_mock, metastore_id=metastore_id)
         scim_service_mock.list_users = MagicMock(side_effect=instance._side_effect_list_users)
         scim_service_mock.list_groups = MagicMock(side_effect=instance._side_effect_list_groups)
         scim_service_mock.list_service_principals = MagicMock(side_effect=instance._side_effect_list_service_principals)
@@ -173,11 +173,14 @@ class DatabricksMock:
             logger=MagicMock(),
             unity_catalog_service=self.unity_catalog_service,
             scim_service=self.scim_service,
+            metastore_id=self.metastore_id,
         )
 
-    def add_table(self, table: TestTable):
+    def add_table(self, table: TestTable, metastore_id: Optional[str] = None):
         schema: TestSchema = table.parent  # type: ignore
         catalog: TestCatalog = schema.parent  # type: ignore
+        if metastore_id is not None:
+            catalog.metastore_id = metastore_id
         self.entities_catalog_to_tables.setdefault(catalog, {}).setdefault(schema, []).append(table.to_table())
         self.entities_table_to_catalog[table.name] = table
 

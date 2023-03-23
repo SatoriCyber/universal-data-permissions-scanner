@@ -57,6 +57,7 @@ class CatalogList(TypedDict):
 
     name: str
     owner: str
+    metastore_id: str
 
 
 class Schema(TypedDict):
