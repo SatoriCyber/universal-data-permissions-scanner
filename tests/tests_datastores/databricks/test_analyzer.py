@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import List
-from unittest.mock import _Call, call
+from unittest.mock import _Call  # type: ignore
 
 import pytest
 
@@ -358,6 +358,31 @@ def test_user_permission_assignment(db_permission: DBPermissionLevel, permission
         ),
     )
     writer.mocked_writer.write_entry.assert_has_calls(calls)  # type: ignore
+
+
+@pytest.mark.parametrize(
+    "metastore_match,expected_metastore_id",
+    [(True, "correct_metastore"), (False, "incorrect_metastore")],
+    ids=["metastore id match", "metastore id doesn't match"],
+)
+def test_metastore_id(metastore_match: bool, expected_metastore_id: str):
+    mock_databricks = DatabricksMock.new(expected_metastore_id)
+    catalog_name = "catalog1"
+    schema_name = "schema1"
+    table_name = "table1"
+
+    user = ParsedUser(active=True, userName="user", id="12345")
+    table = TestTable.new_identity_owner_all(user["userName"], table_name, schema_name, catalog_name)
+
+    mock_databricks.add_user(user)
+    mock_databricks.add_table(table, "correct_metastore")
+    writer = MockWriter.new()
+    mock_databricks.get(writer.get()).run()
+    calls = build_ownership_calls_user(user, table)
+    if metastore_match is True:
+        writer.mocked_writer.write_entry.assert_has_calls(calls)  # type: ignore
+    else:
+        writer.assert_write_entry_not_called()
 
 
 def build_ownership_calls_user(user: ParsedUser, table: TestTable) -> List[_Call]:
