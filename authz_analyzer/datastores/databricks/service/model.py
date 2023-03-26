@@ -81,6 +81,7 @@ class Table(TypedDict):
     """
 
     full_name: str
+    name: str
     table_type: TableType
     owner: str
 
