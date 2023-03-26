@@ -75,7 +75,12 @@ class DatabricksAuthzAnalyzer:
         catalog: CatalogList
         for catalog in self.unity_catalog_service.list_catalogs()["catalogs"]:  # type: ignore
             if self.metastore_id is not None and catalog["metastore_id"] != self.metastore_id:
-                self.logger.error("Catalog %s does not match metastore_id %s", catalog["name"], self.metastore_id)
+                self.logger.error(
+                    "Catalog %s does not match expected metastore_id: %s found %s",
+                    catalog["name"],
+                    self.metastore_id,
+                    catalog["metastore_id"],
+                )
                 continue
             self.logger.info("Analyzing catalog: %s", catalog["name"])
             for entry in self._iter_permissions_catalog(catalog, identities):
@@ -100,7 +105,7 @@ class DatabricksAuthzAnalyzer:
 
     def _build_table_node(self, table: Table, parent: SchemaNode):
         resource_node = ResourceNode(
-            self.logger, table["full_name"], parent, resource_type=table["table_type"], ownership=table["owner"]
+            self.logger, table["name"], parent, resource_type=table["table_type"], ownership=table["owner"]
         )
         privilege_assignments: PrivilegeAssignments
         for privilege_assignments in self.unity_catalog_service.get_effective_permissions("TABLE", table["full_name"]).get("privilege_assignments", []):  # type: ignore

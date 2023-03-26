@@ -212,7 +212,7 @@ def build_identity_member_of_group_direct_access(
     group_path = build_path_element_group_name_no_notes(group)
     group_path.notes = [build_note_group_has_access_table(group, db_permissions, table_name)]
     group_path.db_permissions = db_permissions
-    entry.path = [build_path_element_identity_member_of_group(identity, group), group_path]
+    entry.path = [group_path]
     return call(entry)
 
 
@@ -224,7 +224,6 @@ def build_identity_member_of_group_in_groups(
     db_permissions: List[str],
 ):
     entry = build_authz_entry_no_path(identity, table, permission_level)
-    entry.path = [build_path_element_identity_member_of_group(identity, groups[0])]
     member_of = groups[0]
     for group in groups[1:]:
         entry.path.append(build_path_element_group_member_of_group(member_of, group))
@@ -242,13 +241,11 @@ def build_identity_member_of_schema_group_in_groups(
 ):
     schema = table.get_schema()
     entry = build_authz_entry_no_path(identity, table, permission_level)
-    entry.path = [build_path_element_identity_member_of_group(identity, groups[0])]
     member_of = groups[0]
     for group in groups[1:]:
         entry.path.append(build_path_element_group_member_of_group(member_of, group))
         member_of = group
     entry.path.append(build_path_element_group_access_schema(groups[-1], schema, db_permissions))
-    entry.path.append(build_path_element_table_member_of_schema(table, schema.name))
     return call(entry)
 
 
@@ -260,16 +257,12 @@ def build_identity_member_of_catalog_group_in_groups(
     db_permissions: List[str],
 ):
     catalog = table.get_catalog()
-    schema = table.get_schema()
     entry = build_authz_entry_no_path(identity, table, permission_level)
-    entry.path = [build_path_element_identity_member_of_group(identity, groups[0])]
     member_of = groups[0]
     for group in groups[1:]:
         entry.path.append(build_path_element_group_member_of_group(member_of, group))
         member_of = group
     entry.path.append(build_path_element_group_access_catalog(groups[-1], catalog, db_permissions))
-    entry.path.append(build_path_element_schema_member_of_catalog(schema, catalog.name))
-    entry.path.append(build_path_element_table_member_of_schema(table, schema.name))
     return call(entry)
 
 
@@ -282,11 +275,7 @@ def build_identity_member_of_group_schema_access(
 ):
     schema = table.get_schema()
     entry = build_authz_entry_no_path(identity, table, permission_level)
-    entry.path = [
-        build_path_element_identity_member_of_group(identity, group),
-        build_path_element_group_access_schema(group, schema, db_permissions),
-        build_path_element_table_member_of_schema(table, schema.name),
-    ]
+    entry.path = [build_path_element_group_access_schema(group, schema, db_permissions)]
     return call(entry)
 
 
@@ -297,14 +286,10 @@ def build_identity_member_of_group_catalog_access(
     permission_level: PermissionLevel,
     db_permissions: List[str],
 ):
-    schema = table.get_schema()
     catalog = table.get_catalog()
     entry = build_authz_entry_no_path(identity, table, permission_level)
     entry.path = [
-        build_path_element_identity_member_of_group(identity, group),
         build_path_element_group_access_catalog(group, catalog, db_permissions),
-        build_path_element_schema_member_of_catalog(schema, catalog.name),
-        build_path_element_table_member_of_schema(table, schema.name),
     ]
     return call(entry)
 
@@ -315,14 +300,12 @@ def build_catalog_identity(
     permission_level: PermissionLevel,
     db_permissions: List[str],
 ):
-    schema = table.get_schema()
     catalog = table.get_catalog()
+    identity_path = build_path_element_identity_no_notes(identity)
+    identity_path.db_permissions = db_permissions
+    identity_path.notes = [build_note_identity_has_access_catalog(identity, db_permissions, catalog.name)]
     entry = build_authz_entry_no_path(identity, table, permission_level)
-    entry.path = [
-        build_identity_has_access_catalog(identity, catalog, db_permissions),
-        build_path_element_schema_member_of_catalog(schema, catalog.name),
-        build_path_element_table_member_of_schema(table, schema.name),
-    ]
+    entry.path = [identity_path]
     return call(entry)
 
 
@@ -334,9 +317,13 @@ def build_schema_service_identity(
 ):
     schema = table.get_schema()
     entry = build_authz_entry_no_path(identity, table, permission_level)
+    identity_path = build_path_element_identity_no_notes(identity)
+    identity_path.db_permissions = db_permissions
+    identity_path.notes = [
+        build_note_identity_has_access_schema(identity, db_permissions, schema.get_schema_full_name())
+    ]
     entry.path = [
-        build_path_element_identity_access_schema(identity, schema, db_permissions),
-        build_path_element_table_member_of_schema(table, schema.name),
+        identity_path,
     ]
     return call(entry)
 
@@ -431,7 +418,7 @@ def build_path_element_identity_member_of_group(identity: Identity, group: Group
 
 
 def build_path_element_group_member_of_group(member_group: Group, group: Group):
-    element = build_path_element_group_name_no_notes(group)
+    element = build_path_element_group_name_no_notes(member_group)
     element.notes = [build_note_member_of(member_group["displayName"], "GROUP", group["displayName"])]
     return element
 

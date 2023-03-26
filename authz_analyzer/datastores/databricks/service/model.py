@@ -80,6 +80,7 @@ class Table(TypedDict):
         name: name of the table
     """
 
+    name: str
     full_name: str
     table_type: TableType
     owner: str

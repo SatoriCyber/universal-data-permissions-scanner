@@ -102,34 +102,21 @@ class PolicyNode:
                     )
                     path = path[:-pop_counter]
         if self.parent is not None:
-            element = _build_authz_path_element(
-                self.name,
-                self.name,
-                NODE_TYPE_PATH_TYPE_MAP[self.node_type],
-                note=build_note_member_of(self.name, str(self.parent.node_type), self.parent.name),
-            )
-            path.append(element)
             yield from self.parent.iter_permissions_asset_name(asset, identity_resolver, path)
 
     def _build_path_identity_direct(
         self, path: List[AuthzPathElement], identity: Identity, db_permissions: List[str], asset_name: str
     ):
         str_db_permissions = ",".join(db_permissions)
-        if self.node_type == PolicyNodeType.TABLE:
-            element = _build_authz_path_element_no_note(
-                identity.name,
-                identity.id,
-                IDENTITY_TYPE_TO_ELEMENT_TYPE[identity.type],
-            )
-        else:
-            element = _build_authz_path_element_no_note(self.name, self.name, NODE_TYPE_PATH_TYPE_MAP[self.node_type])
+        element = _build_authz_path_element(
+            identity.name,
+            identity.id,
+            IDENTITY_TYPE_TO_ELEMENT_TYPE[identity.type],
+            note=build_note_permission_for(
+                str(identity.type), identity.name, str_db_permissions, str(self.node_type), asset_name
+            ),
+        )
         element.db_permissions = db_permissions
-        element.notes = [
-            AuthzNote(
-                type=AuthzNoteType.GENERIC,
-                note=f"{identity.type} {identity.name} has {str_db_permissions} permissions for {self.node_type} {asset_name}",
-            )
-        ]
         path.append(element)
 
     def handle_path_groups(
@@ -156,8 +143,8 @@ class PolicyNode:
         for next_group in identity.groups[1:]:
             groups_path.append(
                 _build_authz_path_element(
-                    next_group.name,
-                    next_group.id,
+                    group.name,
+                    group.id,
                     AuthzPathElementType.GROUP,
                     build_note_member_of(group.name, "GROUP", next_group.name),
                 )
@@ -165,15 +152,7 @@ class PolicyNode:
             pop_counter += 1
             group = next_group
         path.extend(reversed(groups_path))
-        path.append(
-            _build_authz_path_element(
-                identity.groups[0].name,
-                identity.groups[0].id,
-                AuthzPathElementType.GROUP,
-                build_note_member_of(identity.name, "GROUP", identity.groups[0].name),
-            )
-        )
-        pop_counter += 2
+        pop_counter += 1
         return pop_counter
 
 
@@ -241,24 +220,6 @@ def _build_authz_path_element(
         name=name,
         id=element_id,
         notes=[note],
-    )
-
-
-def _build_authz_path_element_no_note(
-    name: str,
-    element_id: str,
-    path_element_type: AuthzPathElementType,
-) -> AuthzPathElement:
-    return AuthzPathElement(
-        type=path_element_type,
-        name=name,
-        id=element_id,
-        notes=[
-            AuthzNote(
-                type=AuthzNoteType.GENERIC,
-                note="",
-            )
-        ],
     )
 
 

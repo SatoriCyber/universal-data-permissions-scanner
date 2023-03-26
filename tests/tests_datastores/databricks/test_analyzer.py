@@ -385,6 +385,64 @@ def test_metastore_id(metastore_match: bool, expected_metastore_id: str):
         writer.assert_write_entry_not_called()
 
 
+def test_table_group_and_user():
+    mock_databricks = DatabricksMock.new()
+    catalog_name = "catalog1"
+    schema_name = "schema1"
+    table_name = "table1"
+
+    user = ParsedUser(active=True, userName="user", id="12345")
+    user_2 = ParsedUser(active=True, userName="user_2", id="10111213")
+    group = Group(
+        displayName="Group1",
+        id="6789",
+        meta=GroupMeta(resourceType=ResourceType.GROUP),
+        members=[Ref(ref=user["id"])],
+        groups=[],
+    )
+    table = TestTable.new_identity_owner_all(group["displayName"], table_name, schema_name, catalog_name)
+    table.add_permission(user_2["userName"], "SELECT")
+
+    mock_databricks.add_user(user)
+    mock_databricks.add_user(user_2)
+    mock_databricks.add_table(table)
+    mock_databricks.add_group(group)
+
+    writer = MockWriter.new()
+    mock_databricks.get(writer.get()).run()
+
+    calls = [
+        build_direct_access_user(
+            user_2,
+            table,
+            PermissionLevel.READ,
+            ["SELECT"],
+        ),
+        build_user_member_of_group_direct_access(
+            user,
+            group,
+            table,
+            PermissionLevel.FULL,
+            ["OWNERSHIP"],
+        ),
+        build_user_schema_group_access(
+            user,
+            group,
+            table,
+            PermissionLevel.FULL,
+            ["OWNERSHIP"],
+        ),
+        build_user_catalog_group_access(
+            user,
+            group,
+            table,
+            PermissionLevel.FULL,
+            ["OWNERSHIP"],
+        ),
+    ]
+    writer.mocked_writer.write_entry.assert_has_calls(calls)  # type: ignore
+
+
 def build_ownership_calls_user(user: ParsedUser, table: TestTable) -> List[_Call]:
     return [
         build_direct_access_user(
