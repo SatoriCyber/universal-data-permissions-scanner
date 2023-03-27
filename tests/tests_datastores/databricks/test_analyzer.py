@@ -385,6 +385,25 @@ def test_metastore_id(metastore_match: bool, expected_metastore_id: str):
         writer.assert_write_entry_not_called()
 
 
+def test_two_catalogs_same_user():
+    mock_databricks = DatabricksMock.new()
+
+    user = ParsedUser(active=True, userName="user", id="12345")
+    table = TestTable.new_identity_owner_all(user["userName"], "table1", "schema1", "catalog1")
+    table2 = TestTable.new_identity_owner_all(user["userName"], "table2", "schema2", "catalog2")
+
+    mock_databricks.add_user(user)
+    mock_databricks.add_table(table)
+    mock_databricks.add_table(table2)
+
+    writer = MockWriter.new()
+    mock_databricks.get(writer.get()).run()
+
+    calls = build_ownership_calls_user(user, table)
+    calls.extend(build_ownership_calls_user(user, table2))
+    writer.mocked_writer.write_entry.assert_has_calls(calls)  # type: ignore
+
+
 def build_ownership_calls_user(user: ParsedUser, table: TestTable) -> List[_Call]:
     return [
         build_direct_access_user(

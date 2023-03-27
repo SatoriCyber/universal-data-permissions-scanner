@@ -105,7 +105,8 @@ class TestTable(Entry):
         return cls(table_name, username, schema)
 
     def to_table(self):
-        return Table(full_name=self.name, table_type=TableType.MANAGED, owner=self.owner)
+        full_name = ".".join(self.get_full_name())
+        return Table(name=self.name, table_type=TableType.MANAGED, owner=self.owner, full_name=full_name)
 
     def get_full_name(self):
         schema: TestSchema = self.parent  # type: ignore
@@ -182,7 +183,8 @@ class DatabricksMock:
         if metastore_id is not None:
             catalog.metastore_id = metastore_id
         self.entities_catalog_to_tables.setdefault(catalog, {}).setdefault(schema, []).append(table.to_table())
-        self.entities_table_to_catalog[table.name] = table
+        table_name = ".".join(table.get_full_name())
+        self.entities_table_to_catalog[table_name] = table
 
     def add_user(self, user: ParsedUser):
         self.users.append(user)

@@ -156,8 +156,8 @@ class PolicyNode:
         for next_group in identity.groups[1:]:
             groups_path.append(
                 _build_authz_path_element(
-                    next_group.name,
-                    next_group.id,
+                    group.name,
+                    group.id,
                     AuthzPathElementType.GROUP,
                     build_note_member_of(group.name, "GROUP", next_group.name),
                 )
@@ -165,15 +165,7 @@ class PolicyNode:
             pop_counter += 1
             group = next_group
         path.extend(reversed(groups_path))
-        path.append(
-            _build_authz_path_element(
-                identity.groups[0].name,
-                identity.groups[0].id,
-                AuthzPathElementType.GROUP,
-                build_note_member_of(identity.name, "GROUP", identity.groups[0].name),
-            )
-        )
-        pop_counter += 2
+        pop_counter += 1
         return pop_counter
 
 

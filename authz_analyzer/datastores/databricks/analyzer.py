@@ -100,7 +100,7 @@ class DatabricksAuthzAnalyzer:
 
     def _build_table_node(self, table: Table, parent: SchemaNode):
         resource_node = ResourceNode(
-            self.logger, table["full_name"], parent, resource_type=table["table_type"], ownership=table["owner"]
+            self.logger, table["name"], parent, resource_type=table["table_type"], ownership=table["owner"]
         )
         privilege_assignments: PrivilegeAssignments
         for privilege_assignments in self.unity_catalog_service.get_effective_permissions("TABLE", table["full_name"]).get("privilege_assignments", []):  # type: ignore
