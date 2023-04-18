@@ -136,7 +136,7 @@ class AWSPtrpModelConvertor:
         if note_type == AwsPtrpNoteType.POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE:
             return AuthzNoteType.AWS_POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE
         if note_type == AwsPtrpNoteType.IAM_IDENTITY_CENTER_USER_DESCRIPTION:
-            return AuthzNoteType.AWS_POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE
+            return AuthzNoteType.IAM_IDENTITY_CENTER_USER_DESCRIPTION
         raise Exception(f"unable to convert from {note_type} to AuthzNoteType")  # pylint disable=broad-exception-raised
 
     @staticmethod

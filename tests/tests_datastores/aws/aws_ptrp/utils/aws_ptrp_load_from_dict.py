@@ -55,5 +55,5 @@ def load_aws_ptrp_from_dict(
         aws_principals=aws_principals,
         iam_entities=iam_entities,
         target_account_resources=target_account_resources,
-        iam_identity_center_entities=iam_identity_center_entities, # type: ignore
+        iam_identity_center_entities=iam_identity_center_entities,  # type: ignore
     )
