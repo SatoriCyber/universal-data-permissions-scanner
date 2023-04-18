@@ -13,6 +13,7 @@ regex_federated_user = re.compile(r"arn:aws:sts::([0-9]+):federated-user/(.+)$")
 regex_role_session = re.compile(r"arn:aws:sts::([0-9]+):assumed-role/(.+)/(.+)$")
 regex_account_id = re.compile(r"([0-9]+)$")
 regex_arn_account_id = re.compile(r"arn:aws:iam::([0-9]+):root$")
+regex_aws_sso_reserved_role = re.compile(r"arn:aws:iam::([0-9]+):role/aws-reserved/sso.amazonaws.com/(.+)$")
 
 
 def is_stmt_principal_relevant_to_resource(
@@ -117,6 +118,12 @@ class Principal:
 
     def is_role_session_principal(self) -> bool:
         return bool(self.principal_type == AwsPrincipalType.ASSUMED_ROLE_SESSION)
+
+    def is_principal_aws_sso_reserved_role(self) -> bool:
+        return regex_aws_sso_reserved_role.match(self.get_arn()) is not None
+
+    def is_iam_identity_center_user_principal(self) -> bool:
+        return bool(self.principal_type == AwsPrincipalType.IAM_IDENTITY_CENTER_USER)
 
     def contains(self, other: 'Principal') -> bool:
         # must not be ALL_PRINCIPALS (due to resolving all principal to other users)

@@ -63,6 +63,9 @@ class AWSPtrpModelConvertor:
             return IdentityType.AWS_SERVICE
         if aws_principal_type == AwsPrincipalType.ANONYMOUS_USER:
             return IdentityType.ANONYMOUS_USER
+        if aws_principal_type == AwsPrincipalType.IAM_IDENTITY_CENTER_USER:
+            return IdentityType.IAM_IDENTITY_CENTER_USER
+
         raise Exception(  # pylint disable=broad-exception-raised
             f"unable to convert from {aws_principal_type} to IdentityType. {self}"
         )
@@ -118,6 +121,12 @@ class AWSPtrpModelConvertor:
             return AuthzPathElementType.FEDERATED_USER
         if node_type == AwsPtrpPathNodeType.ANONYMOUS_USER:
             return AuthzPathElementType.ANONYMOUS_USER
+        if node_type == AwsPtrpPathNodeType.IAM_IDENTITY_CENTER_USER:
+            return AuthzPathElementType.IAM_IDENTITY_CENTER_USER
+        if node_type == AwsPtrpPathNodeType.IAM_IDENTITY_CENTER_GROUP:
+            return AuthzPathElementType.IAM_IDENTITY_CENTER_GROUP
+        if node_type == AwsPtrpPathNodeType.PERMISSION_SET:
+            return AuthzPathElementType.PERMISSION_SET
         raise Exception(f"unable to convert from {node_type} to AuthzPathElementType")
 
     @staticmethod
@@ -125,6 +134,8 @@ class AWSPtrpModelConvertor:
         if note_type == AwsPtrpNoteType.POLICY_STMT_DENY_WITH_CONDITION:
             return AuthzNoteType.AWS_POLICY_STMT_DENY_WITH_CONDITION
         if note_type == AwsPtrpNoteType.POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE:
+            return AuthzNoteType.AWS_POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE
+        if note_type == AwsPtrpNoteType.IAM_IDENTITY_CENTER_USER_DESCRIPTION:
             return AuthzNoteType.AWS_POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE
         raise Exception(f"unable to convert from {note_type} to AuthzNoteType")  # pylint disable=broad-exception-raised
 

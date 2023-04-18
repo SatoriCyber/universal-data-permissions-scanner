@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from logging import Logger
-from typing import Dict, Generator, List, Optional, Tuple, Union
+from math import log
+from typing import Dict, Generator, List, Optional, Set, Tuple, Union
 
 import networkx as nx
 from aws_ptrp.actions.aws_actions import AwsActions
@@ -13,6 +14,7 @@ from aws_ptrp.iam.policy.policy_document_resolver import (
     get_resource_based_resolver,
     get_role_trust_resolver,
 )
+from aws_ptrp.iam_identity_center.iam_identity_center_entities import IamIdentityCenterEntities
 from aws_ptrp.principals import Principal, PrincipalBase
 from aws_ptrp.principals.aws_principals import AwsPrincipals
 from aws_ptrp.principals.no_entity_principal import NoEntityPrincipal
@@ -21,6 +23,8 @@ from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
     PathFederatedPrincipalNode,
     PathFederatedPrincipalNodeBase,
     PathNodeBase,
+    PathPermissionSetNode,
+    PathPermissionSetNodeBase,
     PathPolicyNode,
     PathRoleNode,
     PathRoleNodeBase,
@@ -47,6 +51,7 @@ END_NODE = "END_NODE"
 @dataclass
 class PtrpAllowedLines:
     graph: nx.DiGraph
+    iam_identity_center_exists: bool
 
     def yield_principal_to_resource_lines(
         self,
@@ -60,6 +65,14 @@ class PtrpAllowedLines:
                     f"Got invalid simple path in graph, first node is not impl PrincipalAndPoliciesNode: {graph_path}"
                 )
             principal_node: PrincipalAndPoliciesNode = graph_path[0]
+            principal_node_name: str = principal_node.get_node_name()
+            # If we have an IAM Identity Center, we don't want to show the AWS SSO SAML providers principals in the permission lines
+            if (
+                self.iam_identity_center_exists
+                and principal_node_name.startswith("AWSSSO_")
+                and principal_node_name.endswith("DO_NOT_DELETE")
+            ):
+                continue
 
             if isinstance(graph_path[1], PathUserGroupNode):
                 path_user_group_node: Optional[PathUserGroupNode] = graph_path[1]
@@ -83,6 +96,15 @@ class PtrpAllowedLines:
                 start_index_path_role_identity_nodes = start_index_path_role_identity_nodes + 2
             else:
                 path_federated_nodes = None
+
+            # If there is a path_permission_set_node, it will come before the role nodes
+            if isinstance(graph_path[start_index_path_role_identity_nodes], PathPermissionSetNode):
+                path_permission_set_node: Optional[PathPermissionSetNode] = graph_path[
+                    start_index_path_role_identity_nodes
+                ]
+                start_index_path_role_identity_nodes = start_index_path_role_identity_nodes + 1
+            else:
+                path_permission_set_node = None
 
             if len(graph_path) - 2 < start_index_path_role_identity_nodes:
                 raise Exception(f"Got invalid simple path in graph, (not enough nodes): {graph_path}")
@@ -119,6 +141,7 @@ class PtrpAllowedLines:
                 principal_node=principal_node,
                 path_user_group_node=path_user_group_node,
                 path_federated_nodes=path_federated_nodes,
+                path_permission_set_node=path_permission_set_node,
                 path_role_nodes=path_role_identity_nodes,
                 target_policy_node=target_policy_node,
                 resource_node=resource_node,
@@ -129,6 +152,7 @@ class PtrpAllowedLines:
 class PtrpAllowedLinesBuilder:
     logger: Logger
     iam_entities: IAMEntities
+    iam_identity_center_entities: Optional[IamIdentityCenterEntities]
     aws_actions: AwsActions
     aws_principals: AwsPrincipals
     account_resources: AwsAccountResources
@@ -405,18 +429,86 @@ class PtrpAllowedLinesBuilder:
                     principal_base_for_resolver=iam_user,
                 )
 
+    def _insert_permission_sets(self):
+        if self.iam_identity_center_entities is None:
+            return
+        for permission_set in self.iam_identity_center_entities.yield_permission_sets(
+            self.account_resources.aws_account_id
+        ):
+            assert isinstance(permission_set, PathPermissionSetNodeBase)
+            permission_set_node = PathPermissionSetNode(base=permission_set)
+            # Connect the permission set node to the corresponded iam role
+            corresponded_role_arn_prefix = self.iam_identity_center_entities.generate_reserved_sso_arn_prefix(
+                self.account_resources.aws_account_id, permission_set.name
+            )
+            iam_role: Optional[IAMRole] = self.iam_entities.iam_accounts_entities[
+                self.account_resources.aws_account_id
+            ].get_role_with_arn_prefix(corresponded_role_arn_prefix)
+            if iam_role is None:
+                self.logger.warning("Cannot find the corresponded role for permission set %s", permission_set)
+                continue
+
+            path_role_node = PathRoleNode(base=iam_role)
+            self.logger.debug("Connecting %s -> %s", permission_set_node, path_role_node)
+            self.graph.add_edge(permission_set_node, path_role_node)
+
+            target_account_assignments: Optional[Set[str]] = permission_set.get_target_account_assignments(
+                self.account_resources.aws_account_id
+            )
+
+            if target_account_assignments is None:
+                continue
+
+            # Connect the permission set node to the identity center users and groups of the target account which provision it
+            for iam_identity_center_user in self.iam_identity_center_entities.yield_identity_center_users():
+                assert isinstance(iam_identity_center_user, PrincipalAndPoliciesNodeBase)
+                if iam_identity_center_user.user_id in target_account_assignments:
+                    user_node = PrincipalAndPoliciesNode(base=iam_identity_center_user, additional_policies_bases=[])
+                    self.logger.debug("Connecting %s -> %s", user_node, permission_set_node)
+                    self.graph.add_edge(user_node, permission_set_node)
+
+            for iam_identity_center_group in self.iam_identity_center_entities.yield_identity_center_groups():
+                assert isinstance(iam_identity_center_group, PathUserGroupNodeBase)
+                path_user_group_node = PathUserGroupNode(base=iam_identity_center_group)
+                if iam_identity_center_group.group_id in target_account_assignments:
+                    self.logger.debug("Connecting %s -> %s", path_user_group_node, permission_set_node)
+                    self.graph.add_edge(path_user_group_node, permission_set_node)
+
+    def _insert_iam_identity_center_users_and_groups(self):
+        if self.iam_identity_center_entities is None:
+            return
+
+        for iam_identity_center_user in self.iam_identity_center_entities.yield_identity_center_users():
+            assert isinstance(iam_identity_center_user, PrincipalAndPoliciesNodeBase)
+            user_node = PrincipalAndPoliciesNode(base=iam_identity_center_user, additional_policies_bases=[])
+            self.logger.debug("Connecting %s -> %s", START_NODE, user_node)
+            self.graph.add_edge(START_NODE, user_node)
+
+            for iam_identity_center_group in self.iam_identity_center_entities.yield_identity_center_groups_for_user(
+                iam_identity_center_user.user_id
+            ):
+                assert isinstance(iam_identity_center_group, PathUserGroupNodeBase)
+                path_user_group_node = PathUserGroupNode(base=iam_identity_center_group)
+                self.graph.add_edge(user_node, path_user_group_node)
+
     def build(self) -> 'PtrpAllowedLines':
         self.logger.info("Building the Permissions resolver graph")
         self.graph.add_node(START_NODE)
         self.graph.add_node(END_NODE)
 
-        # must runt first, due to the resolving of federated users in the identity policy
+        # must run first, due to the resolving of federated users in the identity policy
         self._insert_iam_users_and_iam_groups()
 
         self._insert_resources()
 
         self._insert_iam_roles_and_trusted_entities()
 
+        self._insert_iam_identity_center_users_and_groups()
+
+        self._insert_permission_sets()
+
         self.logger.info("Finish to build the iam graph: %s", self.graph)
 
-        return PtrpAllowedLines(graph=self.graph)
+        return PtrpAllowedLines(
+            graph=self.graph, iam_identity_center_exists=self.iam_identity_center_entities is not None
+        )

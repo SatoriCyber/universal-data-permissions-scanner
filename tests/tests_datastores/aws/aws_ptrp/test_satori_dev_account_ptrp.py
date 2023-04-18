@@ -91,6 +91,7 @@ def test_aws_ptrp_resolve_permissions_satori_dev_json_file(
         ptrp: AwsPtrp = load_aws_ptrp_from_dict(
             ptrp_json_from_file['iam_entities'],
             ptrp_json_from_file['target_account_resources'],
+            None,
             resource_service_types_to_load,
         )
         writer = get_writer(AWS_AUTHZ_ANALYZER_SATORI_DEV_RESULT_JSON_FILE, OutputFormat.MULTI_JSON)

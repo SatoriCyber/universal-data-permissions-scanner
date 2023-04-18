@@ -89,6 +89,7 @@ def test_aws_ptrp_resolve_permissions_flows(
         ptrp: AwsPtrp = load_aws_ptrp_from_dict(
             json_loaded['input']['iam_entities'],
             json_loaded['input']['target_account_resources'],
+            json_loaded['input'].get('iam_identity_center_entities', None),
             resource_service_types_to_load,
         )
 

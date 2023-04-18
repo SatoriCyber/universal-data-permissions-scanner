@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass, field
 from logging import Logger
 from pathlib import Path
-from typing import Dict, Generator, List, Optional
+from typing import Dict, Generator, List, Optional, Set
 
 from aws_ptrp.iam.iam_groups import IAMGroup, get_iam_groups
 from aws_ptrp.iam.iam_policies import IAMPolicy, get_iam_policies
@@ -71,6 +71,22 @@ class IAMAccountEntities:
             iam_roles=iam_roles,
             iam_policies=iam_policies,
         )
+
+    def get_role_with_arn_prefix(self, arn_prefix: str) -> Optional[IAMRole]:
+        for role in self.iam_roles.values():
+            if role.arn.startswith(arn_prefix):
+                return role
+
+        return None
+
+    def get_available_regions_for_reserved_sso_roles_in_account(self) -> Set[str]:
+        available_regions_for_account: Set[str] = set()
+        for role in self.iam_roles.values():
+            if role.get_stmt_principal().is_principal_aws_sso_reserved_role():
+                region = role.get_node_arn().split("/")[-2]
+                available_regions_for_account.add(region)
+
+        return available_regions_for_account
 
 
 @serde

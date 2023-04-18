@@ -36,6 +36,7 @@ class NodeBase(ABC):
 class NodeNoteType(Enum):
     POLICY_STMT_DENY_WITH_CONDITION = auto()
     POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE = auto()
+    IAM_IDENTITY_CENTER_USER_DESCRIPTION = auto()
 
     def __str__(self) -> str:
         return self.name
@@ -62,6 +63,8 @@ class NodeNote:
             return AwsPtrpNodeNote(
                 note=self.note, note_type=AwsPtrpNoteType.POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE
             )
+        elif self.note_type == NodeNoteType.IAM_IDENTITY_CENTER_USER_DESCRIPTION:
+            return AwsPtrpNodeNote(note=self.note, note_type=AwsPtrpNoteType.IAM_IDENTITY_CENTER_USER_DESCRIPTION)
         else:
             assert False  # should not get here, unknown enum value
 
@@ -95,6 +98,19 @@ class NodeNote:
             )
         else:
             return None
+
+    @classmethod
+    def from_user_and_identity_center_instance_info(
+        cls,
+        user_name: str,
+        identity_center_instance_arn: str,
+        identity_center_account_id: str,
+        identity_center_region: str,
+    ) -> 'NodeNote':
+        return cls(
+            note_type=NodeNoteType.IAM_IDENTITY_CENTER_USER_DESCRIPTION,
+            note=f"{user_name} is a member of identity center instance {identity_center_instance_arn}, which is configured in account {identity_center_account_id}, region {identity_center_region}",
+        )
 
 
 class NodeNotesGetter(ABC):
@@ -140,6 +156,43 @@ class PrincipalAndPoliciesNodeBase(PrincipalNodeBase, PoliciesNodeBase):
 
     # def get_session_policies(self) -> List[PolicyDocument]:
     #     return []
+
+
+@dataclass
+class PathPermissionSetNodeBase(PathNodeBase):
+    pass
+
+
+@dataclass
+class PathPermissionSetNode(PathPermissionSetNodeBase):
+    base: PathPermissionSetNodeBase
+
+    def get_ptrp_path_node(self, nodes_notes_getter: NodeNotesGetter) -> AwsPtrpPathNode:
+        return AwsPtrpPathNode(
+            arn=self.base.get_node_arn(),
+            name=self.base.get_node_name(),
+            type=self.base.get_path_type(),
+            notes=nodes_notes_getter.get_aws_ptrp_node_notes(self),
+        )
+
+    def __repr__(self):
+        return f"PathPermissionSetNode({self.base.__repr__()})"
+
+    def __eq__(self, other):
+        return self.base == other.base
+
+    def __hash__(self):
+        return hash(self.base)
+
+    # NodeBase
+    def get_node_arn(self) -> str:
+        return self.base.get_node_arn()
+
+    def get_node_name(self) -> str:
+        return f"{self.base.get_node_name()}"
+
+    def get_path_type(self) -> AwsPtrpPathNodeType:
+        return self.base.get_path_type()
 
 
 class PathRoleNodeBase(PrincipalAndPoliciesNodeBase, PathNodeBase):
