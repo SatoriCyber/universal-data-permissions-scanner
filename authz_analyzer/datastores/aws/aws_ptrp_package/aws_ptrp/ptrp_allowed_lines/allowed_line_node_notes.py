@@ -156,7 +156,7 @@ def get_nodes_notes_from_target_policies_identity_based(
     target_node_base: NodeBase,
     resource_node_note: NodeBase,
 ) -> NodesNotes:
-    policy_apply_result: PolicyEvaluationApplyResult | None = policy_evaluation_result.get_policy_apply_result()
+    policy_apply_result = policy_evaluation_result.get_policy_apply_result()
     nodes_notes = NodesNotes()
     if policy_apply_result:
         _update_nodes_notes(
