@@ -65,6 +65,7 @@ class IdentityType(Enum):
     ORG_USER = auto()  # MongoDB Atlas
     CLUSTER = auto()  # AWS Redshift Cluster
     SERVICE_PRINCIPAL = auto()  # Databricks
+    IAM_IDENTITY_CENTER_USER = auto()  # AWS
 
     def __str__(self) -> str:
         return self.name
@@ -106,6 +107,9 @@ class AuthzPathElementType(Enum):
     CATALOG = auto()  # Databricks
     SCHEMA = auto()  # Databricks
     SERVICE_PRINCIPAL = auto()  # Databricks
+    IAM_IDENTITY_CENTER_USER = auto()  # AWS
+    IAM_IDENTITY_CENTER_GROUP = auto()  # AWS
+    PERMISSION_SET = auto()  # AWS
 
     def __str__(self) -> str:
         return self.name
@@ -147,6 +151,7 @@ class AuthzNoteType(Enum):
     GENERIC = auto()
     AWS_POLICY_STMT_DENY_WITH_CONDITION = auto()
     AWS_POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE = auto()
+    IAM_IDENTITY_CENTER_USER_DESCRIPTION = auto()
 
     def __str__(self) -> str:
         return self.name

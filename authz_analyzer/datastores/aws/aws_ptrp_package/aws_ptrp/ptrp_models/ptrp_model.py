@@ -20,6 +20,7 @@ class AwsPtrpNoteType(Enum):
 
     POLICY_STMT_DENY_WITH_CONDITION = auto()
     POLICY_STMT_SKIPPING_DENY_WITH_S3_NOT_RESOURCE = auto()
+    IAM_IDENTITY_CENTER_USER_DESCRIPTION = auto()
 
     def __str__(self) -> str:
         return self.name
@@ -94,6 +95,7 @@ class AwsPrincipalType(Enum):
     WEB_IDENTITY_SESSION = auto()
     SAML_SESSION = auto()
     IAM_USER = auto()
+    IAM_IDENTITY_CENTER_USER = auto()
     CANONICAL_USER = auto()  # need to extract the account id
     AWS_STS_FEDERATED_USER_SESSION = auto()
     AWS_SERVICE = auto()
@@ -129,6 +131,9 @@ class AwsPtrpPathNodeType(Enum):
     IAM_INLINE_POLICY = auto()
     IAM_POLICY = auto()
     IAM_ROLE = auto()
+    IAM_IDENTITY_CENTER_USER = auto()
+    IAM_IDENTITY_CENTER_GROUP = auto()
+    PERMISSION_SET = auto()
     RESOURCE_POLICY = auto()
     ROLE_SESSION = auto()
     WEB_IDENTITY_SESSION = auto()

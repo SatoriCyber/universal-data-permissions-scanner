@@ -1,0 +1,503 @@
+{
+    "input": {
+        "iam_entities": {
+            "iam_aws_managed_policies": {
+                "arn:aws:iam::aws:policy/S3GetObjectAccess": {
+                    "policy": {
+                        "PolicyName": "S3GetObjectAccess",
+                        "PolicyId": "ANPAIWMBCKSKIEE64ZLYK",
+                        "Arn": "arn:aws:iam::aws:policy/S3GetObjectAccess",
+                        "DefaultVersionId": "v1",
+                        "Path": "/",
+                        "AttachmentCount": 1,
+                        "PermissionsBoundaryUsageCount": 0,
+                        "IsAttachable": true,
+                        "Description": "Provides s3:GetObject access to all resources in your account"
+                    },
+                    "policy_document": {
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": "s3:GetObject",
+                                "Resource": "*"
+                            }
+                        ]
+                    }
+                },
+                "arn:aws:iam::aws:policy/S3PutObjectAccess": {
+                    "policy": {
+                        "PolicyName": "S3PutObjectAccess",
+                        "PolicyId": "ANPAIWMBCKSKIEE64ZABC",
+                        "Arn": "arn:aws:iam::aws:policy/S3PutObjectAccess",
+                        "DefaultVersionId": "v1",
+                        "Path": "/",
+                        "AttachmentCount": 1,
+                        "PermissionsBoundaryUsageCount": 0,
+                        "IsAttachable": true,
+                        "Description": "Provides s3:PutObject access to all resources in your account"
+                    },
+                    "policy_document": {
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": "s3:PutObject",
+                                "Resource": "*"
+                            }
+                        ]
+                    }
+                }
+            },
+            "iam_accounts_entities": {
+                "105246067165": {
+                    "iam_users": {},
+                    "iam_groups": {},
+                    "iam_roles": {
+                        "arn:aws:iam::105246067165:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3GetObjectAccess_3924a5ba0a9f57fd": {
+                            "role_id": "AROARRAJHRHOR5QAPAJZ4",
+                            "role_name": "AWSReservedSSO_S3GetObjectAccess_3924a5ba0a9f57fd",
+                            "arn": "arn:aws:iam::105246067165:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3GetObjectAccess_3924a5ba0a9f57fd",
+                            "path": "/aws-reserved/sso.amazonaws.com/eu-west-2/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Principal": {
+                                            "Federated": "arn:aws:iam::105246067165:saml-provider/AWSSSO_138233f1aa3d034f_DO_NOT_DELETE"
+                                        },
+                                        "Action": [
+                                            "sts:AssumeRoleWithSAML",
+                                            "sts:TagSession"
+                                        ],
+                                        "Condition": {
+                                            "StringEquals": {
+                                                "SAML:aud": "https://signin.aws.amazon.com/saml"
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::aws:policy/S3GetObjectAccess"
+                            ]
+                        },
+                        "arn:aws:iam::105246067165:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3PutObjectAccess_47c424e5ef775b35": {
+                            "role_id": "AROA2BQ2PAB5RTQITAO7U",
+                            "role_name": "AWSReservedSSO_S3PutObjectAccess_47c424e5ef775b35",
+                            "arn": "arn:aws:iam::105246067165:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3PutObjectAccess_47c424e5ef775b35",
+                            "path": "/aws-reserved/sso.amazonaws.com/eu-west-2/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Principal": {
+                                            "Federated": "arn:aws:iam::105246067165:saml-provider/AWSSSO_b251dac57bca9826_DO_NOT_DELETE"
+                                        },
+                                        "Action": [
+                                            "sts:AssumeRoleWithSAML",
+                                            "sts:TagSession"
+                                        ],
+                                        "Condition": {
+                                            "StringEquals": {
+                                                "SAML:aud": "https://signin.aws.amazon.com/saml"
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            "role_policies": [],
+                            "attached_policies_arn": [
+                                "arn:aws:iam::aws:policy/S3PutObjectAccess"
+                            ]
+                        }
+                    },
+                    "iam_policies": {}
+                },
+                "105246067166": {
+                    "iam_users": {},
+                    "iam_groups": {},
+                    "iam_roles": {
+                        "arn:aws:iam::105246067166:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3GetObjectTaggingAccess_3924a5ba0a9f57sx": {
+                            "role_id": "AROARRAJHRHOR5QAPABC",
+                            "role_name": "AWSReservedSSO_S3GetObjectTaggingAccess_3924a5ba0a9f57sx",
+                            "arn": "arn:aws:iam::105246067166:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3GetObjectTaggingAccess_3924a5ba0a9f57sx",
+                            "path": "/aws-reserved/sso.amazonaws.com/eu-west-2/",
+                            "assume_role_policy_document": {
+                                "Statement": [
+                                    {
+                                        "Effect": "Allow",
+                                        "Principal": {
+                                            "Federated": "arn:aws:iam::105246067166:saml-provider/AWSSSO_13823sd1aa3d034f_DO_NOT_DELETE"
+                                        },
+                                        "Action": [
+                                            "sts:AssumeRoleWithSAML",
+                                            "sts:TagSession"
+                                        ],
+                                        "Condition": {
+                                            "StringEquals": {
+                                                "SAML:aud": "https://signin.aws.amazon.com/saml"
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            "role_policies": [
+                                {
+                                    "RoleName": "AWSReservedSSO_S3GetObjectTaggingAccess_3924a5ba0a9f57sx",
+                                    "PolicyName": "inline-policy-AWSReservedSSO_S3GetObjectTaggingAccess_3924a5ba0a9f57sx",
+                                    "PolicyDocument": {
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Sid": "IamRole1InlineAllow",
+                                                "Action": [
+                                                    "s3:GetObjectTagging"
+                                                ],
+                                                "Resource": [
+                                                    "arn:aws:s3:::bucket_1/*"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "attached_policies_arn": []
+                        }
+                    },
+                    "iam_policies": {}
+                }
+            }
+        },
+        "target_account_resources": {
+            "aws_account_id": "105246067165",
+            "account_resources": {
+                "s3": [
+                    {
+                        "name": "bucket_1",
+                        "aws_account_id": "105246067165",
+                        "policy_document": {
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Sid": "VisualEditor1",
+                                    "_comment": "Gives cross access account to the bucket for reserved sso role in account 105246067166",
+                                    "Principal": {
+                                        "AWS": [
+                                            "arn:aws:iam::105246067166:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3GetObjectTaggingAccess_3924a5ba0a9f57sx"
+                                        ]
+                                    },
+                                    "Action": [
+                                        "s3:GetObjectTagging"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::bucket_1/*"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "iam_identity_center_entities": {
+            "instance_arn": "arn:aws:sso:::instance/ssoins-753503836c02eeff",
+            "identity_store_id": "d-9c6729e338",
+            "account_id": "690471501947",
+            "region": "eu-west-2",
+            "identity_center_users": {
+                "9c6729e338-c86ff1b6-bf5d-42c6-a654-22355b4cd904": {
+                    "user_name": "avivd@company.com",
+                    "user_id": "9c6729e338-c86ff1b6-bf5d-42c6-a654-22355b4cd904"
+                },
+                "9c6729e338-125c9819-4a38-45e5-9180-8d173a482972": {
+                    "user_name": "lalon@company.com",
+                    "user_id": "9c6729e338-125c9819-4a38-45e5-9180-8d173a482972"
+                },
+                "9c6729e338-d91a3e2f-899e-4d82-b80e-78b335672e9c": {
+                    "user_name": "davidln@comapy.com",
+                    "user_id": "9c6729e338-d91a3e2f-899e-4d82-b80e-78b335672e9c"
+                },
+                "9c6729e338-d91a3e2f-899e-4d82-b80e-78b33567abcd": {
+                    "user_name": "cross_account_check@comapy.com",
+                    "user_id": "9c6729e338-d91a3e2f-899e-4d82-b80e-78b33567abcd"
+                }
+            },
+            "identity_center_groups": {
+                "9c6729e338-9f15f3d4-3582-4898-b957-913b03c6269c": {
+                    "group_name": "s3_get_object_access@company.com",
+                    "group_id": "9c6729e338-9f15f3d4-3582-4898-b957-913b03c6269c",
+                    "_comment": "contains avivd@company.com",
+                    "group_user_ids": [
+                        "9c6729e338-c86ff1b6-bf5d-42c6-a654-22355b4cd904"
+                    ]
+                },
+                "9c6729e338-fa947953-712c-40c9-b802-d1fe1bc4890e": {
+                    "group_name": "s3_put_object_access@company.com",
+                    "group_id": "9c6729e338-fa947953-712c-40c9-b802-d1fe1bc4890e",
+                    "_comment": "contains davidln@comapy.com",
+                    "group_user_ids": [
+                        "9c6729e338-d91a3e2f-899e-4d82-b80e-78b335672e9c"
+                    ]
+                }
+            },
+            "permission_sets": {
+                "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-c842ed778524b9b4": {
+                    "name": "S3GetObjectAccess",
+                    "arn": "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-c842ed778524b9b4",
+                    "_comment": "contains s3_get_object_access@company.com group and lalon@company.com user",
+                    "accounts_assignments": {
+                        "105246067165": [
+                            "9c6729e338-9f15f3d4-3582-4898-b957-913b03c6269c",
+                            "9c6729e338-125c9819-4a38-45e5-9180-8d173a482972"
+                        ]
+                    }
+                },
+                "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-b53f25345026ea75": {
+                    "name": "S3PutObjectAccess",
+                    "arn": "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-b53f25345026ea75",
+                    "_comment": "contains s3_put_object_access@company.com group and davidln@comapy.com user",
+                    "accounts_assignments": {
+                        "105246067165": [
+                            "9c6729e338-d91a3e2f-899e-4d82-b80e-78b335672e9c",
+                            "9c6729e338-fa947953-712c-40c9-b802-d1fe1bc4890e"
+                        ]
+                    }
+                },
+                "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-b53f25345026abcd": {
+                    "name": "S3GetObjectTaggingAccess",
+                    "arn": "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-b53f25345026abcd",
+                    "_comment": "contains cross_account user for the account which is not the target one",
+                    "accounts_assignments": {
+                        "105246067166": [
+                            "9c6729e338-d91a3e2f-899e-4d82-b80e-78b33567abcd"
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "output": [
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "9c6729e338-125c9819-4a38-45e5-9180-8d173a482972",
+                "name": "lalon@company.com",
+                "type": "IAM_IDENTITY_CENTER_USER",
+                "notes": [
+                    {
+                        "note": "lalon@company.com is a member of identity center instance arn:aws:sso:::instance/ssoins-753503836c02eeff, which is configured in account 690471501947, region eu-west-2",
+                        "note_type": "IAM_IDENTITY_CENTER_USER_DESCRIPTION"
+                    }
+                ]
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-c842ed778524b9b4",
+                    "name": "S3GetObjectAccess",
+                    "type": "PERMISSION_SET",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3GetObjectAccess_3924a5ba0a9f57fd",
+                    "name": "AWSReservedSSO_S3GetObjectAccess_3924a5ba0a9f57fd",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::aws:policy/S3GetObjectAccess",
+                    "name": "S3GetObjectAccess",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "9c6729e338-c86ff1b6-bf5d-42c6-a654-22355b4cd904",
+                "name": "avivd@company.com",
+                "type": "IAM_IDENTITY_CENTER_USER",
+                "notes": [
+                    {
+                        "note": "avivd@company.com is a member of identity center instance arn:aws:sso:::instance/ssoins-753503836c02eeff, which is configured in account 690471501947, region eu-west-2",
+                        "note_type": "IAM_IDENTITY_CENTER_USER_DESCRIPTION"
+                    }
+                ]
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "9c6729e338-9f15f3d4-3582-4898-b957-913b03c6269c",
+                    "name": "s3_get_object_access@company.com",
+                    "type": "IAM_IDENTITY_CENTER_GROUP",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-c842ed778524b9b4",
+                    "name": "S3GetObjectAccess",
+                    "type": "PERMISSION_SET",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3GetObjectAccess_3924a5ba0a9f57fd",
+                    "name": "AWSReservedSSO_S3GetObjectAccess_3924a5ba0a9f57fd",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::aws:policy/S3GetObjectAccess",
+                    "name": "S3GetObjectAccess",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "9c6729e338-d91a3e2f-899e-4d82-b80e-78b335672e9c",
+                "name": "davidln@comapy.com",
+                "type": "IAM_IDENTITY_CENTER_USER",
+                "notes": [
+                    {
+                        "note": "davidln@comapy.com is a member of identity center instance arn:aws:sso:::instance/ssoins-753503836c02eeff, which is configured in account 690471501947, region eu-west-2",
+                        "note_type": "IAM_IDENTITY_CENTER_USER_DESCRIPTION"
+                    }
+                ]
+            },
+            "action_permission_level": "WRITE",
+            "path_nodes": [
+                {
+                    "arn": "9c6729e338-fa947953-712c-40c9-b802-d1fe1bc4890e",
+                    "name": "s3_put_object_access@company.com",
+                    "type": "IAM_IDENTITY_CENTER_GROUP",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-b53f25345026ea75",
+                    "name": "S3PutObjectAccess",
+                    "type": "PERMISSION_SET",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3PutObjectAccess_47c424e5ef775b35",
+                    "name": "AWSReservedSSO_S3PutObjectAccess_47c424e5ef775b35",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::aws:policy/S3PutObjectAccess",
+                    "name": "S3PutObjectAccess",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "PutObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "9c6729e338-d91a3e2f-899e-4d82-b80e-78b335672e9c",
+                "name": "davidln@comapy.com",
+                "type": "IAM_IDENTITY_CENTER_USER",
+                "notes": [
+                    {
+                        "note": "davidln@comapy.com is a member of identity center instance arn:aws:sso:::instance/ssoins-753503836c02eeff, which is configured in account 690471501947, region eu-west-2",
+                        "note_type": "IAM_IDENTITY_CENTER_USER_DESCRIPTION"
+                    }
+                ]
+            },
+            "action_permission_level": "WRITE",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-b53f25345026ea75",
+                    "name": "S3PutObjectAccess",
+                    "type": "PERMISSION_SET",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067165:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3PutObjectAccess_47c424e5ef775b35",
+                    "name": "AWSReservedSSO_S3PutObjectAccess_47c424e5ef775b35",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::aws:policy/S3PutObjectAccess",
+                    "name": "S3PutObjectAccess",
+                    "type": "IAM_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "PutObject"
+            ]
+        },
+        {
+            "resource": {
+                "name": "bucket_1",
+                "type": "S3_BUCKET",
+                "notes": []
+            },
+            "principal": {
+                "arn": "9c6729e338-d91a3e2f-899e-4d82-b80e-78b33567abcd",
+                "name": "cross_account_check@comapy.com",
+                "type": "IAM_IDENTITY_CENTER_USER",
+                "notes": [
+                    {
+                        "note": "cross_account_check@comapy.com is a member of identity center instance arn:aws:sso:::instance/ssoins-753503836c02eeff, which is configured in account 690471501947, region eu-west-2",
+                        "note_type": "IAM_IDENTITY_CENTER_USER_DESCRIPTION"
+                    }
+                ]
+            },
+            "action_permission_level": "READ",
+            "path_nodes": [
+                {
+                    "arn": "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-b53f25345026abcd",
+                    "name": "S3GetObjectTaggingAccess",
+                    "type": "PERMISSION_SET",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:iam::105246067166:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3GetObjectTaggingAccess_3924a5ba0a9f57sx",
+                    "name": "AWSReservedSSO_S3GetObjectTaggingAccess_3924a5ba0a9f57sx",
+                    "type": "IAM_ROLE",
+                    "notes": []
+                },
+                {
+                    "arn": "arn:aws:s3:::bucket_1",
+                    "name": "bucket_1",
+                    "type": "RESOURCE_POLICY",
+                    "notes": []
+                }
+            ],
+            "action_permissions": [
+                "GetObjectTagging"
+            ]
+        }
+    ]
+}
