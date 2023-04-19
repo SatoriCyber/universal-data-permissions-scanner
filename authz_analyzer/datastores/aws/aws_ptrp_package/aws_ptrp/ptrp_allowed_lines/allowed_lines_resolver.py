@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from logging import Logger
-from math import log
 from typing import Dict, Generator, List, Optional, Set, Tuple, Union
 
 import networkx as nx
@@ -65,13 +64,8 @@ class PtrpAllowedLines:
                     f"Got invalid simple path in graph, first node is not impl PrincipalAndPoliciesNode: {graph_path}"
                 )
             principal_node: PrincipalAndPoliciesNode = graph_path[0]
-            principal_node_name: str = principal_node.get_node_name()
             # If we have an IAM Identity Center, we don't want to show the AWS SSO SAML providers principals in the permission lines
-            if (
-                self.iam_identity_center_exists
-                and principal_node_name.startswith("AWSSSO_")
-                and principal_node_name.endswith("DO_NOT_DELETE")
-            ):
+            if self.iam_identity_center_exists and principal_node.get_stmt_principal().is_aws_sso_saml_session():
                 continue
 
             if isinstance(graph_path[1], PathUserGroupNode):

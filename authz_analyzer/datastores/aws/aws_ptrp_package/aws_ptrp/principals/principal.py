@@ -125,6 +125,13 @@ class Principal:
     def is_iam_identity_center_user_principal(self) -> bool:
         return bool(self.principal_type == AwsPrincipalType.IAM_IDENTITY_CENTER_USER)
 
+    def is_aws_sso_saml_session(self) -> bool:
+        return bool(
+            self.principal_type == AwsPrincipalType.SAML_SESSION
+            and self.name.startswith("AWSSSO_")
+            and self.name.endswith("DO_NOT_DELETE")
+        )
+
     def contains(self, other: 'Principal') -> bool:
         # must not be ALL_PRINCIPALS (due to resolving all principal to other users)
         assert self.principal_type != AwsPrincipalType.ALL_PRINCIPALS
