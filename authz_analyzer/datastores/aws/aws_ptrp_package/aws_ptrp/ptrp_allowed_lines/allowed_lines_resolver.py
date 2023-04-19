@@ -434,9 +434,11 @@ class PtrpAllowedLinesBuilder:
                 corresponded_role_arn_prefix = self.iam_identity_center_entities.generate_reserved_sso_arn_prefix(
                     account_id, permission_set.name
                 )
-                iam_role: Optional[IAMRole] = self.iam_entities.iam_accounts_entities[
-                    account_id
-                ].get_role_with_arn_prefix(corresponded_role_arn_prefix)
+                account_entities = self.iam_entities.iam_accounts_entities.get(account_id)
+                if account_entities is None:
+                    continue
+
+                iam_role: Optional[IAMRole] = account_entities.get_role_with_arn_prefix(corresponded_role_arn_prefix)
                 if iam_role is None:
                     self.logger.warning("Cannot find the corresponded role for permission set %s", permission_set)
                     continue
