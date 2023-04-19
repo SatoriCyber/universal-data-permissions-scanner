@@ -29,12 +29,14 @@ def _create_logger(debug: bool) -> logging.Logger:
 
 
 def get_ptrp_logger() -> logging.Logger:
+    global LOGGER  # pylint: disable=W0603
     if LOGGER:
         return LOGGER
     else:
-        return _create_logger(debug=False)
+        LOGGER = _create_logger(debug=False)
+        return LOGGER
 
 
-def init_ptrp_logger(debug: bool):
+def set_ptrp_logger(logger: logging.Logger):
     global LOGGER  # pylint: disable=W0603
-    LOGGER = _create_logger(debug)
+    LOGGER = logger

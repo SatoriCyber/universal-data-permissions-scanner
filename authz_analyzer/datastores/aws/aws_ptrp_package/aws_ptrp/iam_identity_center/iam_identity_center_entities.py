@@ -59,10 +59,9 @@ class IamIdentityCenterEntities:
             permission_sets=permission_sets,
         )
 
-    def yield_permission_sets(self, target_account_id: str) -> Generator[PermissionsSet, None, None]:
+    def yield_permission_sets(self) -> Generator[PermissionsSet, None, None]:
         for permission_set in self.permission_sets.values():
-            if target_account_id in permission_set.accounts_assignments:
-                yield permission_set
+            yield permission_set
 
     def yield_identity_center_users(self) -> Generator[IamIdentityCenterUser, None, None]:
         for user in self.identity_center_users.values():
@@ -77,8 +76,8 @@ class IamIdentityCenterEntities:
             if user_id in group.group_user_ids:
                 yield group
 
-    def generate_reserved_sso_arn_prefix(self, target_account_id: str, permission_set_name: str) -> str:
-        return f"arn:aws:iam::{target_account_id}:role/aws-reserved/sso.amazonaws.com/{self.region}/AWSReservedSSO_{permission_set_name}_"
+    def generate_reserved_sso_arn_prefix(self, account_id: str, permission_set_name: str) -> str:
+        return f"arn:aws:iam::{account_id}:role/aws-reserved/sso.amazonaws.com/{self.region}/AWSReservedSSO_{permission_set_name}_"
 
 
 def find_and_scan_iam_identity_center_instance(

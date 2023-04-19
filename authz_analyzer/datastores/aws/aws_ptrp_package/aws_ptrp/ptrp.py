@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass
 from logging import Logger
 from typing import Callable, Dict, List, Optional, Set
@@ -9,7 +8,7 @@ from aws_ptrp.iam_identity_center.iam_identity_center_entities import (
     IamIdentityCenterEntities,
     find_and_scan_iam_identity_center_instance,
 )
-from aws_ptrp.logger import init_ptrp_logger
+from aws_ptrp.logger import set_ptrp_logger
 from aws_ptrp.principals.aws_principals import AwsPrincipals
 from aws_ptrp.ptrp_allowed_lines.allowed_line import PtrpAllowedLine
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import PrincipalNodeBase
@@ -90,7 +89,7 @@ class AwsPtrp:
         target_account: AwsAssumeRole,
         additional_accounts: Optional[List[AwsAssumeRole]] = None,
     ) -> 'AwsPtrp':
-        init_ptrp_logger(debug=logger.isEnabledFor(logging.DEBUG))
+        set_ptrp_logger(logger=logger)
 
         iam_entities_for_accounts: Dict[str, IAMAccountEntities] = cls.load_iam_entities_for_accounts(
             logger, target_account, additional_accounts

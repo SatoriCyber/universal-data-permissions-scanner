@@ -25,8 +25,8 @@ class PermissionsSet(PathPermissionSetNodeBase):
     def get_node_arn(self) -> str:
         return self.arn
 
-    def get_target_account_assignments(self, target_account_id: str) -> Optional[Set[str]]:
-        return self.accounts_assignments[target_account_id] if target_account_id in self.accounts_assignments else None
+    def get_account_assignments(self, account_id: str) -> Optional[Set[str]]:
+        return self.accounts_assignments[account_id] if account_id in self.accounts_assignments else None
 
     def __eq__(self, other):
         return self.arn == other.arn

@@ -426,47 +426,46 @@ class PtrpAllowedLinesBuilder:
     def _insert_permission_sets(self):
         if self.iam_identity_center_entities is None:
             return
-        for permission_set in self.iam_identity_center_entities.yield_permission_sets(
-            self.account_resources.aws_account_id
-        ):
+        for permission_set in self.iam_identity_center_entities.yield_permission_sets():
             assert isinstance(permission_set, PathPermissionSetNodeBase)
             permission_set_node = PathPermissionSetNode(base=permission_set)
-            # Connect the permission set node to the corresponded iam role
-            corresponded_role_arn_prefix = self.iam_identity_center_entities.generate_reserved_sso_arn_prefix(
-                self.account_resources.aws_account_id, permission_set.name
-            )
-            iam_role: Optional[IAMRole] = self.iam_entities.iam_accounts_entities[
-                self.account_resources.aws_account_id
-            ].get_role_with_arn_prefix(corresponded_role_arn_prefix)
-            if iam_role is None:
-                self.logger.warning("Cannot find the corresponded role for permission set %s", permission_set)
-                continue
+            for account_id in permission_set.accounts_assignments.keys():
+                # Connect the permission set node to the corresponded iam role
+                corresponded_role_arn_prefix = self.iam_identity_center_entities.generate_reserved_sso_arn_prefix(
+                    account_id, permission_set.name
+                )
+                iam_role: Optional[IAMRole] = self.iam_entities.iam_accounts_entities[
+                    account_id
+                ].get_role_with_arn_prefix(corresponded_role_arn_prefix)
+                if iam_role is None:
+                    self.logger.warning("Cannot find the corresponded role for permission set %s", permission_set)
+                    continue
 
-            path_role_node = PathRoleNode(base=iam_role)
-            self.logger.debug("Connecting %s -> %s", permission_set_node, path_role_node)
-            self.graph.add_edge(permission_set_node, path_role_node)
+                path_role_node = PathRoleNode(base=iam_role)
+                self.logger.debug("Connecting %s -> %s", permission_set_node, path_role_node)
+                self.graph.add_edge(permission_set_node, path_role_node)
 
-            target_account_assignments: Optional[Set[str]] = permission_set.get_target_account_assignments(
-                self.account_resources.aws_account_id
-            )
+                account_assignments: Optional[Set[str]] = permission_set.get_account_assignments(account_id)
 
-            if target_account_assignments is None:
-                continue
+                if account_assignments is None:
+                    continue
 
-            # Connect the permission set node to the identity center users and groups of the target account which provision it
-            for iam_identity_center_user in self.iam_identity_center_entities.yield_identity_center_users():
-                assert isinstance(iam_identity_center_user, PrincipalAndPoliciesNodeBase)
-                if iam_identity_center_user.user_id in target_account_assignments:
-                    user_node = PrincipalAndPoliciesNode(base=iam_identity_center_user, additional_policies_bases=[])
-                    self.logger.debug("Connecting %s -> %s", user_node, permission_set_node)
-                    self.graph.add_edge(user_node, permission_set_node)
+                # Connect the permission set node to the identity center users and groups of the target account which provision it
+                for iam_identity_center_user in self.iam_identity_center_entities.yield_identity_center_users():
+                    assert isinstance(iam_identity_center_user, PrincipalAndPoliciesNodeBase)
+                    if iam_identity_center_user.user_id in account_assignments:
+                        user_node = PrincipalAndPoliciesNode(
+                            base=iam_identity_center_user, additional_policies_bases=[]
+                        )
+                        self.logger.debug("Connecting %s -> %s", user_node, permission_set_node)
+                        self.graph.add_edge(user_node, permission_set_node)
 
-            for iam_identity_center_group in self.iam_identity_center_entities.yield_identity_center_groups():
-                assert isinstance(iam_identity_center_group, PathUserGroupNodeBase)
-                path_user_group_node = PathUserGroupNode(base=iam_identity_center_group)
-                if iam_identity_center_group.group_id in target_account_assignments:
-                    self.logger.debug("Connecting %s -> %s", path_user_group_node, permission_set_node)
-                    self.graph.add_edge(path_user_group_node, permission_set_node)
+                for iam_identity_center_group in self.iam_identity_center_entities.yield_identity_center_groups():
+                    assert isinstance(iam_identity_center_group, PathUserGroupNodeBase)
+                    path_user_group_node = PathUserGroupNode(base=iam_identity_center_group)
+                    if iam_identity_center_group.group_id in account_assignments:
+                        self.logger.debug("Connecting %s -> %s", path_user_group_node, permission_set_node)
+                        self.graph.add_edge(path_user_group_node, permission_set_node)
 
     def _insert_iam_identity_center_users_and_groups(self):
         if self.iam_identity_center_entities is None:
