@@ -36,6 +36,8 @@ from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 
+from authz_analyzer.errors.failed_connection_errors import ConnectionFailure
+
 COMMANDS_DIR = Path(__file__).parent / "commands"
 
 DatabaseName = str
@@ -79,9 +81,12 @@ class RedshiftAuthzAnalyzer:
             logger = get_logger(False)
 
         writer = get_writer(filename=output_path, output_format=output_format)
-        connector: redshift_connector.Connection = redshift_connector.connect(
-            user=username, password=password, host=host, port=port, database=dbname, **connection_kwargs
-        )
+        try:
+            connector: redshift_connector.Connection = redshift_connector.connect(
+                user=username, password=password, host=host, port=port, database=dbname, **connection_kwargs
+            )
+        except Exception as err:
+            raise ConnectionFailure from err
         redshift_cursor = connector.cursor()
 
         # We generate cursor one per database in order to fetch the table grants and the information schema
@@ -90,7 +95,7 @@ class RedshiftAuthzAnalyzer:
             if database.can_connect is False:
                 logger.debug("Skipping %s database, cannot connect", database.name)
                 continue
-            if database == "rdsadmin":
+            if database.name == "rdsadmin":
                 logger.debug("Skipping rdsadmin database, internal use by AWS")
                 continue
             db_connector: redshift_connector.Connection = redshift_connector.connect(
