@@ -53,7 +53,7 @@ class PostgresAuthzAnalyzer:
     deployment: Deployment
 
     @classmethod
-    def connect(
+    def connect(  # pylint: disable=too-many-locals
         cls,
         username: str,
         password: str,
