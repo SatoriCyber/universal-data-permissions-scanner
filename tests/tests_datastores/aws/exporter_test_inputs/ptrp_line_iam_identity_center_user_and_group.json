@@ -1,0 +1,103 @@
+{
+    "ptrp_line": {
+        "resource": {
+            "name": "bucket_1",
+            "type": "S3_BUCKET",
+            "notes": []
+        },
+        "principal": {
+            "arn": "9c6729e338-c86ff1b6-bf5d-42c6-a654-22355b4cd904",
+            "name": "avivd@company.com",
+            "type": "IAM_IDENTITY_CENTER_USER",
+            "notes": [
+                {
+                    "note": "avivd@company.com is a member of identity center instance arn:aws:sso:::instance/ssoins-753503836c02eeff, which is configured in account 690471501947, region eu-west-2",
+                    "note_type": "IAM_IDENTITY_CENTER_USER_DESCRIPTION"
+                }
+            ]
+        },
+        "action_permission_level": "READ",
+        "path_nodes": [
+            {
+                "arn": "9c6729e338-9f15f3d4-3582-4898-b957-913b03c6269c",
+                "name": "s3_get_object_access@company.com",
+                "type": "IAM_IDENTITY_CENTER_GROUP",
+                "notes": []
+            },
+            {
+                "arn": "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-c842ed778524b9b4",
+                "name": "S3GetObjectAccess",
+                "type": "PERMISSION_SET",
+                "notes": []
+            },
+            {
+                "arn": "arn:aws:iam::105246067165:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3GetObjectAccess_3924a5ba0a9f57fd",
+                "name": "AWSReservedSSO_S3GetObject_3924a5ba0a9f57fd",
+                "type": "IAM_ROLE",
+                "notes": []
+            },
+            {
+                "arn": "arn:aws:iam::aws:policy/S3GetObjectAccess",
+                "name": "S3GetObjectAccess",
+                "type": "IAM_POLICY",
+                "notes": []
+            }
+        ],
+        "action_permissions": [
+            "GetObject"
+        ]
+    },
+    "authz_entry": {
+        "asset": {
+            "name": [
+                "bucket_1"
+            ],
+            "type": "S3_BUCKET",
+            "notes": []
+        },
+        "path": [
+            {
+                "id": "9c6729e338-9f15f3d4-3582-4898-b957-913b03c6269c",
+                "name": "s3_get_object_access@company.com",
+                "type": "IAM_IDENTITY_CENTER_GROUP",
+                "notes": [],
+                "db_permissions": []
+            },
+            {
+                "id": "arn:aws:sso:::permissionSet/ssoins-753503836c02eeff/ps-c842ed778524b9b4",
+                "name": "S3GetObjectAccess",
+                "type": "PERMISSION_SET",
+                "notes": [],
+                "db_permissions": []
+            },
+            {
+                "id": "arn:aws:iam::105246067165:role/aws-reserved/sso.amazonaws.com/eu-west-2/AWSReservedSSO_S3GetObjectAccess_3924a5ba0a9f57fd",
+                "name": "AWSReservedSSO_S3GetObject_3924a5ba0a9f57fd",
+                "type": "IAM_ROLE",
+                "notes": [],
+                "db_permissions": []
+            },
+            {
+                "id": "arn:aws:iam::aws:policy/S3GetObjectAccess",
+                "name": "S3GetObjectAccess",
+                "type": "IAM_POLICY",
+                "notes": [],
+                "db_permissions": [
+                    "GetObject"
+                ]
+            }
+        ],
+        "identity": {
+            "id": "9c6729e338-c86ff1b6-bf5d-42c6-a654-22355b4cd904",
+            "name": "avivd@company.com",
+            "type": "IAM_IDENTITY_CENTER_USER",
+            "notes": [
+                {
+                    "note": "avivd@company.com is a member of identity center instance arn:aws:sso:::instance/ssoins-753503836c02eeff, which is configured in account 690471501947, region eu-west-2",
+                    "type": "IAM_IDENTITY_CENTER_USER_DESCRIPTION"
+                }
+            ]
+        },
+        "permission": "READ"
+    }
+}

@@ -16,6 +16,7 @@ from aws_ptrp.ptrp_allowed_lines.allowed_line_node_notes import (
 )
 from aws_ptrp.ptrp_allowed_lines.allowed_line_nodes_base import (
     PathFederatedPrincipalNode,
+    PathPermissionSetNode,
     PathPolicyNode,
     PathRoleNode,
     PathUserGroupNode,
@@ -41,6 +42,7 @@ class PtrpAllowedLine:
     principal_node: PrincipalAndPoliciesNode
     path_user_group_node: Optional[PathUserGroupNode]
     path_federated_nodes: Optional[Tuple[PathPolicyNode, PathFederatedPrincipalNode]]
+    path_permission_set_node: Optional[PathPermissionSetNode]
     path_role_nodes: List[PathRoleNode]
     target_policy_node: PathPolicyNode
     resource_node: ResourceNode
@@ -65,6 +67,14 @@ class PtrpAllowedLine:
             )
             iam_role = path_role_node.get_service_resource()
             assert isinstance(iam_role, IAMRole)
+
+            # Current principal is an Identity Center User and the role is a AWSReservedSSO role,
+            # Due to excluding of the saml provider principal in the path, we will skip
+            if (
+                principal_node.get_stmt_principal().is_iam_identity_center_user_principal()
+                and iam_role.get_stmt_principal().is_principal_aws_sso_reserved_role()
+            ):
+                continue
 
             policy_evaluations_result: PolicyEvaluationsResult = PolicyEvaluation.run_target_policy_resource_based(
                 logger=logger,
@@ -176,6 +186,9 @@ class PtrpAllowedLine:
             path.append(self.path_federated_nodes[0].get_ptrp_path_node(nodes_notes))
             path.append(self.path_federated_nodes[1].get_ptrp_path_node(nodes_notes))
         else:
+            # Permission set node can come before role nodes
+            if self.path_permission_set_node:
+                path.append(self.path_permission_set_node.get_ptrp_path_node(nodes_notes))
             for path_role_node in self.path_role_nodes:
                 path.append(path_role_node.get_ptrp_path_node(nodes_notes))
 

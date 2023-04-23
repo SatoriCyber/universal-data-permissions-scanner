@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Generator, List, Optional, Union
 
 from aws_ptrp.iam.policy.effect import Effect
+from aws_ptrp.logger import get_ptrp_logger
 from aws_ptrp.principals.principal import Principal
 from aws_ptrp.ptrp_models import AwsPrincipalType
 from serde import field, serde
@@ -32,14 +33,19 @@ class StmtPrincipals:
             for principal_type, principal_value in stmt_document_principal.items():
                 values: List[str] = principal_value if isinstance(principal_value, list) else [str(principal_value)]
                 for v in values:
-                    if principal_type == "AWS":
-                        principals.append(Principal.load_from_stmt_aws(v))
-                    elif principal_type == "CanonicalUser":
-                        principals.append(Principal.load_from_stmt_canonical_user(v))
-                    elif principal_type == "Federated":
-                        principals.append(Principal.load_from_stmt_federated(v))
-                    elif principal_type == "Service":
-                        principals.append(Principal.load_from_stmt_service(v))
+                    try:
+                        if principal_type == "AWS":
+                            principals.append(Principal.load_from_stmt_aws(v))
+                        elif principal_type == "CanonicalUser":
+                            principals.append(Principal.load_from_stmt_canonical_user(v))
+                        elif principal_type == "Federated":
+                            principals.append(Principal.load_from_stmt_federated(v))
+                        elif principal_type == "Service":
+                            principals.append(Principal.load_from_stmt_service(v))
+                    except Exception as exception:  # pylint: disable=broad-except
+                        logger = get_ptrp_logger()
+                        logger.warning("Failed to parse principal: %s, %s, %s", principal_type, v, exception)
+                        continue
 
             if len(principals) == 0:
                 raise Exception(f"Invalid type of principal: {stmt_document_principal}")

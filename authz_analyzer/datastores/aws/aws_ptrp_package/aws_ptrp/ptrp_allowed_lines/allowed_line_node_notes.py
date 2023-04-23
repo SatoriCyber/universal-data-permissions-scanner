@@ -168,3 +168,20 @@ def get_nodes_notes_from_target_policies_identity_based(
             resource_node_note=resource_node_note,
         )
     return nodes_notes
+
+
+def get_nodes_notes_from_identity_center_user(
+    target_node_base: NodeBase,
+    identity_center_instance_arn: str,
+    identity_center_account_id: str,
+    identity_center_region: str,
+) -> NodesNotes:
+    nodes_notes = NodesNotes()
+    note = NodeNote.from_user_and_identity_center_instance_info(
+        target_node_base.get_node_name(),
+        identity_center_instance_arn,
+        identity_center_account_id,
+        identity_center_region,
+    )
+    nodes_notes.nodes_notes.setdefault(target_node_base, NodeNotes()).add_node_note(note)
+    return nodes_notes
