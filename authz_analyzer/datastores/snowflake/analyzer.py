@@ -46,6 +46,8 @@ from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 
+from authz_analyzer.errors.failed_connection_errors import ConnectionFailure
+
 COMMANDS_DIR = Path(__file__).parent / "commands"
 
 
@@ -90,14 +92,17 @@ class SnowflakeAuthzAnalyzer:
         # Handle case sensitive warehouse name, wrap with quotes
         warehouse = f'"{warehouse}"'
 
-        connector = snowflake.connector.connect(  # type: ignore
-            user=username,
-            password=password,
-            host=host,
-            account=account,
-            warehouse=warehouse,
-            **snowflake_connection_kwargs,
-        )
+        try:
+            connector = snowflake.connector.connect(  # type: ignore
+                user=username,
+                password=password,
+                host=host,
+                account=account,
+                warehouse=warehouse,
+                **snowflake_connection_kwargs,
+            )
+        except Exception as err:
+            raise ConnectionFailure from err
 
         cursor = connector.cursor()
         service = SnowflakeService(cursor)

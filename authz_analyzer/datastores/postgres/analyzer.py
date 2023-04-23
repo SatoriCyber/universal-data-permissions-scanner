@@ -36,6 +36,8 @@ from authz_analyzer.utils.logger import get_logger
 from authz_analyzer.writers import BaseWriter, OutputFormat, get_writer
 from authz_analyzer.writers.base_writers import DEFAULT_OUTPUT_FILE
 
+from authz_analyzer.errors.failed_connection_errors import ConnectionFailure
+
 COMMANDS_DIR = Path(__file__).parent / "commands"
 
 DbName = str
@@ -51,7 +53,7 @@ class PostgresAuthzAnalyzer:
     deployment: Deployment
 
     @classmethod
-    def connect(
+    def connect(  # pylint: disable=too-many-locals
         cls,
         username: str,
         password: str,
@@ -79,9 +81,12 @@ class PostgresAuthzAnalyzer:
 
         writer = get_writer(filename=output_path, output_format=output_format)
 
-        connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
-            user=username, password=password, host=host, dbname=dbname, **connection_kwargs
-        )
+        try:
+            connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
+                user=username, password=password, host=host, dbname=dbname, **connection_kwargs
+            )
+        except Exception as err:
+            raise ConnectionFailure from err
         connector.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
         # We generate cursor one per database in order to fetch the table grants and the information schema
