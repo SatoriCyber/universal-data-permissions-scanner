@@ -1,7 +1,7 @@
-site_name: authz-analyzer
-site_url: https://satoricyber.github.io/authz-analyzer
-repo_url: https://github.com/satoricyber/authz-analyzer
-repo_name: satoricyber/authz-analyzer
+site_name: universal-data-permissions-scanner
+site_url: https://satoricyber.github.io/universal-data-permissions-scanner
+repo_url: https://github.com/satoricyber/universal-data-permissions-scanner
+repo_name: satoricyber/universal-data-permissions-scanner
 #strict: true
 
 theme:
@@ -45,7 +45,7 @@ plugins:
   - search:
       lang: en
 extra:
-  homepage: https://satoricyber.github.io/authz-analyzer
+  homepage: https://satoricyber.github.io/universal-data-permissions-scanner
   social:
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/SatoriCyber
@@ -54,7 +54,7 @@ extra:
       link: https://www.facebook.com/SatoriCyber
       name: Facebook
     - icon: fontawesome/brands/github
-      link: https://github.com/satoricyber/authz-analyzer
+      link: https://github.com/satoricyber/universal-data-permissions-scanner
       name: Github
     - icon: material/email
       link: "mailto:contact@satoricyber.com"

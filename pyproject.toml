@@ -1,8 +1,8 @@
 [tool]
 [tool.poetry]
-name = "authz-analyzer"
+name = "universal-data-permissions-scanner"
 version = "0.1.13"
-homepage = "https://github.com/satoricyber/authz-analyzer"
+homepage = "https://github.com/satoricyber/universal-data-permissions-scanner"
 description = "Analyze authorization."
 authors = ["SatoriCyber"]
 readme = "README.md"
@@ -65,7 +65,7 @@ test = ["pytest", "pytest-cov", "black", "isort", "twine", "mypy", "types-psycop
 release = ["twine", "mkdocs", "mkdocs-material", "mkdocs-include-markdown-plugin"]
 
 [tool.poetry.scripts]
-authz-analyzer = 'authz_analyzer.cli:main'
+udps = 'authz_analyzer.cli:main'
 
 
 [tool.black]
