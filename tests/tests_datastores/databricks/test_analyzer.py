@@ -5,9 +5,9 @@ from unittest.mock import _Call  # type: ignore
 
 import pytest
 
-from authz_analyzer.datastores.databricks.model import DBPermissionLevel
-from authz_analyzer.datastores.databricks.policy_tree import DB_PERMISSION_PERMISSION_MAP
-from authz_analyzer.datastores.databricks.service.model import (
+from universal_data_permissions_scanner.datastores.databricks.model import DBPermissionLevel
+from universal_data_permissions_scanner.datastores.databricks.policy_tree import DB_PERMISSION_PERMISSION_MAP
+from universal_data_permissions_scanner.datastores.databricks.service.model import (
     Group,
     GroupMeta,
     ParsedUser,
@@ -15,7 +15,7 @@ from authz_analyzer.datastores.databricks.service.model import (
     ResourceType,
     ServicePrincipal,
 )
-from authz_analyzer.models.model import PermissionLevel
+from universal_data_permissions_scanner.models.model import PermissionLevel
 from tests.mocks.mock_writers import MockWriter
 from tests.tests_datastores.databricks.generate_authz_entry import (
     build_catalog_service_principal_access,

@@ -1,8 +1,8 @@
 from typing import List
 from unittest.mock import call
 
-from authz_analyzer.datastores.databricks.service.model import Group, ParsedUser, ServicePrincipal
-from authz_analyzer.models.model import (
+from universal_data_permissions_scanner.datastores.databricks.service.model import Group, ParsedUser, ServicePrincipal
+from universal_data_permissions_scanner.models.model import (
     Asset,
     AssetType,
     AuthzEntry,

@@ -5,7 +5,7 @@ You can contribute in many ways:
 ## Types of Contributions
 
 ### Report Bugs
-Report bugs at https://github.com/satoricyber/authz-analyzer/issues.
+Report bugs at https://github.com/satoricyber/universal-data-permissions-scanner/issues.
 If you are reporting a bug, please include:
 
 * Your operating system name and version.
@@ -25,16 +25,16 @@ Each datastore need to implement the following methods:
 * run
 
 The connect will create a connection to the datastore.
-The run will build the model as described in the [Model](authz_analyzer/models/model.py) package.
+The run will build the model as described in the [Model](universal-data-permissions-scanner/models/model.py) package.
 The run needs to call BaseWriter.write_entry() with AuthzEntry object which presents a line.
 
 ### Write Documentation
-authz-analyzer could always use more documentation, whether as part of the
-official authz-analyzer docs, in docstrings, or even on the web in blog posts,
+universal-data-permissions-scanner could always use more documentation, whether as part of the
+official universal-data-permissions-scanner docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 ### Submit Feedback
-The best way to send feedback is to file an issue at https://github.com/satoricyber/authz-analyzer/issues.
+The best way to send feedback is to file an issue at https://github.com/satoricyber/universal-data-permissions-scanner/issues.
 
 If you are proposing a feature:
 
@@ -43,13 +43,13 @@ If you are proposing a feature:
 * Remember that this is a volunteer-driven project, and that contributions are welcome :)
 
 ## Get Started!
-Ready to contribute? Here's how to set up `authz-analyzer` for local development.
+Ready to contribute? Here's how to set up `universal-data-permissions-scanner` for local development.
 
-1. Fork the `authz-analyzer` repo on GitHub.
+1. Fork the `universal-data-permissions-scanner` repo on GitHub.
 2. Clone your fork locally
 
     ```
-    $ git clone git@github.com:your_name_here/authz-analyzer.git
+    $ git clone git@github.com:your_name_here/universal-data-permissions-scanner.git
     ```
 
 3. Ensure [poetry](https://python-poetry.org/docs/) is installed.
@@ -100,7 +100,7 @@ Before you submit a pull request, check that it meets these guidelines:
    Put your new functionality into a function with a docstring, and add the
    feature to the list in README.md.
 3. The pull request should work for Python 3.8.1 and 3.9 and later . Check
-   https://github.com/satoricyber/authz-analyzer/actions
+   https://github.com/satoricyber/universal-data-permissions-scanner/actions
    and make sure that the tests pass for all supported Python versions.
 
 

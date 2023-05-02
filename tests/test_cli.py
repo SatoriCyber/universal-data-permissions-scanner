@@ -4,11 +4,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 from click.testing import CliRunner
 
-from authz_analyzer import cli
-from authz_analyzer.datastores.aws.analyzer import AwsAssumeRoleInput
+from universal_data_permissions_scanner import cli
+from universal_data_permissions_scanner.datastores.aws.analyzer import AwsAssumeRoleInput
 
 
-@patch('authz_analyzer.cli.run_snowflake', MagicMock())
+@patch('universal_data_permissions_scanner.cli.run_snowflake', MagicMock())
 def test_snowflake():
     invoke(
         cli.snowflake,
@@ -28,7 +28,7 @@ def test_snowflake():
 
 
 @pytest.mark.parametrize('additional_args', [[], ['--key-file', 'key_file_path']], ids=['basic', 'key-file'])
-@patch('authz_analyzer.cli.run_bigquery', MagicMock())
+@patch('universal_data_permissions_scanner.cli.run_bigquery', MagicMock())
 def test_bigquery(additional_args: List[str]):
     args = ['--project', 'proj1']
     args.extend(additional_args)
@@ -77,7 +77,7 @@ def test_valid_aws_account_params():
     ],
     ids=['no-args', 'additional_account'],
 )
-@patch('authz_analyzer.cli.run_aws_s3', MagicMock())
+@patch('universal_data_permissions_scanner.cli.run_aws_s3', MagicMock())
 def test_aws_s3(additional_args: List[str]):
     args = [
         '--target-account-params',
@@ -90,7 +90,7 @@ def test_aws_s3(additional_args: List[str]):
 @pytest.mark.parametrize(
     'additional_args', [[], ['--port', 12345], ['--dbname', 'db123']], ids=['no-args', 'port', 'different dbname']
 )
-@patch('authz_analyzer.cli.run_postgres', MagicMock())
+@patch('universal_data_permissions_scanner.cli.run_postgres', MagicMock())
 def test_postgres(additional_args: List[str]):
     args = ['--username', 'user1', '--password', 'password', '--host', 'host1']
     args.extend(additional_args)
@@ -100,7 +100,7 @@ def test_postgres(additional_args: List[str]):
 @pytest.mark.parametrize(
     'additional_args', [[], ['--port', 12345], ['--dbname', 'db123']], ids=['no-args', 'port', 'different dbname']
 )
-@patch('authz_analyzer.cli.run_redshift', MagicMock())
+@patch('universal_data_permissions_scanner.cli.run_redshift', MagicMock())
 def test_redshift(additional_args: List[str]):
     args = ['--username', 'user1', '--password', 'password', '--host', 'host1']
     args.extend(additional_args)
@@ -110,14 +110,14 @@ def test_redshift(additional_args: List[str]):
 @pytest.mark.parametrize(
     'additional_args', [[], ['--port', 12345], ['--ssl', False]], ids=['no-args', 'port', 'disable ssl']
 )
-@patch('authz_analyzer.cli.run_mongodb', MagicMock())
+@patch('universal_data_permissions_scanner.cli.run_mongodb', MagicMock())
 def test_mongodb(additional_args: List[str]):
     args = ['--username', 'user1', '--password', 'password', '--host', 'host1']
     args.extend(additional_args)
     invoke(cli.mongodb, args)
 
 
-@patch('authz_analyzer.cli.run_mongodb_atlas', MagicMock())
+@patch('universal_data_permissions_scanner.cli.run_mongodb_atlas', MagicMock())
 def test_atlas():
     args = [
         '--public_key',
@@ -136,7 +136,7 @@ def test_atlas():
     invoke(cli.atlas, args)
 
 
-@patch('authz_analyzer.cli.run_databricks', MagicMock())
+@patch('universal_data_permissions_scanner.cli.run_databricks', MagicMock())
 def test_databricks():
     args = [
         '--api_key',

@@ -1,7 +1,7 @@
 from unittest import mock
 from unittest.mock import MagicMock
 
-from authz_analyzer.models.model import (
+from universal_data_permissions_scanner.models.model import (
     Asset,
     AssetType,
     AuthzEntry,
@@ -11,7 +11,7 @@ from authz_analyzer.models.model import (
     IdentityType,
     PermissionLevel,
 )
-from authz_analyzer.writers import CSVWriter
+from universal_data_permissions_scanner.writers import CSVWriter
 
 
 @mock.patch('csv.writer')

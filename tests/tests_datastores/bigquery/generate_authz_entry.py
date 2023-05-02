@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Callable, List, Optional
 
-from authz_analyzer.models.model import (
+from universal_data_permissions_scanner.models.model import (
     Asset,
     AssetType,
     AuthzEntry,

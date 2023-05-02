@@ -6,10 +6,10 @@ from unittest.mock import MagicMock, call
 import pytest
 from redshift_connector import Cursor  # type: ignore
 
-from authz_analyzer import RedshiftAuthzAnalyzer
-from authz_analyzer.datastores.aws.analyzer.redshift.analyzer import ShareName
-from authz_analyzer.datastores.aws.analyzer.redshift.model import ShareObjectType, ShareType
-from authz_analyzer.models.model import (
+from universal_data_permissions_scanner import RedshiftAuthzAnalyzer
+from universal_data_permissions_scanner.datastores.aws.analyzer.redshift.analyzer import ShareName
+from universal_data_permissions_scanner.datastores.aws.analyzer.redshift.model import ShareObjectType, ShareType
+from universal_data_permissions_scanner.models.model import (
     Asset,
     AssetType,
     AuthzEntry,

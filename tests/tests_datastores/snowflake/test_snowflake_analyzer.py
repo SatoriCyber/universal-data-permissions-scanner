@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from authz_analyzer import SnowflakeAuthzAnalyzer
-from authz_analyzer.models.model import (
+from universal_data_permissions_scanner import SnowflakeAuthzAnalyzer
+from universal_data_permissions_scanner.models.model import (
     Asset,
     AssetType,
     AuthzEntry,

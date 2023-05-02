@@ -7,11 +7,11 @@ from unittest.mock import MagicMock, call
 import pytest
 from pymongo.database import Database
 
-from authz_analyzer import MongoDBAuthzAnalyzer
-from authz_analyzer.datastores.mongodb.model import Privilege, Resource, Role
-from authz_analyzer.datastores.mongodb.service import MongoDBService
-from authz_analyzer.datastores.mongodb.service_model import AssignedRole, UserEntry
-from authz_analyzer.models.model import (
+from universal_data_permissions_scanner import MongoDBAuthzAnalyzer
+from universal_data_permissions_scanner.datastores.mongodb.model import Privilege, Resource, Role
+from universal_data_permissions_scanner.datastores.mongodb.service import MongoDBService
+from universal_data_permissions_scanner.datastores.mongodb.service_model import AssignedRole, UserEntry
+from universal_data_permissions_scanner.models.model import (
     Asset,
     AssetType,
     AuthzEntry,

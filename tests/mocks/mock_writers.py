@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from unittest.mock import MagicMock
 
-from authz_analyzer.models.model import AuthzEntry
+from universal_data_permissions_scanner.models.model import AuthzEntry
 
 
 @dataclass
