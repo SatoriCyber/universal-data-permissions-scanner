@@ -8,8 +8,8 @@ from aws_ptrp.ptrp_models import AwsPtrpLine
 from serde import to_dict
 from serde.de import from_dict
 
-from authz_analyzer.datastores.aws.analyzer.exporter import AWSAuthzAnalyzerExporter
-from authz_analyzer.models.model import AuthzEntry
+from universal_data_permissions_scanner.datastores.aws.analyzer.exporter import AWSAuthzAnalyzerExporter
+from universal_data_permissions_scanner.models.model import AuthzEntry
 from tests.mocks.mock_writers import MockWriter
 
 RESOURCES_INPUT_DIR = pathlib.Path().joinpath(os.path.dirname(__file__), 'exporter_test_inputs')

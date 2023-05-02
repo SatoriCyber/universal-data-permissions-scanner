@@ -23,10 +23,10 @@ from aws_ptrp.services.s3.s3_actions import S3Action
 from aws_ptrp.services.s3.s3_service import S3_SERVICE_NAME, S3Service
 from serde.json import to_json
 
-from authz_analyzer.datastores.aws.analyzer.exporter import AWSAuthzAnalyzerExporter
-from authz_analyzer.utils.logger import get_logger
-from authz_analyzer.writers.base_writers import OutputFormat
-from authz_analyzer.writers.get_writers import get_writer
+from universal_data_permissions_scanner.datastores.aws.analyzer.exporter import AWSAuthzAnalyzerExporter
+from universal_data_permissions_scanner.utils.logger import get_logger
+from universal_data_permissions_scanner.writers.base_writers import OutputFormat
+from universal_data_permissions_scanner.writers.get_writers import get_writer
 from tests.tests_datastores.aws.aws_ptrp.utils.aws_ptrp_load_from_dict import load_aws_ptrp_from_dict
 
 AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(

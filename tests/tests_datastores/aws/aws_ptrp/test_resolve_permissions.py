@@ -25,7 +25,7 @@ from aws_ptrp.services.s3.s3_actions import S3Action
 from aws_ptrp.services.s3.s3_service import S3_SERVICE_NAME, S3Service
 from serde.se import to_dict
 
-from authz_analyzer.utils.logger import get_logger
+from universal_data_permissions_scanner.utils.logger import get_logger
 from tests.tests_datastores.aws.aws_ptrp.utils.aws_ptrp_load_from_dict import load_aws_ptrp_from_dict
 
 RESOURCES_INPUT_DIR = pathlib.Path().joinpath(os.path.dirname(__file__), 'resolve_permissions_test_inputs')

@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from authz_analyzer.models.model import (
+from universal_data_permissions_scanner.models.model import (
     Asset,
     AssetType,
     AuthzEntry,
@@ -10,7 +10,7 @@ from authz_analyzer.models.model import (
     IdentityType,
     PermissionLevel,
 )
-from authz_analyzer.writers import MultiJsonWriter
+from universal_data_permissions_scanner.writers import MultiJsonWriter
 
 
 def test_csv_writer_write_entry():

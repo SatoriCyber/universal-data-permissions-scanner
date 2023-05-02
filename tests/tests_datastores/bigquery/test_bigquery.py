@@ -3,14 +3,14 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from authz_analyzer import BigQueryAuthzAnalyzer
-from authz_analyzer.datastores.bigquery.policy_tree import (
+from universal_data_permissions_scanner import BigQueryAuthzAnalyzer
+from universal_data_permissions_scanner.datastores.bigquery.policy_tree import (
     IDENTITY_TYPE_MAP,
     READ_PERMISSIONS,
     ROLE_TO_PERMISSION,
     WRITE_PERMISSIONS,
 )
-from authz_analyzer.models.model import IdentityType, PermissionLevel
+from universal_data_permissions_scanner.models.model import IdentityType, PermissionLevel
 from tests.mocks.mock_writers import MockWriter
 from tests.tests_datastores.bigquery.generate_authz_entry import (
     User,

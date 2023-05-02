@@ -3,10 +3,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from authz_analyzer import PostgresAuthzAnalyzer
-from authz_analyzer.datastores.postgres.deployment import Deployment
-from authz_analyzer.datastores.postgres.model import RESOURCE_TYPE_MAP
-from authz_analyzer.models.model import (
+from universal_data_permissions_scanner import PostgresAuthzAnalyzer
+from universal_data_permissions_scanner.datastores.postgres.deployment import Deployment
+from universal_data_permissions_scanner.datastores.postgres.model import RESOURCE_TYPE_MAP
+from universal_data_permissions_scanner.models.model import (
     Asset,
     AssetType,
     AuthzEntry,

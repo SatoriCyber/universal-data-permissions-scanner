@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from google.cloud import resourcemanager_v3  # type: ignore
 from google.iam.v1 import iam_policy_pb2  # type: ignore
 
-from authz_analyzer.datastores.bigquery.service import BigQueryService
+from universal_data_permissions_scanner.datastores.bigquery.service import BigQueryService
 
 DatasetId = str
 TableFqdn = str

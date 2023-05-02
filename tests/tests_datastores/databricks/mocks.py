@@ -6,8 +6,8 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 from unittest.mock import MagicMock
 
-from authz_analyzer.datastores.databricks.analyzer import DatabricksAuthzAnalyzer
-from authz_analyzer.datastores.databricks.service.model import (
+from universal_data_permissions_scanner.datastores.databricks.analyzer import DatabricksAuthzAnalyzer
+from universal_data_permissions_scanner.datastores.databricks.service.model import (
     CatalogList,
     DatabricksUserResult,
     Group,
@@ -21,7 +21,7 @@ from authz_analyzer.datastores.databricks.service.model import (
     Table,
     TableType,
 )
-from authz_analyzer.writers.base_writers import BaseWriter
+from universal_data_permissions_scanner.writers.base_writers import BaseWriter
 
 
 @dataclass

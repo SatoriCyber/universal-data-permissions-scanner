@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from authz_analyzer import MongoDBAtlasAuthzAnalyzer
-from authz_analyzer.datastores.mongodb.atlas.model import (
+from universal_data_permissions_scanner import MongoDBAtlasAuthzAnalyzer
+from universal_data_permissions_scanner.datastores.mongodb.atlas.model import (
     Organization,
     OrganizationRoleName,
     OrganizationTeam,
@@ -13,15 +13,15 @@ from authz_analyzer.datastores.mongodb.atlas.model import (
     OrganizationUser,
     Project,
 )
-from authz_analyzer.datastores.mongodb.atlas.service import AtlasService
-from authz_analyzer.datastores.mongodb.atlas.service_model import (
+from universal_data_permissions_scanner.datastores.mongodb.atlas.service import AtlasService
+from universal_data_permissions_scanner.datastores.mongodb.atlas.service_model import (
     ClusterConnectionStringEntry,
     ClusterEntry,
     OrganizationEntry,
     ProjectInfo,
 )
-from authz_analyzer.datastores.mongodb.service import MongoDBService
-from authz_analyzer.models.model import (
+from universal_data_permissions_scanner.datastores.mongodb.service import MongoDBService
+from universal_data_permissions_scanner.models.model import (
     Asset,
     AssetType,
     AuthzEntry,

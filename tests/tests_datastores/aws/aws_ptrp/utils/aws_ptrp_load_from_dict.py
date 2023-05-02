@@ -11,7 +11,7 @@ from aws_ptrp.services.federated_user.federated_user_service import FederatedUse
 from aws_ptrp.services.service_resource_type import ServiceResourceType
 from serde.de import from_dict
 
-from authz_analyzer.utils.logger import get_logger
+from universal_data_permissions_scanner.utils.logger import get_logger
 
 
 def load_aws_ptrp_from_dict(

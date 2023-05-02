@@ -92,7 +92,7 @@ celerybeat-schedule
 # virtualenv
 .venv
 venv/
-authz_analyzer_venv/
+universal_data_permissions_scanner_venv/
 ENV/
 
 # Spyder project settings
@@ -116,7 +116,7 @@ ENV/
 
 # mkdocs build dir
 site/
-authz-analyzer-export*
+udps-export*
 tests/tests_datastores/aws/aws_ptrp/satori_dev_account_iam_entities.json
 tests/tests_datastores/aws/aws_ptrp/satori_dev_account_ptrp_result.json
 tests/tests_datastores/aws/aws_ptrp/satori_dev_account_ptrp.json

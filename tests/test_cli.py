@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from click.testing import CliRunner
 
-from authz_analyzer import cli
-from authz_analyzer.datastores.aws.analyzer import AwsAssumeRoleInput
+from universal_data_permissions_scanner import cli
+from universal_data_permissions_scanner.datastores.aws.analyzer import AwsAssumeRoleInput
 
 
 @patch('authz_analyzer.cli.run_snowflake', MagicMock())
