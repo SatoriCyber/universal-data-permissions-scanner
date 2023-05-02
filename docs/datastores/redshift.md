@@ -20,7 +20,7 @@ GRANT ROLE satori_scanner_role TO satori_scanner_user;
 
 ## Scanning Amazon Redshift
 ```
-authz-analyzer redshift \
+udps redshift \
     --host <HOST> \
     --username <USERNAME> \
     --password <PASSWORD>
