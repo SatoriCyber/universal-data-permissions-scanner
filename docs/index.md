@@ -7,7 +7,7 @@ The root cause of this problem is that permissions to data are usually stored in
 Identifying this was an issue for many of our customers, the team at [Satori](https://satoricyber.com) decided to build *Universal Data Permissions Scanner*, a service that helps admins to better manage their data store permissions. We believe no one should have to sift through DB system tables to get a clear picture of who can do what with data.
 
 ## Using Universal Data Permissions Scanner
-Authz Analytics is available in two ways:
+Universal Data Permissions Scanner is available in two ways:
 1. universal-data-permissions-scanner - scan the permissions structure of a database to get the list of all users and data assets they can access.
 2. Satori Posture manager - a fully managed SaaS solution to periodically scan, store and visualize all users and data assets they can access. Learn more [here](https://satoricyber.com).
 
