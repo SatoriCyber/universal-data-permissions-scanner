@@ -17,7 +17,7 @@
         <link rel="next" href="../snowflake/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.9">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ded33207.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.85bb2934.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.a6bdf11c.min.css">
       
       
 
@@ -509,23 +509,23 @@
 <h3 id="setup-access-to-scan-a-postgresql-server">Setup Access to Scan a PostgreSQL Server:<a class="headerlink" href="#setup-access-to-scan-a-postgresql-server" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Create a role for authz-analyzer using the following command: 
-<div class="highlight"><pre><span></span><code>CREATE ROLE authz_analyzer NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN NOREPLICATION NOBYPASSRLS PASSWORD &#39;&lt;REPLACE_WITH_A_STRONG_PASSWORD&gt;&#39;;
+<div class="highlight"><pre><span></span><code>CREATE ROLE udps NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN NOREPLICATION NOBYPASSRLS PASSWORD &#39;&lt;REPLACE_WITH_A_STRONG_PASSWORD&gt;&#39;;
 </code></pre></div></li>
 <li>
-<p>For each database on the server, grant permissions for the authz-analyzer role using the following command:
-<div class="highlight"><pre><span></span><code>GRANT SELECT ON TABLE information_schema.tables TO authz_analyzer;
-GRANT SELECT ON TABLE information_schema.table_privileges TO authz_analyzer;
+<p>For each database on the server, grant permissions for the universal-data-permissions-scanner role using the following command:
+<div class="highlight"><pre><span></span><code>GRANT SELECT ON TABLE information_schema.tables TO udps;
+GRANT SELECT ON TABLE information_schema.table_privileges TO udps;
 </code></pre></div></p>
 </li>
 <li>
 <p>For deployments which are not AWS RDS add the following permissions:
-<div class="highlight"><pre><span></span><code>GRANT SELECT ON TABLE pg_database TO authz_analyzer;
-GRANT SELECT ON TABLE pg_catalog.pg_roles TO authz_analyzer;
+<div class="highlight"><pre><span></span><code>GRANT SELECT ON TABLE pg_database TO udps;
+GRANT SELECT ON TABLE pg_catalog.pg_roles TO udps;
 </code></pre></div></p>
 </li>
 </ol>
 <h3 id="scanning-a-postgresql-server">Scanning a PostgreSQL Server<a class="headerlink" href="#scanning-a-postgresql-server" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>authz-analyzer postgres \
+<div class="highlight"><pre><span></span><code>udps postgres \
     --host &lt;HOST&gt; \
     --username &lt;USERNAME&gt; \
     --password &lt;PASSWORD&gt; \
@@ -607,7 +607,7 @@ GRANT SELECT ON TABLE pg_catalog.pg_roles TO authz_analyzer;
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.instant", "navigation.tabs.sticky"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.51198bba.min.js"></script>
+      <script src="../../assets/javascripts/bundle.fac441b0.min.js"></script>
       
     
   </body>

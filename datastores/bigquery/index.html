@@ -17,7 +17,7 @@
         <link rel="next" href="../mongodb/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.9">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ded33207.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.85bb2934.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.a6bdf11c.min.css">
       
       
 
@@ -522,7 +522,7 @@
 <p>Google BigQuery uses the Google Cloud IAM authorization system to manage access to data assets. GCP IAM implements a role-based access control approach. A GCP IAM role is a set of permissions that allow a principal to perform actions, for example, creating a dataset. To allow principals to perform the actions defined in a role on a resource, an allow policy is created which lists the principals, the role and the resource.</p>
 <p>GCP IAM lets you set allow policies at different levels of the resource hierarchy: organization, folder, project and resource. Allow policies grant access to all resources at lower levels of the hierarchy, for example, when setting an allow policy on a dataset, principals will get be granted the role's permissions on all the tables in the dataset.</p>
 <h3 id="setup-access-to-scan-google-bigquery">Setup Access to Scan Google BigQuery<a class="headerlink" href="#setup-access-to-scan-google-bigquery" title="Permanent link">&para;</a></h3>
-<p>authz-analyzer needs the following permissions:
+<p>universal-data-permissions-scanner needs the following permissions:
 <div class="highlight"><pre><span></span><code>bigquery.datasets.get
 bigquery.datasets.getIamPolicy
 bigquery.tables.get
@@ -538,7 +538,7 @@ iam.roles.get
 resourcemanager.folders.list
 resourcemanager.projects.list
 </code></pre></div></p>
-<p>It is recommended to group these permissions into a custom role in GCP. Because authz-analyzer required organization-level permissions (i.e. <code>resourcemanager.organizations.get</code> and <code>resourcemanager.organizations.getIamPolicy</code>), the custom role needs to be created on the organization's Identity and Access Management (IAM) settings. Follow these steps to create a role for authz-analyzer:</p>
+<p>It is recommended to group these permissions into a custom role in GCP. Because universal-data-permissions-scanner required organization-level permissions (i.e. <code>resourcemanager.organizations.get</code> and <code>resourcemanager.organizations.getIamPolicy</code>), the custom role needs to be created on the organization's Identity and Access Management (IAM) settings. Follow these steps to create a role for universal-data-permissions-scanner:</p>
 <ol>
 <li>Login to the Google Cloud Platform console and navigate to your organization</li>
 <li>Navigate to IAM, Roles menu and select the CREATE ROLE button</li>
@@ -546,7 +546,7 @@ resourcemanager.projects.list
 <li>Use the ADD PERMISSIONS dialog to add the permissions specified above</li>
 <li>Click CREATE to create the role</li>
 </ol>
-<p>Now you can assign to the role to the user or service account that will be used to run authz-analyzer.</p>
+<p>Now you can assign to the role to the user or service account that will be used to run universal-data-permissions-scanner.</p>
 <h3 id="scanning-google-bigquery">Scanning Google BigQuery<a class="headerlink" href="#scanning-google-bigquery" title="Permanent link">&para;</a></h3>
 <p>By default, auth-analyzer will use the default application credentials provided by the <code>gcloud</code> command line interface. To refresh your credentials, run the following command:
 <div class="highlight"><pre><span></span><code>gcloud auth login --update-dac
@@ -629,7 +629,7 @@ Alternatively, use the <code>--key-file</code> option to specify a path to a GCP
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.instant", "navigation.tabs.sticky"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.51198bba.min.js"></script>
+      <script src="../../assets/javascripts/bundle.fac441b0.min.js"></script>
       
     
   </body>

@@ -17,7 +17,7 @@
         <link rel="next" href="../../contributing/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.9">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ded33207.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.85bb2934.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.a6bdf11c.min.css">
       
       
 
@@ -522,27 +522,27 @@
 <p>Snowflake implements a role-based access control (RBAC) model to manage access to data assets. Roles are granted with privileges on data assets and users are assigned to roles, which can be organized hierarchically. All users are assigned to the <code>PUBLIC</code> role by default.</p>
 <h3 id="setup-access-to-scan-a-snowflake-account">Setup Access to Scan a Snowflake Account<a class="headerlink" href="#setup-access-to-scan-a-snowflake-account" title="Permanent link">&para;</a></h3>
 <ol>
-<li>Create a role for authz-analyzer using the following command:
-<div class="highlight"><pre><span></span><code>CREATE ROLE AUTHZ_ANALYZER_ROLE;
+<li>Create a role for universal-data-permissions-scanner using the following command:
+<div class="highlight"><pre><span></span><code>CREATE ROLE UDPS_ROLE;
 </code></pre></div></li>
 <li>Grant privileges to the role you created using the following command:
-<div class="highlight"><pre><span></span><code>GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE AUTHZ_ANALYZER_ROLE;
-GRANT USAGE ON WAREHOUSE &lt;REPLACE_WITH_WAREHOUSE_NAME&gt; TO ROLE AUTHZ_ANALYZER_ROLE;
-GRANT IMPORT SHARE ON ACCOUNT TO AUTHZ_ANALYZER_ROLE;
+<div class="highlight"><pre><span></span><code>GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE UDPS_ROLE;
+GRANT USAGE ON WAREHOUSE &lt;REPLACE_WITH_WAREHOUSE_NAME&gt; TO ROLE UDPS_ROLE;
+GRANT IMPORT SHARE ON ACCOUNT TO UDPS_ROLE;
 </code></pre></div></li>
-<li>Create a user for authz-analyzer and assign it to the role you created using the following commands:
-<div class="highlight"><pre><span></span><code>CREATE USER AUTHZ_ANALYZER password=&#39;&lt;REPLACE_WITH_A_STRONG_PASSWORD&gt;&#39; default_role = AUTHZ_ANALYZER_ROLE;
-GRANT ROLE AUTHZ_ANALYZER_ROLE TO USER AUTHZ_ANALYZER;
+<li>Create a user for universal-data-permissions-scanner and assign it to the role you created using the following commands:
+<div class="highlight"><pre><span></span><code>CREATE USER UDPS password=&#39;&lt;REPLACE_WITH_A_STRONG_PASSWORD&gt;&#39; default_role = UDPS_ROLE;
+GRANT ROLE UDPS_ROLE TO USER UDPS;
 </code></pre></div></li>
 </ol>
 <h3 id="scanning-snowflake">Scanning Snowflake<a class="headerlink" href="#scanning-snowflake" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>authz-analyzer snowflake \
+<div class="highlight"><pre><span></span><code>udps snowflake \
     --account &lt;REPLACE_WITH_ACCOUNT&gt; \
     --username &lt;USERNAME&gt; \
     --password &lt;PASSWORD&gt; 
 </code></pre></div>
 <h3 id="known-limitations">Known Limitations<a class="headerlink" href="#known-limitations" title="Permanent link">&para;</a></h3>
-<p>The following Snowflake features are not currently supported by authz-analyzer:</p>
+<p>The following Snowflake features are not currently supported by universal-data-permissions-scanner:</p>
 <ul>
 <li>SNOWFLAKE database roles</li>
 <li>Permissions on objects to a share via a database role</li>
@@ -623,7 +623,7 @@ GRANT ROLE AUTHZ_ANALYZER_ROLE TO USER AUTHZ_ANALYZER;
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.instant", "navigation.tabs.sticky"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.51198bba.min.js"></script>
+      <script src="../../assets/javascripts/bundle.fac441b0.min.js"></script>
       
     
   </body>

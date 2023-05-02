@@ -17,7 +17,7 @@
         <link rel="next" href="../postgresql/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.9">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ded33207.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.85bb2934.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.a6bdf11c.min.css">
       
       
 
@@ -612,17 +612,17 @@
 <li>Organization Users - users that have access to the Atlas console. Organization users are assigned to organization roles which define their permissions and resources like projects and clusters they can access.</li>
 </ul>
 <h4 id="setup-access-to-scan-a-mongodb-atlas-cluster">Setup Access to Scan a MongoDB Atlas Cluster<a class="headerlink" href="#setup-access-to-scan-a-mongodb-atlas-cluster" title="Permanent link">&para;</a></h4>
-<p>To enable authz-analyzer to scan the list of users, roles and permissions perform the following steps:
+<p>To enable universal-data-permissions-scanner to scan the list of users, roles and permissions perform the following steps:
 1. Create an organization API Key in the Atlas management console.
 2. Grant the <code>Organization Read Only</code> role to the API key you created
 3. Copy the Public and Private keys and store them for later use.</p>
-<p>To enable authz-analyzer to scan the list of databases and collections in a MongoDB cluster perform the following steps:
+<p>To enable universal-data-permissions-scanner to scan the list of databases and collections in a MongoDB cluster perform the following steps:
 1. Create a custom role.
 2. Grant the <code>listDatabases</code> action to the role.
 3. Grant the <code>listCollections</code> action on each database in the cluster to the role.
 4. Create a database user and assign it to the custom role you created.</p>
 <h4 id="scanning-a-mongodb-atlas-cluster">Scanning a MongoDB Atlas Cluster<a class="headerlink" href="#scanning-a-mongodb-atlas-cluster" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code>authz-analyzer atlas \
+<div class="highlight"><pre><span></span><code>udps atlas \
     --public_key &lt;PUBLIC KEY&gt; \
     --private_key &lt;PRIVATE KEY&gt; \
     --username &lt;DB USER&gt; \
@@ -635,10 +635,10 @@
 <h4 id="setup-access-to-scan-a-standalone-mongodb-cluster">Setup Access to Scan a Standalone MongoDB Cluster<a class="headerlink" href="#setup-access-to-scan-a-standalone-mongodb-cluster" title="Permanent link">&para;</a></h4>
 <ol>
 <li>
-<p>Create a role for authz-analyzer using the following command:
+<p>Create a role for universal-data-permissions-scanner using the following command:
 <div class="highlight"><pre><span></span><code>db.createRole(
     {
-        role:&quot;authz_analyzer&quot;,
+        role:&quot;udps&quot;,
         privileges: [
             {
                 resource: {
@@ -654,11 +654,11 @@
 </code></pre></div></p>
 </li>
 <li>
-<p>Create a user for authz-analyzer using the following command:
+<p>Create a user for universal-data-permissions-scanner using the following command:
 <div class="highlight"><pre><span></span><code>db.createUser(
     {
-        user: &quot;authz_analyzer&quot;,
-        roles: [&quot;authz_analyzer&quot;],
+        user: &quot;udps_user&quot;,
+        roles: [&quot;udps&quot;],
         pwd: &quot;&lt;password&gt;&quot;
     }
 ) 
@@ -666,13 +666,13 @@
 </li>
 </ol>
 <h4 id="scanning-a-standalone-mongodb-cluster">Scanning a Standalone MongoDB Cluster<a class="headerlink" href="#scanning-a-standalone-mongodb-cluster" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code>authz-analyzer mongodb \
+<div class="highlight"><pre><span></span><code>udps mongodb \
     --host &lt;CLUSTER HOSTNAME&gt; \
     --username &lt;USERNAME&gt; \
     --password &lt;PASSWORD&gt;
 </code></pre></div>
 <h3 id="known-limitations">Known Limitations<a class="headerlink" href="#known-limitations" title="Permanent link">&para;</a></h3>
-<p>The following MongoDB features are not currently supported by authz-analyzer:</p>
+<p>The following MongoDB features are not currently supported by universal-data-permissions-scanner:</p>
 <ul>
 <li>Data API</li>
 <li>Cloud users</li>
@@ -755,7 +755,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.instant", "navigation.tabs.sticky"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.51198bba.min.js"></script>
+      <script src="../../assets/javascripts/bundle.fac441b0.min.js"></script>
       
     
   </body>
