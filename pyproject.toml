@@ -16,7 +16,7 @@ classifiers=[
     'Programming Language :: Python :: 3.10',
 ]
 packages = [
-    { include = "universal_data_permissions_scanners" },
+    { include = "universal_data_permissions_scanner" },
     { include = "tests", format = "sdist" },
 ]
 
