@@ -14,12 +14,12 @@ Atlas has two types of users:
 
 ### Setup Access to Scan a MongoDB Atlas Cluster
 
-To enable authz-analyzer to scan the list of users, roles and permissions perform the following steps:
+To enable universal-data-permissions-scanner to scan the list of users, roles and permissions perform the following steps:
 1. Create an organization API Key in the Atlas management console.
 2. Grant the `Organization Read Only` role to the API key you created
 3. Copy the Public and Private keys and store them for later use.
 
-To enable authz-analyzer to scan the list of databases and collections in a MongoDB cluster perform the following steps:
+To enable universal-data-permissions-scanner to scan the list of databases and collections in a MongoDB cluster perform the following steps:
 1. Create a custom role.
 2. Grant the `listDatabases` action to the role.
 3. Grant the `listCollections` action on each database in the cluster to the role.
@@ -27,7 +27,7 @@ To enable authz-analyzer to scan the list of databases and collections in a Mong
 
 ### Scanning a MongoDB Atlas Cluster
 ```
-authz-analyzer atlas \
+udps atlas \
     --public_key <PUBLIC KEY> \
     --private_key <PRIVATE KEY> \
     --username <DB USER> \
@@ -40,11 +40,11 @@ authz-analyzer atlas \
 MongoDB implements a role-based access control (RBAC) model to manage access to data assets. Users are assigned with roles which have privileges. Role can be built-it or user-defined, and organized hierarchically. Roles that are assigned to the admin database have access across all databases while roles that are assigned to a specific databases have access only to those databases.
 
 ### Setup Access to Scan a Standalone MongoDB Cluster
-1. Create a role for authz-analyzer using the following command:
+1. Create a role for universal-data-permissions-scanner using the following command:
 ```
 db.createRole(
     {
-        role:"authz_analyzer",
+        role:"udps",
         privileges: [
             {
                 resource: {
@@ -59,12 +59,12 @@ db.createRole(
 )    
 ```
 
-2. Create a user for authz-analyzer using the following command:
+2. Create a user for universal-data-permissions-scanner using the following command:
 ```
 db.createUser(
     {
-        user: "authz_analyzer",
-        roles: ["authz_analyzer"],
+        user: "udps_user",
+        roles: ["udps"],
         pwd: "<password>"
     }
 ) 
@@ -72,14 +72,14 @@ db.createUser(
 
 ### Scanning a Standalone MongoDB Cluster
 ```
-authz-analyzer mongodb \
+udps mongodb \
     --host <CLUSTER HOSTNAME> \
     --username <USERNAME> \
     --password <PASSWORD>
 ```
 
 ## Known Limitations
-The following MongoDB features are not currently supported by authz-analyzer:
+The following MongoDB features are not currently supported by universal-data-permissions-scanner:
 
 * Data API
 * Cloud users

@@ -3,23 +3,23 @@ PostgreSQL implements a role-based access control (RBAC) model to manage access 
 ## Setup Access to Scan a PostgreSQL Server:
 1. Create a role for authz-analyzer using the following command: 
 ```
-CREATE ROLE authz_analyzer NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN NOREPLICATION NOBYPASSRLS PASSWORD '<REPLACE_WITH_A_STRONG_PASSWORD>';
+CREATE ROLE udps NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN NOREPLICATION NOBYPASSRLS PASSWORD '<REPLACE_WITH_A_STRONG_PASSWORD>';
 ```
-2. For each database on the server, grant permissions for the authz-analyzer role using the following command:
+2. For each database on the server, grant permissions for the universal-data-permissions-scanner role using the following command:
 ```
-GRANT SELECT ON TABLE information_schema.tables TO authz_analyzer;
-GRANT SELECT ON TABLE information_schema.table_privileges TO authz_analyzer;
+GRANT SELECT ON TABLE information_schema.tables TO udps;
+GRANT SELECT ON TABLE information_schema.table_privileges TO udps;
 ```
 
 1. For deployments which are not AWS RDS add the following permissions:
 ```
-GRANT SELECT ON TABLE pg_database TO authz_analyzer;
-GRANT SELECT ON TABLE pg_catalog.pg_roles TO authz_analyzer;
+GRANT SELECT ON TABLE pg_database TO udps;
+GRANT SELECT ON TABLE pg_catalog.pg_roles TO udps;
 ```
 
 ## Scanning a PostgreSQL Server
 ```
-authz-analyzer postgres \
+udps postgres \
     --host <HOST> \
     --username <USERNAME> \
     --password <PASSWORD> \
