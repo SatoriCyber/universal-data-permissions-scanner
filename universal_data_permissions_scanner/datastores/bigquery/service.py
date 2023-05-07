@@ -3,6 +3,7 @@ from typing import Any, Callable, List, Optional
 
 import googleapiclient.discovery  # pylint: disable=import-error
 from google.cloud import bigquery, resourcemanager_v3  # pylint: disable=no-name-in-module
+from google.api_core.iam import Policy
 from google.cloud.resourcemanager_v3.types import Project  # pylint: disable=no-name-in-module
 from google.iam.v1 import iam_policy_pb2  # type: ignore
 
@@ -63,7 +64,7 @@ class BigQueryService:  # pylint: disable=(too-many-instance-attributes)
         request = resourcemanager_v3.GetFolderRequest(name=folder_id)
         return self.folders_client.get_folder(request=request)  # type: ignore
 
-    def _get_folder_iam(self, folder_id: str):
+    def _get_folder_iam(self, folder_id: str) -> Policy:
         request = iam_policy_pb2.GetIamPolicyRequest(resource=folder_id)
         return self.folders_client.get_iam_policy(request=request)  # type: ignore
 
@@ -71,7 +72,7 @@ class BigQueryService:  # pylint: disable=(too-many-instance-attributes)
         request = resourcemanager_v3.GetOrganizationRequest(name=org_id)
         return self.org_client.get_organization(request=request)  # type: ignore
 
-    def _get_organization_iam(self, org_id: str):
+    def _get_organization_iam(self, org_id: str) -> Policy:
         request = iam_policy_pb2.GetIamPolicyRequest(resource=org_id)
         return self.org_client.get_iam_policy(request=request)  # type: ignore
 
