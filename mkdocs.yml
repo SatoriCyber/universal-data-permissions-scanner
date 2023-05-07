@@ -68,6 +68,7 @@ nav:
   - Data Stores:
     - Amazon Redshift: datastores/redshift.md
     - Amazon S3: datastores/s3.md
+    - Databricks: datastores/databricks.md
     - Google BigQuery: datastores/bigquery.md
     - MongoDB: datastores/mongodb.md
     - PostgreSQL: datastores/postgresql.md
