@@ -82,7 +82,7 @@ def snowflake(
 
     rsa: Optional[str] = None
     if rsa_key:
-        rsa = rsa_key.read()
+        rsa = rsa_key.read() # pyright: ignore [reportGeneralTypeIssues]
 
     output_path = Path(ctx.obj['OUT'])
     run_snowflake(

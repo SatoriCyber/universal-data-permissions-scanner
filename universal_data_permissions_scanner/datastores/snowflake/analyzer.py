@@ -151,9 +151,11 @@ class SnowflakeAuthzAnalyzer:
     @staticmethod
     def _read_private_key(key: str, password: Optional[str]):
         """Convert private key to pkcs8 format - based on snowflake example"""
+        password_bytes: Optional[bytes] = None
         if password is not None:
-            password = password.encode()
-        p_key = serialization.load_pem_private_key(key.encode(), password=password, backend=default_backend())
+            password_bytes = password.encode()
+
+        p_key = serialization.load_pem_private_key(key.encode(), password=password_bytes, backend=default_backend())
 
         pkb = p_key.private_bytes(
             encoding=serialization.Encoding.DER,
