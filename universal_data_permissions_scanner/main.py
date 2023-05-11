@@ -27,6 +27,8 @@ def run_snowflake(
     warehouse: str,
     output_format: OutputFormat,
     output_path: Path,
+    rsa_key: Optional[str],
+    rsa_pass: Optional[str],
 ):
     """Run snowflake analyzer.
 
@@ -49,6 +51,8 @@ def run_snowflake(
         output_path=output_path,
         output_format=output_format,
         logger=logger,
+        rsa_key=rsa_key,
+        rsa_pass=rsa_pass,
     )
     snowflake_analyzer.run()
 

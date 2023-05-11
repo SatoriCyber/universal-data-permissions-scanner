@@ -27,6 +27,27 @@ def test_snowflake():
     )
 
 
+@patch('universal_data_permissions_scanner.cli.run_snowflake', MagicMock())
+def test_snowflake_private_key():
+    invoke(
+        cli.snowflake,
+        [
+            '--username',
+            'user',
+            '--rsa-key',
+            '-',
+            '--rsa-pass',
+            'rsa-pass',
+            '--account',
+            'account',
+            '--host',
+            'host',
+            '--warehouse',
+            'warehouse',
+        ],
+    )
+
+
 @pytest.mark.parametrize('additional_args', [[], ['--key-file', 'key_file_path']], ids=['basic', 'key-file'])
 @patch('universal_data_permissions_scanner.cli.run_bigquery', MagicMock())
 def test_bigquery(additional_args: List[str]):

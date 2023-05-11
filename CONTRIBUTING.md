@@ -91,6 +91,11 @@ export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
 export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
 ```
 
+If you having problems with python virtual environments, switch into poetry shell
+```
+$ poetry shell
+```
+
 ## Pull Request Guidelines
 
 Before you submit a pull request, check that it meets these guidelines:

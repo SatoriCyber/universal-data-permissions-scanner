@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 from unittest.mock import MagicMock, call
-
+import hashlib
 import pytest
 
 from universal_data_permissions_scanner import SnowflakeAuthzAnalyzer
@@ -473,3 +473,85 @@ def test_snowflake_analyzer_shares(
         mocked_writer.mocked_writer.write_entry.assert_has_calls(expected_writes)  # type: ignore
     else:
         mocked_writer.assert_write_entry_not_called()
+
+
+@pytest.mark.parametrize(
+    "rsa_key, password, expected",
+    [
+        (
+            """ 
+-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIIE6TAbBgkqhkiG9w0BBQMwDgQI7+JBZKQNQVoCAggABIIEyI/ezj17Nor++B5/
+b0t0e/aJlqrODaPhsPzHOLt8cWsL39frHfurSXyy7hsnYRyZbyU5YqgxNiRoMAwY
+AxlFpgV/4u5vbTms5bZbcQ1GuBdTB/lKV8pmLDe9wKrxMspGnRwIcCOEUO3qEjyW
+iT5q4UlbSWASIum+dNhN1XNufdlXdhnKNi97YckQy1qWJl7Mt/23uQtpD2ppqMDa
+YMBBIqM7AkOdlZ81HqgM5wyl8H+bnFELYPBsriDL57FhxSEppS0fLyLJBUtYONzw
+XPorP/UsZz65hw6UYVmArH17/3PrQ96liioP10LIJ7Y9YM0kYiFzW3I3qjMIADsU
+vB3KCP2qDEuV1mQ7cNZlfocoUdGu++x7yzGjqz4Bi7/qd1+2TMH7OSMAXCPTxA3n
+e3IoV3BsA438I7+BceAFA+7FbHdx/Z/vTJIfETq8KsicA6yMD+SU9jJYtEptDzqC
+BuWCrvu2dsbjsOfHzowHz7XsmsLTryULVKPlCOlOVzUMK2yLd5Yg8x71AUYEkWWJ
+6Q22VzUlZFrn8BUXh5gTIs6fJw2sydMw0IdaRRWzezg/EGw6LDplaxZnW0aSi1wN
+3sosEo23QmPXT2KOXArxO0eXqBbw2oYy4Xc8OCFySxinAS7wZvGHVE1IGpqWqS1u
+iUdSkY7Yn/+cF0j6Cb0p8eKOBuKo0QJ3+NU0GmO4ZD2tQfz0oqwvg7Nz9Sg4c+ri
+AAPpHQT87l6GHu00h2uGC7Mg5aqqLBIRFBLg2B7WjVf/bgh67tFLLorb+nKkyyDz
+FHZWwez01QdrM/Zy6HzDRpUV7ihhuSuYS+LmOL2aPy6zCxAP708XsHFhweuvLTU9
+cUlfxky3QEk2mil30VZ93SVZ8D8do/Dy8oX8S+RR40OvGdZNQfvk+obr1tZPjvxk
+gycfrd7joGuX+NvNq4ys8jFDhuLNozRwwQGOrchcDVL4unu32J40DmAGT6dNg0Lk
+nRZEcW9zv88Rx+sXyaPgY9xQ/zTgi/Q61SrOYCV50+kvw3f5u7hc+pDD+7R0kwom
+HTQ8TUCr0n8pZ2hX50LkbHVom6ulsfh+jyemXXzOeSp/FEzf1VcY5PDRpp+rG40k
+k7fAoGOeAhCjAmsFRTJRE85tXXmJ7ZvlOwCYkddUIQVPhYPexvsoVAD6+P1/wvOT
+D/WqhsSaHMskJK1X5Hll1aPmCMK+nss0kQfRDFj5S8PhUvFRpy7cbfvRKdi3A8BV
+zK5buJB2akk37ZYIydLhW1FoKKOhEfutHNZDuxxf2/xoT8kjqrrii/fcAbhzEaKQ
+3uQZMCknS+tcBNyRsmw3xoSalwyef0QPZyIRHsXYp8gPA7HhjIavqpa3Z3BY35n+
+MPIvWVgGEsohFhVmTqzMaY86jSQE8vnvPOOBWWB1bhJQt7XYSIzVYQ9iclhzZuqN
+99hUcsLFEdntnffGKir86xtnNg90h6VqT5POxsbZFgmWkmd5+0+pEyy/rdYtZwl5
+bJcEwSrOVxewbVIweD8aiNfCK4SlB7TqibsgCXFiPL8xzKhMKKCSFjY2/2nlZLXA
+MWfPy/lI6uwk9/IfTDqhj072f59Y6+wz8grvJtiOtSl83+427IsPpdTAdHmvvVfc
+QL/fsRCErfq+UAiJbA==
+-----END ENCRYPTED PRIVATE KEY-----
+""",
+            "test",
+            "a8d46ae6de90037bc03f69d2dd41880ab4c41c2db900b18baae6d00c7be05811",
+        ),
+        (
+            """ 
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCb3GChHX3l7Ba9
+yfm+hTGcjJKSZImiBC/riR0wYdd6jIAyehDhLjDwlH7qpn2L9dLULxb5Z0PCDC1h
+MkNnfVIWpJhEoGtDv/eVQlhtC6TfJGH6/u2hr/7NrjUuABrlOCaZMZbA4zhltc2q
+buzDMd4hnw7CxrLzR6OMvAR90GZojXgoQmE1wN1GX4J1ol1ioHMEr2sPqHz/MfxM
+HibgIU2hop3sxAn1KFf9phFGA3hm29kWhJdYJJnXk5ON4bS9enwJA6GFjtKDWXut
+BWg99k+77L60LAWhvtgH8QkY5ZYOLVMqdaiVs0kQqifQtz1/dgStUF4r8OAmozj9
+WnTL/2QzAgMBAAECggEAFW4Yry5x6BItEk1aFHMV3jOJ160RK4Ct4hHJPKTHTudQ
+nSAhgASs3/da+AKKUpsrMNeErigfreekua+CixE1Hz3kXdM8zGTxsskbhWrLcY78
+FdnFbKzZOQiR8VA8YnX1AK1L0But3nY/4AY+cZxCsZbAHdHaOw8HkssrRu1Hl2pd
+PaNjyWesL2a1sbTa7lpWaSoyy813SIuVtH86jnGnmkNGvjAWHilvqQ4mHXl1FmoQ
+X7LQoTnNXecbnMeIfNg+2xTxSDgwaF816XzQrmKiREMMZwi4INj22HpZo5FpX1Kr
+j2RXlUj7SLBeYM4+3+s2V7Z6hI3zV//9RRZiAntY6QKBgQDN0XcmzjvmlpE+Hs2M
+svmw0wcKiNHgENG2MigF5MTr/eCI2OoqLtJRcC3U4kmzYPBjoSn5yCvJXXJP3kOS
+3RbMD0qHn/s37UCKQq2ykKm0RDQzyMcy+gTrRRqwYsEFvg9aYdng5Ac9iiDkGcY9
+n1ytOIUF4+pzZ1LKgK9Q9M5JVQKBgQDB3LpP8dyXQaLE2lpLWnivSYhyFXnhmN3W
+cuoGV8WNiPig+3O0PncK8TF2Ym5TapIzlUCyTOJh26WjmbWtKJ1Pkm5YR6l2JiyJ
+pKzvHZ9RYMkHosZvHqzWMPKjqJ5NEx7FRmjXle2ZNtQQvhyA/i6yxGdHfYHeMFGP
+cKk72cRXZwKBgQCoMfZyYvU2snMNVfTad2RvqXTGmhsRRg1rHD/y2QpIZNd6XfG2
++T5syQTbRPW/voeUk58O/hMyYshJFrUYLs8zgYeBoC6XfK5Sjr0OAQR+SYJzky+e
+rA0bCwUNghaFj9VSIkcAbriwBNJuNdX4g+Qjtt2We7QcDSLuVA1xVi3CZQKBgA3e
+zhHEO0UzNAMjoEw9596aw0FuWe8TMeQTCr1zcDYFM8zI0Ol3gqrswN44gq5DNLyu
+FBftulDIF1zSNZZzDnZQAsccMXq7lnoupxTgqLJ420lJkysGJdWZYPLmsJTRJmV0
++TFbj8lji966y21LQmoV9VG/IBiWmm9J30Hh/dNHAoGAUU043I6oScB2MsYJVMDW
+hZrSr2BX/Qe7r38dApkZinXhCpRstgGj6L+2Gn2Mpi8qBI14TAFkzcRcmOcwCK/I
+s9F57ES837zGU2kYl8LbDPUkeU3QGxv78GBxc/geIb2aFvg7BbMiPfLQnFbqv1gz
+OmaNtj0B9DQjsLqsxnrU1hM=
+-----END PRIVATE KEY-----
+""",
+            None,
+            "19e6134ff79b30b0b3a354ab98504127fb7f3fa043fc8f3caaa0b348193e5fd1",
+        ),
+    ],
+)
+def test_snowflake_analyzer_read_private_key(rsa_key, password, expected):
+    rsa_key = SnowflakeAuthzAnalyzer._read_private_key(rsa_key, password)
+    m = hashlib.sha256()
+    m.update(rsa_key)
+    m.digest()
+    assert m.hexdigest() == expected
