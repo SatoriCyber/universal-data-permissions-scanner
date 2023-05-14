@@ -3,7 +3,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, TextIO
 
 import click
 
@@ -72,7 +72,7 @@ def snowflake(
     account: str,
     host: str,
     warehouse: str,
-    rsa_key: click.File,
+    rsa_key: Optional[TextIO],
     rsa_pass: Optional[str],
 ):
     """Analyze Snowflake Authorization"""
@@ -81,8 +81,8 @@ def snowflake(
         return
 
     rsa: Optional[str] = None
-    if rsa_key:
-        rsa = rsa_key.read() # pyright: ignore [reportGeneralTypeIssues]
+    if rsa_key is not None:
+        rsa = rsa_key.read()
 
     output_path = Path(ctx.obj['OUT'])
     run_snowflake(
