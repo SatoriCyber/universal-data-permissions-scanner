@@ -68,7 +68,7 @@ def main(ctx: click.Context, debug: bool, out: str, out_format: str):
 def snowflake(
     ctx: click.Context,
     username: str,
-    password: str,
+    password: Optional[str],
     account: str,
     host: str,
     warehouse: str,

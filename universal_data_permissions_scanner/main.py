@@ -21,7 +21,7 @@ from universal_data_permissions_scanner.datastores.databricks.analyzer import Da
 def run_snowflake(
     logger: Logger,
     username: str,
-    password: str,
+    password: Optional[str],
     account: str,
     host: str,
     warehouse: str,
