@@ -81,7 +81,9 @@ class SnowflakeAuthzAnalyzer:
             host (str): Snowflake host
             account (str): Snowflake account
             username (str): Snowflake username to connect with
-            password (str): Snowflake password to connect with
+            password (Optional[str]): Snowflake password to connect with
+            rsa_key: (Optional[str]): Snowflake rsa key to connect with
+            rsa_pass: (Optional[str]): RSA password to decrypt rsa key
             warehouse (str): Snowflake warehouse to use
             logger (Optional[Logger], optional): Python logger. Defaults to None.
             output_path (Union[Path, str], optional): Path to write the file. Defaults to ./authz-analyzer-export.
