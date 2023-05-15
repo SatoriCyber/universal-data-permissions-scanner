@@ -3,7 +3,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, TextIO
 
 import click
 
@@ -59,14 +59,35 @@ def main(ctx: click.Context, debug: bool, out: str, out_format: str):
 @main.command()
 @click.pass_context
 @click.option('--username', '-u', required=True, type=str, help="Username")
-@click.option('--password', '-p', required=True, type=str, help="Password")
+@click.option('--password', '-p', required=False, type=str, help="Password")
+@click.option('--rsa-key', '-r', required=False, type=click.File('r'), help="Path to RSA private key")
+@click.option('--rsa-pass', required=False, type=str, help="RSA key password")
 @click.option('--account', '-a', required=True, type=str, help="Account")
 @click.option('--host', '-t', required=False, type=str, help="Hostname")
 @click.option('--warehouse', '-w', required=False, type=str, help="Warehouse")
-def snowflake(ctx: click.Context, username: str, password: str, account: str, host: str, warehouse: str):
+def snowflake(
+    ctx: click.Context,
+    username: str,
+    password: Optional[str],
+    account: str,
+    host: str,
+    warehouse: str,
+    rsa_key: Optional[TextIO],
+    rsa_pass: Optional[str],
+):
     """Analyze Snowflake Authorization"""
+    if not any([password, rsa_key]):
+        click.echo('Error: Required at least one of the options: --password / -p or --rsa / -r')
+        return
+
+    rsa: Optional[str] = None
+    if rsa_key is not None:
+        rsa = rsa_key.read()
+
     output_path = Path(ctx.obj['OUT'])
-    run_snowflake(ctx.obj['LOGGER'], username, password, account, host, warehouse, ctx.obj["FORMAT"], output_path)
+    run_snowflake(
+        ctx.obj['LOGGER'], username, password, account, host, warehouse, ctx.obj["FORMAT"], output_path, rsa, rsa_pass
+    )
 
 
 @main.command()

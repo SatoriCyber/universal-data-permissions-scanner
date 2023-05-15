@@ -21,12 +21,14 @@ from universal_data_permissions_scanner.datastores.databricks.analyzer import Da
 def run_snowflake(
     logger: Logger,
     username: str,
-    password: str,
+    password: Optional[str],
     account: str,
     host: str,
     warehouse: str,
     output_format: OutputFormat,
     output_path: Path,
+    rsa_key: Optional[str],
+    rsa_pass: Optional[str],
 ):
     """Run snowflake analyzer.
 
@@ -49,6 +51,8 @@ def run_snowflake(
         output_path=output_path,
         output_format=output_format,
         logger=logger,
+        rsa_key=rsa_key,
+        rsa_pass=rsa_pass,
     )
     snowflake_analyzer.run()
 

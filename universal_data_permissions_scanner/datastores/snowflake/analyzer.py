@@ -26,6 +26,8 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 import snowflake.connector
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 
 from universal_data_permissions_scanner.datastores.snowflake import exporter
 from universal_data_permissions_scanner.datastores.snowflake.model import (
@@ -60,16 +62,17 @@ class SnowflakeAuthzAnalyzer:
     logger: Logger
 
     @classmethod
-    def connect(
+    def connect(  # pylint: disable=too-many-locals
         cls,
         host: str,
         account: str,
         username: str,
-        password: str,
         warehouse: str,
         logger: Optional[Logger] = None,
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
+        rsa_key: Optional[str] = None,
+        rsa_pass: Optional[str] = None,
         **snowflake_connection_kwargs: Any,
     ):
         """Connect to Snowflake and return an analyzer.
@@ -92,10 +95,12 @@ class SnowflakeAuthzAnalyzer:
         # Handle case sensitive warehouse name, wrap with quotes
         warehouse = f'"{warehouse}"'
 
+        if rsa_key is not None:
+            snowflake_connection_kwargs["private_key"] = SnowflakeAuthzAnalyzer._read_private_key(rsa_key, rsa_pass)
+
         try:
             connector = snowflake.connector.connect(  # type: ignore
                 user=username,
-                password=password,
                 host=host,
                 account=account,
                 warehouse=warehouse,
@@ -139,6 +144,22 @@ class SnowflakeAuthzAnalyzer:
                 roles.add(role)
             roles.add(DBRole(name="PUBLIC", roles=set()))
         return results
+
+    @staticmethod
+    def _read_private_key(key: str, password: Optional[str]):
+        """Convert private key to pkcs8 format - based on snowflake example"""
+        password_bytes: Optional[bytes] = None
+        if password is not None:
+            password_bytes = password.encode()
+
+        p_key = serialization.load_pem_private_key(key.encode(), password=password_bytes, backend=default_backend())
+
+        pkb = p_key.private_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+        return pkb
 
     @staticmethod
     def _add_role_to_roles(role_name: str, granted_role_name: str, role_to_roles: Dict[str, Set[DBRole]]):
