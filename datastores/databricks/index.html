@@ -8,20 +8,20 @@
       
       
       
-        <link rel="canonical" href="https://satoricyber.github.io/universal-data-permissions-scanner/datastores/s3/">
+        <link rel="canonical" href="https://satoricyber.github.io/universal-data-permissions-scanner/datastores/databricks/">
       
       
-        <link rel="prev" href="../redshift/">
+        <link rel="prev" href="../s3/">
       
       
-        <link rel="next" href="../databricks/">
+        <link rel="next" href="../bigquery/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
     
     
       
-        <title>Amazon S3 - universal-data-permissions-scanner</title>
+        <title>Databricks - universal-data-permissions-scanner</title>
       
     
     
@@ -69,7 +69,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#setup-access-to-scan-s3-buckets-in-an-aws-account" class="md-skip">
+        <a href="#setup-access-to-scan-a-databricks" class="md-skip">
           Skip to content
         </a>
       
@@ -104,7 +104,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Amazon S3
+              Databricks
             
           </span>
         </div>
@@ -303,6 +303,20 @@
               
   
   
+  
+    <li class="md-nav__item">
+      <a href="../s3/" class="md-nav__link">
+        Amazon S3
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
     
   
   
@@ -313,12 +327,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Amazon S3
+          Databricks
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Amazon S3
+        Databricks
       </a>
       
         
@@ -335,22 +349,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#setup-access-to-scan-s3-buckets-in-an-aws-account" class="md-nav__link">
-    Setup Access to Scan S3 Buckets in an AWS Account
+  <a href="#setup-access-to-scan-a-databricks" class="md-nav__link">
+    Setup Access to Scan a Databricks:
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#scanning-s3-buckets-in-an-aws-account" class="md-nav__link">
-    Scanning S3 Buckets in an AWS Account
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#known-limitations" class="md-nav__link">
-    Known Limitations
+  <a href="#scanning-databricks" class="md-nav__link">
+    Scanning databricks
   </a>
   
 </li>
@@ -359,20 +366,6 @@
   
 </nav>
       
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../databricks/" class="md-nav__link">
-        Databricks
-      </a>
     </li>
   
 
@@ -495,22 +488,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#setup-access-to-scan-s3-buckets-in-an-aws-account" class="md-nav__link">
-    Setup Access to Scan S3 Buckets in an AWS Account
+  <a href="#setup-access-to-scan-a-databricks" class="md-nav__link">
+    Setup Access to Scan a Databricks:
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#scanning-s3-buckets-in-an-aws-account" class="md-nav__link">
-    Scanning S3 Buckets in an AWS Account
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#known-limitations" class="md-nav__link">
-    Known Limitations
+  <a href="#scanning-databricks" class="md-nav__link">
+    Scanning databricks
   </a>
   
 </li>
@@ -533,130 +519,29 @@
   
 
 
-  <h1>Amazon S3</h1>
+  <h1>Databricks</h1>
 
-<p>AWS S3 uses the AWS IAM authorization system to manage access to S3 buckets. AWS IAM implements both role-based and attribute-based access control approaches. AWS IAM lets you set allow or deny policies for actions taken on resources by principals (users). These are called identity-based policies.</p>
-<p>There are several types of principals in AWS IAM, including IAM user, IAM role, federated user, AWS service, or an anonymous principal. Principals, in the same account or not, may assume IAM roles to gain permissions to actions on resources. To allow a principal to assume an IAM role, a trust relationship is defined on the role which specifies which principals and under what conditions are allowed to assume the role.</p>
-<p>In addition to the identity-based policies described above, an S3 bucket may also have a policy attached to it called a resource-based policy. This policy can allow principals to perform actions on the S3 bucket directly.</p>
-<p>universal-data-permissions-scanner simulates the AWS policy evaluation process to determine the final set of allowed actions granted to principals on S3 buckets.</p>
-<h4 id="setup-access-to-scan-s3-buckets-in-an-aws-account">Setup Access to Scan S3 Buckets in an AWS Account<a class="headerlink" href="#setup-access-to-scan-s3-buckets-in-an-aws-account" title="Permanent link">&para;</a></h4>
-<p>To enable universal-data-permissions-scanner to scan the AWS IAM system for S3 bucket permissions, perform the following steps:
-1. For each AWS account, create a role to be assumed by the udps
-2. Attached the following policy to the new role:
-<div class="highlight"><pre><span></span><code>{
-    &quot;Version&quot;: &quot;2012-10-17&quot;,
-    &quot;Statement&quot;: [
-        {
-            &quot;Sid&quot;: &quot;SatoriAnalyzer&quot;,
-            &quot;Effect&quot;: &quot;Allow&quot;,
-            &quot;Action&quot;: [
-                &quot;iam:List*&quot;,
-                &quot;iam:Get*&quot;,
-                &quot;s3:ListAccessPointsForObjectLambda&quot;,
-                &quot;s3:GetAccessPoint&quot;,
-                &quot;s3:GetLifecycleConfiguration&quot;,
-                &quot;s3:GetBucketTagging&quot;,
-                &quot;s3:GetAccessPointPolicyForObjectLambda&quot;,
-                &quot;s3:ListBucketVersions&quot;,
-                &quot;s3:ListBucket&quot;,
-                &quot;s3:GetObjectVersionAttributes&quot;,
-                &quot;s3:GetBucketPolicy&quot;,
-                &quot;s3:GetObjectAcl&quot;,
-                &quot;s3:GetBucketObjectLockConfiguration&quot;,
-                &quot;s3:GetAccessPointPolicyStatus&quot;,
-                &quot;s3:GetObjectVersionAcl&quot;,
-                &quot;s3:GetObjectTagging&quot;,
-                &quot;s3:GetBucketOwnershipControls&quot;,
-                &quot;s3:GetBucketPublicAccessBlock&quot;,
-                &quot;s3:GetMultiRegionAccessPointPolicyStatus&quot;,
-                &quot;s3:GetBucketPolicyStatus&quot;,
-                &quot;s3:GetObjectRetention&quot;,
-                &quot;s3:GetMultiRegionAccessPointPolicy&quot;,
-                &quot;s3:GetBucketWebsite&quot;,
-                &quot;s3:GetAccessPointPolicyStatusForObjectLambda&quot;,
-                &quot;s3:ListAccessPoints&quot;,
-                &quot;s3:GetMultiRegionAccessPoint&quot;,
-                &quot;s3:GetObjectAttributes&quot;,
-                &quot;s3:ListMultiRegionAccessPoints&quot;,
-                &quot;s3:GetBucketVersioning&quot;,
-                &quot;s3:GetBucketAcl&quot;,
-                &quot;s3:GetObjectLegalHold&quot;,
-                &quot;s3:GetAccessPointConfigurationForObjectLambda&quot;,
-                &quot;s3:DescribeMultiRegionAccessPointOperation&quot;,
-                &quot;s3:GetObject&quot;,
-                &quot;s3:GetAccountPublicAccessBlock&quot;,
-                &quot;s3:ListAllMyBuckets&quot;,
-                &quot;s3:GetBucketCORS&quot;,
-                &quot;s3:GetBucketLocation&quot;,
-                &quot;s3:GetAccessPointPolicy&quot;,
-                &quot;s3:GetObjectVersion&quot;,
-                &quot;sso:ListAccountAssignments&quot;,
-                &quot;sso:ListAccountsForProvisionedPermissionSet&quot;,
-                &quot;sso:ListInstances&quot;,
-                &quot;sso:ListPermissionSets&quot;,
-                &quot;sso:DescribePermissionSet&quot;,
-                &quot;identitystore:ListUsers&quot;,
-                &quot;identitystore:ListGroups&quot;,
-                &quot;identitystore:ListGroupMemberships&quot;
-            ],
-            &quot;Resource&quot;: &quot;*&quot;
-        }
-    ]
-}
+<p>Databricks has two locations where identity is managed:
+* Account
+* Workspace (deprecated)
+There are two types of identities:
+* Users
+* service principals
+Users and service principals can be assigned to groups. Groups can be assigned to other groups.
+Users, service principals and groups are assigned to workspaces, workspaces are assigned to unity-catalog.
+Unity-catalog manage access to data assets.
+Each asset has ownership, which grants full permission.
+Assets are hierarchical, so permissions can be inherited from parent assets.
+For example, a users can be granted select on a catalog, all tables which belong to the catalog will inherit the permission.</p>
+<h3 id="setup-access-to-scan-a-databricks">Setup Access to Scan a Databricks:<a class="headerlink" href="#setup-access-to-scan-a-databricks" title="Permanent link">&para;</a></h3>
+<ol>
+<li>For a user with admin access to the account and which is member of the unity-catalog, login to a workspace, click on the user icon in the top right corner and select "User Settings" -&gt; "Access Tokens" -&gt; "Generate New Token". Copy the generated token.</li>
+</ol>
+<h3 id="scanning-databricks">Scanning databricks<a class="headerlink" href="#scanning-databricks" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>udps databricks \
+    --host &lt;WORKSPACE URL&gt; \
+    --api_key &lt;API_TOKEN&gt; \
 </code></pre></div>
-3. Add the following statement to the role’s Trust Relationships
-<div class="highlight"><pre><span></span><code>{
-    &quot;Version&quot;: &quot;2012-10-17&quot;,
-    &quot;Statement&quot;: [
-        {
-            &quot;Sid&quot;: &quot;Statement1&quot;,
-            &quot;Effect&quot;: &quot;Allow&quot;,
-            &quot;Principal&quot;: {
-                &quot;AWS&quot;: [
-                    &quot;&lt;ARN-TRUSTED-PRINCIPAL&gt;&quot;
-                ]
-            },
-            &quot;Action&quot;: &quot;sts:AssumeRole&quot;
-        }
-    ]
-}
-</code></pre></div>
-<code>ARN-TRUSTED-PRINCIPAL</code> is the AWS ARN of the authenticated principal, such as an IAM or federated user which will be running universal-data-permissions-scanner.</p>
-<h4 id="scanning-s3-buckets-in-an-aws-account">Scanning S3 Buckets in an AWS Account<a class="headerlink" href="#scanning-s3-buckets-in-an-aws-account" title="Permanent link">&para;</a></h4>
-<p>universal-data-permissions-scanner will assume the role arn specified in the <code>--target-account-params</code> parameter to scan the permissions of S3 buckets located in the role's AWS account . Use the optional <code>--additional-account-params</code> parameter to specify additional AWS accounts which may contain information about principals. For example, it's common to organize AWS accounts hierarchically, and manage users in a root account, allowing them to assume roles in sub-accounts.</p>
-<p><code>AWS-ACCOUNT-ASSUME-ROLE-PARAMS</code> is string parameter with format: <code>"role_arn: &lt;ROLE-ARN&gt;"</code></p>
-<div class="highlight"><pre><span></span><code>udps aws-s3 \
-    --target-account-params &lt;AWS-ACCOUNT-ASSUME-ROLE-PARAMS&gt;
-    [--additional-account-params  &lt;AWS-ACCOUNT-ASSUME-ROLE-PARAMS&gt;]
-</code></pre></div>
-<h3 id="known-limitations">Known Limitations<a class="headerlink" href="#known-limitations" title="Permanent link">&para;</a></h3>
-<p>The following AWS features are not currently supported by universal-data-permissions-scanner:</p>
-<ul>
-<li>Policy evaluation <ul>
-<li>AWS organization policies</li>
-<li>Principal permissions boundary    </li>
-</ul>
-</li>
-<li>Policy elements<ul>
-<li>Placeholders like {"aws:username}"</li>
-<li>Session tags</li>
-<li>Conditions    </li>
-</ul>
-</li>
-<li>S3 bucket<ul>
-<li>ACL policy</li>
-<li>Public access settings</li>
-<li>Cross-origin resource sharing settings</li>
-</ul>
-</li>
-<li>Principal resolving from:<ul>
-<li>SAML providers</li>
-<li>Web identity providers</li>
-<li>OIDC providers</li>
-<li>Canonical ID in S3 bucket policy </li>
-</ul>
-</li>
-</ul>
 
 
 
