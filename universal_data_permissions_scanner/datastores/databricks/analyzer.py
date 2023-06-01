@@ -32,7 +32,8 @@ class DatabricksAuthzAnalyzer:
     def connect(
         cls,
         host: str,
-        token: str,
+        username: str,
+        password: str,
         metastore_id: Optional[str] = None,
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
@@ -43,7 +44,8 @@ class DatabricksAuthzAnalyzer:
 
         Args:
             host (str): instance url, e.g. https://dbc-a1b2345c-d6e7.cloud.databricks.com
-            token (str): Personal access token, more details: https://docs.databricks.com/dev-tools/auth.html#pat
+            username (str): An account admin user name which has permission on the metastore as well.
+            password (str): Password for the user.
             output_format (OutputFormat, optional): Output format. Defaults to OutputFormat.CSV.
             output_path (Union[Path, str], optional): Output path. Defaults to Path.cwd()/DEFAULT_OUTPUT_FILE.
             logger (Optional[Logger], optional): Logger. Defaults to None.
@@ -55,7 +57,7 @@ class DatabricksAuthzAnalyzer:
         if logger is None:
             logger = get_logger(False)
         logger.debug("Connecting to Databricks instance at %s", host)
-        api_client = ApiClient(host=host, token=token, **kwargs)
+        api_client = ApiClient(host=host, user=username, password=password, **kwargs)
         unity_catalog_service = UnityCatalogService(api_client)
         scim_service = ScimService(api_client)
         return cls(

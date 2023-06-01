@@ -12,11 +12,12 @@ Assets are hierarchical, so permissions can be inherited from parent assets.
 For example, a users can be granted select on a catalog, all tables which belong to the catalog will inherit the permission.
 
 ## Setup Access to Scan a Databricks:
-1. For a user with admin access to the account and which is member of the unity-catalog, login to a workspace, click on the user icon in the top right corner and select "User Settings" -> "Access Tokens" -> "Generate New Token". Copy the generated token.
+1. Provide a user which has access to the account, workspace, and unity-catalog.
 
 ## Scanning databricks
 ```
 udps databricks \
     --host <WORKSPACE URL> \
-    --api_key <API_TOKEN> \
+    --username <USERNAME> \
+    -- password <PASSWORD>
 ```

@@ -259,18 +259,32 @@ def atlas(
 
 @main.command()
 @click.pass_context
-@click.option('--api_key', '-k', required=True, type=str, help="Databricks API key")
+@click.option(
+    '--username',
+    '-u',
+    required=True,
+    type=str,
+    help="Databricks account admin username",
+)
+@click.option(
+    '--password',
+    '-p',
+    required=True,
+    type=str,
+    help="Databricks account admin password",
+)
 @click.option(
     '--host', '-h', required=True, type=str, help="workspace host, e.g. https://<workspace>.cloud.databricks.com"
 )
-def databricks(ctx: click.Context, host: str, api_key: str):
+def databricks(ctx: click.Context, host: str, username: str, password: str):
     """Analyze databricks Authorization"""
     run_databricks(
         logger=ctx.obj['LOGGER'],
         output_format=ctx.obj['FORMAT'],
         output_path=ctx.obj['OUT'],
         host=host,
-        token=api_key,
+        username=username,
+        password=password,
     )
 
 

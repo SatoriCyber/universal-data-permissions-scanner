@@ -177,8 +177,10 @@ def test_atlas():
 @patch('universal_data_permissions_scanner.cli.run_databricks', MagicMock())
 def test_databricks():
     args = [
-        '--api_key',
-        'key',
+        '--username',
+        'user1',
+        '--password',
+        'password',
         '--host',
         'host',
     ]
