@@ -17,7 +17,7 @@
         <link rel="next" href="../bigquery/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.85bb2934.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.26e3688c.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.a6bdf11c.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -535,12 +535,13 @@ Assets are hierarchical, so permissions can be inherited from parent assets.
 For example, a users can be granted select on a catalog, all tables which belong to the catalog will inherit the permission.</p>
 <h3 id="setup-access-to-scan-a-databricks">Setup Access to Scan a Databricks:<a class="headerlink" href="#setup-access-to-scan-a-databricks" title="Permanent link">&para;</a></h3>
 <ol>
-<li>For a user with admin access to the account and which is member of the unity-catalog, login to a workspace, click on the user icon in the top right corner and select "User Settings" -&gt; "Access Tokens" -&gt; "Generate New Token". Copy the generated token.</li>
+<li>Provide a user which has access to the account, workspace, and unity-catalog.</li>
 </ol>
 <h3 id="scanning-databricks">Scanning databricks<a class="headerlink" href="#scanning-databricks" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>udps databricks \
     --host &lt;WORKSPACE URL&gt; \
-    --api_key &lt;API_TOKEN&gt; \
+    --username &lt;USERNAME&gt; \
+    -- password &lt;PASSWORD&gt;
 </code></pre></div>
 
 
