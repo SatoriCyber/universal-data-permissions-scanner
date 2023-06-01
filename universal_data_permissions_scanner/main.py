@@ -236,7 +236,8 @@ def run_mongodb_atlas(
 def run_databricks(
     logger: Logger,
     host: str,
-    token: str,
+    username: str,
+    password: str,
     output_format: OutputFormat,
     output_path: Path,
 ):
@@ -251,7 +252,8 @@ def run_databricks(
     """
     analyzer = DatabricksAuthzAnalyzer.connect(
         host=host,
-        token=token,
+        username=username,
+        password=password,
         output_path=output_path,
         output_format=output_format,
         logger=logger,
