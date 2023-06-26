@@ -19,6 +19,18 @@ from universal_data_permissions_scanner.utils.logger import get_logger
 from universal_data_permissions_scanner.writers.base_writers import DEFAULT_OUTPUT_FILE, BaseWriter, OutputFormat
 from universal_data_permissions_scanner.writers.get_writers import get_writer
 
+from universal_data_permissions_scanner.datastores.databricks.service.authentication import (
+    Authentication,
+)
+
+
+from universal_data_permissions_scanner.datastores.databricks.service.authentication.basic import BasicAuthentication
+
+from universal_data_permissions_scanner.datastores.databricks.service.authentication.oauth import (
+    OauthProvider,
+    get_authentication_token,
+)
+
 
 @dataclass
 class DatabricksAuthzAnalyzer:
@@ -32,8 +44,7 @@ class DatabricksAuthzAnalyzer:
     def connect(
         cls,
         host: str,
-        username: str,
-        password: str,
+        authentication: Authentication,
         metastore_id: Optional[str] = None,
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
@@ -44,8 +55,7 @@ class DatabricksAuthzAnalyzer:
 
         Args:
             host (str): instance url, e.g. https://dbc-a1b2345c-d6e7.cloud.databricks.com
-            username (str): An account admin user name which has permission on the metastore as well.
-            password (str): Password for the user.
+            authentication: Authentication method, either basic or oauth
             output_format (OutputFormat, optional): Output format. Defaults to OutputFormat.CSV.
             output_path (Union[Path, str], optional): Output path. Defaults to Path.cwd()/DEFAULT_OUTPUT_FILE.
             logger (Optional[Logger], optional): Logger. Defaults to None.
@@ -57,7 +67,18 @@ class DatabricksAuthzAnalyzer:
         if logger is None:
             logger = get_logger(False)
         logger.debug("Connecting to Databricks instance at %s", host)
-        api_client = ApiClient(host=host, user=username, password=password, **kwargs)
+        if isinstance(authentication.authentication, BasicAuthentication):
+            api_client = ApiClient(
+                host=host,
+                user=authentication.authentication.username,
+                password=authentication.authentication.password,
+                **kwargs,
+            )
+        elif isinstance(authentication.authentication, OauthProvider):  # type: ignore
+            token = get_authentication_token(authentication.authentication)
+            api_client = ApiClient(host=host, token=token, **kwargs)
+        else:
+            raise ValueError("Unknown authentication method")
         unity_catalog_service = UnityCatalogService(api_client)
         scim_service = ScimService(api_client)
         return cls(
