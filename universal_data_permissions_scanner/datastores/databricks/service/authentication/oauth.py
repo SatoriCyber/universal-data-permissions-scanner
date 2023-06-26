@@ -6,7 +6,7 @@ from typing import TypedDict
 import requests
 
 
-class OauthProviderBase(ABC):
+class OauthProviderBase(ABC):  # pylint: disable=too-few-public-methods
     @abstractmethod
     def get_token(self, client_id: str, client_secret: str) -> str:
         pass
