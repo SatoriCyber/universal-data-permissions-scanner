@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 from serde import field, serde
 
@@ -8,8 +8,8 @@ from serde import field, serde
 @serde(rename_all="pascalcase")
 @dataclass
 class Owner:
-    display_name: str
     id: str = field(rename='ID')  # pylint: disable=invalid-name
+    display_name: Optional[str] = field(default=None, skip_if_default=True)
 
 
 class Permission(str, Enum):
@@ -29,9 +29,9 @@ class GrantType(str, Enum):
 @serde(rename_all="pascalcase")
 @dataclass
 class Grantee:
-    display_name: str
     type: GrantType
     id: str = field(rename='ID')  # pylint: disable=invalid-name
+    display_name: Optional[str] = field(default=None, skip_if_default=True)
 
 
 @serde(rename_all="pascalcase")

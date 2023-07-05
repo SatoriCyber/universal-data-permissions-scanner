@@ -174,16 +174,24 @@ def test_atlas():
     invoke(cli.atlas, args)
 
 
+@pytest.mark.parametrize(
+    'additional_args',
+    [
+        ['--username', 'user1', '--password', 'abc123'],
+        ['--client_id', "client_id", '--client_secret', 'client_secret', '--tenant_id', 'tenant_id'],
+    ],
+    ids=[
+        'username password',
+        'oauth azure',
+    ],
+)
 @patch('universal_data_permissions_scanner.cli.run_databricks', MagicMock())
-def test_databricks():
+def test_databricks(additional_args: List[str]):
     args = [
-        '--username',
-        'user1',
-        '--password',
-        'password',
         '--host',
         'host',
     ]
+    args.extend(additional_args)
     invoke(cli.databricks, args)
 
 

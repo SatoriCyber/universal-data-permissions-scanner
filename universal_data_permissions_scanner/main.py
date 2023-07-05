@@ -16,6 +16,7 @@ from universal_data_permissions_scanner import (
 from universal_data_permissions_scanner.writers import OutputFormat, get_writer
 
 from universal_data_permissions_scanner.datastores.databricks.analyzer import DatabricksAuthzAnalyzer
+from universal_data_permissions_scanner.datastores.databricks import Authentication
 
 
 def run_snowflake(
@@ -24,7 +25,7 @@ def run_snowflake(
     password: Optional[str],
     account: str,
     host: str,
-    warehouse: str,
+    warehouse: Optional[str],
     output_format: OutputFormat,
     output_path: Path,
     rsa_key: Optional[str],
@@ -236,8 +237,7 @@ def run_mongodb_atlas(
 def run_databricks(
     logger: Logger,
     host: str,
-    username: str,
-    password: str,
+    authentication: Authentication,
     output_format: OutputFormat,
     output_path: Path,
 ):
@@ -249,11 +249,11 @@ def run_databricks(
         key (str): Databricks API key
         output_format (OutputFormat): Output format, CSV or JSON
         output_path (str): Where to write the output
+        authentication: Authentication method
     """
     analyzer = DatabricksAuthzAnalyzer.connect(
         host=host,
-        username=username,
-        password=password,
+        authentication=authentication,
         output_path=output_path,
         output_format=output_format,
         logger=logger,

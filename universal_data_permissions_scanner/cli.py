@@ -7,6 +7,10 @@ from typing import List, Optional, TextIO
 
 import click
 
+from universal_data_permissions_scanner.datastores.databricks import (
+    Authentication,
+)
+
 if sys.executable != sys.argv[0]:
     sys.path.insert(0, (os.path.join(os.path.dirname(__file__), "..")))
 
@@ -71,7 +75,7 @@ def snowflake(
     password: Optional[str],
     account: str,
     host: str,
-    warehouse: str,
+    warehouse: Optional[str],
     rsa_key: Optional[TextIO],
     rsa_pass: Optional[str],
 ):
@@ -262,29 +266,48 @@ def atlas(
 @click.option(
     '--username',
     '-u',
-    required=True,
+    required=False,
     type=str,
     help="Databricks account admin username",
 )
 @click.option(
     '--password',
     '-p',
-    required=True,
+    required=False,
     type=str,
     help="Databricks account admin password",
 )
+@click.option('--client_id', '-cid', required=False, type=str, help="Client ID for ouath2")
+@click.option('--client_secret', '-cis', required=False, type=str, help="Client Secret for ouath2")
+@click.option('--tenant_id', '-tid', required=False, type=str, help="Tenant ID for Azure Oauth")
 @click.option(
     '--host', '-h', required=True, type=str, help="workspace host, e.g. https://<workspace>.cloud.databricks.com"
 )
-def databricks(ctx: click.Context, host: str, username: str, password: str):
+def databricks(
+    ctx: click.Context,
+    host: str,
+    username: Optional[str],
+    password: Optional[str],
+    client_id: Optional[str],
+    client_secret: Optional[str],
+    tenant_id: Optional[str],
+):
     """Analyze databricks Authorization"""
+    if (username is not None) and (password is not None):
+        authentication = Authentication.basic(username=username, password=password)
+    elif (client_id is not None) and (client_secret is not None) and (tenant_id is not None):
+        authentication = Authentication.oauth_azure(
+            client_id=client_id, client_secret=client_secret, tenant_id=tenant_id
+        )
+    else:
+        raise ValueError("Either username and password or client_id, client_secret and tenant_id must be provided")
+
     run_databricks(
         logger=ctx.obj['LOGGER'],
         output_format=ctx.obj['FORMAT'],
         output_path=ctx.obj['OUT'],
         host=host,
-        username=username,
-        password=password,
+        authentication=authentication,
     )
 
 
