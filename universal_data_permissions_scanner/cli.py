@@ -75,7 +75,7 @@ def snowflake(
     password: Optional[str],
     account: str,
     host: str,
-    warehouse: str,
+    warehouse: Optional[str],
     rsa_key: Optional[TextIO],
     rsa_pass: Optional[str],
 ):

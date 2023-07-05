@@ -25,7 +25,7 @@ def run_snowflake(
     password: Optional[str],
     account: str,
     host: str,
-    warehouse: str,
+    warehouse: Optional[str],
     output_format: OutputFormat,
     output_path: Path,
     rsa_key: Optional[str],
