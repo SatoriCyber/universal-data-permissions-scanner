@@ -67,7 +67,7 @@ class SnowflakeAuthzAnalyzer:
         host: str,
         account: str,
         username: str,
-        warehouse: str,
+        warehouse: Optional[str],
         logger: Optional[Logger] = None,
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
@@ -95,7 +95,8 @@ class SnowflakeAuthzAnalyzer:
         writer = get_writer(filename=output_path, output_format=output_format)
 
         # Handle case sensitive warehouse name, wrap with quotes
-        warehouse = f'"{warehouse}"'
+        if warehouse is not None:
+            warehouse = f'"{warehouse}"'
 
         if rsa_key is not None:
             snowflake_connection_kwargs["private_key"] = SnowflakeAuthzAnalyzer._read_private_key(rsa_key, rsa_pass)
