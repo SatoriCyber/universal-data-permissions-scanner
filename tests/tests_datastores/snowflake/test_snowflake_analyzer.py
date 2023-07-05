@@ -382,6 +382,30 @@ def _call_analyzer(service: MagicMock, mocked_writer: MockWriter):
             GrantsShare(
                 "2023-01-22 05:03:55.849 -0800",
                 "USAGE",
+                "FUNCTION",
+                "FUNC1",
+                "SHARE",
+                "PDA02239.SHARE1",
+                "false",
+                "ACCOUNTADMIN",
+            ),
+            [],
+            [],
+        ),
+        (  # test 5
+            Share(
+                "2023-01-22T05:03:45.169-08:00",
+                "OUTBOUND",
+                "OUGNBIN.PDA02239.SHARE1",
+                "DB1",
+                "ACCOUNT1",
+                "ACCOUNTADMIN",
+                "",
+                "",
+            ),
+            GrantsShare(
+                "2023-01-22 05:03:55.849 -0800",
+                "USAGE",
                 "DATABASE_ROLE",
                 "DB1.ROLE_SHARE",
                 "SHARE",
@@ -392,7 +416,7 @@ def _call_analyzer(service: MagicMock, mocked_writer: MockWriter):
             [],
             [],
         ),
-        (  # test 4
+        (  # test 6
             Share(
                 "2023-01-22T05:03:45.169-08:00",
                 "OUTBOUND",
@@ -449,6 +473,7 @@ def _call_analyzer(service: MagicMock, mocked_writer: MockWriter):
         "Outbound share no account",
         "No relevant permissions",  # We grant usage permission on database, but no access to data
         "Outbound simple share",
+        "Outbound simple share ignore for function",
         "Share with database user with no access",
         "Share with database user with access",
     ),

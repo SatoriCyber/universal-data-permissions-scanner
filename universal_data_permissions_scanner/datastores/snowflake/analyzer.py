@@ -291,7 +291,12 @@ class SnowflakeAuthzAnalyzer:
                 self.logger.debug("Privilege doesn't grant permission to data, skipping privilege %s", row[1])
                 continue
 
-            granted_on = GrantedOn(row[2])
+            try:
+                granted_on = GrantedOn(row[2])
+            except ValueError:
+                self.logger.warning("Unknown granted on %s", row[2])
+                continue
+
             resource_name: List[str] = row[3].split(".")
             if granted_on is GrantedOn.DATABASE_ROLE and database_permission is PermissionType.USAGE:
                 on_role(DBRole(resource_name[-1], set()))
