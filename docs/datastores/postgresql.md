@@ -11,7 +11,7 @@ GRANT SELECT ON TABLE information_schema.tables TO udps;
 GRANT SELECT ON TABLE information_schema.table_privileges TO udps;
 ```
 
-1. For deployments which are not AWS RDS add the following permissions:
+3. For deployments which are not AWS RDS add the following permissions:
 ```
 GRANT SELECT ON TABLE pg_database TO udps;
 GRANT SELECT ON TABLE pg_catalog.pg_roles TO udps;
