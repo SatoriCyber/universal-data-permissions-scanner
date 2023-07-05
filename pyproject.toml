@@ -23,7 +23,7 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.8.1,<3.11"
 click = "8.1.3"
-snowflake-connector-python = "=3.0.0"
+snowflake-connector-python = "=3.0.2"
 google-cloud-bigquery = ">=2.1.0,<3.0"
 google-cloud-resource-manager = ">=1.6.3,<2.0"
 google-api-python-client = "~2.66.0"
