@@ -74,7 +74,7 @@ def snowflake(
     username: str,
     password: Optional[str],
     account: str,
-    host: str,
+    host: Optional[str],
     warehouse: Optional[str],
     rsa_key: Optional[TextIO],
     rsa_pass: Optional[str],
@@ -89,8 +89,20 @@ def snowflake(
         rsa = rsa_key.read()
 
     output_path = Path(ctx.obj['OUT'])
+    kwargs = {}
+    if host is not None:
+        kwargs['host'] = host
     run_snowflake(
-        ctx.obj['LOGGER'], username, password, account, host, warehouse, ctx.obj["FORMAT"], output_path, rsa, rsa_pass
+        logger=ctx.obj['LOGGER'],
+        username=username,
+        password=password,
+        account=account,
+        warehouse=warehouse,
+        output_format=ctx.obj["FORMAT"],
+        output_path=output_path,
+        rsa_key=rsa,
+        rsa_pass=rsa_pass,
+        **kwargs,
     )
 
 
