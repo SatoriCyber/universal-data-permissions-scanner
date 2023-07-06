@@ -1,7 +1,7 @@
 """Main module."""
 from logging import Logger
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from universal_data_permissions_scanner import (
     AwsAssumeRoleInput,
@@ -24,12 +24,12 @@ def run_snowflake(
     username: str,
     password: Optional[str],
     account: str,
-    host: str,
     warehouse: Optional[str],
     output_format: OutputFormat,
     output_path: Path,
     rsa_key: Optional[str],
     rsa_pass: Optional[str],
+    **kwargs: Any,
 ):
     """Run snowflake analyzer.
 
@@ -38,13 +38,13 @@ def run_snowflake(
         username (str): Username
         password (str): Password
         account (str): Snowflake account to analyzer
-        host (str): Snowflake host
         warehouse (str): Warehouse
         output_format (OutputFormat): Output format, CSV or JSON
         output_path (str): Where to write the output
+        kwargs:
+            host (str): Snowflake host
     """
     snowflake_analyzer = SnowflakeAuthzAnalyzer.connect(
-        host=host,
         username=username,
         password=password,
         warehouse=warehouse,
@@ -54,6 +54,7 @@ def run_snowflake(
         logger=logger,
         rsa_key=rsa_key,
         rsa_pass=rsa_pass,
+        kwargs=kwargs,
     )
     snowflake_analyzer.run()
 

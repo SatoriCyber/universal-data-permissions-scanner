@@ -64,7 +64,6 @@ class SnowflakeAuthzAnalyzer:
     @classmethod
     def connect(  # pylint: disable=too-many-locals
         cls,
-        host: str,
         account: str,
         username: str,
         warehouse: Optional[str],
@@ -78,7 +77,6 @@ class SnowflakeAuthzAnalyzer:
         """Connect to Snowflake and return an analyzer.
 
         Args:
-            host (str): Snowflake host
             account (str): Snowflake account
             username (str): Snowflake username to connect with
             password (Optional[str]): Snowflake password to connect with
@@ -88,6 +86,8 @@ class SnowflakeAuthzAnalyzer:
             logger (Optional[Logger], optional): Python logger. Defaults to None.
             output_path (Union[Path, str], optional): Path to write the file. Defaults to ./authz-analyzer-export.
             output_format (OutputFormat, optional): Output format. Defaults to OutputFormat.CSV.
+            snowflake_connection_kwargs:
+                host (str): Snowflake host
         """
         if logger is None:
             logger = get_logger(False)
@@ -104,7 +104,6 @@ class SnowflakeAuthzAnalyzer:
         try:
             connector = snowflake.connector.connect(  # type: ignore
                 user=username,
-                host=host,
                 account=account,
                 warehouse=warehouse,
                 **snowflake_connection_kwargs,
