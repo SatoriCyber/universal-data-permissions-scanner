@@ -88,7 +88,9 @@ class SnowflakeAuthzAnalyzer:
             output_format (OutputFormat, optional): Output format. Defaults to OutputFormat.CSV.
             snowflake_connection_kwargs:
                 host (str): Snowflake host
+                application (str): Snowflake application name
         """
+        snowflake_connection_kwargs.setdefault("application", "Satori_UDPS")
         if logger is None:
             logger = get_logger(False)
 
