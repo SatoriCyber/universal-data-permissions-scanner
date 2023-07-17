@@ -9,7 +9,7 @@ Both users and groups can have privileges granted to them
 The database will not let you set up circular membership loops.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from logging import Logger
 from pathlib import Path
 from typing import Any, Dict, Optional, Set, Union
@@ -51,7 +51,7 @@ class RedshiftAuthzAnalyzer:
     cursors: Dict[DatabaseName, redshift_connector.Cursor]
     writer: BaseWriter
     logger: Logger
-    service: RedshiftService = RedshiftService()
+    service: RedshiftService = field(default_factory=RedshiftService)
 
     @classmethod
     def connect(  # pylint: disable=too-many-locals
