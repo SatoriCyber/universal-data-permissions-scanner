@@ -14,6 +14,7 @@ classifiers=[
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
 ]
 packages = [
     { include = "universal_data_permissions_scanner" },
@@ -21,10 +22,10 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8.1,<3.11"
+python = ">=3.8.1,<3.12"
 click = "8.1.3"
 snowflake-connector-python = "=3.0.2"
-google-cloud-bigquery = ">=2.1.0,<3.0"
+google-cloud-bigquery = ">=3.4.2"
 google-cloud-resource-manager = ">=1.6.3,<2.0"
 google-api-python-client = "~2.66.0"
 boto3 = "^1.26.27"
