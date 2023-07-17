@@ -2,57 +2,57 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://satoricyber.github.io/universal-data-permissions-scanner/</loc>
-         <lastmod>2023-07-05</lastmod>
+         <lastmod>2023-07-17</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/universal-data-permissions-scanner/changelog/</loc>
-         <lastmod>2023-07-05</lastmod>
+         <lastmod>2023-07-17</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/universal-data-permissions-scanner/contributing/</loc>
-         <lastmod>2023-07-05</lastmod>
+         <lastmod>2023-07-17</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/universal-data-permissions-scanner/installation/</loc>
-         <lastmod>2023-07-05</lastmod>
+         <lastmod>2023-07-17</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/universal-data-permissions-scanner/datastores/bigquery/</loc>
-         <lastmod>2023-07-05</lastmod>
+         <lastmod>2023-07-17</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/universal-data-permissions-scanner/datastores/databricks/</loc>
-         <lastmod>2023-07-05</lastmod>
+         <lastmod>2023-07-17</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/universal-data-permissions-scanner/datastores/mongodb/</loc>
-         <lastmod>2023-07-05</lastmod>
+         <lastmod>2023-07-17</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/universal-data-permissions-scanner/datastores/postgresql/</loc>
-         <lastmod>2023-07-05</lastmod>
+         <lastmod>2023-07-17</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/universal-data-permissions-scanner/datastores/redshift/</loc>
-         <lastmod>2023-07-05</lastmod>
+         <lastmod>2023-07-17</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/universal-data-permissions-scanner/datastores/s3/</loc>
-         <lastmod>2023-07-05</lastmod>
+         <lastmod>2023-07-17</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://satoricyber.github.io/universal-data-permissions-scanner/datastores/snowflake/</loc>
-         <lastmod>2023-07-05</lastmod>
+         <lastmod>2023-07-17</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
