@@ -13,7 +13,7 @@ GRANT IMPORT SHARE ON ACCOUNT TO UDPS_ROLE;
 ```
 3. Create a user for universal-data-permissions-scanner and assign it to the role you created using the following commands:
 ```
-CREATE USER UDPS password='<REPLACE_WITH_A_STRONG_PASSWORD>' default_role = UDPS_ROLE;
+CREATE USER UDPS password='<REPLACE_WITH_A_STRONG_PASSWORD>' default_role = UDPS_ROLE default_warehouse=<WAREHOUSE>;
 GRANT ROLE UDPS_ROLE TO USER UDPS;
 ```
 
