@@ -37,7 +37,6 @@ class PrincipalsResolver:
         not_principal_annotated: bool,
         aws_principals: AwsPrincipals,
     ) -> Set[PrincipalBase]:
-
         ret: Set[PrincipalBase] = set()
         if resource_based_policy_service_resource_type:
             resource_based_irrelevant_principal_types: Optional[
@@ -47,6 +46,7 @@ class PrincipalsResolver:
                 stmt_principals, parent_aws_account_id, resource_based_irrelevant_principal_types
             )
 
+        accounts_with_root_principal_in_stmt_principals: Set[Optional[str]] = set()
         if not_principal_annotated:
             # Set will be used later to exclude cross account principals from "NotPrincipal" list,
             # if the root principal of the account is not in the list

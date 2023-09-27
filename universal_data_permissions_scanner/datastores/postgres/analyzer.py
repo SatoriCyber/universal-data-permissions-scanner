@@ -82,7 +82,7 @@ class PostgresAuthzAnalyzer:
         writer = get_writer(filename=output_path, output_format=output_format)
 
         try:
-            connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
+            connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member #type: ignore
                 user=username, password=password, host=host, dbname=dbname, **connection_kwargs
             )
         except Exception as err:
@@ -101,7 +101,7 @@ class PostgresAuthzAnalyzer:
                 deployment = Deployment.gcp()
                 logger.debug("Skipping cloudsqladmin database, internal use by GCP")
                 continue
-            db_connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member
+            db_connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member #type: ignore
                 user=username, password=password, host=host, dbname=database, **connection_kwargs
             )
             postgres_cursors[database] = db_connector.cursor()

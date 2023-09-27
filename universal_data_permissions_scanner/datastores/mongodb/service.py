@@ -28,12 +28,12 @@ class MongoDBService:
     @staticmethod
     def get_users(database_connection: Database[Any]):
         """Get all users."""
-        results: UserInfoResponseEntry = database_connection.command("usersInfo")
+        results: UserInfoResponseEntry = database_connection.command("usersInfo")  # type: ignore
         return results['users']
 
     @staticmethod
     def get_custom_roles(database_connection: Database[Any]):
         """Get all custom roles."""
-        results: RolesInfoEntry = database_connection.command({"rolesInfo": 1, "showPrivileges": True})
+        results: RolesInfoEntry = database_connection.command({"rolesInfo": 1, "showPrivileges": True})  # type: ignore
         parsed_roles = {role["role"]: Role.build_from_response(role) for role in results['roles']}
         return parsed_roles
