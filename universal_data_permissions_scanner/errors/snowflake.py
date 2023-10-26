@@ -1,0 +1,2 @@
+class NoActiveWarehouseException(BaseException):
+    pass

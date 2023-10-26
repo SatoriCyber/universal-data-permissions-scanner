@@ -3,6 +3,9 @@ from pathlib import Path
 from typing import Any, List, Optional, Tuple
 
 from snowflake.connector.cursor import SnowflakeCursor
+from snowflake.connector.errors import ProgrammingError
+
+from universal_data_permissions_scanner.errors.snowflake import NoActiveWarehouseException
 
 COMMANDS_DIR = Path(__file__).parent / "commands"
 
@@ -28,5 +31,10 @@ class SnowflakeService:
         command = (COMMANDS_DIR / file_name_command).read_text(encoding="utf-8")
         if params is not None:
             command += " " + params
-        self.cursor.execute(command=command)
+        try:
+            self.cursor.execute(command=command)
+        except ProgrammingError as err:
+            if "No active warehouse selected in the current session" in str(err):
+                raise NoActiveWarehouseException from err
+
         return self.cursor.fetchall()  # type: ignore
