@@ -38,14 +38,12 @@ class DatabricksAuthzAnalyzer:
     logger: Logger
     unity_catalog_service: UnityCatalogService
     scim_service: ScimService
-    metastore_id: Optional[str] = None
 
     @classmethod
     def connect(
         cls,
         host: str,
         authentication: Authentication,
-        metastore_id: Optional[str] = None,
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
         logger: Optional[Logger] = None,
@@ -86,7 +84,6 @@ class DatabricksAuthzAnalyzer:
             logger=logger,
             unity_catalog_service=unity_catalog_service,
             scim_service=scim_service,
-            metastore_id=metastore_id,
         )
 
     def run(self):
@@ -102,9 +99,6 @@ class DatabricksAuthzAnalyzer:
         self.logger.info("Starting to analyze catalogs")
         catalog: CatalogList
         for catalog in self.unity_catalog_service.list_catalogs()["catalogs"]:  # type: ignore
-            if self.metastore_id is not None and catalog["metastore_id"] != self.metastore_id:
-                self.logger.error("Catalog %s does not match metastore_id %s", catalog["name"], self.metastore_id)
-                continue
             self.logger.info("Analyzing catalog: %s", catalog["name"])
             for entry in self._iter_permissions_catalog(catalog, identities):
                 self.logger.debug("Writing entry: %s", entry)
