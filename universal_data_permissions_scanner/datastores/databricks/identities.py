@@ -20,6 +20,9 @@ from universal_data_permissions_scanner.datastores.databricks.service.model impo
     ServicePrincipal,
 )
 
+# Databricks doesn't allow to use the reserved identities to provide permissions.
+RESERVED_IDENTITIES = ["DB - RESERVED - account admins"]
+
 
 class RefType(Enum):
     USER = "Users"
@@ -116,15 +119,20 @@ class Identities:
 
     def resolve_identities(
         self, identity: DataBricksIdentityName, groups: Optional[List[ParsedGroup]] = None
-    ) -> Generator[DatabricksParsedIdentity, None, None]:
+    ) -> Generator[Optional[DatabricksParsedIdentity], None, None]:
         """Resolve an identity to a list of users with groups.
         Args:
             identity (Identity): the identity of the user or group.
 
         Yields:
-            Generator[User, None, None]: A user and the groups, for example user1 belongs to group 2, group 2 belongs to group 3 group 3 is the requested identity.
+            Generator[Optional[DatabricksParsedIdentity], None, None]:
+                A user and the groups, for example user1 belongs to group 2, group 2 belongs to group 3 group 3 is the requested identity.
+                None for reserved identities.
             The path will be user1 [group 2] [group 3]
         """
+        if identity in RESERVED_IDENTITIES:
+            yield None
+            return
         # handle the first call.
         if groups is None:
             groups = []
@@ -134,11 +142,14 @@ class Identities:
         # If it is a user, we return the user.
         try:
             yield from self._resolve_group(identity, groups)
+            return
         except IdentityNotFoundException:
             try:
                 yield self._resolve_user(identity)
+                return
             except IdentityNotFoundException:
                 yield self._resolve_service_principal(identity)
+                return
 
     def _resolve_user(self, identity: DataBricksIdentityName):
         try:
@@ -162,7 +173,7 @@ class Identities:
         except KeyError as exc:
             raise IdentityNotFoundException from exc
         groups.insert(0, Identities._parse_group(group))
-        for member in group["members"]:
+        for member in group.get("members", ()):
             ref = _get_ref(member)
             if ref.type == RefType.USER:
                 yield self._get_user_from_ref(ref, groups)

@@ -77,7 +77,9 @@ class PolicyNode:
     def iter_permissions_asset_name(
         self,
         asset: Asset,
-        identity_resolver: Callable[[DataBricksIdentityName], Generator[DatabricksParsedIdentity, None, None]],
+        identity_resolver: Callable[
+            [DataBricksIdentityName], Generator[Optional[DatabricksParsedIdentity], None, None]
+        ],
         path: List[AuthzPathElement],
     ) -> Generator[AuthzEntry, None, None]:
         asset_name = ".".join(asset.name[0 : self.location])
@@ -85,6 +87,9 @@ class PolicyNode:
             for permission in permissions:
                 db_permissions = [str(db_permission) for db_permission in permission.db_permissions]
                 for identity in identity_resolver(permission.identity):
+                    if identity is None:
+                        self.logger.info("Identity: %s, is built-in, skipping", permission.identity)
+                        continue
                     authz_identity = Identity(
                         name=identity.name,
                         id=identity.id,
@@ -217,7 +222,10 @@ class ResourceNode(PolicyNode):
         return [self.parent.parent.name, self.parent.name, self.name]
 
     def iter_permissions(
-        self, identity_resolver: Callable[[DataBricksIdentityName], Generator[DatabricksParsedIdentity, None, None]]
+        self,
+        identity_resolver: Callable[
+            [DataBricksIdentityName], Generator[Optional[DatabricksParsedIdentity], None, None]
+        ],
     ) -> Generator[AuthzEntry, None, None]:
         if self.parent is None:
             raise ValueError("Parent of resource node cannot be None")
