@@ -292,12 +292,16 @@ def atlas(
 @click.option('--client_id', '-cid', required=False, type=str, help="Client ID for ouath2")
 @click.option('--client_secret', '-cis', required=False, type=str, help="Client Secret for ouath2")
 @click.option('--tenant_id', '-tid', required=False, type=str, help="Tenant ID for Azure Oauth")
+@click.option('--is_azure', '-az', required=True, type=str, help="Is the account Azure")
+@click.option('--account_id', '-aid', required=True, type=str, help="Databricks Account ID")
 @click.option(
     '--host', '-h', required=True, type=str, help="workspace host, e.g. https://<workspace>.cloud.databricks.com"
 )
 def databricks(
     ctx: click.Context,
     host: str,
+    is_azure: bool,
+    account_id: str,
     username: Optional[str],
     password: Optional[str],
     client_id: Optional[str],
@@ -318,6 +322,8 @@ def databricks(
         logger=ctx.obj['LOGGER'],
         output_format=ctx.obj['FORMAT'],
         output_path=ctx.obj['OUT'],
+        is_azure=is_azure,
+        account_id=account_id,
         host=host,
         authentication=authentication,
     )

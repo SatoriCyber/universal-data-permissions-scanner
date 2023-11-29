@@ -187,10 +187,7 @@ def test_atlas():
 )
 @patch('universal_data_permissions_scanner.cli.run_databricks', MagicMock())
 def test_databricks(additional_args: List[str]):
-    args = [
-        '--host',
-        'host',
-    ]
+    args = ['--host', 'host', '--account_id', 'account_id', '--is_azure', 'True']
     args.extend(additional_args)
     invoke(cli.databricks, args)
 
