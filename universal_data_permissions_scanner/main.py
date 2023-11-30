@@ -239,7 +239,6 @@ def run_databricks(
     logger: Logger,
     host: str,
     authentication: Authentication,
-    is_azure: bool,
     account_id: str,
     output_format: OutputFormat,
     output_path: Path,
@@ -257,7 +256,6 @@ def run_databricks(
     analyzer = DatabricksAuthzAnalyzer.connect(
         host=host,
         authentication=authentication,
-        is_azure=is_azure,
         account_id=account_id,
         output_path=output_path,
         output_format=output_format,
