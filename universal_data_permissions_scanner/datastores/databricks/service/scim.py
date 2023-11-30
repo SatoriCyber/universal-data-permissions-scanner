@@ -4,6 +4,7 @@ So it is our own implementation.
 """
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any
 
 from databricks_cli.sdk.api_client import ApiClient  # type: ignore
@@ -24,23 +25,54 @@ from universal_data_permissions_scanner.datastores.databricks.service.authentica
     get_authentication_token,
 )
 
-ACCOUNT_URL = "https://accounts.cloud.databricks.com"
+from universal_data_permissions_scanner.datastores.databricks.service.exceptions import UnknownCloudProvider
+
+AWS_ACCOUNT_URL = "https://accounts.cloud.databricks.com"
 AZURE_ACCOUNT_URL = "https://accounts.azuredatabricks.net"
+GCP_ACCOUNT_URL = "https://accounts.gcp.databricks.com"
 
 
 BASE_URI = 'accounts'
 SCIM_URI = 'scim/v2'
 
 
+class CloudProvider(Enum):
+    """On which cloud provider the account in, will determinate the hostname for the admin console"""
+
+    AZURE = "AZURE"
+    GCP = "GCP"
+    AWS = "AWS"
+
+    @classmethod
+    def from_host(cls, host: str) -> 'CloudProvider':
+        """Determinate the cloud provider based on the host"""
+        if host.endswith(".azuredatabricks.net"):
+            return cls.AZURE
+        if host.endswith(".gcp.databricks.com"):
+            return cls.GCP
+        if host.endswith(".cloud.databricks.com"):
+            return cls.AWS
+        raise UnknownCloudProvider(f"Failed to resolve host {host} to a cloud provider")
+
+    def account_url(self) -> str:
+        """Return the hostname for the admin console"""
+        if self == CloudProvider.AZURE:
+            return AZURE_ACCOUNT_URL
+        if self == CloudProvider.AWS:
+            return AWS_ACCOUNT_URL
+        if self == CloudProvider.GCP:
+            return GCP_ACCOUNT_URL
+        raise UnknownCloudProvider
+
+
 @dataclass
 class ScimService:
     client: ApiClient
     account_id: str
-    base_url: str
 
     @classmethod
-    def load(cls, authentication: Authentication, account_id: str, is_azure: bool, **kwargs: Any) -> 'ScimService':
-        base_url = AZURE_ACCOUNT_URL if is_azure else ACCOUNT_URL
+    def load(cls, authentication: Authentication, account_id: str, host: str, **kwargs: Any) -> 'ScimService':
+        base_url = CloudProvider.from_host(host).account_url()
         if isinstance(authentication.authentication, BasicAuthentication):
             client = ApiClient(
                 host=base_url,
@@ -53,7 +85,7 @@ class ScimService:
             client = ApiClient(host=base_url, token=token, **kwargs)
         else:
             raise ValueError("Unknown authentication method")
-        return cls(client, account_id, base_url)
+        return cls(client, account_id)
 
     def list_users(self) -> DatabricksUserResult:
         """Implementation of /api/2.0/preview/scim/v2/Users.

@@ -46,7 +46,6 @@ class DatabricksAuthzAnalyzer:
         host: str,
         authentication: Authentication,
         account_id: str,
-        is_azure: bool,
         metastore_id: Optional[str] = None,
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
@@ -82,7 +81,7 @@ class DatabricksAuthzAnalyzer:
         else:
             raise ValueError("Unknown authentication method")
         unity_catalog_service = UnityCatalogService(api_client)
-        scim_service = ScimService.load(authentication, account_id, is_azure)
+        scim_service = ScimService.load(authentication, account_id, host)
         return cls(
             writer=writer,
             logger=logger,
