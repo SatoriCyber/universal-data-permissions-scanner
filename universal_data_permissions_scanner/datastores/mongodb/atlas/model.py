@@ -14,6 +14,8 @@ from universal_data_permissions_scanner.datastores.mongodb.atlas.service_model i
 )
 from universal_data_permissions_scanner.datastores.mongodb.model import InheritedRole, Resource
 
+from universal_data_permissions_scanner.datastores.mongodb.atlas.exceptions import ActionResourcesNotFoundException
+
 OrganizationRoleName = str
 OrganizationTeamId = str
 
@@ -220,7 +222,13 @@ class CustomRole:
                 permission = Permission[action["action"]]
             except KeyError:  # ignore actions that doesn't access data, we don't need them
                 continue
-            for resource in action["resources"]:
+
+            try:
+                action_resources = action["resources"]
+            except KeyError as err:
+                raise ActionResourcesNotFoundException(action) from err
+
+            for resource in action_resources:
                 resolved_resource = Resource(collection=resource["collection"], database=resource["db"])
                 custom_role.actions.add(Action(resource=resolved_resource, permission=permission))
         for inherited_role in entry["inheritedRoles"]:
