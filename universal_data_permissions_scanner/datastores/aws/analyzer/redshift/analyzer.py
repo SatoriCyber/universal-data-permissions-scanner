@@ -12,7 +12,7 @@ The database will not let you set up circular membership loops.
 from dataclasses import dataclass, field
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 import redshift_connector  # type: ignore
 
@@ -146,8 +146,7 @@ class RedshiftAuthzAnalyzer:
         results: Dict[DBIdentity, Set[DBIdentity]] = {}
 
         # For identities, it is shared per cluster, there is no need to pull per DB
-        pg_cursor = self._get_single_cursor()
-        rows = self.service.get_rows(pg_cursor, Path("identities.sql"))
+        rows = self._get_identities()
         for row in rows:
             identity_id: IdentityId = row[0]
             identity_name: str = row[1]
@@ -180,6 +179,17 @@ class RedshiftAuthzAnalyzer:
                     DBIdentity.new(id_=-1, name="super_user", identity_type=IdentityType.ROLE, relations=set())
                 )
 
+        return results
+
+    def _get_identities(self) -> List[Any]:
+        pg_cursor = self._get_single_cursor()
+        results: List[Any] = []
+        pg_users = self.service.get_rows(pg_cursor, Path("identities_pg_user.sql"))
+        svv_role_grants = self.service.get_rows(pg_cursor, Path("identities_svv_role_grants.sql"))
+        svv_user_grants = self.service.get_rows(pg_cursor, Path("identities_svv_user_grants.sql"))
+        results.extend(pg_users)
+        results.extend(svv_role_grants)
+        results.extend(svv_user_grants)
         return results
 
     def _get_identities_privileges(  # pylint: disable=too-many-locals
