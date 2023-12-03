@@ -172,8 +172,12 @@ class RedshiftMockService:
     ) -> Sequence[Tuple[Union[str, bool], ...]]:
         identities = self.identities[redshift_cursor]
         identities_privileges = self.identities_privileges[redshift_cursor]
-        if command_name == Path("identities.sql"):
+        if command_name == Path("identities_pg_user.sql"):
             return identities
+        if command_name == Path("identities_svv_role_grants.sql"):
+            return []
+        if command_name == Path("identities_svv_user_grants.sql"):
+            return []
         if command_name == Path("identities_privileges.sql"):
             return identities_privileges
         if command_name == Path("all_tables.sql"):
