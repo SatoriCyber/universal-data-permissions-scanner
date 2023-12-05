@@ -14,7 +14,10 @@ from universal_data_permissions_scanner.datastores.mongodb.atlas.service_model i
 )
 from universal_data_permissions_scanner.datastores.mongodb.model import InheritedRole, Resource
 
-from universal_data_permissions_scanner.datastores.mongodb.atlas.exceptions import ActionResourcesNotFoundException
+from universal_data_permissions_scanner.datastores.mongodb.atlas.exceptions import (
+    ActionResourceNotFoundException,
+    ActionResourcesNotFoundException,
+)
 
 OrganizationRoleName = str
 OrganizationTeamId = str
@@ -229,7 +232,11 @@ class CustomRole:
                 raise ActionResourcesNotFoundException(action) from err
 
             for resource in action_resources:
-                resolved_resource = Resource(collection=resource["collection"], database=resource["db"])
+                try:
+                    collection = resource["collection"]
+                except KeyError as err:
+                    raise ActionResourceNotFoundException(resource) from err
+                resolved_resource = Resource(collection=collection, database=resource["db"])
                 custom_role.actions.add(Action(resource=resolved_resource, permission=permission))
         for inherited_role in entry["inheritedRoles"]:
             InheritedRole(database=inherited_role["db"], name=inherited_role["role"])
