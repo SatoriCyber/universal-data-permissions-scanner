@@ -20,7 +20,7 @@ def test_csv_writer_write_header(_mocked_csv: MagicMock):
     mock_fh = MagicMock()
 
     writer = CSVWriter(mock_fh)
-    writer.writer.writerow.assert_called_once()
+    writer.writer.writerow.assert_called_once() # pyright: ignore [reportFunctionMemberAccess]
 
 
 def test_csv_writer_write_entry():
