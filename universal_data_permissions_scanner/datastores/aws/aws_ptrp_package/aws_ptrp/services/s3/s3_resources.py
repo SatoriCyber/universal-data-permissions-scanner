@@ -104,7 +104,7 @@ class S3ServiceResourcesResolver(ServiceResourcesResolverBase):
 
     @classmethod
     def load_from_single_stmt(
-        cls, _logger: Logger, stmt_ctx: StmtResourcesToResolveCtx, not_resource_annotated: bool
+        cls, logger: Logger, stmt_ctx: StmtResourcesToResolveCtx, not_resource_annotated: bool
     ) -> 'S3ServiceResourcesResolver':
         resolved_buckets: Dict[S3Bucket, ResolvedS3BucketActions] = {}
         s3_buckets: List[S3Bucket] = [s for s in stmt_ctx.service_resources if isinstance(s, S3Bucket)]

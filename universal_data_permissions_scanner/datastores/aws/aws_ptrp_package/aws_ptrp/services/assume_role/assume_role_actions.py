@@ -55,7 +55,7 @@ class AssumeRoleServiceActionsResolver(ServiceActionsResolverBase):
     @classmethod
     def load_from_single_stmt(
         cls,
-        _logger: Logger,
+        logger: Logger,
         stmt_regexes: List[str],
         service_actions: Set[ServiceActionBase],
         not_action_annotated: bool,

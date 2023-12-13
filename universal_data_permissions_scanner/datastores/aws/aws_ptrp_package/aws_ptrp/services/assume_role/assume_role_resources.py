@@ -114,7 +114,7 @@ class AssumeRoleServiceResourcesResolver(ServiceResourcesResolverBase):
 
     @classmethod
     def load_from_single_stmt(
-        cls, _logger: Logger, stmt_ctx: StmtResourcesToResolveCtx, not_resource_annotated: bool
+        cls, logger: Logger, stmt_ctx: StmtResourcesToResolveCtx, not_resource_annotated: bool
     ) -> ServiceResourcesResolverBase:
         resolved_iam_roles_actions: Dict[IAMRole, ResolvedAssumeRoleActions] = dict()
         assume_role_actions = set(
