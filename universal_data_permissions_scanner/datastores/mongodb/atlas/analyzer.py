@@ -150,14 +150,22 @@ class MongoDBAtlasAuthzAnalyzer:
         connection_string = cluster_info["connectionStrings"]["standardSrv"].split(',')[0]
         cluster = Cluster(name=cluster_info["name"], id=cluster_info["id"], connection_string=connection_string)
         mongo_client = self.atlas_service.get_mongodb_client(cluster.connection_string, self.db_user, self.db_password)
+        project_dbs_to_collections: Dict[str, List[str]] = {}
         for db_name, db_connection in mongo_client.iter_database_connections():
             for collection in db_connection.list_collection_names():
+                project_dbs_to_collections.setdefault(db_name, []).append(collection)
+
+        project_custom_roles = self.atlas_service.get_custom_roles_by_project(project, project_dbs_to_collections)
+        for db_name, db_collections in project_dbs_to_collections.items():
+            for collection in db_collections:
                 asset = Asset(name=[db_name, collection], type=AssetType.COLLECTION)
                 self._report_organization_users(
                     asset=asset, organization=organization, project=project, cluster=cluster, db=db_name
                 )
                 self._report_project_users(project, asset, db=db_name, organization=organization, cluster=cluster)
-                self._report_db_users(asset=asset, db=db_name, project=project, cluster=cluster)
+                self._report_db_users(
+                    asset=asset, db=db_name, project=project, cluster=cluster, project_custom_roles=project_custom_roles
+                )
 
     def _report_organization_users(
         self,
@@ -289,10 +297,9 @@ class MongoDBAtlasAuthzAnalyzer:
             path.pop(0)
 
     def _report_db_users(
-        self, project: Project, asset: Asset, db: str, cluster: Cluster
+        self, project: Project, asset: Asset, db: str, cluster: Cluster, project_custom_roles: Dict[str, CustomRole]
     ):  # pylint: disable=invalid-name
         db_users = self.atlas_service.get_all_db_users_for_project(project)
-        project_custom_roles = self.atlas_service.get_custom_roles_by_project(project)
         for db_user in db_users:
             if len(db_user.scopes) != 0:
                 db_user_scopes = {scope.name for scope in db_user.scopes}
@@ -366,7 +373,9 @@ class MongoDBAtlasAuthzAnalyzer:
                     custom_role.actions, collection_name
                 )
                 if permission_level is not None:
-                    role_db_permissions = [str(action.permission) for action in custom_role.actions]
+                    role_db_permissions = list(
+                        dict.fromkeys([str(action.permission) for action in custom_role.actions])
+                    )
                     path = [
                         AuthzPathElement(
                             id=custom_role.name,
