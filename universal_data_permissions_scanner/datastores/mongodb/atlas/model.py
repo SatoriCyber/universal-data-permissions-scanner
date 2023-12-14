@@ -215,6 +215,12 @@ class CustomRole:
     def __hash__(self) -> int:
         return hash(self.name)
 
+    def _add_all_project_resources_with_permission(self, permission, project_dbs_to_collections: Dict[str, List[str]]):
+        for db_name, collections in project_dbs_to_collections.items():
+            for collection in collections:
+                resolved_resource = Resource(collection=collection, database=db_name)
+                self.actions.add(Action(resource=resolved_resource, permission=permission))
+
     @classmethod
     def build_custom_role_from_response(
         cls, entry: CustomRoleEntry, project_dbs_to_collections: Dict[str, List[str]]
@@ -234,11 +240,9 @@ class CustomRole:
 
             for resource in action_resources:
                 # If the resource is with a permission on all cluster, we need to add the action to all collections in all databases in the project
-                if "cluster" in resource and resource["cluster"] is True:
-                    for db_name, collections in project_dbs_to_collections.items():
-                        for collection in collections:
-                            resolved_resource = Resource(collection=collection, database=db_name)
-                            custom_role.actions.add(Action(resource=resolved_resource, permission=permission))
+                cluster_permission = resource.get("cluster", False)
+                if cluster_permission is True:
+                    custom_role._add_all_project_resources_with_permission(permission, project_dbs_to_collections)
                 else:
                     try:
                         collection = resource["collection"]
