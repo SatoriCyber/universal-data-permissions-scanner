@@ -3,8 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Dict, Optional, Set
+from typing import Dict, List, Optional, Set
 
+from universal_data_permissions_scanner.datastores.mongodb.atlas.exceptions import (
+    ActionResourceNotFoundException,
+    ActionResourcesNotFoundException,
+)
 from universal_data_permissions_scanner.datastores.mongodb.atlas.service_model import (
     ClusterEntry,
     CustomRoleEntry,
@@ -13,11 +17,6 @@ from universal_data_permissions_scanner.datastores.mongodb.atlas.service_model i
     OrganizationUserEntry,
 )
 from universal_data_permissions_scanner.datastores.mongodb.model import InheritedRole, Resource
-
-from universal_data_permissions_scanner.datastores.mongodb.atlas.exceptions import (
-    ActionResourceNotFoundException,
-    ActionResourcesNotFoundException,
-)
 
 OrganizationRoleName = str
 OrganizationTeamId = str
@@ -216,8 +215,16 @@ class CustomRole:
     def __hash__(self) -> int:
         return hash(self.name)
 
+    def _add_all_project_resources_with_permission(self, permission, project_dbs_to_collections: Dict[str, List[str]]):
+        for db_name, collections in project_dbs_to_collections.items():
+            for collection in collections:
+                resolved_resource = Resource(collection=collection, database=db_name)
+                self.actions.add(Action(resource=resolved_resource, permission=permission))
+
     @classmethod
-    def build_custom_role_from_response(cls, entry: CustomRoleEntry) -> CustomRole:
+    def build_custom_role_from_response(
+        cls, entry: CustomRoleEntry, project_dbs_to_collections: Dict[str, List[str]]
+    ) -> CustomRole:
         """Build set of custom roles from the response."""
         custom_role = cls(name=entry["roleName"], actions=set(), inherited_roles=set())
         for action in entry["actions"]:
@@ -232,12 +239,17 @@ class CustomRole:
                 raise ActionResourcesNotFoundException(action) from err
 
             for resource in action_resources:
-                try:
-                    collection = resource["collection"]
-                except KeyError as err:
-                    raise ActionResourceNotFoundException(resource) from err
-                resolved_resource = Resource(collection=collection, database=resource["db"])
-                custom_role.actions.add(Action(resource=resolved_resource, permission=permission))
+                # If the resource is with a permission on all cluster, we need to add the action to all collections in all databases in the project
+                cluster_permission = resource.get("cluster", False)
+                if cluster_permission is True:
+                    custom_role._add_all_project_resources_with_permission(permission, project_dbs_to_collections)
+                else:
+                    try:
+                        collection = resource["collection"]
+                    except KeyError as err:
+                        raise ActionResourceNotFoundException(resource) from err
+                    resolved_resource = Resource(collection=collection, database=resource["db"])
+                    custom_role.actions.add(Action(resource=resolved_resource, permission=permission))
         for inherited_role in entry["inheritedRoles"]:
             InheritedRole(database=inherited_role["db"], name=inherited_role["role"])
 
