@@ -62,6 +62,7 @@ class PostgresAuthzAnalyzer:
         logger: Optional[Logger] = None,
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
+        custom_writer: Optional[BaseWriter] = None,
         **connection_kwargs: Any,
     ):
         """Connect to Postgres and return an analyzer.
@@ -78,8 +79,10 @@ class PostgresAuthzAnalyzer:
         """
         if logger is None:
             logger = get_logger(False)
-
-        writer = get_writer(filename=output_path, output_format=output_format)
+        if custom_writer is not None:
+            writer = custom_writer
+        else:
+            writer = get_writer(filename=output_path, output_format=output_format)
 
         try:
             connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member #type: ignore

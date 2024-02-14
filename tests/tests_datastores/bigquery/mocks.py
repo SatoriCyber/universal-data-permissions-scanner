@@ -140,7 +140,7 @@ class MockBigQueryService:
 
     def _side_effect_get_iam_policy_project(self, request: iam_policy_pb2.GetIamPolicyRequest) -> MockedIam:
         expected_iam_policy = iam_policy_pb2.GetIamPolicyRequest(
-            resource=f"projects/{self.project.project_id}"
+            resource=f"projects/{self.project.project_id}"  # type: ignore
         )  # pyright: ignore [reportGeneralTypeIssues]
         if request == expected_iam_policy:
             return MockedIam(bindings=self.project_bindings)
@@ -171,7 +171,7 @@ class MockBigQueryService:
     def _side_effect_get_iam_policy_folder(self, request: iam_policy_pb2.GetIamPolicyRequest) -> MockedIam:
         assert self.folder is not None
         expected_iam_policy = iam_policy_pb2.GetIamPolicyRequest(
-            resource=f"{self.folder.name}"
+            resource=f"{self.folder.name}"  # type: ignore
         )  # pyright: ignore [reportGeneralTypeIssues]
         assert request == expected_iam_policy
         return MockedIam(bindings=self.folder.bindings)
@@ -185,7 +185,7 @@ class MockBigQueryService:
     def _side_effect_get_iam_policy_organization(self, request: iam_policy_pb2.GetIamPolicyRequest) -> MockedIam:
         assert self.organization is not None
         expected_iam_policy = iam_policy_pb2.GetIamPolicyRequest(
-            resource=f"{self.organization.name}"
+            resource=f"{self.organization.name}"  # type: ignore
         )  # pyright: ignore [reportGeneralTypeIssues]
         assert request == expected_iam_policy
         return MockedIam(bindings=self.organization.bindings)

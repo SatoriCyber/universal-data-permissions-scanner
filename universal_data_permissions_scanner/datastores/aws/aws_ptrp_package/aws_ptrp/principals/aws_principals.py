@@ -131,7 +131,6 @@ class AwsPrincipals:
         all_stmt_principals: List[Principal],
         not_principal_annotated: bool,
     ) -> Optional[Set[PrincipalBase]]:
-
         if stmt_principal.is_all_principals():
             return self._resolve_all_principals()
         if stmt_principal.is_no_entity_principal():

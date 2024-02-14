@@ -18,7 +18,7 @@ def test_atlas_build_custom_role_from_response():
 
     custom_role_entry = CustomRoleEntry(
         {  # pyright: ignore [reportGeneralTypeIssues]
-            'actions': [
+            'actions': [  # type: ignore
                 {'action': 'OUT_TO_S3', 'resources': [{'cluster': True}]},
                 {'action': 'FIND', 'resources': [{'collection': 'test_collection2', 'db': 'test2'}]},
                 {'action': 'DROP_DATABASE', 'resources': [{'collection': '', 'db': 'test'}]},

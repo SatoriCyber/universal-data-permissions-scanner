@@ -34,6 +34,7 @@ Roles have scope:
     Collection - All collections in the database.
 Atlas also allows to limit the access to specific cluster.
 """
+
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
@@ -106,6 +107,7 @@ class MongoDBAtlasAuthzAnalyzer:
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
         logger: Optional[Logger] = None,
+        custom_writer: Optional[BaseWriter] = None,
     ):
         """Connect to the MongoDB atlas.
         Tries to authenticate with the provided credentials to the base API.
@@ -115,7 +117,10 @@ class MongoDBAtlasAuthzAnalyzer:
             logger = get_logger(False)
         logger.info("Starting to scan project %s, cluster %s", project_name, cluster_name)
 
-        writer = get_writer(filename=output_path, output_format=output_format)
+        if custom_writer is not None:
+            writer = custom_writer
+        else:
+            writer = get_writer(filename=output_path, output_format=output_format)
 
         service = AtlasService.connect(public_key, private_key)
         return cls(

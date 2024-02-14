@@ -50,6 +50,7 @@ class DatabricksAuthzAnalyzer:
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
         logger: Optional[Logger] = None,
+        custom_writer: Optional[BaseWriter] = None,
         **kwargs: Any,
     ):
         """Analyzer authorization for Databricks
@@ -64,7 +65,10 @@ class DatabricksAuthzAnalyzer:
         Returns:
             cls: instance
         """
-        writer = get_writer(filename=output_path, output_format=output_format)
+        if custom_writer is not None:
+            writer = custom_writer
+        else:
+            writer = get_writer(filename=output_path, output_format=output_format)
         if logger is None:
             logger = get_logger(False)
         logger.debug("Connecting to Databricks instance at %s", host)

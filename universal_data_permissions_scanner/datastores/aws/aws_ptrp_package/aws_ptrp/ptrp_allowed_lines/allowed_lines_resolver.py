@@ -69,7 +69,7 @@ class PtrpAllowedLines:
                 continue
 
             if isinstance(graph_path[1], PathUserGroupNode):
-                path_user_group_node: Optional[PathUserGroupNode] = graph_path[1]
+                path_user_group_node: Optional[PathUserGroupNode] = graph_path[1]  # type: ignore
                 start_index_path_role_identity_nodes = 2
             else:
                 path_user_group_node = None
@@ -78,12 +78,12 @@ class PtrpAllowedLines:
             if isinstance(graph_path[start_index_path_role_identity_nodes], PathPolicyNode) and isinstance(
                 graph_path[start_index_path_role_identity_nodes + 1], PathFederatedPrincipalNode
             ):
-                path_federated_policy_node: PathPolicyNode = graph_path[start_index_path_role_identity_nodes]
-                path_federated_principal_node: PathFederatedPrincipalNode = graph_path[
+                path_federated_policy_node: PathPolicyNode = graph_path[start_index_path_role_identity_nodes]  # type: ignore
+                path_federated_principal_node: PathFederatedPrincipalNode = graph_path[  # type: ignore
                     start_index_path_role_identity_nodes + 1
                 ]
 
-                path_federated_nodes: Optional[Tuple[PathPolicyNode, PathFederatedPrincipalNode]] = (
+                path_federated_nodes: Optional[Tuple[PathPolicyNode, PathFederatedPrincipalNode]] = (  # type: ignore
                     path_federated_policy_node,
                     path_federated_principal_node,
                 )
@@ -93,7 +93,7 @@ class PtrpAllowedLines:
 
             # If there is a path_permission_set_node, it will come before the role nodes
             if isinstance(graph_path[start_index_path_role_identity_nodes], PathPermissionSetNode):
-                path_permission_set_node: Optional[PathPermissionSetNode] = graph_path[
+                path_permission_set_node: Optional[PathPermissionSetNode] = graph_path[  # type: ignore
                     start_index_path_role_identity_nodes
                 ]
                 start_index_path_role_identity_nodes = start_index_path_role_identity_nodes + 1
@@ -111,7 +111,7 @@ class PtrpAllowedLines:
                 raise Exception(
                     f"Got invalid simple path in graph, not all nodes are impl PathRoleNode: {graph_path[start_index_path_role_identity_nodes:-2]}"
                 )
-            path_role_identity_nodes: List[PathRoleNode] = graph_path[start_index_path_role_identity_nodes:-2]
+            path_role_identity_nodes: List[PathRoleNode] = graph_path[start_index_path_role_identity_nodes:-2]  # type: ignore
 
             # path must not be with non-empty list of roles path_federated_nodes
             if path_role_identity_nodes and path_federated_nodes:
