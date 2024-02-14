@@ -54,11 +54,7 @@ class PtrpAllowedLines:
 
     def yield_principal_to_resource_lines(
         self,
-    ) -> Generator[
-        PtrpAllowedLine,
-        None,
-        None,
-    ]:
+    ) -> Generator[PtrpAllowedLine, None, None,]:
         for graph_path in nx.all_simple_paths(self.graph, source=START_NODE, target=END_NODE):
             graph_path = graph_path[1:-1]  # without the START_NODE, END_NODE
             if len(graph_path) < 3:
@@ -206,21 +202,17 @@ class PtrpAllowedLinesBuilder:
         self,
         identity_principal: Principal,
         policy_document_ctx: PolicyDocumentCtx,
-    ) -> Generator[
-        Tuple[ServiceResourceType, ServiceResourceBase],
-        None,
-        None,
-    ]:
-        service_resources_resolver: Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]] = (
-            get_identity_based_resolver(
-                logger=self.logger,
-                policy_documents_ctx=[policy_document_ctx],
-                identity_principal=identity_principal,
-                effect=Effect.Allow,
-                aws_actions=self.aws_actions,
-                aws_principals=self.aws_principals,
-                account_resources=self.account_resources,
-            )
+    ) -> Generator[Tuple[ServiceResourceType, ServiceResourceBase], None, None,]:
+        service_resources_resolver: Optional[
+            Dict[ServiceResourceType, ServiceResourcesResolverBase]
+        ] = get_identity_based_resolver(
+            logger=self.logger,
+            policy_documents_ctx=[policy_document_ctx],
+            identity_principal=identity_principal,
+            effect=Effect.Allow,
+            aws_actions=self.aws_actions,
+            aws_principals=self.aws_principals,
+            account_resources=self.account_resources,
         )
 
         if service_resources_resolver:
@@ -310,17 +302,17 @@ class PtrpAllowedLinesBuilder:
     def _insert_iam_roles_and_trusted_entities(self):
         for iam_role in self.iam_entities.yield_iam_roles():
             # Check the role's trusted entities
-            role_trust_service_principal_resolver: Optional[AssumeRoleServiceResourcesResolver] = (
-                get_role_trust_resolver(
-                    logger=self.logger,
-                    role_trust_policy=iam_role.assume_role_policy_document,
-                    iam_role_arn=iam_role.arn,
-                    iam_role_aws_account_id=iam_role.get_resource_account_id(),
-                    effect=Effect.Allow,
-                    aws_actions=self.aws_actions,
-                    aws_principals=self.aws_principals,
-                    account_resources=self.account_resources,
-                )
+            role_trust_service_principal_resolver: Optional[
+                AssumeRoleServiceResourcesResolver
+            ] = get_role_trust_resolver(
+                logger=self.logger,
+                role_trust_policy=iam_role.assume_role_policy_document,
+                iam_role_arn=iam_role.arn,
+                iam_role_aws_account_id=iam_role.get_resource_account_id(),
+                effect=Effect.Allow,
+                aws_actions=self.aws_actions,
+                aws_principals=self.aws_principals,
+                account_resources=self.account_resources,
             )
 
             if role_trust_service_principal_resolver is None:

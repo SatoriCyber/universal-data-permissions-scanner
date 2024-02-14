@@ -55,7 +55,6 @@ additional_account_session_called_with = {
 def test_create_session_with_assume_role(
     mock_session, mock_sts_client
 ):  # pylint: disable=unused-argument,redefined-outer-name
-
     # Configure the mock sts_client
     mock_session.return_value = MagicMock()
     mock_sts_client.return_value = MagicMock()
