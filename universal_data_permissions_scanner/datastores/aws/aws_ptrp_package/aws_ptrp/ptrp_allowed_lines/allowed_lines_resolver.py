@@ -115,7 +115,7 @@ class PtrpAllowedLines:
                 raise Exception(
                     f"Got invalid simple path in graph, not all nodes are impl PathRoleNode: {graph_path[start_index_path_role_identity_nodes:-2]}"
                 )
-            path_role_identity_nodes: List[PathRoleNode] = graph_path[start_index_path_role_identity_nodes:-2]
+            path_role_identity_nodes: List[PathRoleNode] = graph_path[start_index_path_role_identity_nodes:-2]  # type: ignore
 
             # path must not be with non-empty list of roles path_federated_nodes
             if path_role_identity_nodes and path_federated_nodes:
