@@ -103,6 +103,7 @@ class BigQueryAuthzAnalyzer:
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
         credentials_str: Optional[str] = None,
+        custom_writer: Optional[BaseWriter] = None,
         **kwargs: Any,
     ):
         """Connect to BigQuery and return an instance of the analyzer.
@@ -114,7 +115,10 @@ class BigQueryAuthzAnalyzer:
             output_path (Union[Path, str], optional): Path to write the file. Defaults to ./authz-analyzer-export.
             credentials_str (Optional[str], optional): ServiceAccount to connect to BigQuery. Defaults to None.
         """
-        writer = get_writer(filename=output_path, output_format=output_format)
+        if custom_writer is not None:
+            writer = custom_writer
+        else:
+            writer = get_writer(filename=output_path, output_format=output_format)
         if logger is None:
             logger = get_logger(False)
         if credentials_str is not None:

@@ -35,11 +35,15 @@ class AWSAuthzAnalyzer:
         logger: Optional[Logger] = None,
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
+        custom_writer: Optional[BaseWriter] = None,
     ):
         if logger is None:
             logger = get_logger(False)
 
-        writer: BaseWriter = get_writer(filename=output_path, output_format=output_format)
+        if custom_writer is not None:
+            writer = custom_writer
+        else:
+            writer: BaseWriter = get_writer(filename=output_path, output_format=output_format)
         aws_exporter = AWSAuthzAnalyzerExporter(writer)
         target_account_assume_role = AwsAssumeRole(
             role_arn=target_account.role_arn,

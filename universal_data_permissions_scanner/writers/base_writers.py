@@ -1,4 +1,5 @@
 """Module for writers building blocks"""
+
 from abc import ABC, abstractmethod
 from enum import Enum, auto
 from typing import TextIO
@@ -23,19 +24,19 @@ class BaseWriter(ABC):
         self._write_header()
 
     @abstractmethod
-    def _write_header(self):
+    def _write_header(self) -> None:
         """Writes header of the file.
         Should be called before any write_entry.
         """
 
     @abstractmethod
-    def write_entry(self, entry: AuthzEntry):
+    def write_entry(self, entry: AuthzEntry) -> None:
         """Write a single entry to the file.
 
         Args:
             entry (AuthzEntry): AuthZEntry to write to the file.
         """
 
-    def close(self):
+    def close(self) -> None:
         """Close the writer."""
         self.fh.close()

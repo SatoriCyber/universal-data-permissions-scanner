@@ -64,6 +64,7 @@ class RedshiftAuthzAnalyzer:
         logger: Optional[Logger] = None,
         output_format: OutputFormat = OutputFormat.CSV,
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
+        custom_writer: Optional[BaseWriter] = None,
         **connection_kwargs: Any,
     ):
         """Connect to Redshift and return an analyzer.
@@ -79,8 +80,10 @@ class RedshiftAuthzAnalyzer:
         """
         if logger is None:
             logger = get_logger(False)
-
-        writer = get_writer(filename=output_path, output_format=output_format)
+        if custom_writer is not None:
+            writer = custom_writer
+        else:
+            writer = get_writer(filename=output_path, output_format=output_format)
         try:
             connector: redshift_connector.Connection = redshift_connector.connect(
                 user=username, password=password, host=host, port=port, database=dbname, **connection_kwargs

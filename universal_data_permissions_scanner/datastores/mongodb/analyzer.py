@@ -10,6 +10,7 @@ Roles have scope:
     Database - All databases in the cluster
     Collection - All collections in the database.
 """
+
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
@@ -69,6 +70,7 @@ class MongoDBAuthzAnalyzer:
         output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
         logger: Optional[Logger] = None,
         ssl: bool = True,
+        custom_writer: Optional[BaseWriter] = None,
         **kwargs: Any,
     ):
         """Connect to MongoDB.
@@ -87,7 +89,10 @@ class MongoDBAuthzAnalyzer:
         Returns:
             MongoDBAuthzAnalyzer: Analyzer
         """
-        writer = get_writer(filename=output_path, output_format=output_format)
+        if custom_writer is not None:
+            writer = custom_writer
+        else:
+            writer = get_writer(filename=output_path, output_format=output_format)
         try:
             client = MongoDBService(
                 MongoClient(

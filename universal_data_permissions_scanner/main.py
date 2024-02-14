@@ -1,4 +1,5 @@
 """Main module."""
+
 from logging import Logger
 from pathlib import Path
 from typing import Any, List, Optional
@@ -18,6 +19,8 @@ from universal_data_permissions_scanner.writers import OutputFormat, get_writer
 from universal_data_permissions_scanner.datastores.databricks.analyzer import DatabricksAuthzAnalyzer
 from universal_data_permissions_scanner.datastores.databricks import Authentication
 
+from universal_data_permissions_scanner.writers.base_writers import BaseWriter
+
 
 def run_snowflake(
     logger: Logger,
@@ -30,7 +33,7 @@ def run_snowflake(
     rsa_key: Optional[str],
     rsa_pass: Optional[str],
     **kwargs: Any,
-):
+) -> None:
     """Run snowflake analyzer.
 
     Args:
@@ -44,6 +47,7 @@ def run_snowflake(
         kwargs:
             host (str): Snowflake host
     """
+    custom_writer = kwargs.pop("writer")
     snowflake_analyzer = SnowflakeAuthzAnalyzer.connect(
         username=username,
         password=password,
@@ -54,6 +58,7 @@ def run_snowflake(
         logger=logger,
         rsa_key=rsa_key,
         rsa_pass=rsa_pass,
+        custom_writer=custom_writer,
         kwargs=kwargs,
     )
     snowflake_analyzer.run()
@@ -66,20 +71,22 @@ def run_aws_s3(
     filename: str,
     target_account: AwsAssumeRoleInput,
     additional_accounts: Optional[List[AwsAssumeRoleInput]] = None,
-):
-    writer = get_writer(filename, output_format)
+    **kwargs: Any,
+) -> None:
+    writer: BaseWriter = kwargs.get("writer", get_writer(filename, output_format))
     analyzer = AWSAuthzAnalyzer.connect(
         target_account=target_account,
         additional_accounts=additional_accounts,
         logger=logger,
         output_path=filename,
         output_format=output_format,
+        custom_writer=writer,
     )
     analyzer.run_s3()
     writer.close()
 
 
-def run_bigquery(logger: Logger, project_id: str, output_format: OutputFormat, output_path: str):
+def run_bigquery(logger: Logger, project_id: str, output_format: OutputFormat, output_path: str, **kwargs: Any) -> None:
     """Run BigQuery analyzer.
 
     Args:
@@ -88,8 +95,9 @@ def run_bigquery(logger: Logger, project_id: str, output_format: OutputFormat, o
         output_format (OutputFormat): Output format, CSV or JSON
         output_path (str): Where to write the output
     """
+    writer = kwargs.get("writer")
     analyzer = BigQueryAuthzAnalyzer.connect(
-        logger=logger, project_id=project_id, output_path=output_path, output_format=output_format
+        logger=logger, project_id=project_id, output_path=output_path, output_format=output_format, custom_writer=writer
     )
     analyzer.run()
 
@@ -103,7 +111,8 @@ def run_postgres(
     output_format: OutputFormat,
     output_path: Path,
     port: int,
-):
+    **kwargs: Any,
+) -> None:
     """Run Postgres analyzer.
 
     Args:
@@ -116,6 +125,7 @@ def run_postgres(
         output_path (str): Where to write the output
         port (int): Postgres port
     """
+    writer = kwargs.get("writer")
     analyzer = PostgresAuthzAnalyzer.connect(
         username=username,
         password=password,
@@ -125,6 +135,7 @@ def run_postgres(
         output_format=output_format,
         logger=logger,
         port=port,
+        custom_writer=writer,
     )
     analyzer.run()
 
@@ -138,7 +149,8 @@ def run_redshift(
     output_format: OutputFormat,
     output_path: Path,
     port: int,
-):
+    **kwargs: Any,
+) -> None:
     """Run Redshift analyzer.
 
     Args:
@@ -151,6 +163,7 @@ def run_redshift(
         output_path (str): Where to write the output
         port (int): Redshift port
     """
+    writer = kwargs.get("writer")
     analyzer = RedshiftAuthzAnalyzer.connect(
         username=username,
         password=password,
@@ -160,6 +173,7 @@ def run_redshift(
         output_format=output_format,
         logger=logger,
         port=port,
+        custom_writer=writer,
     )
     analyzer.run()
 
@@ -173,7 +187,8 @@ def run_mongodb(
     output_path: Path,
     port: int,
     ssl: bool,
-):
+    **kwargs: Any,
+) -> None:
     """Run MongoDB analyzer.
 
     Args:
@@ -186,6 +201,7 @@ def run_mongodb(
         port (int): port
         ssl(bool): use ssl
     """
+    writer = kwargs.get("writer")
     analyzer = MongoDBAuthzAnalyzer.connect(
         username=username,
         password=password,
@@ -195,6 +211,7 @@ def run_mongodb(
         logger=logger,
         port=port,
         ssl=ssl,
+        custom_writer=writer,
     )
     analyzer.run()
 
@@ -209,7 +226,8 @@ def run_mongodb_atlas(
     cluster_name: str,
     output_format: OutputFormat,
     output_path: Path,
-):
+    **kwargs: Any,
+) -> None:
     """Run MongoDB Atlas analyzer.
 
     Args:
@@ -221,6 +239,7 @@ def run_mongodb_atlas(
         output_format (OutputFormat): Output format, CSV or JSON
         output_path (str): Where to write the output
     """
+    writer = kwargs.get("writer", None)
     analyzer = MongoDBAtlasAuthzAnalyzer.connect(
         public_key=public_key,
         private_key=private_key,
@@ -231,6 +250,7 @@ def run_mongodb_atlas(
         output_path=output_path,
         output_format=output_format,
         logger=logger,
+        custom_writer=writer,
     )
     analyzer.run()
 
@@ -242,7 +262,8 @@ def run_databricks(
     account_id: str,
     output_format: OutputFormat,
     output_path: Path,
-):
+    **kwargs: Any,
+) -> None:
     """Run Databricks analyzer.
 
     Args:
@@ -253,6 +274,7 @@ def run_databricks(
         output_path (str): Where to write the output
         authentication: Authentication method
     """
+    writer = kwargs.get("writer", None)
     analyzer = DatabricksAuthzAnalyzer.connect(
         host=host,
         authentication=authentication,
@@ -260,5 +282,6 @@ def run_databricks(
         output_path=output_path,
         output_format=output_format,
         logger=logger,
+        custom_writer=writer,
     )
     analyzer.run()
