@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from typing import TextIO
+from typing import BinaryIO, TextIO, Union
 
 from universal_data_permissions_scanner.models.model import AuthzEntry
 
@@ -19,7 +19,7 @@ class OutputFormat(Enum):
 class BaseWriter(ABC):
     """Base class for writers."""
 
-    def __init__(self, fh: TextIO) -> None:  # pylint: disable=(invalid-name)
+    def __init__(self, fh: Union[TextIO, BinaryIO]) -> None:  # pylint: disable=(invalid-name)
         self.fh = fh  # pylint: disable=(invalid-name)
         self._write_header()
 
