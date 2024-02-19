@@ -53,7 +53,7 @@ class MultiJsonWriter(BaseWriter):
         }
         json_line = json.dumps(line, indent=None)
         json_line += '\n'
-        self.fh.write(json_line)
+        self.fh.write(json_line)  # type: ignore
 
     def _write_header(self):
         pass
