@@ -114,6 +114,7 @@ class DatabricksAuthzAnalyzer:
             for entry in self._iter_permissions_catalog(catalog, identities):
                 self.logger.debug("Writing entry: %s", entry)
                 self.writer.write_entry(entry)
+        self.writer.close()
 
     def _iter_permissions_catalog(self, catalog: CatalogList, identities: Identities):
         catalog_node = CatalogNode(self.logger, catalog["name"], catalog["owner"])
