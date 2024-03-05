@@ -60,7 +60,6 @@ class SnowflakeAuthzAnalyzer:
     writer: BaseWriter
     logger: Logger
 
-    # TODO: Move the logger to the kwargs, someday, remove the **snowflake_connection_kwargs
     @classmethod
     def connect(  # pylint: disable=too-many-locals
         cls,

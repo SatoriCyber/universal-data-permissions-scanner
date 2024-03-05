@@ -13,8 +13,7 @@ Roles have scope:
 
 from dataclasses import dataclass
 from logging import Logger
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set
 
 from pymongo import MongoClient  # pylint: disable=import-error
 

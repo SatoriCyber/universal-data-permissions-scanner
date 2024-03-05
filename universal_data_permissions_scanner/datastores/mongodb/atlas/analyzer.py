@@ -37,8 +37,7 @@ Atlas also allows to limit the access to specific cluster.
 
 from dataclasses import dataclass
 from logging import Logger
-from pathlib import Path
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set
 
 from universal_data_permissions_scanner.datastores.mongodb.atlas.model import (
     Action,
@@ -70,9 +69,7 @@ from universal_data_permissions_scanner.models.model import (
     PermissionLevel,
 )
 from universal_data_permissions_scanner.utils.logger import get_logger
-from universal_data_permissions_scanner.writers import BaseWriter, OutputFormat
-from universal_data_permissions_scanner.writers.base_writers import DEFAULT_OUTPUT_FILE
-from universal_data_permissions_scanner.writers.get_writers import open_writer
+from universal_data_permissions_scanner.writers import BaseWriter
 
 PermissionOrganizationUserMap = Dict[PermissionLevel, Set[OrganizationUser]]
 

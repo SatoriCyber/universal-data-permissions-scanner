@@ -44,7 +44,7 @@ class BaseWriter(ABC):
 
     @classmethod
     @contextmanager
-    def open(cls, fh: Union[TextIO, BinaryIO]) -> Generator["BaseWriter", Any, None]:
+    def open(cls, fh: Union[TextIO, BinaryIO]) -> Generator["BaseWriter", Any, None]:  # pylint: disable=(invalid-name)
         """Context manager to open the writer."""
         writer = cls(fh)
         try:
