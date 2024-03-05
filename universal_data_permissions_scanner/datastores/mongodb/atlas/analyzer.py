@@ -37,8 +37,7 @@ Atlas also allows to limit the access to specific cluster.
 
 from dataclasses import dataclass
 from logging import Logger
-from pathlib import Path
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set
 
 from universal_data_permissions_scanner.datastores.mongodb.atlas.model import (
     Action,
@@ -70,9 +69,7 @@ from universal_data_permissions_scanner.models.model import (
     PermissionLevel,
 )
 from universal_data_permissions_scanner.utils.logger import get_logger
-from universal_data_permissions_scanner.writers import BaseWriter, OutputFormat
-from universal_data_permissions_scanner.writers.base_writers import DEFAULT_OUTPUT_FILE
-from universal_data_permissions_scanner.writers.get_writers import get_writer
+from universal_data_permissions_scanner.writers import BaseWriter
 
 PermissionOrganizationUserMap = Dict[PermissionLevel, Set[OrganizationUser]]
 
@@ -104,10 +101,8 @@ class MongoDBAtlasAuthzAnalyzer:
         db_password: str,
         project_name: str,
         cluster_name: str,
-        output_format: OutputFormat = OutputFormat.CSV,
-        output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
+        writer: BaseWriter,
         logger: Optional[Logger] = None,
-        custom_writer: Optional[BaseWriter] = None,
     ):
         """Connect to the MongoDB atlas.
         Tries to authenticate with the provided credentials to the base API.
@@ -116,11 +111,6 @@ class MongoDBAtlasAuthzAnalyzer:
         if logger is None:
             logger = get_logger(False)
         logger.info("Starting to scan project %s, cluster %s", project_name, cluster_name)
-
-        if custom_writer is not None:
-            writer = custom_writer
-        else:
-            writer = get_writer(filename=output_path, output_format=output_format)
 
         service = AtlasService.connect(public_key, private_key)
         return cls(

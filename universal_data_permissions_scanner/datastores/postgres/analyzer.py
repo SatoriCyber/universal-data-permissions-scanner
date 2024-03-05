@@ -14,7 +14,7 @@ The database will not let you set up circular membership loops.
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Generator, List, Optional, Set, Tuple
 
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, connection, cursor
@@ -33,8 +33,7 @@ from universal_data_permissions_scanner.datastores.postgres.model import (
 )
 from universal_data_permissions_scanner.models.model import AssetType, PermissionLevel
 from universal_data_permissions_scanner.utils.logger import get_logger
-from universal_data_permissions_scanner.writers import BaseWriter, OutputFormat, get_writer
-from universal_data_permissions_scanner.writers.base_writers import DEFAULT_OUTPUT_FILE
+from universal_data_permissions_scanner.writers import BaseWriter
 
 from universal_data_permissions_scanner.errors.failed_connection_errors import ConnectionFailure
 
@@ -59,10 +58,8 @@ class PostgresAuthzAnalyzer:
         password: str,
         host: str,
         dbname: str,
+        writer: BaseWriter,
         logger: Optional[Logger] = None,
-        output_format: OutputFormat = OutputFormat.CSV,
-        output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
-        custom_writer: Optional[BaseWriter] = None,
         **connection_kwargs: Any,
     ):
         """Connect to Postgres and return an analyzer.
@@ -73,17 +70,11 @@ class PostgresAuthzAnalyzer:
             host (str): Postgres host, can be a hostname or an IP address
             dbname (str): Postgres database name
             logger (Optional[Logger], optional): Python logger. Defaults to None.
-            output_path (Union[Path, str], optional): Path to write the file. Defaults to ./authz-analyzer-export.
-            output_format (OutputFormat, optional): Output format. Defaults to OutputFormat.CSV.
+            writer(BaseWriter): Writer to output the entries
             credentials_str (Optional[str], optional): ServiceAccount to connect to BigQuery. Defaults to None.
         """
         if logger is None:
             logger = get_logger(False)
-        if custom_writer is not None:
-            writer = custom_writer
-        else:
-            writer = get_writer(filename=output_path, output_format=output_format)
-
         try:
             connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member #type: ignore
                 user=username, password=password, host=host, dbname=dbname, **connection_kwargs
@@ -119,7 +110,6 @@ class PostgresAuthzAnalyzer:
         self.logger.info("Starting to Analyze")
         exporter.export(model=authorization_model, writer=self.writer)
         self.logger.info("Finished analyzing")
-        self.writer.close()
 
     @staticmethod
     def _get_all_databases(

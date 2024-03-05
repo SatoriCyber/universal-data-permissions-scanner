@@ -1,8 +1,7 @@
 from collections import namedtuple
 from dataclasses import dataclass
 from logging import Logger
-from pathlib import Path
-from typing import List, Optional, Set, Union
+from typing import List, Optional, Set
 
 # (vs-code) For python auto-complete please add this to your workspace setting.json file
 # "python.autoComplete.extraPaths": [
@@ -13,9 +12,8 @@ from aws_ptrp.services import ServiceResourceType
 from aws_ptrp.services.s3.s3_service import S3Service
 
 from universal_data_permissions_scanner.datastores.aws.analyzer.exporter import AWSAuthzAnalyzerExporter
+from universal_data_permissions_scanner.writers import BaseWriter
 from universal_data_permissions_scanner.utils.logger import get_logger
-from universal_data_permissions_scanner.writers import BaseWriter, OutputFormat, get_writer
-from universal_data_permissions_scanner.writers.base_writers import DEFAULT_OUTPUT_FILE
 
 AwsAssumeRoleInput = namedtuple('AwsAssumeRoleInput', ['role_arn', 'external_id'])
 
@@ -31,19 +29,12 @@ class AWSAuthzAnalyzer:
     def connect(
         cls,
         target_account: AwsAssumeRoleInput,
-        additional_accounts: Optional[List[AwsAssumeRoleInput]] = None,
+        writer: BaseWriter,
         logger: Optional[Logger] = None,
-        output_format: OutputFormat = OutputFormat.CSV,
-        output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
-        custom_writer: Optional[BaseWriter] = None,
+        additional_accounts: Optional[List[AwsAssumeRoleInput]] = None,
     ):
         if logger is None:
             logger = get_logger(False)
-
-        if custom_writer is not None:
-            writer = custom_writer
-        else:
-            writer: BaseWriter = get_writer(filename=output_path, output_format=output_format)
         aws_exporter = AWSAuthzAnalyzerExporter(writer)
         target_account_assume_role = AwsAssumeRole(
             role_arn=target_account.role_arn,

@@ -53,8 +53,7 @@ Permissions are defined using roles, see the mapping of role to permissions in t
 import json
 from dataclasses import dataclass
 from logging import Logger
-from pathlib import Path
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional
 
 from google.api_core.page_iterator import Iterator  # type: ignore
 from google.cloud.bigquery.table import TableListItem  # type: ignore
@@ -81,10 +80,8 @@ from universal_data_permissions_scanner.models.model import (
     Identity,
     PermissionLevel,
 )
-from universal_data_permissions_scanner.utils.logger import get_logger
 from universal_data_permissions_scanner.writers import BaseWriter
-from universal_data_permissions_scanner.writers.base_writers import DEFAULT_OUTPUT_FILE, OutputFormat
-from universal_data_permissions_scanner.writers.get_writers import get_writer
+from universal_data_permissions_scanner.utils.logger import get_logger
 
 
 @dataclass
@@ -99,11 +96,9 @@ class BigQueryAuthzAnalyzer:
     def connect(
         cls,
         project_id: str,
+        writer: BaseWriter,
         logger: Optional[Logger] = None,
-        output_format: OutputFormat = OutputFormat.CSV,
-        output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
         credentials_str: Optional[str] = None,
-        custom_writer: Optional[BaseWriter] = None,
         **kwargs: Any,
     ):
         """Connect to BigQuery and return an instance of the analyzer.
@@ -111,14 +106,9 @@ class BigQueryAuthzAnalyzer:
         Args:
             project_id (str): GCP project id to analyze.
             logger (Optional[Logger], optional): Python logger. Defaults to None.
-            output_format (OutputFormat, optional): file format to export. Defaults to OutputFormat.CSV.
-            output_path (Union[Path, str], optional): Path to write the file. Defaults to ./authz-analyzer-export.
+            writer(BaseWriter): Writer to output the entries
             credentials_str (Optional[str], optional): ServiceAccount to connect to BigQuery. Defaults to None.
         """
-        if custom_writer is not None:
-            writer = custom_writer
-        else:
-            writer = get_writer(filename=output_path, output_format=output_format)
         if logger is None:
             logger = get_logger(False)
         if credentials_str is not None:
@@ -151,7 +141,6 @@ class BigQueryAuthzAnalyzer:
                 )
                 table_node.set_parent(dataset_node)
                 self._calc(Asset([fq_table_id], type=AssetType.TABLE), table_node, [])
-        self.writer.close()
 
     def _calc(
         self,

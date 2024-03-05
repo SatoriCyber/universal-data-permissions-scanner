@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger
-from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from databricks_cli.sdk.api_client import ApiClient  # type: ignore
 from databricks_cli.unity_catalog.uc_service import UnityCatalogService  # type: ignore
@@ -15,15 +14,14 @@ from universal_data_permissions_scanner.datastores.databricks.service.model impo
     Table,
 )
 from universal_data_permissions_scanner.datastores.databricks.service.scim import ScimService
-from universal_data_permissions_scanner.utils.logger import get_logger
-from universal_data_permissions_scanner.writers.base_writers import DEFAULT_OUTPUT_FILE, BaseWriter, OutputFormat
-from universal_data_permissions_scanner.writers.get_writers import get_writer
+from universal_data_permissions_scanner.writers.base_writers import BaseWriter
 
 from universal_data_permissions_scanner.datastores.databricks.service.authentication import (
     Authentication,
 )
 
 
+from universal_data_permissions_scanner.utils.logger import get_logger
 from universal_data_permissions_scanner.datastores.databricks.service.authentication.basic import BasicAuthentication
 
 from universal_data_permissions_scanner.datastores.databricks.service.authentication.oauth import (
@@ -46,11 +44,9 @@ class DatabricksAuthzAnalyzer:
         host: str,
         authentication: Authentication,
         account_id: str,
+        writer: BaseWriter,
+        logger: Optional[Logger],
         metastore_id: Optional[str] = None,
-        output_format: OutputFormat = OutputFormat.CSV,
-        output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
-        logger: Optional[Logger] = None,
-        custom_writer: Optional[BaseWriter] = None,
         **kwargs: Any,
     ):
         """Analyzer authorization for Databricks
@@ -58,17 +54,12 @@ class DatabricksAuthzAnalyzer:
         Args:
             host (str): instance url, e.g. https://dbc-a1b2345c-d6e7.cloud.databricks.com
             authentication: Authentication method, either basic or oauth
-            output_format (OutputFormat, optional): Output format. Defaults to OutputFormat.CSV.
-            output_path (Union[Path, str], optional): Output path. Defaults to Path.cwd()/DEFAULT_OUTPUT_FILE.
+            writer(BaseWriter): Writer to output the entries
             logger (Optional[Logger], optional): Logger. Defaults to None.
 
         Returns:
             cls: instance
         """
-        if custom_writer is not None:
-            writer = custom_writer
-        else:
-            writer = get_writer(filename=output_path, output_format=output_format)
         if logger is None:
             logger = get_logger(False)
         logger.debug("Connecting to Databricks instance at %s", host)
@@ -114,7 +105,6 @@ class DatabricksAuthzAnalyzer:
             for entry in self._iter_permissions_catalog(catalog, identities):
                 self.logger.debug("Writing entry: %s", entry)
                 self.writer.write_entry(entry)
-        self.writer.close()
 
     def _iter_permissions_catalog(self, catalog: CatalogList, identities: Identities):
         catalog_node = CatalogNode(self.logger, catalog["name"], catalog["owner"])

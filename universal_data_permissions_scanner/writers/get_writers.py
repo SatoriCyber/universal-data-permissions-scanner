@@ -1,29 +1,35 @@
 import sys
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Optional, TextIO, Union
+from contextlib import contextmanager
+from typing import Optional, TextIO, Union, Generator, Any
 
 from universal_data_permissions_scanner.writers.base_writers import BaseWriter, OutputFormat
 from universal_data_permissions_scanner.writers.csv_writer import CSVWriter
 from universal_data_permissions_scanner.writers.multi_json_exporter import MultiJsonWriter
 
 
-def get_writer(filename: Optional[Union[Path, str]], output_format: OutputFormat) -> BaseWriter:
+@contextmanager
+def open_writer(filename: Optional[Union[Path, str]], output_format: OutputFormat) -> Generator[BaseWriter, Any, None]:
     fh = (  # pylint: disable=invalid-name
         sys.stdout if filename is None else open(filename, 'w', encoding="utf=8")  # pylint: disable=consider-using-with
     )
-    writer = _get_writer(fh, output_format)
-    return writer
+    with _open_writer(fh, output_format) as writer:
+        yield writer
 
 
-def _get_writer(
+@contextmanager
+def _open_writer(
     fh: Union[TextIO, TextIOWrapper], output_format: OutputFormat  # pylint: disable=(invalid-name)
-) -> BaseWriter:
+) -> Generator[BaseWriter, Any, None]:
     if output_format is OutputFormat.MULTI_JSON:
-        return MultiJsonWriter(fh)
-    if output_format is OutputFormat.CSV:
-        return CSVWriter(fh)
-    raise WriterNotFoundException("Output format not support")
+        with MultiJsonWriter.open(fh) as writer:
+            yield writer
+    elif output_format is OutputFormat.CSV:
+        with CSVWriter.open(fh) as writer:
+            yield writer
+    else:
+        raise WriterNotFoundException("Output format not support")
 
 
 class WriterNotFoundException(BaseException):
