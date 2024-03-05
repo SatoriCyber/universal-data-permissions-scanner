@@ -78,7 +78,7 @@ def run_aws_s3(
         analyzer.run_s3()
 
 
-def run_bigquery(logger: Logger, project_id: str, output_format: OutputFormat, output_path: str, **kwargs: Any) -> None:
+def run_bigquery(logger: Logger, project_id: str, output_format: OutputFormat, output_path: str) -> None:
     """Run BigQuery analyzer.
 
     Args:
@@ -101,7 +101,6 @@ def run_postgres(
     output_format: OutputFormat,
     output_path: Path,
     port: int,
-    **kwargs: Any,
 ) -> None:
     """Run Postgres analyzer.
 
