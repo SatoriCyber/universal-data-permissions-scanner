@@ -67,7 +67,6 @@ def run_aws_s3(
     output_path: str,
     target_account: AwsAssumeRoleInput,
     additional_accounts: Optional[List[AwsAssumeRoleInput]] = None,
-    **kwargs: Any,
 ) -> None:
     with open_writer(output_path, output_format) as writer:
         analyzer = AWSAuthzAnalyzer.connect(
@@ -138,7 +137,6 @@ def run_redshift(
     output_format: OutputFormat,
     output_path: Path,
     port: int,
-    **kwargs: Any,
 ) -> None:
     """Run Redshift analyzer.
 
@@ -174,7 +172,6 @@ def run_mongodb(
     output_path: Path,
     port: int,
     ssl: bool,
-    **kwargs: Any,
 ) -> None:
     """Run MongoDB analyzer.
 
@@ -211,7 +208,6 @@ def run_mongodb_atlas(
     cluster_name: str,
     output_format: OutputFormat,
     output_path: Path,
-    **kwargs: Any,
 ) -> None:
     """Run MongoDB Atlas analyzer.
 
@@ -245,7 +241,6 @@ def run_databricks(
     account_id: str,
     output_format: OutputFormat,
     output_path: Path,
-    **kwargs: Any,
 ) -> None:
     """Run Databricks analyzer.
 
