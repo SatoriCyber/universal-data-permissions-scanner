@@ -1,4 +1,5 @@
 """Console script for authz_analyzer."""
+
 import os
 import re
 import sys
@@ -167,7 +168,7 @@ def aws_s3(
     run_aws_s3(
         logger=ctx.obj['LOGGER'],
         output_format=ctx.obj['FORMAT'],
-        filename=ctx.obj['OUT'],
+        output_path=ctx.obj['OUT'],
         target_account=target_account_params,
         additional_accounts=additional_account_params,
     )

@@ -12,7 +12,7 @@ The database will not let you set up circular membership loops.
 from dataclasses import dataclass, field
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set
 
 import redshift_connector  # type: ignore
 
@@ -32,9 +32,8 @@ from universal_data_permissions_scanner.datastores.aws.analyzer.redshift.model i
 )
 from universal_data_permissions_scanner.datastores.aws.analyzer.redshift.service import RedshiftService
 from universal_data_permissions_scanner.models import PermissionLevel
+from universal_data_permissions_scanner.writers import BaseWriter
 from universal_data_permissions_scanner.utils.logger import get_logger
-from universal_data_permissions_scanner.writers import BaseWriter, OutputFormat, get_writer
-from universal_data_permissions_scanner.writers.base_writers import DEFAULT_OUTPUT_FILE
 
 from universal_data_permissions_scanner.errors.failed_connection_errors import ConnectionFailure
 
@@ -61,10 +60,8 @@ class RedshiftAuthzAnalyzer:
         host: str,
         port: int,
         dbname: str,
+        writer: BaseWriter,
         logger: Optional[Logger] = None,
-        output_format: OutputFormat = OutputFormat.CSV,
-        output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
-        custom_writer: Optional[BaseWriter] = None,
         **connection_kwargs: Any,
     ):
         """Connect to Redshift and return an analyzer.
@@ -75,15 +72,10 @@ class RedshiftAuthzAnalyzer:
             host (str): Redshift host, can be a hostname or an IP address
             dbname (str): Redshift database name
             logger (Optional[Logger], optional): Python logger. Defaults to None.
-            output_path (Union[Path, str], optional): Path to write the file. Defaults to ./authz-analyzer-export.
-            output_format (OutputFormat, optional): Output format. Defaults to OutputFormat.CSV.
+            writer(BaseWriter): Writer to output the entries
         """
         if logger is None:
             logger = get_logger(False)
-        if custom_writer is not None:
-            writer = custom_writer
-        else:
-            writer = get_writer(filename=output_path, output_format=output_format)
         try:
             connector: redshift_connector.Connection = redshift_connector.connect(
                 user=username, password=password, host=host, port=port, database=dbname, **connection_kwargs
@@ -116,7 +108,6 @@ class RedshiftAuthzAnalyzer:
         self.logger.info("Starting to Analyze")
         exporter.export(model=authorization_model, writer=self.writer)
         self.logger.info("Finished analyzing")
-        self.writer.close()
 
     @staticmethod
     def _get_all_databases(redshift_cursor: redshift_connector.Cursor):

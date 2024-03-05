@@ -26,7 +26,7 @@ from serde.json import to_json
 from universal_data_permissions_scanner.datastores.aws.analyzer.exporter import AWSAuthzAnalyzerExporter
 from universal_data_permissions_scanner.utils.logger import get_logger
 from universal_data_permissions_scanner.writers.base_writers import OutputFormat
-from universal_data_permissions_scanner.writers.get_writers import get_writer
+from universal_data_permissions_scanner.writers.get_writers import open_writer
 from tests.tests_datastores.aws.aws_ptrp.utils.aws_ptrp_load_from_dict import load_aws_ptrp_from_dict
 
 AWS_AUTHZ_ANALYZER_SATORI_DEV_JSON_FILE = pathlib.Path().joinpath(
@@ -94,6 +94,6 @@ def test_aws_ptrp_resolve_permissions_satori_dev_json_file(
             None,
             resource_service_types_to_load,
         )
-        writer = get_writer(AWS_AUTHZ_ANALYZER_SATORI_DEV_RESULT_JSON_FILE, OutputFormat.MULTI_JSON)
-        exporter = AWSAuthzAnalyzerExporter(writer)
-        ptrp.resolve_permissions(get_logger(False), exporter.export_entry_from_ptrp_line)
+        with open_writer(AWS_AUTHZ_ANALYZER_SATORI_DEV_RESULT_JSON_FILE, OutputFormat.MULTI_JSON) as writer:
+            exporter = AWSAuthzAnalyzerExporter(writer)
+            ptrp.resolve_permissions(get_logger(False), exporter.export_entry_from_ptrp_line)

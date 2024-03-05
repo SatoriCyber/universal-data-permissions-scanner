@@ -23,7 +23,7 @@ The analyzer query to tables: snowflake.account_usage.grants_to_users, snowflake
 from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import snowflake.connector
 from cryptography.hazmat.backends import default_backend
@@ -45,8 +45,7 @@ from universal_data_permissions_scanner.datastores.snowflake.model import (
 from universal_data_permissions_scanner.datastores.snowflake.service import SnowflakeService
 from universal_data_permissions_scanner.models.model import PermissionLevel
 from universal_data_permissions_scanner.utils.logger import get_logger
-from universal_data_permissions_scanner.writers import BaseWriter, OutputFormat, get_writer
-from universal_data_permissions_scanner.writers.base_writers import DEFAULT_OUTPUT_FILE
+from universal_data_permissions_scanner.writers import BaseWriter
 
 from universal_data_permissions_scanner.errors.failed_connection_errors import ConnectionFailure
 
@@ -61,18 +60,17 @@ class SnowflakeAuthzAnalyzer:
     writer: BaseWriter
     logger: Logger
 
+    # TODO: Move the logger to the kwargs, someday, remove the **snowflake_connection_kwargs
     @classmethod
     def connect(  # pylint: disable=too-many-locals
         cls,
         account: str,
         username: str,
         warehouse: Optional[str],
+        writer: BaseWriter,
         logger: Optional[Logger] = None,
-        output_format: OutputFormat = OutputFormat.CSV,
-        output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
         rsa_key: Optional[str] = None,
         rsa_pass: Optional[str] = None,
-        custom_writer: Optional[BaseWriter] = None,
         **snowflake_connection_kwargs: Any,
     ):
         """Connect to Snowflake and return an analyzer.
@@ -85,8 +83,7 @@ class SnowflakeAuthzAnalyzer:
             rsa_pass: (Optional[str]): RSA password to decrypt rsa key
             warehouse (str): Snowflake warehouse to use
             logger (Optional[Logger], optional): Python logger. Defaults to None.
-            output_path (Union[Path, str], optional): Path to write the file. Defaults to ./authz-analyzer-export.
-            output_format (OutputFormat, optional): Output format. Defaults to OutputFormat.CSV.
+            writer(BaseWriter): Writer to output the entries
             snowflake_connection_kwargs:
                 host (str): Snowflake host
                 application (str): Snowflake application name
@@ -94,11 +91,6 @@ class SnowflakeAuthzAnalyzer:
         snowflake_connection_kwargs.setdefault("application", "Satori_UDPS")
         if logger is None:
             logger = get_logger(False)
-
-        if custom_writer is not None:
-            writer = custom_writer
-        else:
-            writer = get_writer(filename=output_path, output_format=output_format)
 
         # Handle case sensitive warehouse name, wrap with quotes
         if warehouse is not None:
@@ -130,7 +122,6 @@ class SnowflakeAuthzAnalyzer:
         self.logger.info("Starting to Analyze")
         exporter.export(model=authorization_model, writer=self.writer)
         self.logger.info("Finished analyzing")
-        self.writer.close()
 
     def _get_users_to_role_mapping(self) -> Dict[User, Set[DBRole]]:
         rows: List[Tuple[str, str, Optional[str]]] = self.service.get_rows(file_name_command=Path("user_grants.sql"))  # type: ignore

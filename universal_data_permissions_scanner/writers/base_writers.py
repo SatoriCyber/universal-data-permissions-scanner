@@ -2,7 +2,8 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from typing import BinaryIO, TextIO, Union
+from contextlib import contextmanager
+from typing import BinaryIO, TextIO, Union, Any, Generator
 
 from universal_data_permissions_scanner.models.model import AuthzEntry
 
@@ -40,3 +41,13 @@ class BaseWriter(ABC):
     def close(self) -> None:
         """Close the writer."""
         self.fh.close()
+
+    @classmethod
+    @contextmanager
+    def open(cls, fh: Union[TextIO, BinaryIO]) -> Generator["BaseWriter", Any, None]:
+        """Context manager to open the writer."""
+        writer = cls(fh)
+        try:
+            yield writer
+        finally:
+            writer.close()

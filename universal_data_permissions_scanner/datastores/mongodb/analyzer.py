@@ -39,9 +39,7 @@ from universal_data_permissions_scanner.models.model import (
     PermissionLevel,
 )
 from universal_data_permissions_scanner.utils.logger import get_logger
-from universal_data_permissions_scanner.writers import BaseWriter, OutputFormat
-from universal_data_permissions_scanner.writers.base_writers import DEFAULT_OUTPUT_FILE
-from universal_data_permissions_scanner.writers.get_writers import get_writer
+from universal_data_permissions_scanner.writers import BaseWriter
 
 PermissionOrganizationUserMap = Dict[PermissionLevel, Set[OrganizationUser]]
 
@@ -66,11 +64,9 @@ class MongoDBAuthzAnalyzer:
         host: str,
         username: str,
         password: str,
-        output_format: OutputFormat = OutputFormat.CSV,
-        output_path: Union[Path, str] = Path.cwd() / DEFAULT_OUTPUT_FILE,
+        writer: BaseWriter,
         logger: Optional[Logger] = None,
         ssl: bool = True,
-        custom_writer: Optional[BaseWriter] = None,
         **kwargs: Any,
     ):
         """Connect to MongoDB.
@@ -79,8 +75,7 @@ class MongoDBAuthzAnalyzer:
             host (str): hostname of the mongodb server
             username (str): username
             password (str): password
-            output_format (OutputFormat, optional): Output format. Defaults to OutputFormat.CSV.
-            output_path (Union[Path, str], optional): Output path. Defaults to Path.cwd()/DEFAULT_OUTPUT_FILE.
+            writer(BaseWriter): Writer to output the entries
             logger (Optional[Logger], optional): Logger. Defaults to None.
 
         Raises:
@@ -89,10 +84,8 @@ class MongoDBAuthzAnalyzer:
         Returns:
             MongoDBAuthzAnalyzer: Analyzer
         """
-        if custom_writer is not None:
-            writer = custom_writer
-        else:
-            writer = get_writer(filename=output_path, output_format=output_format)
+        if logger is None:
+            logger = get_logger(False)
         try:
             client = MongoDBService(
                 MongoClient(
@@ -105,8 +98,6 @@ class MongoDBAuthzAnalyzer:
             )
         except Exception as err:
             raise ConnectionError(f"Could not connect to {host} with the provided credentials") from err
-        if logger is None:
-            logger = get_logger(False)
         return cls(writer=writer, logger=logger, client=client)
 
     def run(self):
