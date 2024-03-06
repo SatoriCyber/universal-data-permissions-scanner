@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "udps"
-version = "0.1.30"
+version = "0.1.31"
 homepage = "https://github.com/satoricyber/universal-data-permissions-scanner"
 description = "Analyze authorization."
 authors = ["SatoriCyber"]
