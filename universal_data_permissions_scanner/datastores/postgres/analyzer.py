@@ -18,6 +18,7 @@ from typing import Any, Dict, Generator, List, Optional, Set, Tuple
 
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, connection, cursor
+from psycopg2.errors import OperationalError
 
 from universal_data_permissions_scanner.datastores.postgres import exporter
 from universal_data_permissions_scanner.datastores.postgres.database_query_results import DataBaseAcl
@@ -95,11 +96,20 @@ class PostgresAuthzAnalyzer:
                 deployment = Deployment.gcp()
                 logger.debug("Skipping cloudsqladmin database, internal use by GCP")
                 continue
-            db_connector: psycopg2.connection = psycopg2.connect(  # pylint: disable=E1101:no-member #type: ignore
-                user=username, password=password, host=host, dbname=database, **connection_kwargs
+            db_connector = PostgresAuthzAnalyzer._connect_to_db(
+                user=username, password=password, host=host, dbame=database, **connection_kwargs
             )
             postgres_cursors[database] = db_connector.cursor()
         return cls(logger=logger, cursors=postgres_cursors, writer=writer, deployment=deployment)
+
+    @staticmethod
+    def _connect_to_db(
+        user: str, password: str, host: str, dbame: str, **connection_kwargs: Any
+    ) -> psycopg2.connection:  # pylint: disable=E1101:no-member #type: ignore
+        try:
+            return psycopg2.connect(user=user, password=password, host=host, dbname=dbame, **connection_kwargs)
+        except OperationalError as err:
+            raise ConnectionFailure from err
 
     def run(
         self,
