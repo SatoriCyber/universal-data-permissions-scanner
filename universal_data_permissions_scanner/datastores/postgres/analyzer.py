@@ -96,16 +96,16 @@ class PostgresAuthzAnalyzer:
                 deployment = Deployment.gcp()
                 logger.debug("Skipping cloudsqladmin database, internal use by GCP")
                 continue
-            db_connector = PostgresAuthzAnalyzer._connect_to_db(
-                user=username, password=password, host=host, dbame=database, **connection_kwargs
+            db_connector: psycopg2.connection = (  # pylint: disable=E1101:no-member #type: ignore
+                PostgresAuthzAnalyzer._connect_to_db(  # pylint: disable=E1101:no-member #type: ignore
+                    user=username, password=password, host=host, dbame=database, **connection_kwargs
+                )
             )
             postgres_cursors[database] = db_connector.cursor()
         return cls(logger=logger, cursors=postgres_cursors, writer=writer, deployment=deployment)
 
     @staticmethod
-    def _connect_to_db(
-        user: str, password: str, host: str, dbame: str, **connection_kwargs: Any
-    ) -> psycopg2.connection:  # pylint: disable=E1101:no-member #type: ignore
+    def _connect_to_db(user: str, password: str, host: str, dbame: str, **connection_kwargs: Any) -> Any:
         try:
             return psycopg2.connect(user=user, password=password, host=host, dbname=dbame, **connection_kwargs)
         except OperationalError as err:
