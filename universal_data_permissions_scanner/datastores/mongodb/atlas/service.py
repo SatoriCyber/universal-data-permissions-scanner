@@ -1,11 +1,13 @@
 """MongoDB service.
 Handle all the communication with MongoDB Atlas.
 """
+
 from dataclasses import dataclass
 from typing import Any, Dict, List, Set
 
 import requests
 from pymongo import MongoClient  # pylint: disable=import-error
+from pymongo.errors import ConfigurationError
 from requests.auth import HTTPDigestAuth
 
 from universal_data_permissions_scanner.datastores.mongodb.atlas.model import (
@@ -26,6 +28,8 @@ from universal_data_permissions_scanner.datastores.mongodb.atlas.service_model i
     ProjectInfo,
 )
 from universal_data_permissions_scanner.datastores.mongodb.service import MongoDBService
+
+from universal_data_permissions_scanner.errors.failed_connection_errors import ConnectionFailure
 
 BASE_API = "https://cloud.mongodb.com/api/atlas/v1.0/"
 
@@ -131,8 +135,8 @@ class AtlasService:
     @staticmethod
     def get_mongodb_client(connection_string: str, db_user: str, db_password: str, **kwargs: Any) -> MongoDBService:
         """Get MongoDB connection."""
-        return MongoDBService(
-            MongoClient(
+        try:
+            client = MongoClient(
                 connection_string,
                 username=db_user,
                 password=db_password,
@@ -140,4 +144,7 @@ class AtlasService:
                 tls=True,
                 **kwargs,
             )
-        )
+        except ConfigurationError as err:
+            raise ConnectionFailure from err
+
+        return MongoDBService(client)
