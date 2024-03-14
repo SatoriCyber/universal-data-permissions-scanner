@@ -3,6 +3,7 @@ from typing import Any, Callable, List, Optional
 
 import googleapiclient.discovery  # pylint: disable=import-error
 from google.cloud import bigquery, resourcemanager_v3  # pylint: disable=no-name-in-module
+from google.api_core.exceptions import PermissionDenied
 from google.api_core.iam import Policy
 from google.cloud.resourcemanager_v3.types import Project  # pylint: disable=no-name-in-module
 from google.iam.v1 import iam_policy_pb2  # type: ignore
@@ -54,7 +55,11 @@ class BigQueryService:  # pylint: disable=(too-many-instance-attributes)
     @staticmethod
     def _get_project(projects_client: resourcemanager_v3.ProjectsClient, project_id: str):
         request = resourcemanager_v3.GetProjectRequest(name=f"projects/{project_id}")
-        return projects_client.get_project(request=request)  # type: ignore
+        try:
+            project = projects_client.get_project(request=request)  # type: ignore
+        except PermissionDenied as err:
+            raise ConnectionError from err
+        return project
 
     def _get_project_iam(self):
         request = iam_policy_pb2.GetIamPolicyRequest(
