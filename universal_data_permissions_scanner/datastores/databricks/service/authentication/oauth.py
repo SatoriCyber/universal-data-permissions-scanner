@@ -55,6 +55,7 @@ class OauthProviderAzure(OauthProviderBase):
             timeout=OauthProviderAzure._get_timeout(),
             verify=True,
         )
+        response.raise_for_status()
         access_token: str = response.json()["access_token"]
         return access_token
 
