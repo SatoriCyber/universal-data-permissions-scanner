@@ -81,8 +81,8 @@ class DatabricksAuthzAnalyzer:
             except requests.exceptions.HTTPError as err:
                 if err.response.status_code == UNAUTHORIZED:
                     raise ConnectionFailure() from err
-                else:
-                    raise err
+
+                raise err
             api_client = ApiClient(host=host, token=token, **kwargs)
         else:
             raise ValueError("Unknown authentication method")
