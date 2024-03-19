@@ -1,6 +1,9 @@
 from dataclasses import dataclass
+from http.client import UNAUTHORIZED
 from logging import Logger
 from typing import Any, Optional
+
+import requests
 
 from databricks_cli.sdk.api_client import ApiClient  # type: ignore
 from databricks_cli.unity_catalog.uc_service import UnityCatalogService  # type: ignore
@@ -28,6 +31,8 @@ from universal_data_permissions_scanner.datastores.databricks.service.authentica
     OauthProvider,
     get_authentication_token,
 )
+
+from universal_data_permissions_scanner.errors.failed_connection_errors import ConnectionFailure
 
 
 @dataclass
@@ -71,7 +76,13 @@ class DatabricksAuthzAnalyzer:
                 **kwargs,
             )
         elif isinstance(authentication.authentication, OauthProvider):  # type: ignore
-            token = get_authentication_token(authentication.authentication)
+            try:
+                token = get_authentication_token(authentication.authentication)
+            except requests.exceptions.HTTPError as err:
+                if err.response.status_code == UNAUTHORIZED:
+                    raise ConnectionFailure() from err
+
+                raise err
             api_client = ApiClient(host=host, token=token, **kwargs)
         else:
             raise ValueError("Unknown authentication method")
