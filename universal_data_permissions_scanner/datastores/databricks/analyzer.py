@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from http.client import UNAUTHORIZED
+from http.client import FORBIDDEN, UNAUTHORIZED
 from logging import Logger
 from typing import Any, Optional
 
@@ -98,24 +98,29 @@ class DatabricksAuthzAnalyzer:
 
     def run(self):
         """Run the analyzer"""
-        self.logger.debug("Starting to analyzer Databricks, fetching users")
-        users = self.scim_service.list_users()["Resources"]
-        self.logger.debug("fetching groups")
-        groups = self.scim_service.list_groups()["Resources"]
-        self.logger.debug("fetching service principals")
-        service_principal = self.scim_service.list_service_principals()["Resources"]
+        try:
+            self.logger.debug("Starting to analyzer Databricks, fetching users")
+            users = self.scim_service.list_users()["Resources"]
+            self.logger.debug("fetching groups")
+            groups = self.scim_service.list_groups()["Resources"]
+            self.logger.debug("fetching service principals")
+            service_principal = self.scim_service.list_service_principals()["Resources"]
 
-        identities = Identities.build_from_databricks_response(self.logger, users, groups, service_principal)
-        self.logger.info("Starting to analyze catalogs")
-        catalog: CatalogList
-        for catalog in self.unity_catalog_service.list_catalogs()["catalogs"]:  # type: ignore
-            if self.metastore_id is not None and catalog["metastore_id"] != self.metastore_id:
-                self.logger.error("Catalog %s does not match metastore_id %s", catalog["name"], self.metastore_id)
-                continue
-            self.logger.info("Analyzing catalog: %s", catalog["name"])
-            for entry in self._iter_permissions_catalog(catalog, identities):
-                self.logger.debug("Writing entry: %s", entry)
-                self.writer.write_entry(entry)
+            identities = Identities.build_from_databricks_response(self.logger, users, groups, service_principal)
+            self.logger.info("Starting to analyze catalogs")
+            catalog: CatalogList
+            for catalog in self.unity_catalog_service.list_catalogs()["catalogs"]:  # type: ignore
+                if self.metastore_id is not None and catalog["metastore_id"] != self.metastore_id:
+                    self.logger.error("Catalog %s does not match metastore_id %s", catalog["name"], self.metastore_id)
+                    continue
+                self.logger.info("Analyzing catalog: %s", catalog["name"])
+                for entry in self._iter_permissions_catalog(catalog, identities):
+                    self.logger.debug("Writing entry: %s", entry)
+                    self.writer.write_entry(entry)
+        except requests.exceptions.HTTPError as err:
+            if err.response.status_code == FORBIDDEN:
+                raise ConnectionFailure() from err
+            raise err
 
     def _iter_permissions_catalog(self, catalog: CatalogList, identities: Identities):
         catalog_node = CatalogNode(self.logger, catalog["name"], catalog["owner"])
