@@ -79,7 +79,7 @@ class DatabricksAuthzAnalyzer:
             try:
                 token = get_authentication_token(authentication.authentication)
             except requests.exceptions.HTTPError as err:
-                if err.response.status_code == UNAUTHORIZED:
+                if err.response.status_code in (UNAUTHORIZED, FORBIDDEN):
                     raise ConnectionFailure() from err
 
                 raise err
