@@ -204,9 +204,9 @@ class AwsPrincipals:
                     role_session_account_id, AwsAccountPrincipals()
                 )
                 role_session = RoleSession(iam_role=iam_role_of_session, role_session_principal=role_session_principal)
-                account_principals_to_add_role_session.role_session_principals[
-                    role_session_principal.get_arn()
-                ] = role_session
+                account_principals_to_add_role_session.role_session_principals[role_session_principal.get_arn()] = (
+                    role_session
+                )
                 iam_role_of_session.add_role_session(role_session)
         return None
 

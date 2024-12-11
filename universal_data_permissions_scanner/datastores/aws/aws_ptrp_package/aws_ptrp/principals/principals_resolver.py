@@ -39,9 +39,9 @@ class PrincipalsResolver:
     ) -> Set[PrincipalBase]:
         ret: Set[PrincipalBase] = set()
         if resource_based_policy_service_resource_type:
-            resource_based_irrelevant_principal_types: Optional[
-                Set[AwsPrincipalType]
-            ] = resource_based_policy_service_resource_type.get_resource_based_policy_irrelevant_principal_types()
+            resource_based_irrelevant_principal_types: Optional[Set[AwsPrincipalType]] = (
+                resource_based_policy_service_resource_type.get_resource_based_policy_irrelevant_principal_types()
+            )
             stmt_principals = _filter_resource_based_stmt_principals(
                 stmt_principals, parent_aws_account_id, resource_based_irrelevant_principal_types
             )

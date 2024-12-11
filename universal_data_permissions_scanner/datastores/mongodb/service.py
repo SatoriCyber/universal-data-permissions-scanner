@@ -3,7 +3,6 @@
 To make shortcuts for repeated logic, use the client directly for all others.
 """
 
-
 from dataclasses import dataclass
 from typing import Any
 

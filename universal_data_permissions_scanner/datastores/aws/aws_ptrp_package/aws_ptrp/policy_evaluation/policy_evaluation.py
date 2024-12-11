@@ -211,23 +211,23 @@ class PolicyEvaluation:
         effect: Effect,
     ) -> Optional[ServiceResourcesResolverBase]:
         allowed_service_action_types: Set[ServiceActionType] = set([service_resource_type])
-        identity_policies_services_resolver: Optional[
-            Dict[ServiceResourceType, ServiceResourcesResolverBase]
-        ] = get_identity_based_resolver(
-            logger=logger,
-            policy_documents_ctx=principal_policies_ctx,
-            identity_principal=identity_principal,
-            aws_actions=aws_actions,
-            aws_principals=aws_principals,
-            account_resources=account_resources,
-            effect=effect,
-            allowed_service_action_types=allowed_service_action_types,
+        identity_policies_services_resolver: Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]] = (
+            get_identity_based_resolver(
+                logger=logger,
+                policy_documents_ctx=principal_policies_ctx,
+                identity_principal=identity_principal,
+                aws_actions=aws_actions,
+                aws_principals=aws_principals,
+                account_resources=account_resources,
+                effect=effect,
+                allowed_service_action_types=allowed_service_action_types,
+            )
         )
 
         if identity_policies_services_resolver:
-            identity_policies_service_resolver: Optional[
-                ServiceResourcesResolverBase
-            ] = identity_policies_services_resolver.get(service_resource_type)
+            identity_policies_service_resolver: Optional[ServiceResourcesResolverBase] = (
+                identity_policies_services_resolver.get(service_resource_type)
+            )
         else:
             identity_policies_service_resolver = None
 
@@ -349,16 +349,16 @@ class PolicyEvaluation:
             parent_aws_account_id=target_service_resource.get_resource_account_id(),
         )
 
-        target_policy_service_resolver: Optional[
-            ServiceResourcesResolverBase
-        ] = cls._get_resource_policy_service_resolver(
-            logger=logger,
-            resource_policy_ctx=resource_policy_ctx,
-            service_resource_type=service_resource_type,
-            aws_actions=aws_actions,
-            aws_principals=aws_principals,
-            account_resources=account_resources,
-            effect=Effect.Allow,
+        target_policy_service_resolver: Optional[ServiceResourcesResolverBase] = (
+            cls._get_resource_policy_service_resolver(
+                logger=logger,
+                resource_policy_ctx=resource_policy_ctx,
+                service_resource_type=service_resource_type,
+                aws_actions=aws_actions,
+                aws_principals=aws_principals,
+                account_resources=account_resources,
+                effect=Effect.Allow,
+            )
         )
         if target_policy_service_resolver is None or target_policy_service_resolver.is_empty():
             return policy_evaluations_result

@@ -5,6 +5,7 @@ The way the permission was granted is described in the path.
 Each writer will use the model to write the data in the format it needs.
 Each datastore needs to create the model from the data it has, each entry should be of type AuthzEntry.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

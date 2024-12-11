@@ -1,6 +1,5 @@
 """Atlas Role/Permission resolvers to Authz Permission"""
 
-
 from enum import Enum, auto
 
 from universal_data_permissions_scanner.datastores.mongodb.atlas.model import Permission

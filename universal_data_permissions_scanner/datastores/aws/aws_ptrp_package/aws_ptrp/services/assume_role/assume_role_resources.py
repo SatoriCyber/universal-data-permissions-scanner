@@ -61,10 +61,10 @@ class AssumeRoleResolvedStmt(ResolvedSingleStmtGetter):
 
     def yield_trusted_principals(self, iam_role: IAMRole) -> Generator[PrincipalBase, None, None]:
         for resolved_principal_base in self.resolved_stmt.resolved_stmt_principals:
-            relevant_assume_role: Optional[
-                AssumeRoleActionType
-            ] = AssumeRoleResolvedStmt.get_relevant_assume_action_by_principal_type(
-                resolved_principal_base.get_principal().principal_type
+            relevant_assume_role: Optional[AssumeRoleActionType] = (
+                AssumeRoleResolvedStmt.get_relevant_assume_action_by_principal_type(
+                    resolved_principal_base.get_principal().principal_type
+                )
             )
             if relevant_assume_role is None:
                 continue

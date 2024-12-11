@@ -204,7 +204,7 @@ def generate_authz_share(
                     PermissionLevel.READ,
                     roles_path=[RolePath("role_1", ["SELECT"])],
                 )
-            ]
+            ],
             # end test 2
         ),
         (  # test 3
@@ -224,13 +224,13 @@ def generate_authz_share(
                     PermissionLevel.READ,
                     roles_path=[RolePath("role_1", []), RolePath("role_2", ["SELECT"])],
                 )
-            ]
+            ],
             # end test 3
         ),
         (  # test 4
             [UserGrant("user_1", "role_1", "user_1@example.com")],
             [RoleGrant("role_1", "USAGE", "", "", "role_2", "ROLE"), RoleGrant("role_2", "", "", "", "", "")],
-            []
+            [],
             # end test 4
         ),
         (  # test 5
@@ -250,7 +250,7 @@ def generate_authz_share(
                     PermissionLevel.READ,
                     roles_path=[RolePath("role_1", ["REFERENCES", "SELECT"])],
                 )
-            ]
+            ],
             # end test 5
         ),
     ],
