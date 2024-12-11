@@ -62,7 +62,7 @@ class BigQueryService:  # pylint: disable=(too-many-instance-attributes)
         return project
 
     def _get_project_iam(self):
-        request = iam_policy_pb2.GetIamPolicyRequest(
+        request = iam_policy_pb2.GetIamPolicyRequest( #pylint: disable=no-member # pyright: ignore [reportAttributeAccessIssue]
             resource=f"projects/{self.project_id}"  # type: ignore
         )  # pyright: ignore [reportGeneralTypeIssues]
         return self.projects_client.get_iam_policy(request=request)  # type: ignore
@@ -72,7 +72,7 @@ class BigQueryService:  # pylint: disable=(too-many-instance-attributes)
         return self.folders_client.get_folder(request=request)  # type: ignore
 
     def _get_folder_iam(self, folder_id: str) -> Policy:
-        request = iam_policy_pb2.GetIamPolicyRequest(
+        request = iam_policy_pb2.GetIamPolicyRequest( #pylint: disable=no-member # pyright: ignore [reportAttributeAccessIssue]
             resource=folder_id
         )  # pyright: ignore [reportGeneralTypeIssues] #type: ignore
         return self.folders_client.get_iam_policy(request=request)  # type: ignore
@@ -82,7 +82,7 @@ class BigQueryService:  # pylint: disable=(too-many-instance-attributes)
         return self.org_client.get_organization(request=request)  # type: ignore
 
     def _get_organization_iam(self, org_id: str) -> Policy:
-        request = iam_policy_pb2.GetIamPolicyRequest(
+        request = iam_policy_pb2.GetIamPolicyRequest( #pylint: disable=no-member # pyright: ignore [reportAttributeAccessIssue]
             resource=org_id
         )  # pyright: ignore [reportGeneralTypeIssues] #type: ignore
         return self.org_client.get_iam_policy(request=request)  # type: ignore

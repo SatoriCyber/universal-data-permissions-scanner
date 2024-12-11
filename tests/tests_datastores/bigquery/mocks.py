@@ -138,8 +138,8 @@ class MockBigQueryService:
         )
         return service
 
-    def _side_effect_get_iam_policy_project(self, request: iam_policy_pb2.GetIamPolicyRequest) -> MockedIam:
-        expected_iam_policy = iam_policy_pb2.GetIamPolicyRequest(
+    def _side_effect_get_iam_policy_project(self, request: iam_policy_pb2.GetIamPolicyRequest) -> MockedIam:  # pyright: ignore [reportAttributeAccessIssue]
+        expected_iam_policy = iam_policy_pb2.GetIamPolicyRequest( # pyright: ignore [reportAttributeAccessIssue]
             resource=f"projects/{self.project.project_id}"  # type: ignore
         )  # pyright: ignore [reportGeneralTypeIssues]
         if request == expected_iam_policy:
@@ -168,9 +168,9 @@ class MockBigQueryService:
         assert request == expected
         return self.folder
 
-    def _side_effect_get_iam_policy_folder(self, request: iam_policy_pb2.GetIamPolicyRequest) -> MockedIam:
+    def _side_effect_get_iam_policy_folder(self, request: iam_policy_pb2.GetIamPolicyRequest) -> MockedIam: # pyright: ignore [reportAttributeAccessIssue]
         assert self.folder is not None
-        expected_iam_policy = iam_policy_pb2.GetIamPolicyRequest(
+        expected_iam_policy = iam_policy_pb2.GetIamPolicyRequest( # pyright: ignore [reportAttributeAccessIssue]
             resource=f"{self.folder.name}"  # type: ignore
         )  # pyright: ignore [reportGeneralTypeIssues]
         assert request == expected_iam_policy
@@ -182,9 +182,9 @@ class MockBigQueryService:
         assert request == expected
         return self.organization
 
-    def _side_effect_get_iam_policy_organization(self, request: iam_policy_pb2.GetIamPolicyRequest) -> MockedIam:
+    def _side_effect_get_iam_policy_organization(self, request: iam_policy_pb2.GetIamPolicyRequest) -> MockedIam: # pyright: ignore [reportAttributeAccessIssue]
         assert self.organization is not None
-        expected_iam_policy = iam_policy_pb2.GetIamPolicyRequest(
+        expected_iam_policy = iam_policy_pb2.GetIamPolicyRequest( # pyright: ignore [reportAttributeAccessIssue]
             resource=f"{self.organization.name}"  # type: ignore
         )  # pyright: ignore [reportGeneralTypeIssues]
         assert request == expected_iam_policy
