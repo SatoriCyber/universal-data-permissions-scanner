@@ -102,9 +102,9 @@ class ServiceResourcesResolverBase(ABC):
                 # other stmt relevant to this principal
                 # Need to check matches on the resolved resources in these statements
                 for service_resource, resolved_action_single_stmt in resolved_stmt.resolved_stmt_resources.items():
-                    other_resolved_action_single_stmt: Optional[
-                        ResolvedActionsSingleStmt
-                    ] = other_resolved_stmt.resolved_stmt_resources.get(service_resource)
+                    other_resolved_action_single_stmt: Optional[ResolvedActionsSingleStmt] = (
+                        other_resolved_stmt.resolved_stmt_resources.get(service_resource)
+                    )
 
                     if not other_resolved_action_single_stmt:
                         res.resolved_stmt_results.add(
@@ -140,9 +140,9 @@ class ServiceResourcesResolverBase(ABC):
             if method_on_stmt_actions_type == MethodOnStmtActionsType.INTERSECTION:
                 # done aggregate all other stmts, possible now to intersects the results
                 for service_resource, resolved_action_single_stmt in resolved_stmt.resolved_stmt_resources.items():
-                    resolved_actions_resource: Optional[
-                        Set[ServiceActionBase]
-                    ] = resolved_actions_resources_for_intersection.get(service_resource)
+                    resolved_actions_resource: Optional[Set[ServiceActionBase]] = (
+                        resolved_actions_resources_for_intersection.get(service_resource)
+                    )
                     if resolved_actions_resource:
                         resolved_action_single_stmt.resolved_stmt_actions.intersection_update(resolved_actions_resource)
                     else:

@@ -1,4 +1,5 @@
 """Writer for CSV."""
+
 import csv
 from typing import TextIO
 

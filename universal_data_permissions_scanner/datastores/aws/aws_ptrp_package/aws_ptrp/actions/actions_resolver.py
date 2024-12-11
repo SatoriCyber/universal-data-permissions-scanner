@@ -19,9 +19,11 @@ class ActionsResolver:
                 stmt_relative_id_regex = (
                     "*"
                     if stmt_action_regex == "*"
-                    else stmt_action_regex[len(service_prefix) :]
-                    if stmt_action_regex.startswith(service_prefix)
-                    else None
+                    else (
+                        stmt_action_regex[len(service_prefix) :]
+                        if stmt_action_regex.startswith(service_prefix)
+                        else None
+                    )
                 )
                 if stmt_relative_id_regex is None:
                     continue

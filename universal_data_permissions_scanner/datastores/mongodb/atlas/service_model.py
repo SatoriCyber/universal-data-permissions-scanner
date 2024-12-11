@@ -1,4 +1,5 @@
 """Defines the objects returned by the Atlas admin API."""
+
 from typing import List, TypedDict
 
 

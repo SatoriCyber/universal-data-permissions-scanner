@@ -1,4 +1,5 @@
 """Translate the MongoDB Atlas API to the model used by the analyzer."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

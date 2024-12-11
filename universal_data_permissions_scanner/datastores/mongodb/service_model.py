@@ -1,4 +1,5 @@
 """Defines the objects returned by the MongoDB API."""
+
 from typing import List, TypedDict
 
 

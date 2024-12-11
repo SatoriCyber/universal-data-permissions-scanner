@@ -73,9 +73,9 @@ class AwsAccountResources:
         self, principal_type: AwsPrincipalType
     ) -> Generator[Principal, None, None]:
         for service_resource_type, account_resources_service in self.account_resources.items():
-            resource_based_irrelevant_principal_types: Optional[
-                Set[AwsPrincipalType]
-            ] = service_resource_type.get_resource_based_policy_irrelevant_principal_types()
+            resource_based_irrelevant_principal_types: Optional[Set[AwsPrincipalType]] = (
+                service_resource_type.get_resource_based_policy_irrelevant_principal_types()
+            )
 
             for account_resource_service in account_resources_service:
                 bucket_policy: Optional[PolicyDocument] = account_resource_service.get_resource_policy()
@@ -103,9 +103,9 @@ class AwsAccountResources:
             logger.info(
                 f"Loading AWS account resources (from boto3 session) for type {service_type_to_load.get_service_name()}"
             )
-            ret_from_session: Optional[
-                Set[ServiceResourceBase]
-            ] = service_type_to_load.load_service_resources_from_session(logger, session, aws_account_id)
+            ret_from_session: Optional[Set[ServiceResourceBase]] = (
+                service_type_to_load.load_service_resources_from_session(logger, session, aws_account_id)
+            )
             if ret_from_session:
                 account_resources[service_type_to_load] = ret_from_session
 

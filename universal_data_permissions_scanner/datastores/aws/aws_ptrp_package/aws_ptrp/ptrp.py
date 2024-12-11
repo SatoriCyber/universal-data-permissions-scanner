@@ -197,10 +197,10 @@ class AwsPtrp:
         principal_to_policy_evaluation: PrincipalNodeBase = line.get_principal_makes_the_request_to_resource()
         service_resource: ServiceResourceBase = line.resource_node.base
 
-        resolved_actions: Optional[
-            Set[ServiceActionBase]
-        ] = service_resources_resolver.get_resolved_actions_per_resource_and_principal(
-            service_resource, principal_to_policy_evaluation.get_stmt_principal()
+        resolved_actions: Optional[Set[ServiceActionBase]] = (
+            service_resources_resolver.get_resolved_actions_per_resource_and_principal(
+                service_resource, principal_to_policy_evaluation.get_stmt_principal()
+            )
         )
         if resolved_actions:
             self._cb_line_for_permissions_level(resolved_actions, principal_to_report, resource, path_nodes, cb_line)

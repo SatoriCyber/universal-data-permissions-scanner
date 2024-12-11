@@ -49,9 +49,9 @@ def get_role_trust_resolver(
         allowed_service_action_types=set([service_resource_type]),
     )
     if all_stmts_service_resources_resolvers:
-        ret_service_resources_resolver: Optional[
-            ServiceResourcesResolverBase
-        ] = all_stmts_service_resources_resolvers.get(service_resource_type)
+        ret_service_resources_resolver: Optional[ServiceResourcesResolverBase] = (
+            all_stmts_service_resources_resolvers.get(service_resource_type)
+        )
         if ret_service_resources_resolver and isinstance(
             ret_service_resources_resolver, AssumeRoleServiceResourcesResolver
         ):
@@ -184,14 +184,14 @@ def _services_resolver_for_policy_document(
             continue
 
         # Resolve the statement actions
-        single_stmt_service_actions_resolvers: Optional[
-            Dict[ServiceActionType, ServiceActionsResolverBase]
-        ] = ActionsResolver.resolve_stmt_action_regexes(
-            logger,
-            statement.get_actions(),
-            statement.is_not_action_in_statement(),
-            aws_actions,
-            allowed_service_action_types,
+        single_stmt_service_actions_resolvers: Optional[Dict[ServiceActionType, ServiceActionsResolverBase]] = (
+            ActionsResolver.resolve_stmt_action_regexes(
+                logger,
+                statement.get_actions(),
+                statement.is_not_action_in_statement(),
+                aws_actions,
+                allowed_service_action_types,
+            )
         )
         if not single_stmt_service_actions_resolvers:
             continue
@@ -205,28 +205,28 @@ def _services_resolver_for_policy_document(
         # Resolve the statement resources
         resolved_services_action: Set[ServiceActionType] = set(single_stmt_service_actions_resolvers.keys())
         is_condition_stmt_exists: bool = statement.condition is not None
-        single_stmt_service_resources_resolvers: Optional[
-            Dict[ServiceResourceType, ServiceResourcesResolverBase]
-        ] = ResourcesResolver.resolve_stmt_resource_regexes(
-            logger=logger,
-            stmt_name=statement.sid,
-            stmt_parent_arn=parent_arn,
-            policy_name=policy_name,
-            is_condition_stmt_exists=is_condition_stmt_exists,
-            stmt_resource=statement_resources,
-            not_resource_annotated=statement.is_not_resource_in_statement(),
-            account_resources=account_resources,
-            resolved_stmt_principals=resolved_stmt_principals,
-            resolved_stmt_services_action_types=resolved_services_action,
-            service_action_stmt_resolvers=single_stmt_service_actions_resolvers,
+        single_stmt_service_resources_resolvers: Optional[Dict[ServiceResourceType, ServiceResourcesResolverBase]] = (
+            ResourcesResolver.resolve_stmt_resource_regexes(
+                logger=logger,
+                stmt_name=statement.sid,
+                stmt_parent_arn=parent_arn,
+                policy_name=policy_name,
+                is_condition_stmt_exists=is_condition_stmt_exists,
+                stmt_resource=statement_resources,
+                not_resource_annotated=statement.is_not_resource_in_statement(),
+                account_resources=account_resources,
+                resolved_stmt_principals=resolved_stmt_principals,
+                resolved_stmt_services_action_types=resolved_services_action,
+                service_action_stmt_resolvers=single_stmt_service_actions_resolvers,
+            )
         )
 
         # update the all_stmts_service_resources_resolvers with the current single stmt result
         if single_stmt_service_resources_resolvers:
             for service_type, single_stmt_service_resolver in single_stmt_service_resources_resolvers.items():
-                all_stmts_service_resources_resolver: Optional[
-                    ServiceResourcesResolverBase
-                ] = all_stmts_service_resources_resolvers.get(service_type)
+                all_stmts_service_resources_resolver: Optional[ServiceResourcesResolverBase] = (
+                    all_stmts_service_resources_resolvers.get(service_type)
+                )
 
                 if all_stmts_service_resources_resolver is not None:
                     all_stmts_service_resources_resolver.extend_resolved_stmts(
