@@ -14,6 +14,8 @@ users as (
         default_role
     from
         snowflake.account_usage.users
+    where
+        deleted_on is null
 )
 select
     users.user as user,
