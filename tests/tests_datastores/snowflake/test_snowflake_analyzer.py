@@ -273,6 +273,36 @@ def generate_authz_share(
             ],
             # end test 6
         ),
+        (  # test 7
+            [UserGrant("user_1", "role_1", "user_1@example.com")],
+            [
+                RoleGrant("role_1", "SELECT", "db1", "schema1", "table1", "TABLE"),
+                RoleGrant("role_1", "SELECT", "db1", "schema1", "table2", "TABLE"),
+            ],
+            [
+                generate_authz_entry_role(
+                    "user_1",
+                    "user_1@example.com",
+                    IdentityType.USER,
+                    "db1",
+                    "schema1",
+                    "table1",
+                    PermissionLevel.READ,
+                    roles_path=[RolePath("role_1", ["SELECT"])],
+                ),
+                generate_authz_entry_role(
+                    "user_1",
+                    "user_1@example.com",
+                    IdentityType.USER,
+                    "db1",
+                    "schema1",
+                    "table2",
+                    PermissionLevel.READ,
+                    roles_path=[RolePath("role_1", ["SELECT"])],
+                )
+            ],
+            # end test 7
+        ),
     ],
     ids=(
         "User with no role",
@@ -281,6 +311,7 @@ def generate_authz_share(
         "user1 has role1, role1 has role2, role2 got no permissions",
         "user with one role multiple permissions",
         "user with one role an permission",
+        "user with one role multiple permissions on different tables",
     ),
 )
 def test_snowflake_analyzer_user_role(
