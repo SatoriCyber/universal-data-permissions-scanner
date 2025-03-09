@@ -299,7 +299,7 @@ def generate_authz_share(
                     "table2",
                     PermissionLevel.READ,
                     roles_path=[RolePath("role_1", ["SELECT"])],
-                )
+                ),
             ],
             # end test 7
         ),
