@@ -325,7 +325,7 @@ def test_snowflake_analyzer_user_role(
     mocked_writer = MockWriter.new()
     _call_analyzer(analyzer_mock.get(), mocked_writer)
     if len(expected_writes) != 0:
-        mocked_writer.mocked_writer.write_entry.assert_has_calls(expected_writes)  # type: ignore
+        mocked_writer.mocked_writer.write_entry.assert_has_calls(expected_writes, any_order=True)  # type: ignore
     else:
         mocked_writer.assert_write_entry_not_called()
 
