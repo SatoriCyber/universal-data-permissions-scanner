@@ -21,7 +21,7 @@ def to_dict_serializer(account_resources: Dict[ServiceResourceType, List[Service
 
 
 def from_dict_deserializer(
-    account_resources_from_deserializer: Dict[str, List[Any]]
+    account_resources_from_deserializer: Dict[str, List[Any]],
 ) -> Dict[ServiceResourceType, List[ServiceResourceBase]]:
     account_resources: Dict[ServiceResourceType, List[ServiceResourceBase]] = dict()
     for service_key_name, service_resources_base in account_resources_from_deserializer.items():

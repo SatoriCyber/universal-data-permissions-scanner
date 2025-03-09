@@ -3,7 +3,7 @@
 Each line is a valid json.
 Good when there is a need to stream the file to BigQuery.
 https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-json#loading_semi-structured_json_data
- """
+"""
 
 import json
 from typing import Dict, List, Union
