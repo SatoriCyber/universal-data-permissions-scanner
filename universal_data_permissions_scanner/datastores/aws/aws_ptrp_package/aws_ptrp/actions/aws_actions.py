@@ -16,7 +16,7 @@ def to_dict_serializer(aws_actions: Dict[ServiceActionType, List[ServiceActionBa
 
 
 def from_dict_deserializer(
-    account_actions_from_deserializer: Dict[str, List[Any]]
+    account_actions_from_deserializer: Dict[str, List[Any]],
 ) -> Dict[ServiceActionType, List[ServiceActionBase]]:
     aws_actions: Dict[ServiceActionType, List[ServiceActionBase]] = dict()
     for service_key_name, service_actions_base in account_actions_from_deserializer.items():
